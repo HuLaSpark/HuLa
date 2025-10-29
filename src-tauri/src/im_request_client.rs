@@ -316,7 +316,7 @@ pub enum ImUrl {
     MessageDeleteByConversationId,
     MessagePage,
     MessageDeleteByAdmin,
-    
+
     ConversationCreateMy,
     ConversationUpdateMy,
     ConversationMyList,
@@ -325,14 +325,14 @@ pub enum ImUrl {
     ConversationDeleteByUnpinned,
     ConversationPage,
     ConversationDeleteByAdmin,
-    
+
     ModelCreate,
     ModelUpdate,
     ModelDelete,
     ModelGet,
     ModelPage,
     ModelSimpleList,
-    
+
     ChatRoleMyPage,
     ChatRoleGetMy,
     ChatRoleCreateMy,
@@ -344,21 +344,21 @@ pub enum ImUrl {
     ChatRoleDelete,
     ChatRoleGet,
     ChatRolePage,
-    
+
     ApiKeyCreate,
     ApiKeyUpdate,
     ApiKeyDelete,
     ApiKeyGet,
     ApiKeyPage,
     ApiKeySimpleList,
-    
+
     ToolCreate,
     ToolUpdate,
     ToolDelete,
     ToolGet,
     ToolPage,
     ToolSimpleList,
-    
+
     ImageMyPage,
     ImagePublicPage,
     ImageGetMy,
@@ -371,14 +371,14 @@ pub enum ImUrl {
     ImagePage,
     ImageUpdate,
     ImageDelete,
-    
+
     KnowledgePage,
     KnowledgeGet,
     KnowledgeCreate,
     KnowledgeUpdate,
     KnowledgeDelete,
     KnowledgeSimpleList,
-    
+
     KnowledgeDocumentPage,
     KnowledgeDocumentGet,
     KnowledgeDocumentCreate,
@@ -386,7 +386,7 @@ pub enum ImUrl {
     KnowledgeDocumentUpdate,
     KnowledgeDocumentUpdateStatus,
     KnowledgeDocumentDelete,
-    
+
     KnowledgeSegmentGet,
     KnowledgeSegmentPage,
     KnowledgeSegmentCreate,
@@ -395,11 +395,11 @@ pub enum ImUrl {
     KnowledgeSegmentSplit,
     KnowledgeSegmentGetProcessList,
     KnowledgeSegmentSearch,
-    
+
     MindMapGenerateStream,
     MindMapDelete,
     MindMapPage,
-    
+
     MusicMyPage,
     MusicGenerate,
     MusicDeleteMy,
@@ -408,14 +408,14 @@ pub enum ImUrl {
     MusicPage,
     MusicDelete,
     MusicUpdate,
-    
+
     WorkflowCreate,
     WorkflowUpdate,
     WorkflowDelete,
     WorkflowGet,
     WorkflowPage,
     WorkflowTest,
-    
+
     WriteGenerateStream,
     WriteDelete,
     WritePage,
@@ -539,11 +539,18 @@ impl ImUrl {
             // ai相关 - 聊天消息
             ImUrl::MessageSend => (http::Method::POST, "ai/chat/message/send"),
             ImUrl::MessageSendStream => (http::Method::POST, "ai/chat/message/send-stream"),
-            ImUrl::MessageListByConversationId => (http::Method::GET, "ai/chat/message/list-by-conversation-id"),
+            ImUrl::MessageListByConversationId => {
+                (http::Method::GET, "ai/chat/message/list-by-conversation-id")
+            }
             ImUrl::MessageDelete => (http::Method::DELETE, "ai/chat/message/delete"),
-            ImUrl::MessageDeleteByConversationId => (http::Method::DELETE, "ai/chat/message/delete-by-conversation-id"),
+            ImUrl::MessageDeleteByConversationId => (
+                http::Method::DELETE,
+                "ai/chat/message/delete-by-conversation-id",
+            ),
             ImUrl::MessagePage => (http::Method::GET, "ai/chat/message/page"),
-            ImUrl::MessageDeleteByAdmin => (http::Method::DELETE, "ai/chat/message/delete-by-admin"),
+            ImUrl::MessageDeleteByAdmin => {
+                (http::Method::DELETE, "ai/chat/message/delete-by-admin")
+            }
 
             // AI 聊天对话
             ImUrl::ConversationCreateMy => (http::Method::POST, "ai/chat/conversation/create-my"),
@@ -551,9 +558,14 @@ impl ImUrl {
             ImUrl::ConversationMyList => (http::Method::GET, "ai/chat/conversation/my-list"),
             ImUrl::ConversationGetMy => (http::Method::GET, "ai/chat/conversation/get-my"),
             ImUrl::ConversationDeleteMy => (http::Method::DELETE, "ai/chat/conversation/delete-my"),
-            ImUrl::ConversationDeleteByUnpinned => (http::Method::DELETE, "ai/chat/conversation/delete-by-unpinned"),
+            ImUrl::ConversationDeleteByUnpinned => (
+                http::Method::DELETE,
+                "ai/chat/conversation/delete-by-unpinned",
+            ),
             ImUrl::ConversationPage => (http::Method::GET, "ai/chat/conversation/page"),
-            ImUrl::ConversationDeleteByAdmin => (http::Method::DELETE, "ai/chat/conversation/delete-by-admin"),
+            ImUrl::ConversationDeleteByAdmin => {
+                (http::Method::DELETE, "ai/chat/conversation/delete-by-admin")
+            }
 
             // AI 模型相关接口
             ImUrl::ModelCreate => (http::Method::POST, "ai/model/create"),
@@ -562,7 +574,7 @@ impl ImUrl {
             ImUrl::ModelGet => (http::Method::GET, "ai/model/get"),
             ImUrl::ModelPage => (http::Method::GET, "ai/model/page"),
             ImUrl::ModelSimpleList => (http::Method::GET, "ai/model/simple-list"),
-            
+
             // 聊天角色相关接口
             ImUrl::ChatRoleMyPage => (http::Method::GET, "ai/chat-role/my-page"),
             ImUrl::ChatRoleGetMy => (http::Method::GET, "ai/chat-role/get-my"),
@@ -575,7 +587,7 @@ impl ImUrl {
             ImUrl::ChatRoleDelete => (http::Method::DELETE, "ai/chat-role/delete"),
             ImUrl::ChatRoleGet => (http::Method::GET, "ai/chat-role/get"),
             ImUrl::ChatRolePage => (http::Method::GET, "ai/chat-role/page"),
-            
+
             // API 密钥相关接口
             ImUrl::ApiKeyCreate => (http::Method::POST, "ai/api-key/create"),
             ImUrl::ApiKeyUpdate => (http::Method::PUT, "ai/api-key/update"),
@@ -583,7 +595,7 @@ impl ImUrl {
             ImUrl::ApiKeyGet => (http::Method::GET, "ai/api-key/get"),
             ImUrl::ApiKeyPage => (http::Method::GET, "ai/api-key/page"),
             ImUrl::ApiKeySimpleList => (http::Method::GET, "ai/api-key/simple-list"),
-            
+
             // AI 工具相关接口
             ImUrl::ToolCreate => (http::Method::POST, "ai/tool/create"),
             ImUrl::ToolUpdate => (http::Method::PUT, "ai/tool/update"),
@@ -605,7 +617,7 @@ impl ImUrl {
             ImUrl::ImagePage => (http::Method::GET, "ai/image/page"),
             ImUrl::ImageUpdate => (http::Method::PUT, "ai/image/update"),
             ImUrl::ImageDelete => (http::Method::DELETE, "ai/image/delete"),
-            
+
             // 知识库相关接口
             ImUrl::KnowledgePage => (http::Method::GET, "ai/knowledge/page"),
             ImUrl::KnowledgeGet => (http::Method::GET, "ai/knowledge/get"),
@@ -613,27 +625,37 @@ impl ImUrl {
             ImUrl::KnowledgeUpdate => (http::Method::PUT, "ai/knowledge/update"),
             ImUrl::KnowledgeDelete => (http::Method::DELETE, "ai/knowledge/delete"),
             ImUrl::KnowledgeSimpleList => (http::Method::GET, "ai/knowledge/simple-list"),
-            
+
             // 知识库文档相关接口
             ImUrl::KnowledgeDocumentPage => (http::Method::GET, "ai/knowledge/document/page"),
             ImUrl::KnowledgeDocumentGet => (http::Method::GET, "ai/knowledge/document/get"),
             ImUrl::KnowledgeDocumentCreate => (http::Method::POST, "ai/knowledge/document/create"),
-            ImUrl::KnowledgeDocumentCreateList => (http::Method::POST, "ai/knowledge/document/create-list"),
+            ImUrl::KnowledgeDocumentCreateList => {
+                (http::Method::POST, "ai/knowledge/document/create-list")
+            }
             ImUrl::KnowledgeDocumentUpdate => (http::Method::PUT, "ai/knowledge/document/update"),
-            ImUrl::KnowledgeDocumentUpdateStatus => (http::Method::PUT, "ai/knowledge/document/update-status"),
-            ImUrl::KnowledgeDocumentDelete => (http::Method::DELETE, "ai/knowledge/document/delete"),
-            
+            ImUrl::KnowledgeDocumentUpdateStatus => {
+                (http::Method::PUT, "ai/knowledge/document/update-status")
+            }
+            ImUrl::KnowledgeDocumentDelete => {
+                (http::Method::DELETE, "ai/knowledge/document/delete")
+            }
+
             // 知识库文档片段相关接口
             ImUrl::KnowledgeSegmentGet => (http::Method::GET, "ai/knowledge/segment/get"),
             ImUrl::KnowledgeSegmentPage => (http::Method::GET, "ai/knowledge/segment/page"),
             ImUrl::KnowledgeSegmentCreate => (http::Method::POST, "ai/knowledge/segment/create"),
             ImUrl::KnowledgeSegmentUpdate => (http::Method::PUT, "ai/knowledge/segment/update"),
-            ImUrl::KnowledgeSegmentUpdateStatus => (http::Method::PUT, "ai/knowledge/segment/update-status"),
+            ImUrl::KnowledgeSegmentUpdateStatus => {
+                (http::Method::PUT, "ai/knowledge/segment/update-status")
+            }
             ImUrl::KnowledgeSegmentSplit => (http::Method::GET, "ai/knowledge/segment/split"),
-            ImUrl::KnowledgeSegmentGetProcessList => (http::Method::GET, "ai/knowledge/segment/get-process-list"),
+            ImUrl::KnowledgeSegmentGetProcessList => {
+                (http::Method::GET, "ai/knowledge/segment/get-process-list")
+            }
             ImUrl::KnowledgeSegmentSearch => (http::Method::GET, "ai/knowledge/segment/search"),
 
-             // AI 思维导图相关接口
+            // AI 思维导图相关接口
             ImUrl::MindMapGenerateStream => (http::Method::POST, "ai/mind-map/generate-stream"),
             ImUrl::MindMapDelete => (http::Method::DELETE, "ai/mind-map/delete"),
             ImUrl::MindMapPage => (http::Method::GET, "ai/mind-map/page"),
@@ -660,7 +682,7 @@ impl ImUrl {
             ImUrl::WriteGenerateStream => (http::Method::POST, "ai/write/generate-stream"),
             ImUrl::WriteDelete => (http::Method::DELETE, "ai/write/delete"),
             ImUrl::WritePage => (http::Method::GET, "ai/write/page"),
-            
+
             // 群成员信息
             ImUrl::GetAllUserBaseInfo => (http::Method::GET, "im/room/group/member/list"),
             ImUrl::CheckEmail => (http::Method::GET, "oauth/anyTenant/checkEmail"),
@@ -796,7 +818,7 @@ impl ImUrl {
             "messageDeleteByConversationId" => Ok(ImUrl::MessageDeleteByConversationId),
             "messagePage" => Ok(ImUrl::MessagePage),
             "messageDeleteByAdmin" => Ok(ImUrl::MessageDeleteByAdmin),
-            
+
             // ================ AI 聊天对话 ================
             "conversationCreateMy" => Ok(ImUrl::ConversationCreateMy),
             "conversationUpdateMy" => Ok(ImUrl::ConversationUpdateMy),
@@ -806,7 +828,7 @@ impl ImUrl {
             "conversationDeleteByUnpinned" => Ok(ImUrl::ConversationDeleteByUnpinned),
             "conversationPage" => Ok(ImUrl::ConversationPage),
             "conversationDeleteByAdmin" => Ok(ImUrl::ConversationDeleteByAdmin),
-            
+
             // ================ AI 模型 ================
             "modelCreate" => Ok(ImUrl::ModelCreate),
             "modelUpdate" => Ok(ImUrl::ModelUpdate),
@@ -814,7 +836,7 @@ impl ImUrl {
             "modelGet" => Ok(ImUrl::ModelGet),
             "modelPage" => Ok(ImUrl::ModelPage),
             "modelSimpleList" => Ok(ImUrl::ModelSimpleList),
-            
+
             // ================ AI 聊天角色 ================
             "chatRoleMyPage" => Ok(ImUrl::ChatRoleMyPage),
             "chatRoleGetMy" => Ok(ImUrl::ChatRoleGetMy),
@@ -827,7 +849,7 @@ impl ImUrl {
             "chatRoleDelete" => Ok(ImUrl::ChatRoleDelete),
             "chatRoleGet" => Ok(ImUrl::ChatRoleGet),
             "chatRolePage" => Ok(ImUrl::ChatRolePage),
-            
+
             // ================ API 密钥 ================
             "apiKeyCreate" => Ok(ImUrl::ApiKeyCreate),
             "apiKeyUpdate" => Ok(ImUrl::ApiKeyUpdate),
@@ -835,7 +857,7 @@ impl ImUrl {
             "apiKeyGet" => Ok(ImUrl::ApiKeyGet),
             "apiKeyPage" => Ok(ImUrl::ApiKeyPage),
             "apiKeySimpleList" => Ok(ImUrl::ApiKeySimpleList),
-            
+
             // ================ AI 工具 ================
             "toolCreate" => Ok(ImUrl::ToolCreate),
             "toolUpdate" => Ok(ImUrl::ToolUpdate),
@@ -843,7 +865,7 @@ impl ImUrl {
             "toolGet" => Ok(ImUrl::ToolGet),
             "toolPage" => Ok(ImUrl::ToolPage),
             "toolSimpleList" => Ok(ImUrl::ToolSimpleList),
-            
+
             // ================ AI 图像 ================
             "imageMyPage" => Ok(ImUrl::ImageMyPage),
             "imagePublicPage" => Ok(ImUrl::ImagePublicPage),
@@ -857,7 +879,7 @@ impl ImUrl {
             "imagePage" => Ok(ImUrl::ImagePage),
             "imageUpdate" => Ok(ImUrl::ImageUpdate),
             "imageDelete" => Ok(ImUrl::ImageDelete),
-            
+
             // ================ AI 知识库 ================
             "knowledgePage" => Ok(ImUrl::KnowledgePage),
             "knowledgeGet" => Ok(ImUrl::KnowledgeGet),
@@ -865,7 +887,7 @@ impl ImUrl {
             "knowledgeUpdate" => Ok(ImUrl::KnowledgeUpdate),
             "knowledgeDelete" => Ok(ImUrl::KnowledgeDelete),
             "knowledgeSimpleList" => Ok(ImUrl::KnowledgeSimpleList),
-            
+
             // ================ AI 知识库文档 ================
             "knowledgeDocumentPage" => Ok(ImUrl::KnowledgeDocumentPage),
             "knowledgeDocumentGet" => Ok(ImUrl::KnowledgeDocumentGet),
@@ -874,7 +896,7 @@ impl ImUrl {
             "knowledgeDocumentUpdate" => Ok(ImUrl::KnowledgeDocumentUpdate),
             "knowledgeDocumentUpdateStatus" => Ok(ImUrl::KnowledgeDocumentUpdateStatus),
             "knowledgeDocumentDelete" => Ok(ImUrl::KnowledgeDocumentDelete),
-            
+
             // ================ AI 知识库段落 ================
             "knowledgeSegmentGet" => Ok(ImUrl::KnowledgeSegmentGet),
             "knowledgeSegmentPage" => Ok(ImUrl::KnowledgeSegmentPage),
@@ -884,12 +906,12 @@ impl ImUrl {
             "KnowledgeSegmentSplit" => Ok(ImUrl::KnowledgeSegmentSplit),
             "KnowledgeSegmentGetProcessList" => Ok(ImUrl::KnowledgeSegmentGetProcessList),
             "KnowledgeSegmentSearch" => Ok(ImUrl::KnowledgeSegmentSearch),
-            
+
             // ================ AI 思维导图 ================
             "mindMapGenerateStream" => Ok(ImUrl::MindMapGenerateStream),
             "mindMapDelete" => Ok(ImUrl::MindMapDelete),
             "mindMapPage" => Ok(ImUrl::MindMapPage),
-            
+
             // ================ AI 音乐 ================
             "musicMyPage" => Ok(ImUrl::MusicMyPage),
             "musicGenerate" => Ok(ImUrl::MusicGenerate),
@@ -899,7 +921,7 @@ impl ImUrl {
             "musicPage" => Ok(ImUrl::MusicPage),
             "musicDelete" => Ok(ImUrl::MusicDelete),
             "musicUpdate" => Ok(ImUrl::MusicUpdate),
-            
+
             // ================ AI 工作流 ================
             "workflowCreate" => Ok(ImUrl::WorkflowCreate),
             "workflowUpdate" => Ok(ImUrl::WorkflowUpdate),
@@ -907,7 +929,7 @@ impl ImUrl {
             "workflowGet" => Ok(ImUrl::WorkflowGet),
             "workflowPage" => Ok(ImUrl::WorkflowPage),
             "workflowTest" => Ok(ImUrl::WorkflowTest),
-            
+
             // ================ AI 写作 ================
             "WriteGenerateStream" => Ok(ImUrl::WriteGenerateStream),
             "WriteDelete" => Ok(ImUrl::WriteDelete),

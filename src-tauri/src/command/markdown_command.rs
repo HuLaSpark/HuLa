@@ -156,10 +156,7 @@ pub async fn get_readme_html(app: AppHandle, language: String) -> Result<String,
         possible_paths.push(project_root.join(readme_filename));
 
         // 回退：src-tauri/docs 目录
-        possible_paths.push(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join(&readme_relative_path),
-        );
+        possible_paths.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&readme_relative_path));
     }
 
     #[cfg(not(dev))]

@@ -405,10 +405,11 @@ export const useGroupStore = defineStore(
      * @param roomId 群聊房间ID
      * @param forceRefresh 是否强制刷新，默认false
      */
-    const getGroupUserList = async (roomId: string, forceRefresh = false) => {
+    const getGroupUserList = async (roomId: string, forceRefresh = false, keyword = '') => {
+      const trimmedKeyword = keyword.trim()
       const cachedList = userListMap[roomId]
-      // 如果已经有缓存且不需要强制刷新，则直接返回
-      if (!forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
+
+      if (!trimmedKeyword && !forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
         return cachedList
       }
 
@@ -416,18 +417,19 @@ export const useGroupStore = defineStore(
         userListMap[roomId] = []
       }
 
-      const data: any = await ImRequestUtils.groupListMember(roomId)
+      const data = await ImRequestUtils.groupListMember(roomId, trimmedKeyword)
       if (!data) {
         userListOptions.loading = false
         return []
       }
 
-      // 将数据存储到Record中
-      userListMap[roomId] = data
       userListOptions.loading = false
 
-      // 更新缓存
-      updateMemberCache(roomId, data)
+      if (!trimmedKeyword) {
+        userListMap[roomId] = Array.isArray(data) ? [...data] : []
+        updateMemberCache(roomId, userListMap[roomId])
+      }
+
       return data
     }
 
@@ -459,48 +461,41 @@ export const useGroupStore = defineStore(
      */
     const updateUserItem = (uid: string, updates: Partial<UserItem>, roomId: string | 'all' = 'all'): boolean => {
       if (!uid || typeof uid !== 'string') {
-        console.warn('[updateUserItem] 无效的用户ID:', uid)
+        console.warn('[updateUserItem] invalid uid:', uid)
         return false
       }
 
       if (!updates || typeof updates !== 'object') {
-        console.warn('[updateUserItem] 无效的更新数据:', updates)
+        console.warn('[updateUserItem] invalid update payload:', updates)
         return false
       }
 
-      let updated = false
+      const refreshTargets = new Set<string>()
 
       if (roomId === 'all') {
-        // 更新所有房间中的该用户
-        Object.keys(userListMap).forEach((room) => {
-          const userList = userListMap[room] || []
-          const userIndex = userList.findIndex((user: UserItem) => user.uid === uid)
-          if (userIndex !== -1) {
-            const updatedList = [...userList]
-            updatedList[userIndex] = { ...updatedList[userIndex], ...updates }
-            userListMap[room] = updatedList
-            updated = true
-          }
+        getRoomIdsByUid(uid).forEach((room) => {
+          if (room) refreshTargets.add(room)
         })
       } else {
-        // 更新指定房间中的用户
-        const targetRoomId = roomId || globalStore.currentSession!.roomId
+        const targetRoomId = roomId || globalStore.currentSession?.roomId
         if (!targetRoomId) {
-          console.warn('[updateUserItem] 无法确定目标房间ID')
+          console.warn('[updateUserItem] cannot determine target room id')
           return false
         }
-
-        const currentUserList = userListMap[targetRoomId] || []
-        const userIndex = currentUserList.findIndex((user: UserItem) => user.uid === uid)
-        if (userIndex !== -1) {
-          const updatedList = [...currentUserList]
-          updatedList[userIndex] = { ...updatedList[userIndex], ...updates }
-          userListMap[targetRoomId] = updatedList
-          updated = true
-        }
+        refreshTargets.add(targetRoomId)
       }
 
-      return updated
+      if (refreshTargets.size === 0) {
+        return false
+      }
+
+      refreshTargets.forEach((roomId) => {
+        getGroupUserList(roomId, true).catch((error) => {
+          console.error('[group] refresh members failed:', error)
+        })
+      })
+
+      return true
     }
 
     /**
@@ -512,32 +507,21 @@ export const useGroupStore = defineStore(
      */
     const addUserItem = (userItem: UserItem, roomId?: string): boolean => {
       if (!userItem || typeof userItem !== 'object' || !userItem.uid) {
-        console.warn('[addUserItem] 无效的用户信息:', userItem)
+        console.warn('[addUserItem] invalid user info:', userItem)
         return false
       }
 
-      let added = false
-
-      // 添加到指定房间中
-      const targetRoomId = roomId || globalStore.currentSession!.roomId
+      const targetRoomId = roomId || globalStore.currentSession?.roomId
       if (!targetRoomId) {
-        console.warn('[addUserItem] 无法确定目标房间ID')
+        console.warn('[addUserItem] cannot determine target room id')
         return false
       }
 
-      const currentUserList = userListMap[targetRoomId] || []
+      getGroupUserList(targetRoomId, true).catch((error) => {
+        console.error('[group] refresh members failed:', error)
+      })
 
-      const existIndex = currentUserList.findIndex((user: UserItem) => user.uid === userItem.uid)
-
-      if (existIndex !== -1) {
-        currentUserList[existIndex] = userItem
-        added = true
-      } else {
-        currentUserList.push(userItem)
-        added = true
-      }
-
-      return added
+      return true
     }
 
     /**
@@ -548,29 +532,21 @@ export const useGroupStore = defineStore(
      */
     const removeUserItem = (uid: string, roomId?: string): boolean => {
       if (!uid || typeof uid !== 'string') {
-        console.warn('[removeUserItem] 无效的用户ID:', uid)
+        console.warn('[removeUserItem] invalid uid:', uid)
         return false
       }
 
-      let removed = false
-
-      // 从指定房间中移除
-      const targetRoomId = roomId || globalStore.currentSession!.roomId
+      const targetRoomId = roomId || globalStore.currentSession?.roomId
       if (!targetRoomId) {
-        console.warn('[removeUserItem] 无法确定目标房间ID')
+        console.warn('[removeUserItem] cannot determine target room id')
         return false
       }
 
-      const currentUserList = userListMap[targetRoomId] || []
-      const initialLength = currentUserList.length
-      const filteredList = currentUserList.filter((user: UserItem) => user.uid !== uid)
+      getGroupUserList(targetRoomId, true).catch((error) => {
+        console.error('[group] refresh members failed:', error)
+      })
 
-      if (filteredList.length < initialLength) {
-        userListMap[targetRoomId] = filteredList
-        removed = true
-      }
-
-      return removed
+      return true
     }
 
     /**

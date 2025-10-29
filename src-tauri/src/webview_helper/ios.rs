@@ -2,26 +2,25 @@ use std::{
     cell::RefCell,
     ptr::NonNull,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
 use objc2::{
-    define_class, msg_send,
+    DefinedClass, MainThreadMarker, MainThreadOnly, define_class, msg_send,
     rc::Retained,
     runtime::{AnyObject, ProtocolObject},
-    DefinedClass, MainThreadMarker, MainThreadOnly,
 };
 use objc2_core_foundation::{CGPoint, CGRect};
 use objc2_foundation::{
-    NSDictionary, NSNumber, NSNotification, NSNotificationCenter, NSNotificationName, NSObject,
+    NSDictionary, NSNotification, NSNotificationCenter, NSNotificationName, NSNumber, NSObject,
     NSObjectProtocol, NSString, NSTimeInterval, NSValue,
 };
 use objc2_ui_kit::{
-    UIKeyboardDidShowNotification, UIKeyboardWillHideNotification, UIKeyboardWillShowNotification,
-    UIScrollView, UIScrollViewContentInsetAdjustmentBehavior, UIScrollViewDelegate, UIWebView,
-    UIColor, UIView, UIViewAnimationOptions,
+    UIColor, UIKeyboardDidShowNotification, UIKeyboardWillHideNotification,
+    UIKeyboardWillShowNotification, UIScrollView, UIScrollViewContentInsetAdjustmentBehavior,
+    UIScrollViewDelegate, UIView, UIViewAnimationOptions, UIWebView,
 };
 use tauri::WebviewWindow;
 
@@ -56,8 +55,12 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
         let webview: &UIWebView = &*webview.inner().cast();
         let notification_center = NSNotificationCenter::defaultCenter();
         let main_thread = MainThreadMarker::from(webview);
-        let background_color =
-            UIColor::colorWithRed_green_blue_alpha(243.0 / 255.0, 251.0 / 255.0, 248.0 / 255.0, 1.0);
+        let background_color = UIColor::colorWithRed_green_blue_alpha(
+            243.0 / 255.0,
+            251.0 / 255.0,
+            248.0 / 255.0,
+            1.0,
+        );
 
         webview.setOpaque(false);
         webview.setBackgroundColor(Some(&background_color));
@@ -226,8 +229,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                 };
 
                 let curve_key = NSString::from_str("UIKeyboardAnimationCurveUserInfoKey");
-                let curve_value: *mut NSNumber =
-                    msg_send![user_info, objectForKey: &*curve_key];
+                let curve_value: *mut NSNumber = msg_send![user_info, objectForKey: &*curve_key];
                 let curve_bits = {
                     curve_value
                         .as_ref()
@@ -286,8 +288,8 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                         msg_send![notification, userInfo];
 
                     let duration_key = NSString::from_str("UIKeyboardAnimationDurationUserInfoKey");
-                        let duration_value: *mut NSNumber =
-                            msg_send![user_info, objectForKey: &*duration_key];
+                    let duration_value: *mut NSNumber =
+                        msg_send![user_info, objectForKey: &*duration_key];
                     let duration: NSTimeInterval = {
                         duration_value
                             .as_ref()
@@ -343,8 +345,7 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                     let _: () = msg_send![webview_ptr, endEditing: true];
 
                     unsafe {
-                        let scroll_view_ptr = (&**scroll_view_arc_observer)
-                            as *const UIScrollView
+                        let scroll_view_ptr = (&**scroll_view_arc_observer) as *const UIScrollView
                             as *mut UIScrollView;
                         let _: () = msg_send![
                             scroll_view_ptr,
@@ -391,7 +392,8 @@ pub fn initialize_keyboard_adjustment(webview_window: &WebviewWindow) {
                     return;
                 }
 
-                let user_info: *mut NSDictionary<NSString, AnyObject> = msg_send![notification, userInfo];
+                let user_info: *mut NSDictionary<NSString, AnyObject> =
+                    msg_send![notification, userInfo];
                 if user_info.is_null() {
                     return;
                 }
