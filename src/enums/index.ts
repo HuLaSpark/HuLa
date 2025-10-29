@@ -520,7 +520,9 @@ export enum TauriCommand {
   /** 移除 token */
   REMOVE_TOKENS = 'remove_tokens',
   /** 查询聊天历史记录 */
-  QUERY_CHAT_HISTORY = 'query_chat_history'
+  QUERY_CHAT_HISTORY = 'query_chat_history',
+  /** AI 消息流式发送 */
+  AI_MESSAGE_SEND_STREAM = 'ai_message_send_stream'
 }
 
 // 通话状态枚举

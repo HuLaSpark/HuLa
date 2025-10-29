@@ -362,6 +362,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
+    use crate::command::ai_command::ai_message_send_stream;
     use crate::command::markdown_command::{get_readme_html, parse_markdown};
     #[cfg(mobile)]
     use crate::command::set_complete;
@@ -448,6 +449,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         im_request_command,
         get_settings,
         update_settings,
+        // AI 相关命令
+        ai_message_send_stream,
         // Markdown 相关命令
         parse_markdown,
         get_readme_html,
