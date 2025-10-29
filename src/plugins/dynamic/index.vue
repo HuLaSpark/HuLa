@@ -1,6 +1,6 @@
 <template>
   <main class="size-full rounded-8px bg-white">
-    <!-- 重写的头像栏 -->
+    <!-- 头像栏 -->
     <div class="flex flex-col h-32vh relative">
       <div class="flex h-95% w-full relative">
         <ActionBar
@@ -30,7 +30,7 @@
               </n-popover>
             </div>
 
-            <div class="cursor-pointer">
+            <div class="cursor-pointer" @click="handleRefresh">
               <n-popover trigger="hover">
                 <template #trigger>
                   <svg class="size-20px color-white iconpark-icon"><use href="#refresh"></use></svg>
@@ -58,150 +58,24 @@
     <!-- 动态列表 -->
     <div class="flex flex-col items-center px-20px h-full mt-15px">
       <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 184px)" class="w-full rounded-b-8px">
-        <!-- 加载状态 -->
-        <div v-if="feedOptions.isLoading" class="flex justify-center items-center py-20px">
-          <n-spin size="large" />
-        </div>
-
-        <!-- 空状态 -->
-        <div v-else-if="dynamicList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-          暂无动态，快去发布第一条吧！
-        </div>
-
-        <!-- 动态内容 -->
-        <div v-else class="w-full">
-          <div
-            v-for="(item, index) in dynamicList"
-            :key="item.id"
-            class="w-full bg-white mb-10px p-10px box-border cursor-pointer hover:bg-#f5f5f5 transition-colors duration-200">
-            <!-- 主要内容区域 -->
-            <div class="flex items-start gap-12px">
-              <!-- 左侧：头像 -->
-              <div class="flex-shrink-0">
-                <n-avatar :size="42" round :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
-              </div>
-
-              <!-- 右侧：内容区域 -->
-              <div class="flex-1 min-w-0">
-                <!-- 用户名 -->
-                <div class="flex items-center gap-6px mb-8px">
-                  <span class="text-15px font-500 text-#576b95 cursor-pointer hover:underline">
-                    {{ userStore.userInfo!.name }}
-                  </span>
-                  <n-popover trigger="hover" v-if="item.author?.isAuth">
-                    <template #trigger>
-                      <svg class="size-14px color-#13987f">
-                        <use href="#auth"></use>
-                      </svg>
-                    </template>
-                    <span>认证用户</span>
-                  </n-popover>
-                </div>
-
-                <!-- 动态内容 -->
-                <div class="text-15px text-#000 mb-10px">
-                  {{ item.content }}
-                </div>
-
-                <!-- 图片区域 -->
-                <div v-if="item.images && item.images.length > 0" class="mb-10px">
-                  <!-- 单张图片 -->
-                  <div v-if="item.images.length === 1" class="inline-block">
-                    <n-image
-                      :src="item.images[0]"
-                      alt="图片"
-                      width="200px"
-                      height="200px"
-                      object-fit="cover"
-                      class="rounded-4px cursor-pointer"
-                      @click.stop="previewImage(item.images, 0)" />
-                  </div>
-                  <!-- 多张图片 - 九宫格布局 -->
-                  <div
-                    v-else
-                    class="grid gap-4px"
-                    :class="[
-                      item.images.length === 2
-                        ? 'grid-cols-2'
-                        : item.images.length === 4
-                          ? 'grid-cols-2'
-                          : 'grid-cols-3'
-                    ]"
-                    style="max-width: 420px">
-                    <n-image
-                      v-for="(img, idx) in item.images.slice(0, 9)"
-                      :key="idx"
-                      :src="img"
-                      alt="图片"
-                      width="136px"
-                      height="136px"
-                      object-fit="cover"
-                      class="rounded-4px cursor-pointer"
-                      @click.stop="previewImage(item.images, idx)" />
-                  </div>
-                </div>
-
-                <!-- 视频区域 -->
-                <div v-else-if="item.videoUrl" class="mb-10px inline-block relative">
-                  <n-image
-                    :src="item.videoUrl"
-                    alt="视频"
-                    width="200px"
-                    height="200px"
-                    object-fit="cover"
-                    class="rounded-4px cursor-pointer"
-                    @click.stop="handleVideoPlay(item.videoUrl)" />
-                  <!-- 播放图标 -->
-                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="w-48px h-48px rounded-full bg-black/50 flex items-center justify-center">
-                      <svg class="size-24px color-white">
-                        <use href="#play"></use>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 底部信息：时间和操作 -->
-                <div class="flex items-center justify-between mt-15px">
-                  <span class="text-13px text-#999">{{ formatTime(item.createTime!) }}</span>
-
-                  <div class="flex items-center gap-16px">
-                    <!-- 评论按钮 -->
-                    <!-- <div
-                      class="flex items-center gap-4px cursor-pointer text-#999 hover:text-#576b95 transition-colors"
-                      @click.stop="handleComment(item)">
-                      <svg class="size-16px">
-                        <use href="#comment"></use>
-                      </svg>
-                      <span class="text-13px">{{ item.commentCount || 0 }}</span>
-                    </div> -->
-
-                    <!-- 更多操作 -->
-                    <div class="bg-gray-100 rounded-5px py-2px px-5px">
-                      <n-dropdown class="" :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
-                        <div class="cursor-pointer text-#999 hover:text-#576b95 transition-colors" @click.stop>
-                          <svg class="size-16px">
-                            <use href="#more"></use>
-                          </svg>
-                        </div>
-                      </n-dropdown>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 灰色线 -->
-            <div v-if="index !== dynamicList.length - 1" class="w-full h-1px bg-gray-100 mt-20px"></div>
-          </div>
-        </div>
-
-        <!-- 加载更多 -->
-        <div v-if="!feedOptions.isLast" class="flex justify-center py-15px bg-white">
-          <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text>
-            {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-          </n-button>
-        </div>
+        <DynamicList
+          mode="pc"
+          :avatar-size="42"
+          item-class="w-full mb-10px p-10px box-border cursor-pointer hover:bg-#f5f5f5 transition-colors duration-200"
+          empty-text="暂无动态，快去发布第一条吧！"
+          :show-loaded-all="false"
+          :single-image-size="{ width: '200px', height: '200px' }"
+          :grid-image-size="{ width: '136px', height: '136px' }"
+          :video-size="{ width: '200px', height: '200px' }"
+          grid-max-width="max-width: 420px"
+          single-image-class="rounded-4px"
+          grid-image-class="rounded-4px"
+          video-class="rounded-4px"
+          play-icon-size="w-48px h-48px"
+          play-icon-inner-size="size-24px"
+          @preview-image="previewImage"
+          @video-play="handleVideoPlay"
+          @load-more="loadMore" />
       </n-scrollbar>
     </div>
 
@@ -390,12 +264,14 @@ import { ref, onMounted, computed } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
-import { useFeedStore, type FeedItem } from '@/stores/feed.ts'
+import { useFeedStore } from '@/stores/feed.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { formatTimestamp } from '@/utils/ComputedTime'
 import { useMessage } from 'naive-ui'
 import type { FriendItem } from '@/services/types'
 import { storeToRefs } from 'pinia'
+import DynamicList from '@/components/common/DynamicList.vue'
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
@@ -405,8 +281,7 @@ const message = useMessage()
 
 // 从store中获取响应式数据
 const {
-  feedList: dynamicList,
-  feedOptions
+  feedList: dynamicList
   //  feedStats
 } = storeToRefs(feedStore)
 
@@ -499,18 +374,9 @@ const enrichedSelectedUsers = computed(() => {
   })
 })
 
-// 格式化时间显示
+// 格式化时间显示（评论弹窗使用） - 使用项目统一的时间格式化函数
 const formatTime = (timestamp: number) => {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
-  if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`
-
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return formatTimestamp(timestamp)
 }
 
 /**
@@ -529,13 +395,6 @@ const fetchComments = async (_feedId: string) => {
     console.error('获取评论失败:', error)
   }
 }
-
-// 评论操作
-// const handleComment = async (feed: FeedItem) => {
-//   currentFeedId.value = feed.id
-//   await fetchComments(feed.id)
-//   showCommentModal.value = true
-// }
 
 // 提交评论（由于接口不存在，暂时为空实现）
 const submitComment = async () => {
@@ -559,54 +418,6 @@ const submitComment = async () => {
   }
 }
 
-// 更多操作选项
-const getMoreOptions = (feed: FeedItem) => {
-  const options = [
-    {
-      label: '复制链接',
-      key: 'copy'
-    },
-    {
-      label: '举报',
-      key: 'report'
-    }
-  ]
-
-  // 如果是自己的动态，添加删除选项
-  if (feed.author?.id === userStore.userInfo!.uid) {
-    options.unshift({
-      label: '删除动态',
-      key: 'delete'
-    })
-  }
-
-  return options
-}
-
-// 处理更多操作
-const handleMoreAction = async (feed: FeedItem, action: string) => {
-  switch (action) {
-    case 'delete':
-      try {
-        await feedStore.deleteFeed(feed.id)
-        message.success('删除成功')
-      } catch (error) {
-        console.error('删除动态失败:', error)
-        message.error('删除失败，请重试')
-      }
-      break
-    case 'copy':
-      // 复制链接逻辑
-      navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
-      message.success('链接已复制')
-      break
-    case 'report':
-      // 举报逻辑
-      message.info('举报功能开发中')
-      break
-  }
-}
-
 // 图片预览
 const previewImage = (images: string[], index: number) => {
   // 实现图片预览逻辑
@@ -622,6 +433,17 @@ const handleVideoPlay = (url: string) => {
 // 处理信息提示
 const handleInfoTip = () => {
   showCommentModal.value = true
+}
+
+// 处理刷新
+const handleRefresh = async () => {
+  try {
+    await feedStore.refresh()
+    message.success('刷新成功')
+  } catch (error) {
+    console.error('刷新动态失败:', error)
+    message.error('刷新失败，请重试')
+  }
 }
 
 // 权限选择相关方法

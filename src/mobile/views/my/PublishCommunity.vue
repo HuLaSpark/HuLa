@@ -195,6 +195,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import type { FriendItem } from '@/services/types'
+import 'vant/lib/index.css' // Vant UI 样式
 
 const router = useRouter()
 const feedStore = useFeedStore()
@@ -318,19 +319,13 @@ const handlePublish = async () => {
     // 调用 store 的发布方法，会自动刷新列表
     await feedStore.publishFeed(feedData)
 
-    showToast({
-      message: '发布成功！',
-      icon: 'success'
-    })
+    showToast('发布成功！')
 
     // 返回上一页
     router.back()
   } catch (error) {
     console.error('发布动态失败:', error)
-    showToast({
-      message: '发布失败，请稍后重试',
-      icon: 'fail'
-    })
+    showToast('发布失败，请稍后重试')
   } finally {
     isPublishing.value = false
   }

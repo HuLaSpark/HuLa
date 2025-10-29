@@ -10,11 +10,7 @@
       <!-- 中间：两行内容 -->
       <div class="truncate pl-4 flex gap-10px flex-col">
         <div class="text-14px leading-tight font-bold flex-1 truncate text-#333 flex items-center gap-2">
-          <span>{{ feedItem.author?.name || '未知用户' }}</span>
-          <!-- 认证标识 -->
-          <svg v-if="feedItem.author?.isAuth" class="w-16px h-16px color-#13987f flex-shrink-0">
-            <use href="#auth"></use>
-          </svg>
+          <span>{{ userName }}</span>
         </div>
         <div class="text-12px text-#666 truncate">{{ formatTime(feedItem.createTime) }}</div>
       </div>
@@ -31,9 +27,9 @@
         </div>
 
         <!-- 图片网格 - 根据图片数量动态调整 -->
-        <div v-if="feedItem.images && feedItem.images.length > 0" :class="getImageGridClass(feedItem.images.length)">
+        <div v-if="feedItem.urls && feedItem.urls.length > 0" :class="getImageGridClass(feedItem.urls.length)">
           <div
-            v-for="(image, index) in feedItem.images"
+            v-for="(image, index) in feedItem.urls"
             :key="index"
             class="relative w-full aspect-square rounded-10px mask-rounded overflow-hidden"
             @click="handleImageClick(index)">
@@ -65,7 +61,9 @@
           <!-- 评论 -->
           <div class="flex items-center gap-1 cursor-pointer active:opacity-60" @click="handleComment">
             <svg class="iconpark-icon w-20px h-20px"><use href="#huifu"></use></svg>
-            <span v-if="feedItem.commentCount > 0">{{ formatCount(feedItem.commentCount) }}</span>
+            <span v-if="feedItem.commentCount && feedItem.commentCount > 0">
+              {{ formatCount(feedItem.commentCount) }}
+            </span>
           </div>
 
           <!-- 点赞 -->
@@ -85,19 +83,38 @@
 import { computed, ref } from 'vue'
 import type { FeedItem } from '@/stores/feed'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useGroupStore } from '@/stores/group'
 
 interface Props {
   feedItem: FeedItem
 }
 
 const props = defineProps<Props>()
+const groupStore = useGroupStore()
 
 const isLiked = ref(false)
 const likeCount = ref(0)
 
-// 计算头像URL
+// 计算头像URL - 使用 uid 从 groupStore 获取用户信息
 const avatarUrl = computed(() => {
-  return AvatarUtils.getAvatarUrl(props.feedItem.author?.avatar || '')
+  if (props.feedItem.uid) {
+    const userInfo = groupStore.getUserInfo(props.feedItem.uid)
+    if (userInfo?.avatar) {
+      return AvatarUtils.getAvatarUrl(userInfo.avatar)
+    }
+  }
+  return AvatarUtils.getAvatarUrl('')
+})
+
+// 计算用户名称
+const userName = computed(() => {
+  if (props.feedItem.uid) {
+    const userInfo = groupStore.getUserInfo(props.feedItem.uid)
+    if (userInfo?.name || userInfo?.myName) {
+      return userInfo.name || userInfo.myName
+    }
+  }
+  return '未知用户'
 })
 
 // 格式化时间

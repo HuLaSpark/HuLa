@@ -10,69 +10,21 @@
     <div class="relative top-0 flex-1 flex">
       <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
       <!-- 动态内容 -->
-      <div ref="scrollContainer" :style="{ height: tabHeight + 'px' }" class="z-1 overflow-y-auto mt-2 absolute z-3">
+      <div
+        ref="scrollContainer"
+        :style="{ height: tabHeight + 'px' }"
+        class="z-1 overflow-y-auto mt-2 absolute z-3 w-full">
         <div class="custom-rounded bg-white flex px-24px flex-col gap-4 z-1 p-10px mt-4">
-          <CommunityTab
-            :style="{ height: tabHeight + 'px' }"
-            :custom-height="tabHeight - 44"
-            @scroll="handleScroll"
-            @update="onUpdate"
-            :options="tabOptions"
-            active-tab-name="find">
-            <template #find>
-              <!-- 加载状态 -->
-              <div
-                v-if="feedOptions.isLoading && feedList.length === 0"
-                class="flex justify-center items-center py-20px">
-                <n-spin size="large" />
-              </div>
-
-              <!-- 空状态 -->
-              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                暂无动态
-              </div>
-
-              <!-- 动态列表 -->
-              <template v-else>
-                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
-
-                <!-- 加载更多 -->
-                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                  </n-button>
-                </div>
-
-                <!-- 已加载全部 -->
-                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-              </template>
-            </template>
-
-            <template #follow>
-              <!-- 赞过的动态 - 暂时显示相同内容 -->
-              <div
-                v-if="feedOptions.isLoading && feedList.length === 0"
-                class="flex justify-center items-center py-20px">
-                <n-spin size="large" />
-              </div>
-
-              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                暂无赞过的动态
-              </div>
-
-              <template v-else>
-                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
-
-                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                  </n-button>
-                </div>
-
-                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-              </template>
-            </template>
-          </CommunityTab>
+          <n-scrollbar ref="scrollbarRef" :style="{ height: tabHeight + 'px' }" @scroll="handleScroll">
+            <!-- 动态内容区域 -->
+            <div class="py-12px">
+              <DynamicList
+                mode="mobile"
+                @preview-image="previewImage"
+                @video-play="handleVideoPlay"
+                @load-more="loadMore" />
+            </div>
+          </n-scrollbar>
         </div>
       </div>
     </div>
@@ -90,16 +42,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import CommunityContent from '#/components/community/CommunityContent.vue'
-import CommunityTab from '#/components/community/CommunityTab.vue'
 import PersonalInfo from '#/components/my/PersonalInfo.vue'
 import Settings from '#/components/my/Settings.vue'
 import router from '@/router'
 import { useFeedStore } from '@/stores/feed'
+import DynamicList from '@/components/common/DynamicList.vue'
 
 const feedStore = useFeedStore()
-const { feedList, feedOptions } = storeToRefs(feedStore)
 
 const measureRef = ref<HTMLDivElement>()
 
@@ -113,25 +62,21 @@ const toPublishCommunity = () => {
   router.push('/mobile/mobileMy/publishCommunity')
 }
 
-const onUpdate = (newTab: string) => {
-  console.log('已更新：', newTab)
-}
-
 const loadMore = async () => {
-  if (feedOptions.value.isLoading || feedOptions.value.isLast) return
   await feedStore.loadMore()
 }
 
-const tabOptions = reactive([
-  {
-    tab: '动态',
-    name: 'find'
-  },
-  {
-    tab: '赞过',
-    name: 'follow'
-  }
-])
+// 图片预览
+const previewImage = (images: string[], index: number) => {
+  console.log('预览图片:', images, index)
+  // TODO: 实现图片预览功能
+}
+
+// 视频播放
+const handleVideoPlay = (url: string) => {
+  console.log('播放视频:', url)
+  // TODO: 实现视频播放功能
+}
 
 const isShow = ref(true)
 
