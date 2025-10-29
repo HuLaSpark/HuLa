@@ -7,11 +7,13 @@ import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
 import { initializePlatform } from '@/utils/PlatformConstants'
+import { startWebVitalObserver } from '@/utils/WebVitalsObserver'
 import { invoke } from '@tauri-apps/api/core'
 import { isMobile } from '@/utils/PlatformConstants'
 import App from '@/App.vue'
 
 initializePlatform()
+startWebVitalObserver()
 import('@/services/webSocketAdapter')
 
 if (process.env.NODE_ENV === 'development') {

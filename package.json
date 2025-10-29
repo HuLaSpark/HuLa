@@ -132,7 +132,8 @@
     "vue-cropper": "1.1.4",
     "vue-demi": "0.14.10",
     "vue-router": "^4.6.3",
-    "vue-virtual-scroller": "2.0.0-beta.8"
+    "vue-virtual-scroller": "2.0.0-beta.8",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.7",

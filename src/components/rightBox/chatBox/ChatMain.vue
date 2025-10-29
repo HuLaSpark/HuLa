@@ -636,7 +636,6 @@ const handleChatAreaClick = (event: Event): void => {
 // 防冲突的加载更多处理
 const handleLoadMore = async (): Promise<void> => {
   // 如果正在加载、已经触发了加载、或已到达最后一页，则不重复触发
-  console.log(chatStore.currentMessageOptions)
   if (chatStore.currentMessageOptions?.isLoading || isLoadingMore.value || chatStore.currentMessageOptions?.isLast)
     return
 
