@@ -1,157 +1,120 @@
 <template>
-  <div class="flex flex-col h-full flex-1">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
-
-    <!-- 输入框 -->
-    <div class="px-16px mt-2 mb-12px z-1 flex gap-3 justify-around">
-      <n-input
-        id="search"
-        v-model:value="searchKeyword"
-        class="rounded-6px w-full bg-white relative text-12px"
-        :maxlength="20"
-        clearable
-        spellCheck="false"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        :placeholder="'搜索'"
-        @update:value="handleSearch">
-        <template #prefix>
-          <svg class="w-12px h-12px"><use href="#search"></use></svg>
-        </template>
-      </n-input>
-
-      <img @click="toScanQRCode" class="block w-32px h-32px" src="@/assets/mobile/community/scanner.webp" alt="" />
-    </div>
-
-    <!-- tab组件 -->
-    <div class="flex flex-1 z-1 relative">
-      <div ref="measureRef" class="flex flex-1"></div>
-      <div :style="{ height: communityTabHeight + 'px' }" class="absolute top-0 left-0 flex flex-col w-full">
-        <div class="flex flex-1 px-20px">
-          <CommunityTab
-            :customHeight="communityTabHeight - 44"
-            @update="onUpdate"
-            @scroll="handleScroll"
-            :options="tabOptions"
-            active-tab-name="find">
-            <template #find>
-              <!-- 加载状态 -->
-              <div
-                v-if="feedOptions.isLoading && feedList.length === 0"
-                class="flex justify-center items-center py-20px">
-                <n-spin size="large" />
-              </div>
-
-              <!-- 空状态 -->
-              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                暂无动态
-              </div>
-
-              <!-- 动态列表 -->
-              <template v-else>
-                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
-
-                <!-- 加载更多 -->
-                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                  </n-button>
-                </div>
-
-                <!-- 已加载全部 -->
-                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-              </template>
-            </template>
-
-            <template #follow>
-              <!-- 关注的动态列表 - 暂时显示相同内容 -->
-              <div
-                v-if="feedOptions.isLoading && feedList.length === 0"
-                class="flex justify-center items-center py-20px">
-                <n-spin size="large" />
-              </div>
-
-              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                暂无关注的动态
-              </div>
-
-              <template v-else>
-                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
-
-                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                  </n-button>
-                </div>
-
-                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-              </template>
-            </template>
-          </CommunityTab>
+  <div class="flex flex-col h-full flex-1 bg-white">
+    <!-- 动态列表区域 -->
+    <van-pull-refresh
+      class="flex-1 overflow-hidden"
+      :pull-distance="100"
+      :disabled="!isEnablePullRefresh"
+      v-model="loading"
+      @refresh="onRefresh">
+      <n-scrollbar ref="scrollbarRef" class="h-full" @scroll="handleScroll">
+        <!-- 图片区 -->
+        <div class="w-full h-30vh relative">
+          <div class="flex h-95% w-full relative">
+            <img
+              class="w-full h-full object-cover"
+              src="https://ts3.tc.mm.bing.net/th/id/OIP-C.ynSetSr3z884UC6sEp4yiwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
+              alt="" />
+          </div>
+          <div class="flex absolute right-20px bottom-0 gap-15px">
+            <div class="text-white items-center flex">
+              {{ userStore.userInfo?.name }}
+            </div>
+            <div>
+              <n-avatar :size="65" round bordered :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <!-- 动态内容区域 -->
+        <div class="px-12px py-12px">
+          <DynamicList
+            mode="mobile"
+            @preview-image="previewImage"
+            @video-play="handleVideoPlay"
+            @load-more="loadMore" />
+        </div>
+      </n-scrollbar>
+    </van-pull-refresh>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import CommunityContent from '#/components/community/CommunityContent.vue'
-import CommunityTab from '#/components/community/CommunityTab.vue'
-import router from '@/router'
 import { useFeedStore } from '@/stores/feed'
+import { useUserStore } from '@/stores/user'
+import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useMessage } from 'naive-ui'
+import { debounce, throttle } from 'lodash-es'
+import DynamicList from '@/components/common/DynamicList.vue'
 
 const feedStore = useFeedStore()
-const { feedList, feedOptions } = storeToRefs(feedStore)
+const userStore = useUserStore()
+const message = useMessage()
 
-const measureRef = ref<HTMLDivElement>()
-const communityTabHeight = ref(0)
-const searchKeyword = ref('')
-const currentTab = ref('find')
+const { feedOptions } = storeToRefs(feedStore)
 
-const measureElementObserver = new ResizeObserver((event) => {
-  communityTabHeight.value = event[0].contentRect.height
-})
+const scrollbarRef = ref()
+const loading = ref(false)
+const isEnablePullRefresh = ref(true) // 是否启用下拉刷新，现在设置为滚动到顶才启用
 
-onMounted(async () => {
-  if (measureRef.value) {
-    measureElementObserver.observe(measureRef.value)
-  }
+let scrollTop = 0 // 记住当前滑动到哪了
 
-  // 初始加载动态列表
-  await feedStore.getFeedList(true)
-})
+const enablePullRefresh = debounce((top: number) => {
+  isEnablePullRefresh.value = top === 0
+}, 100)
 
-onUnmounted(() => {
-  if (measureRef.value) {
-    measureElementObserver.unobserve(measureRef.value)
-  }
-})
+const disablePullRefresh = throttle(() => {
+  isEnablePullRefresh.value = false
+}, 80)
 
-const toScanQRCode = () => {
-  router.push('/mobile/mobileMy/scanQRCode')
+// 图片预览
+const previewImage = (images: string[], index: number) => {
+  console.log('预览图片:', images, index)
+  // TODO: 实现图片预览功能
 }
 
-const onUpdate = (newTab: string) => {
-  console.log('已更新：', newTab)
-  currentTab.value = newTab
-  // 切换tab时可以根据需要加载不同的数据
+// 视频播放
+const handleVideoPlay = (url: string) => {
+  console.log('播放视频:', url)
+  // TODO: 实现视频播放功能
 }
 
-const handleSearch = (value: string) => {
-  console.log('搜索：', value)
-  // TODO: 实现搜索功能
+// 下拉刷新
+const onRefresh = () => {
+  loading.value = true
+
+  const apiPromise = feedStore.refresh()
+  const delayPromise = new Promise((resolve) => setTimeout(resolve, 500))
+
+  Promise.all([apiPromise, delayPromise])
+    .then(() => {
+      loading.value = false
+      console.log('刷新完成')
+    })
+    .catch((error) => {
+      loading.value = false
+      console.log('刷新动态列表失败：', error)
+      message.error('刷新失败，请重试')
+    })
 }
 
+// 处理滚动
 const handleScroll = (event: any) => {
-  // 滚动到底部时自动加载更多
   const target = event.target
   if (!target) return
 
-  const scrollTop = target.scrollTop
+  scrollTop = target.scrollTop
   const scrollHeight = target.scrollHeight
   const clientHeight = target.clientHeight
+
+  // 控制下拉刷新的启用状态
+  if (scrollTop < 200) {
+    enablePullRefresh(scrollTop)
+  } else {
+    disablePullRefresh()
+  }
 
   // 距离底部100px时触发加载
   if (scrollHeight - scrollTop - clientHeight < 100) {
@@ -159,28 +122,23 @@ const handleScroll = (event: any) => {
   }
 }
 
+// 加载更多
 const loadMore = async () => {
   if (feedOptions.value.isLoading || feedOptions.value.isLast) return
   await feedStore.loadMore()
 }
 
-const tabOptions = reactive([
-  {
-    tab: '发现',
-    name: 'find'
-  },
-  {
-    tab: '关注',
-    name: 'follow'
-  }
-])
+// 初始化数据
+onMounted(async () => {
+  // 初始加载动态列表
+  await feedStore.getFeedList(true)
+})
+
+onUnmounted(() => {
+  // 清理工作
+})
 </script>
 
-<style scoped>
-.mask-rounded {
-  -webkit-mask-image: radial-gradient(circle, white 100%, transparent 100%);
-  mask-image: radial-gradient(circle, white 100%, transparent 100%);
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
-}
+<style scoped lang="scss">
+// 自定义样式
 </style>

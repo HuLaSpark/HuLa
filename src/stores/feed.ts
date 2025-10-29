@@ -8,21 +8,16 @@ import { feedList as getFeedListApi, pushFeed, delFeed, editFeed } from '@/utils
  * 管理动态列表、发布、删除、编辑等功能
  */
 
-// 朋友圈项类型定义
+// 朋友圈项类型定义（与后端返回的数据结构对齐）
 export interface FeedItem {
   id: string
   content: string
-  images?: string[]
+  urls?: string[] | null // 图片URL列表
   videoUrl?: string
   createTime?: number
-  commentCount: number
-  author: {
-    id: string
-    name: string
-    avatar: string
-    isAuth: boolean
-    signature?: string
-  }
+  createBy?: string // 创建者ID
+  uid: string // 用户ID
+  commentCount?: number
   mediaType?: 0 | 1 | 2 // 0-纯文本, 1-图片, 2-视频
   permission?: 'privacy' | 'open' | 'partVisible' | 'notAnyone'
 }
