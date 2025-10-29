@@ -15,14 +15,21 @@
           <use href="#settings"></use>
         </svg>
       </div>
+      <slot></slot>
       <!--  固定在最顶层  -->
       <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
         <n-popover trigger="hover">
           <template #trigger>
-            <svg v-if="alwaysOnTopStatus" class="size-14px color-[--action-bar-icon-color] outline-none cursor-pointer">
+            <svg
+              v-if="alwaysOnTopStatus"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+              class="size-14px outline-none cursor-pointer">
               <use href="#onTop"></use>
             </svg>
-            <svg v-else class="size-16px color-[--action-bar-icon-color] outline-none cursor-pointer">
+            <svg
+              v-else
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+              class="size-16px outline-none cursor-pointer">
               <use href="#notOnTop"></use>
             </svg>
           </template>
@@ -32,28 +39,40 @@
       </div>
       <!-- 收缩页面 -->
       <div v-if="shrink" @click="shrinkWindow" class="hover-box">
-        <svg class="size-16px color-[--action-bar-icon-color] cursor-pointer">
+        <svg
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-16px cursor-pointer">
           <use href="#left-bar"></use>
         </svg>
       </div>
       <!-- 最小化 -->
       <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
-        <svg class="size-24px color-[--action-bar-icon-color] opacity-66 cursor-pointer">
+        <svg
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-24px opacity-66 cursor-pointer">
           <use href="#maximize"></use>
         </svg>
       </div>
       <!-- 最大化 -->
       <div v-if="maxW" @click="restoreWindow" class="hover-box">
-        <svg v-show="!windowMaximized" class="size-18px color-[--action-bar-icon-color] cursor-pointer">
+        <svg
+          v-show="!windowMaximized"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-18px cursor-pointer">
           <use href="#rectangle-small"></use>
         </svg>
-        <svg v-show="windowMaximized" class="size-16px color-[--action-bar-icon-color] cursor-pointer">
+        <svg
+          v-show="windowMaximized"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-16px cursor-pointer">
           <use href="#internal-reduction"></use>
         </svg>
       </div>
       <!-- 关闭窗口 -->
       <div v-if="closeW" @click="handleCloseWin" :class="{ windowMaximized: 'rounded-rt-8px' }" class="action-close">
-        <svg class="size-14px color-[--action-bar-icon-color] cursor-pointer">
+        <svg
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-14px cursor-pointer">
           <use href="#close"></use>
         </svg>
       </div>
@@ -111,7 +130,8 @@ const {
   closeW = true,
   shrink = true,
   shrinkStatus = true,
-  isDrag = true
+  isDrag = true,
+  iconColor = ''
 } = defineProps<{
   minW?: boolean
   maxW?: boolean
@@ -122,6 +142,7 @@ const {
   shrinkStatus?: boolean
   proxy?: boolean
   isDrag?: boolean
+  iconColor?: string
 }>()
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore()
 const settingStore = useSettingStore()
