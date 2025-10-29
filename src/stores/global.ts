@@ -70,7 +70,10 @@ export const useGlobalStore = defineStore(
     const isTrayMenuShow = ref<boolean>(false)
 
     // home窗口位置、宽高信息
-    const homeWindowState = ref<{ width?: number; height?: number }>({})
+    const homeWindowState = ref<{ width?: number; height?: number }>({
+      width: 960,
+      height: 720
+    })
 
     // 设置提示框显示状态
     const setTipVisible = (visible: boolean) => {
