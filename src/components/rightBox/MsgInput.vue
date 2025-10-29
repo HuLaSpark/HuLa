@@ -1,222 +1,227 @@
 <template>
-  <!-- 录音模式 -->
-  <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
+  <div class="msg-input-container">
+    <!-- 录音模式 -->
+    <VoiceRecorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
 
-  <!-- 输入框表单 -->
-  <form
-    v-show="!isVoiceMode"
-    id="message-form"
-    @submit.prevent="handleFormSubmit"
-    :class="[isMobile() ? 'gap-10px ' : '']"
-    class="w-full flex flex-1 min-h-0">
-    <div
-      class="w-full flex"
-      :class="isMobile() ? 'flex flex-1 p-5px gap-2 pt-5px items-center min-h-2.25rem' : ' flex-col'">
-      <div v-if="isMobile()" class="flex items-center justify-center w-6 ms-5px h-2.5rem">
-        <svg
-          @click="handleVoiceClick"
-          :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
-          class="w-25px h-25px mt-2px outline-none">
-          <use href="#voice"></use>
-        </svg>
-      </div>
-
-      <ContextMenu class="w-full flex-1 min-h-0" @select="$event.click()" :menu="menuList">
-        <n-scrollbar @click="focusInput">
-          <div
-            id="message-input"
-            ref="messageInputDom"
-            :style="{
-              minHeight: isMobile() ? '2rem' : '36px',
-              lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
-              outline: 'none'
-            }"
-            contenteditable
-            spellcheck="false"
-            @paste="onPaste($event)"
-            @input="handleInput"
-            @keydown.exact.enter="inputKeyDown"
-            @keydown.exact.meta.enter="inputKeyDown"
-            @keydown="updateSelectionRange"
-            @keyup="updateSelectionRange"
-            @click="updateSelectionRange"
-            @blur="handleBlur"
-            @compositionend="updateSelectionRange"
-            @keydown.exact.ctrl.enter="inputKeyDown"
-            data-placeholder="善言一句暖人心，恶语一句伤人心"
-            :class="
-              isMobile()
-                ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
-                : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
-            "></div>
-        </n-scrollbar>
-      </ContextMenu>
-
-      <!-- 发送按钮 -->
+    <!-- 输入框表单 -->
+    <form
+      v-show="!isVoiceMode"
+      id="message-form"
+      @submit.prevent="handleFormSubmit"
+      :class="[isMobile() ? 'gap-10px ' : '']"
+      class="w-full flex flex-1 min-h-0">
       <div
-        v-if="!isMobile()"
-        class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex justify-end mb-4px">
-        <n-config-provider :theme="lightTheme">
-          <n-button-group size="small">
-            <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="send">发送</n-button>
-            <n-button color="#13987f" class="p-[0_6px]">
-              <template #icon>
-                <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
-                  <n-popselect
-                    v-model:show="arrow"
-                    v-model:value="chatKey"
-                    :options="sendOptions"
-                    trigger="click"
-                    placement="top-end">
-                    <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
-                      <use href="#down"></use>
-                    </svg>
-                    <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
-                      <use href="#up"></use>
-                    </svg>
-                    <template #action>
-                      <n-flex
-                        justify="center"
-                        align="center"
-                        :size="4"
-                        class="text-(12px #777) cursor-default tracking-1 select-none">
-                        <span v-if="chatKey !== 'Enter'">
-                          {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
-                        </span>
-                        <svg class="size-12px">
-                          <use href="#Enter"></use>
-                        </svg>
-                        发送 /
-                        <n-flex v-if="chatKey !== 'Enter'" align="center" :size="6">
-                          <svg class="size-12px">
-                            <use href="#Enter"></use>
-                          </svg>
-                          <p>或</p>
-                        </n-flex>
-                        <n-flex align="center" :size="0">
-                          {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
-                          <svg class="size-12px">
-                            <use href="#Enter"></use>
-                          </svg>
-                        </n-flex>
-                        换行
-                      </n-flex>
-                    </template>
-                  </n-popselect>
-                </n-config-provider>
-              </template>
-            </n-button>
-          </n-button-group>
-        </n-config-provider>
-      </div>
-
-      <!-- @提及框  -->
-      <div v-if="ait && activeItem?.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
-        <n-virtual-list
-          id="image-chat-ait"
-          ref="virtualListInst-ait"
-          style="max-height: 180px"
-          :item-size="36"
-          :items="personList"
-          v-model:selectedKey="selectedAitKey">
-          <template #default="{ item }">
-            <n-flex
-              @mouseover="() => (selectedAitKey = item.uid)"
-              :class="{ active: selectedAitKey === item.uid }"
-              @click="handleAit(item)"
-              :key="item.uid"
-              align="center"
-              class="ait-item">
-              <n-avatar
-                lazy
-                round
-                :size="22"
-                :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
-                :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-                :render-placeholder="() => null"
-                :intersection-observer-options="{
-                  root: '#image-chat-ait'
-                }" />
-              <span>{{ item.myName || item.name }}</span>
-            </n-flex>
-          </template>
-        </n-virtual-list>
-      </div>
-
-      <!-- / 提及框  -->
-      <div
-        v-if="aiDialogVisible && activeItem?.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
-        class="AI-options">
-        <n-virtual-list
-          ref="virtualListInst-AI"
-          style="max-height: 180px"
-          :item-size="36"
-          :items="groupedAIModels"
-          v-model:selectedKey="selectedAIKey">
-          <template #default="{ item }">
-            <n-flex
-              @mouseover="() => (selectedAIKey = item.uid)"
-              :class="{ active: selectedAIKey === item.uid }"
-              @click="handleAI(item)"
-              align="center"
-              class="AI-item">
-              <n-flex align="center" justify="space-between" class="w-full pr-6px">
-                <n-flex align="center">
-                  <img class="size-18px object-contain" :src="item.avatar" alt="" />
-                  <p class="text-(14px [--chat-text-color])">{{ item.name }}</p>
-                </n-flex>
-
-                <n-flex align="center" :size="6">
-                  <div class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-6px text-(11px [--bate-color] center)">
-                    Beta
-                  </div>
-                  <n-tag size="small" class="text-10px" :bordered="false" type="success">128k</n-tag>
-                </n-flex>
-              </n-flex>
-            </n-flex>
-          </template>
-        </n-virtual-list>
-      </div>
-
-      <div
-        v-if="isMobile()"
-        class="grid gap-2 h-2.5rem items-center"
-        :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
-        <div class="w-full flex-center h-full">
-          <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
-            <use :href="iconClickedStates.isClickedEmoji ? '#face' : '#smiling-face'"></use>
+        class="w-full flex"
+        :class="isMobile() ? 'flex flex-1 p-5px gap-2 pt-5px items-center min-h-2.25rem' : ' flex-col'">
+        <div v-if="isMobile()" class="flex items-center justify-center w-6 ms-5px h-2.5rem">
+          <svg
+            @click="handleVoiceClick"
+            :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
+            class="w-25px h-25px mt-2px outline-none">
+            <use href="#voice"></use>
           </svg>
         </div>
+
+        <ContextMenu class="w-full flex-1 min-h-0" @select="$event.click()" :menu="menuList">
+          <n-scrollbar @click="focusInput">
+            <div
+              id="message-input"
+              ref="messageInputDom"
+              :style="{
+                minHeight: isMobile() ? '2rem' : '36px',
+                lineHeight: isMobile() && !msgInput ? '2rem' : '20px',
+                outline: 'none'
+              }"
+              contenteditable
+              spellcheck="false"
+              @paste="onPaste($event)"
+              @input="handleInternalInput"
+              @keydown.exact.enter="handleEnterKey"
+              @keydown.exact.meta.enter="handleEnterKey"
+              @keydown="updateSelectionRange"
+              @keyup="updateSelectionRange"
+              @click="updateSelectionRange"
+              @blur="handleBlur"
+              @compositionend="updateSelectionRange"
+              @keydown.exact.ctrl.enter="handleEnterKey"
+              data-placeholder="善言一句暖人心，恶语一句伤人心"
+              :class="
+                isMobile()
+                  ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
+                  : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
+              "></div>
+          </n-scrollbar>
+        </ContextMenu>
+
+        <!-- 发送按钮 -->
         <div
-          v-if="msgInput"
-          class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
-          <n-config-provider class="h-full" :theme="lightTheme">
-            <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
-              <n-button color="#13987f" :disabled="disabledSend" class="w-3rem h-full" @click="handleMobileSend">
+          v-if="!isMobile()"
+          class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex justify-end mb-4px">
+          <n-config-provider :theme="lightTheme">
+            <n-button-group size="small">
+              <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="handleDesktopSend">
                 发送
+              </n-button>
+              <n-button color="#13987f" class="p-[0_6px]">
+                <template #icon>
+                  <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
+                    <n-popselect
+                      v-model:show="arrow"
+                      v-model:value="chatKey"
+                      :options="sendOptions"
+                      trigger="click"
+                      placement="top-end">
+                      <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
+                        <use href="#down"></use>
+                      </svg>
+                      <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
+                        <use href="#up"></use>
+                      </svg>
+                      <template #action>
+                        <n-flex
+                          justify="center"
+                          align="center"
+                          :size="4"
+                          class="text-(12px #777) cursor-default tracking-1 select-none">
+                          <span v-if="chatKey !== 'Enter'">
+                            {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
+                          </span>
+                          <svg class="size-12px">
+                            <use href="#Enter"></use>
+                          </svg>
+                          发送 /
+                          <n-flex v-if="chatKey !== 'Enter'" align="center" :size="6">
+                            <svg class="size-12px">
+                              <use href="#Enter"></use>
+                            </svg>
+                            <p>或</p>
+                          </n-flex>
+                          <n-flex align="center" :size="0">
+                            {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
+                            <svg class="size-12px">
+                              <use href="#Enter"></use>
+                            </svg>
+                          </n-flex>
+                          换行
+                        </n-flex>
+                      </template>
+                    </n-popselect>
+                  </n-config-provider>
+                </template>
               </n-button>
             </n-button-group>
           </n-config-provider>
         </div>
-        <div v-if="!msgInput" class="flex items-center justify-start h-full">
-          <svg
-            @click="handleMoreClick"
-            :class="iconClickedStates.isClickedMore ? 'rotate-45' : 'rotate-0'"
-            class="w-25px h-25px mt-2px outline-none iconpark-icon transition-transform duration-300 ease">
-            <use href="#add-one"></use>
-          </svg>
+
+        <!-- @提及框  -->
+        <div v-if="ait && activeItem?.type === RoomTypeEnum.GROUP && personList.length > 0" class="ait-options">
+          <n-virtual-list
+            id="image-chat-ait"
+            ref="virtualListInst-ait"
+            style="max-height: 180px"
+            :item-size="36"
+            :items="personList"
+            v-model:selectedKey="selectedAitKey">
+            <template #default="{ item }">
+              <n-flex
+                @mouseover="() => (selectedAitKey = item.uid)"
+                :class="{ active: selectedAitKey === item.uid }"
+                @click="handleAit(item)"
+                :key="item.uid"
+                align="center"
+                class="ait-item">
+                <n-avatar
+                  lazy
+                  round
+                  :size="22"
+                  :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                  :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+                  :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+                  :render-placeholder="() => null"
+                  :intersection-observer-options="{
+                    root: '#image-chat-ait'
+                  }" />
+                <span>{{ item.myName || item.name }}</span>
+              </n-flex>
+            </template>
+          </n-virtual-list>
+        </div>
+
+        <!-- / 提及框  -->
+        <div
+          v-if="aiDialogVisible && activeItem?.type === RoomTypeEnum.GROUP && groupedAIModels.length > 0"
+          class="AI-options">
+          <n-virtual-list
+            ref="virtualListInst-AI"
+            style="max-height: 180px"
+            :item-size="36"
+            :items="groupedAIModels"
+            v-model:selectedKey="selectedAIKey">
+            <template #default="{ item }">
+              <n-flex
+                @mouseover="() => (selectedAIKey = item.uid)"
+                :class="{ active: selectedAIKey === item.uid }"
+                @click="handleAI(item)"
+                align="center"
+                class="AI-item">
+                <n-flex align="center" justify="space-between" class="w-full pr-6px">
+                  <n-flex align="center">
+                    <img class="size-18px object-contain" :src="item.avatar" alt="" />
+                    <p class="text-(14px [--chat-text-color])">{{ item.name }}</p>
+                  </n-flex>
+
+                  <n-flex align="center" :size="6">
+                    <div
+                      class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-6px text-(11px [--bate-color] center)">
+                      Beta
+                    </div>
+                    <n-tag size="small" class="text-10px" :bordered="false" type="success">128k</n-tag>
+                  </n-flex>
+                </n-flex>
+              </n-flex>
+            </template>
+          </n-virtual-list>
+        </div>
+
+        <div
+          v-if="isMobile()"
+          class="grid gap-2 h-2.5rem items-center"
+          :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
+          <div class="w-full flex-center h-full">
+            <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
+              <use :href="iconClickedStates.isClickedEmoji ? '#face' : '#smiling-face'"></use>
+            </svg>
+          </div>
+          <div
+            v-if="msgInput"
+            class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
+            <n-config-provider class="h-full" :theme="lightTheme">
+              <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
+                <n-button color="#13987f" :disabled="disabledSend" class="w-3rem h-full" @click="handleMobileSend">
+                  发送
+                </n-button>
+              </n-button-group>
+            </n-config-provider>
+          </div>
+          <div v-if="!msgInput" class="flex items-center justify-start h-full">
+            <svg
+              @click="handleMoreClick"
+              :class="iconClickedStates.isClickedMore ? 'rotate-45' : 'rotate-0'"
+              class="w-25px h-25px mt-2px outline-none iconpark-icon transition-transform duration-300 ease">
+              <use href="#add-one"></use>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
-  </form>
+    </form>
 
-  <!-- 文件上传弹窗 -->
-  <FileUploadModal
-    v-model:show="showFileModal"
-    :files="pendingFiles"
-    @confirm="handleFileConfirm"
-    @cancel="handleFileCancel" />
+    <!-- 文件上传弹窗 -->
+    <FileUploadModal
+      v-model:show="showFileModal"
+      :files="pendingFiles"
+      @confirm="handleFileConfirm"
+      @cancel="handleFileCancel" />
+  </div>
 </template>
 <script setup lang="ts">
 import { emit } from '@tauri-apps/api/event'
@@ -235,6 +240,13 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useGroupStore } from '@/stores/group'
+interface Props {
+  isAIMode?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isAIMode: false
+})
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
@@ -282,15 +294,6 @@ const {
   focusOn,
   getCursorSelectionRange
 } = useMsgInput(messageInputDom)
-
-/** 移动端专用适配变量（开始） */
-// const isFocus = ref(false) // 当前是否聚焦
-
-// const isClickedVoice = ref(false)
-// const isClickedEmoji = ref(false)
-// const isClickedMore = ref(false)
-
-/** 移动端专用适配变量（结束） */
 
 /** 表单提交处理函数 */
 const handleFormSubmit = async (e: Event) => {
@@ -343,6 +346,10 @@ watch(personList, (newList) => {
 //     selectedAIKey.value = newList[0].uid
 //   }
 // })
+const handleInternalInput = (e: Event) => {
+  handleInput(e)
+  selfEmitter('input', e)
+}
 
 // 显示文件弹窗的回调函数
 const showFileModalCallback = (files: File[]) => {
@@ -417,21 +424,6 @@ const handleVoiceCancel = () => {
   isVoiceMode.value = false
 }
 
-// /** 导出组件方法和属性 */
-// defineExpose({
-//   messageInputDom,
-//   getLastEditRange: () => getCursorSelectionRange(),
-//   updateSelectionRange,
-//   focus,
-//   showFileModal: showFileModalCallback,
-//   exitVoiceMode,
-//   isVoiceMode: readonly(isVoiceMode),
-//   handleLocationSelected,
-//   handleVoiceCancel
-// })
-
-/** 移动端专用适配事件（开始） */
-
 // 记录当前点击状态
 const iconClickedStates = ref({
   isClickedMore: false,
@@ -440,13 +432,33 @@ const iconClickedStates = ref({
   isFocus: false
 })
 
+// 定义公共类型
+interface ClickState {
+  isClickedMore: boolean
+  isClickedEmoji: boolean
+  isClickedVoice: boolean
+  isFocus: boolean
+}
+
+interface AISendData {
+  content: string
+}
+
 /**
  * 自定义事件
  * clickMore: 点击更多按钮
  * clickEmoji: 点击表情按钮
  * clickVoice: 点击语音按钮
  */
-const selfEmitter = defineEmits(['clickMore', 'clickEmoji', 'clickVoice', 'customFocus', 'send'])
+const selfEmitter = defineEmits<{
+  (e: 'clickMore', data: ClickState): void
+  (e: 'clickEmoji', data: ClickState): void
+  (e: 'clickVoice', data: ClickState): void
+  (e: 'customFocus', data: ClickState): void
+  (e: 'send', data: ClickState): void
+  (e: 'input', event: Event): void
+  (e: 'send-ai', data: AISendData): void
+}>()
 
 /** 设置聚焦状态 */
 const setIsFocus = (value: boolean) => {
@@ -505,13 +517,100 @@ const handleVoiceClick = () => {
   })
 }
 
+const getInputContent = (): string => {
+  if (messageInputDom.value) {
+    return messageInputDom.value.textContent?.trim() || ''
+  }
+  return ''
+}
+
+/**
+ * 判断逻辑：
+ * 1. 如果有选中的AI模型 -> AI发送 [暂不实现]
+ * 2. 如果当前是AI对话模式 -> AI发送
+ * 3. 默认 -> IM发送
+ */
+const determineSendType = (): 'ai' | 'im' => {
+  if (props.isAIMode) {
+    return 'ai'
+  }
+  return 'im'
+}
+
+// 手机端发送逻辑
 const handleMobileSend = async () => {
-  await send()
-  selfEmitter('send', iconClickedStates.value)
+  const content = getInputContent()
+  if (!content.trim()) {
+    window.$message.warning('请输入消息内容')
+    return
+  }
+
+  if (determineSendType() === 'ai') {
+    await handleAISend()
+  } else {
+    await send()
+  }
+
+  // 这个事件也需要正确的类型
+  selfEmitter('send', {
+    isClickedMore: iconClickedStates.value.isClickedMore,
+    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
+    isClickedVoice: iconClickedStates.value.isClickedVoice,
+    isFocus: iconClickedStates.value.isFocus
+  })
 
   // 移动端发送消息后重新聚焦输入框
   if (isMobile()) {
     focusInput()
+  }
+}
+
+// 清空输入框
+const clearInput = () => {
+  if (messageInputDom.value) {
+    messageInputDom.value.textContent = ''
+    // 触发输入事件更新状态
+    const event = new Event('input', { bubbles: true })
+    messageInputDom.value.dispatchEvent(event)
+  }
+}
+
+// AI发送逻辑
+const handleAISend = async () => {
+  const content = getInputContent()
+  if (!content.trim()) {
+    window.$message.warning('请输入消息内容')
+    return
+  }
+
+  selfEmitter('send-ai', {
+    content: content
+  })
+  clearInput()
+}
+
+// 桌面端发送逻辑
+const handleDesktopSend = async () => {
+  const content = getInputContent()
+  if (!content.trim()) {
+    window.$message.warning('请输入消息内容')
+    return
+  }
+
+  if (determineSendType() === 'ai') {
+    await handleAISend()
+  } else {
+    await send()
+  }
+}
+
+const handleEnterKey = (e: KeyboardEvent) => {
+  if (determineSendType() === 'ai') {
+    e.preventDefault()
+    e.stopPropagation()
+    handleAISend()
+  } else {
+    inputKeyDown(e)
   }
 }
 
@@ -641,8 +740,22 @@ onUnmounted(() => {
     removeMobileClosePanel()
   }
 })
+
+watch(
+  () => props.isAIMode,
+  (newValue) => {
+    console.log('AI模式状态变化:', newValue)
+    if (!newValue) {
+      selectedAIKey.value = null
+    }
+  }
+)
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/scss/msg-input';
+// 传递 props 到子组件是新增了一个div 适配样式
+.msg-input-container {
+  display: contents;
+}
 </style>

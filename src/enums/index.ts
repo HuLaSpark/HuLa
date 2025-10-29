@@ -741,13 +741,15 @@ export enum ImUrlEnum {
   /** 获取指定会话消息列表 */
   MESSAGE_LIST_BY_CONVERSATION_ID = 'messageListByConversationId',
   /** 获取会话消息列表 */
-  CONVERSATION_MY_LIST = 'conversationMyList',
+  CONVERSATION_PAGE = 'conversationPage',
   /** 获得【我的】聊天对话 */
   CONVERSATION_GET_MY = 'conversationGetMy',
   /** 创建会话 */
   CONVERSATION_CREATE_MY = 'conversationCreateMy',
   /** 删除会话 */
-  CONVERSATION_DELETE_MY = 'conversationDeleteMy'
+  CONVERSATION_DELETE_MY = 'conversationDeleteMy',
+  /** 模型页面 */
+  MODEL_PAGE = 'modelPage'
 }
 
 // 滚动意图管理枚举

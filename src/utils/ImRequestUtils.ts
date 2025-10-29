@@ -710,10 +710,10 @@ export async function getFeedPermission(params: { feedId: string }) {
 }
 
 // 发送AI消息（流式）
-export async function messageSendStream(params: { conversationId: string; content: string; useContext?: boolean }) {
+export async function messageSendStream(body: { conversationId: string; content: string; useContext?: boolean }) {
   return await imRequest({
     url: ImUrlEnum.MESSAGE_SEND_STREAM,
-    params
+    body
   })
 }
 
@@ -730,9 +730,9 @@ export async function messageListByConversationId(params: {
 }
 
 // 获取会话列表（我的）
-export async function conversationMyList(params?: { pageNo?: number; pageSize?: number }) {
+export async function conversationPage(params?: { pageNo?: number; pageSize?: number }) {
   return await imRequest({
-    url: ImUrlEnum.CONVERSATION_MY_LIST,
+    url: ImUrlEnum.CONVERSATION_PAGE,
     params
   })
 }
@@ -757,6 +757,14 @@ export async function conversationCreateMy(params: { roleId?: string; knowledgeI
 export async function conversationDeleteMy(params: { id: string }) {
   return await imRequest({
     url: ImUrlEnum.CONVERSATION_DELETE_MY,
+    params
+  })
+}
+
+// 模型页面
+export async function modelPage(params?: { pageNo?: number; pageSize?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.MODEL_PAGE,
     params
   })
 }
