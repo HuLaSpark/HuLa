@@ -1,60 +1,63 @@
 <template>
-  <main class="size-full rounded-8px bg-[--right-bg-color]">
-    <ActionBar
-      :shrink="false"
-      :max-w="false"
-      :top-win-label="WebviewWindow.getCurrent().label"
-      :current-label="WebviewWindow.getCurrent().label" />
+  <main class="size-full rounded-8px bg-white">
+    <!-- 重写的头像栏 -->
+    <div class="flex flex-col h-32vh relative">
+      <div class="flex h-95% w-full relative">
+        <ActionBar
+          style="position: absolute; top: 0; left: 0; width: 100vw"
+          :shrink="false"
+          :max-w="false"
+          :icon-color="'white'"
+          :top-win-label="WebviewWindow.getCurrent().label"
+          :current-label="WebviewWindow.getCurrent().label">
+          <div data-tauri-drag-region class="w-87% flex gap-10px items-center">
+            <div class="cursor-pointer ms-15px" @click="handleInfoTip">
+              <n-badge :value="unreadCount" :max="100" :show="unreadCount > 0">
+                <svg class="size-18px color-white iconpark-icon">
+                  <use href="#remind"></use>
+                </svg>
+              </n-badge>
+            </div>
 
-    <!-- 头部用户信息栏 -->
-    <n-flex
-      data-tauri-drag-region
-      align="center"
-      justify="center"
-      :size="20"
-      class="login-box relative h-160px w-full select-none">
-      <n-avatar :size="120" round bordered :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
-      <n-flex vertical justify="center" :size="20">
-        <p class="text-(24px [--chat-text-color]) font-500">{{ userStore.userInfo!.name }}</p>
+            <div class="cursor-pointer" @click="showAddFeedModal = true">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <svg class="size-24px color-white text-white iconpark-icon">
+                    <use href="#plus"></use>
+                  </svg>
+                </template>
+                <span>发布动态</span>
+              </n-popover>
+            </div>
 
-        <n-flex align="center" justify="space-between" :size="30" class="mt-5px">
-          <template v-for="item in titleList" :key="item.label">
-            <n-flex vertical align="center" class="cursor-pointer">
-              <p class="text-[--text-color]">{{ item.total }}</p>
-              <p class="text-(16px #808080)">{{ item.label }}</p>
-            </n-flex>
-          </template>
-        </n-flex>
-      </n-flex>
-
-      <div class="absolute top-30px right-30px flex items-center gap-15px">
-        <!-- 闹铃图标 -->
-        <div class="cursor-pointer" @click="handleInfoTip">
-          <n-badge :value="unreadCount" :max="100" :show="unreadCount > 0">
-            <svg class="size-24px color-[--text-color]">
-              <use href="#remind"></use>
-            </svg>
-          </n-badge>
+            <div class="cursor-pointer">
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <svg class="size-20px color-white iconpark-icon"><use href="#refresh"></use></svg>
+                </template>
+                <span>刷新</span>
+              </n-popover>
+            </div>
+          </div>
+        </ActionBar>
+        <img
+          class="w-full h-full object-cover"
+          src="https://ts3.tc.mm.bing.net/th/id/OIP-C.ynSetSr3z884UC6sEp4yiwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
+          alt="" />
+      </div>
+      <div class="flex absolute right-20px bottom-0 gap-15px">
+        <div class="text-white items-center flex">
+          {{ userStore.userInfo?.name }}
         </div>
-        <!-- 添加动态按钮 -->
-        <div class="cursor-pointer" @click="showAddFeedModal = true">
-          <n-popover trigger="hover">
-            <template #trigger>
-              <svg class="size-24px color-[--text-color]">
-                <use href="#plus"></use>
-              </svg>
-            </template>
-            <span>发布动态</span>
-          </n-popover>
+        <div>
+          <n-avatar :size="65" round bordered :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
         </div>
       </div>
-    </n-flex>
+    </div>
 
     <!-- 动态列表 -->
-    <div class="flex flex-col items-center text-[--text-color] bg-[--right-bg-color]">
-      <n-scrollbar
-        style="max-height: calc(100vh / var(--page-scale, 1) - 184px)"
-        class="w-full rounded-b-8px bg-[--center-bg-color] border-(solid 1px [--line-color]) p-[10px_0] box-border">
+    <div class="flex flex-col items-center px-20px h-full mt-15px">
+      <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 184px)" class="w-full rounded-b-8px">
         <!-- 加载状态 -->
         <div v-if="feedOptions.isLoading" class="flex justify-center items-center py-20px">
           <n-spin size="large" />
@@ -66,109 +69,135 @@
         </div>
 
         <!-- 动态内容 -->
-        <n-flex v-else vertical class="w-full">
+        <div v-else class="w-full">
           <div
-            v-for="item in dynamicList"
+            v-for="(item, index) in dynamicList"
             :key="item.id"
-            class="w-full border-b border-[--line-color] bg-[--right-bg-color] p-15px box-border cursor-pointer hover:bg-[--bg-hover-color]">
+            class="w-full bg-white mb-10px p-10px box-border cursor-pointer hover:bg-#f5f5f5 transition-colors duration-200">
             <!-- 主要内容区域 -->
-            <n-flex align="start" justify="space-between">
-              <!-- 左侧：头像和内容 -->
-              <n-flex align="start" style="flex: 1; min-width: 0">
-                <!-- 用户头像 -->
-                <n-avatar :size="40" round :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
-
-                <!-- 内容区域 -->
-                <n-flex vertical style="flex: 1; min-width: 0" class="ml-10px">
-                  <!-- 用户名和时间 -->
-                  <n-flex align="center" :size="8" class="mb-5px">
-                    <span class="text-14px font-500 text-[--text-color]">
-                      {{ userStore.userInfo!.name }}
-                    </span>
-                    <n-popover trigger="hover" v-if="item.author?.isAuth">
-                      <template #trigger>
-                        <svg class="size-16px color-#13987f">
-                          <use href="#auth"></use>
-                        </svg>
-                      </template>
-                      <span>认证用户</span>
-                    </n-popover>
-                  </n-flex>
-
-                  <!-- 动态内容 - 最多显示3行 -->
-                  <n-ellipsis :line-clamp="3" class="text-14px text-[--text-color] leading-5 mb-8px">
-                    {{ item.content }}
-                  </n-ellipsis>
-
-                  <!-- 底部信息：时间和操作 -->
-                  <n-flex align="center" justify="space-between" class="mt-5px">
-                    <span class="text-12px text-#999">{{ formatTime(item.createTime!) }}</span>
-
-                    <n-flex align="center" :size="15">
-                      <!-- 评论 -->
-                      <n-button text size="tiny" @click.stop="handleComment(item)">
-                        <template #icon>
-                          <n-icon size="16">
-                            <svg>
-                              <use href="#comment"></use>
-                            </svg>
-                          </n-icon>
-                        </template>
-                        <span class="text-12px text-#999">{{ item.commentCount || 0 }}</span>
-                      </n-button>
-
-                      <!-- 更多操作 -->
-                      <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
-                        <n-button text size="tiny" @click.stop>
-                          <template #icon>
-                            <n-icon size="16">
-                              <svg>
-                                <use href="#more"></use>
-                              </svg>
-                            </n-icon>
-                          </template>
-                        </n-button>
-                      </n-dropdown>
-                    </n-flex>
-                  </n-flex>
-                </n-flex>
-              </n-flex>
-
-              <!-- 右侧：缩略图 -->
-              <div v-if="item.images && item.images.length > 0" class="ml-10px flex-shrink-0">
-                <n-image
-                  :src="item.images[0]"
-                  alt="缩略图"
-                  width="80px"
-                  height="80px"
-                  object-fit="cover"
-                  class="rounded-6px"
-                  @click.stop="previewImage(item.images, 0)" />
+            <div class="flex items-start gap-12px">
+              <!-- 左侧：头像 -->
+              <div class="flex-shrink-0">
+                <n-avatar :size="42" round :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
               </div>
 
-              <!-- 视频缩略图 -->
-              <div v-else-if="item.videoUrl" class="ml-10px flex-shrink-0 relative">
-                <n-image
-                  :src="item.videoUrl"
-                  alt="视频"
-                  width="80px"
-                  height="80px"
-                  object-fit="cover"
-                  class="rounded-6px"
-                  @click.stop="handleVideoPlay(item.videoUrl)" />
-                <!-- 播放图标 -->
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <svg class="size-24px color-white opacity-80">
-                    <use href="#play"></use>
-                  </svg>
+              <!-- 右侧：内容区域 -->
+              <div class="flex-1 min-w-0">
+                <!-- 用户名 -->
+                <div class="flex items-center gap-6px mb-8px">
+                  <span class="text-15px font-500 text-#576b95 cursor-pointer hover:underline">
+                    {{ userStore.userInfo!.name }}
+                  </span>
+                  <n-popover trigger="hover" v-if="item.author?.isAuth">
+                    <template #trigger>
+                      <svg class="size-14px color-#13987f">
+                        <use href="#auth"></use>
+                      </svg>
+                    </template>
+                    <span>认证用户</span>
+                  </n-popover>
+                </div>
+
+                <!-- 动态内容 -->
+                <div class="text-15px text-#000 mb-10px">
+                  {{ item.content }}
+                </div>
+
+                <!-- 图片区域 -->
+                <div v-if="item.images && item.images.length > 0" class="mb-10px">
+                  <!-- 单张图片 -->
+                  <div v-if="item.images.length === 1" class="inline-block">
+                    <n-image
+                      :src="item.images[0]"
+                      alt="图片"
+                      width="200px"
+                      height="200px"
+                      object-fit="cover"
+                      class="rounded-4px cursor-pointer"
+                      @click.stop="previewImage(item.images, 0)" />
+                  </div>
+                  <!-- 多张图片 - 九宫格布局 -->
+                  <div
+                    v-else
+                    class="grid gap-4px"
+                    :class="[
+                      item.images.length === 2
+                        ? 'grid-cols-2'
+                        : item.images.length === 4
+                          ? 'grid-cols-2'
+                          : 'grid-cols-3'
+                    ]"
+                    style="max-width: 420px">
+                    <n-image
+                      v-for="(img, idx) in item.images.slice(0, 9)"
+                      :key="idx"
+                      :src="img"
+                      alt="图片"
+                      width="136px"
+                      height="136px"
+                      object-fit="cover"
+                      class="rounded-4px cursor-pointer"
+                      @click.stop="previewImage(item.images, idx)" />
+                  </div>
+                </div>
+
+                <!-- 视频区域 -->
+                <div v-else-if="item.videoUrl" class="mb-10px inline-block relative">
+                  <n-image
+                    :src="item.videoUrl"
+                    alt="视频"
+                    width="200px"
+                    height="200px"
+                    object-fit="cover"
+                    class="rounded-4px cursor-pointer"
+                    @click.stop="handleVideoPlay(item.videoUrl)" />
+                  <!-- 播放图标 -->
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-48px h-48px rounded-full bg-black/50 flex items-center justify-center">
+                      <svg class="size-24px color-white">
+                        <use href="#play"></use>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 底部信息：时间和操作 -->
+                <div class="flex items-center justify-between mt-15px">
+                  <span class="text-13px text-#999">{{ formatTime(item.createTime!) }}</span>
+
+                  <div class="flex items-center gap-16px">
+                    <!-- 评论按钮 -->
+                    <!-- <div
+                      class="flex items-center gap-4px cursor-pointer text-#999 hover:text-#576b95 transition-colors"
+                      @click.stop="handleComment(item)">
+                      <svg class="size-16px">
+                        <use href="#comment"></use>
+                      </svg>
+                      <span class="text-13px">{{ item.commentCount || 0 }}</span>
+                    </div> -->
+
+                    <!-- 更多操作 -->
+                    <div class="bg-gray-100 rounded-5px py-2px px-5px">
+                      <n-dropdown class="" :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
+                        <div class="cursor-pointer text-#999 hover:text-#576b95 transition-colors" @click.stop>
+                          <svg class="size-16px">
+                            <use href="#more"></use>
+                          </svg>
+                        </div>
+                      </n-dropdown>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </n-flex>
+            </div>
+
+            <!-- 灰色线 -->
+            <div v-if="index !== dynamicList.length - 1" class="w-full h-1px bg-gray-100 mt-20px"></div>
           </div>
-        </n-flex>
+        </div>
 
         <!-- 加载更多 -->
-        <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
+        <div v-if="!feedOptions.isLast" class="flex justify-center py-15px bg-white">
           <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text>
             {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
           </n-button>
@@ -177,7 +206,7 @@
     </div>
 
     <!-- 添加动态弹窗 -->
-    <n-modal v-model:show="showAddFeedModal" class="w-600px border-rd-8px">
+    <n-modal v-model:show="showAddFeedModal" class="w-80vw border-rd-8px">
       <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
         <div class="flex justify-between items-center mb-20px">
           <h3 class="text-18px font-bold text-[--text-color]">发布动态</h3>
@@ -243,7 +272,7 @@
     </n-modal>
 
     <!-- 用户选择弹窗 -->
-    <n-modal v-model:show="showUserSelectModal" class="w-500px border-rd-8px">
+    <n-modal v-model:show="showUserSelectModal" class="w-75vw border-rd-8px">
       <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
         <div class="flex justify-between items-center mb-20px">
           <h3 class="text-16px font-bold text-[--text-color]">选择用户</h3>
@@ -305,7 +334,7 @@
     </n-modal>
 
     <!-- 评论弹出框 -->
-    <n-modal v-model:show="showCommentModal" class="w-500px border-rd-8px">
+    <n-modal v-model:show="showCommentModal" class="w-75vw border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
         <div class="flex justify-between items-center mb-15px">
           <h3 class="text-16px font-bold">评论列表</h3>
@@ -375,7 +404,11 @@ const groupStore = useGroupStore()
 const message = useMessage()
 
 // 从store中获取响应式数据
-const { feedList: dynamicList, feedOptions, feedStats } = storeToRefs(feedStore)
+const {
+  feedList: dynamicList,
+  feedOptions
+  //  feedStats
+} = storeToRefs(feedStore)
 
 const showCommentModal = ref(false)
 const newComment = ref('')
@@ -404,20 +437,20 @@ const selectedUserIds = ref<string[]>([])
 const selectedUsers = ref<FriendItem[]>([])
 const userSearchKeyword = ref('')
 
-const titleList = computed(() => [
-  {
-    label: '动态',
-    total: feedStats.value.total
-  },
-  {
-    label: '关注',
-    total: feedStats.value.followCount
-  },
-  {
-    label: '粉丝',
-    total: feedStats.value.fansCount
-  }
-])
+// const titleList = computed(() => [
+//   {
+//     label: '动态',
+//     total: feedStats.value.total
+//   },
+//   {
+//     label: '关注',
+//     total: feedStats.value.followCount
+//   },
+//   {
+//     label: '粉丝',
+//     total: feedStats.value.fansCount
+//   }
+// ])
 
 interface CommentItem {
   id: string
@@ -498,11 +531,11 @@ const fetchComments = async (_feedId: string) => {
 }
 
 // 评论操作
-const handleComment = async (feed: FeedItem) => {
-  currentFeedId.value = feed.id
-  await fetchComments(feed.id)
-  showCommentModal.value = true
-}
+// const handleComment = async (feed: FeedItem) => {
+//   currentFeedId.value = feed.id
+//   await fetchComments(feed.id)
+//   showCommentModal.value = true
+// }
 
 // 提交评论（由于接口不存在，暂时为空实现）
 const submitComment = async () => {
