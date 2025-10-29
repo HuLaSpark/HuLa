@@ -113,12 +113,16 @@ pub async fn page_msg(
     .map_err(|e| e.to_string())?;
 
     // 转换数据库模型为响应模型
-    let message_resps: Vec<MessageResp> = db_result
-        .list
-        .unwrap_or_default()
+    let mut raw_list = db_result.list.unwrap_or_default();
+    raw_list.sort_by(|a, b| {
+        let a_time = a.send_time.unwrap_or(0);
+        let b_time = b.send_time.unwrap_or(0);
+        a_time.cmp(&b_time)
+    });
+
+    let message_resps: Vec<MessageResp> = raw_list
         .into_iter()
         .map(|msg| convert_message_to_resp(msg, None))
-        .rev()
         .collect();
 
     Ok(CursorPageResp {
