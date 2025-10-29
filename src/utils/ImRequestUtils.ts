@@ -709,11 +709,106 @@ export async function getFeedPermission(params: { feedId: string }) {
   })
 }
 
-// 发送AI消息（流式）
-export async function messageSendStream(body: { conversationId: string; content: string; useContext?: boolean }) {
-  return await imRequest({
-    url: ImUrlEnum.MESSAGE_SEND_STREAM,
-    body
+/**
+ * SSE 流式数据事件类型
+ */
+interface SseStreamEvent {
+  eventType: 'chunk' | 'done' | 'error'
+  data?: string
+  error?: string
+  requestId: string
+}
+
+/**
+ * 流式数据回调函数
+ */
+export interface StreamCallbacks {
+  onChunk?: (chunk: string) => void
+  onDone?: (fullContent: string) => void
+  onError?: (error: string) => void
+}
+
+/**
+ * 发送AI消息（流式）
+ * 使用 Promise 包装整个 SSE 流程，监听 Tauri 事件接收流式数据
+ *
+ * @param body 请求参数
+ * @param callbacks 流式数据回调函数
+ * @returns Promise，在流结束后 resolve 完整内容
+ */
+export async function messageSendStream(
+  body: { conversationId: string; content: string; useContext?: boolean },
+  callbacks?: StreamCallbacks
+): Promise<string> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  const { listen } = await import('@tauri-apps/api/event')
+  const { TauriCommand } = await import('@/enums')
+
+  // 生成唯一的请求 ID
+  const requestId = `ai-stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+
+  return new Promise<string>((resolve, reject) => {
+    let unlisten: (() => void) | null = null
+    let fullContent = ''
+    let isResolved = false
+
+    // 使用立即执行的 async 函数
+    ;(async () => {
+      try {
+        // 监听 SSE 流式事件
+        unlisten = await listen<SseStreamEvent>('ai-stream-event', (event) => {
+          const { eventType, data, error, requestId: eventRequestId } = event.payload
+
+          // 只处理当前请求的事件
+          if (eventRequestId !== requestId) {
+            return
+          }
+
+          switch (eventType) {
+            case 'chunk':
+              if (data) {
+                fullContent += data
+                callbacks?.onChunk?.(data)
+              }
+              break
+
+            case 'done':
+              if (!isResolved) {
+                isResolved = true
+                const finalContent = data || fullContent
+                callbacks?.onDone?.(finalContent)
+                if (unlisten) unlisten()
+                resolve(finalContent)
+              }
+              break
+
+            case 'error':
+              if (!isResolved) {
+                isResolved = true
+                const errorMsg = error || '未知错误'
+                callbacks?.onError?.(errorMsg)
+                if (unlisten) unlisten()
+                reject(new Error(errorMsg))
+              }
+              break
+          }
+        })
+
+        // 调用 Rust 后端命令发送请求
+        await invoke(TauriCommand.AI_MESSAGE_SEND_STREAM, {
+          body,
+          requestId
+        })
+      } catch (error) {
+        if (!isResolved) {
+          isResolved = true
+          if (unlisten) unlisten()
+          const errorMsg = error instanceof Error ? error.message : String(error)
+          callbacks?.onError?.(errorMsg)
+          reject(error)
+        }
+      }
+    })()
   })
 }
 

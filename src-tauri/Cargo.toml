@@ -92,8 +92,10 @@ reqwest = { version = "0.11", default-features = false, features = [
     "socks",
     "rustls-tls",
     "blocking",
+    "stream",
 ] }
 futures = "0.3"
+bytes = "1.5"
 dotenv = "0.15.0"
 pulldown-cmark = "0.12"
 

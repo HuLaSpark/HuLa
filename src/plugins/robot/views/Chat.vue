@@ -1,12 +1,14 @@
 <template>
   <!-- 主体内容 -->
-  <main>
-    <div data-tauri-drag-region class="flex truncate p-[8px_20px_14px_20px] justify-between items-center gap-50px">
+  <main class="chat-main-container">
+    <div
+      data-tauri-drag-region
+      class="chat-header flex truncate p-[8px_16px_10px_16px] justify-between items-center gap-50px">
       <n-flex :size="10" vertical class="truncate">
         <p
           v-if="!isEdit"
           @click="handleEdit"
-          class="leading-7 text-(22px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
+          class="leading-6 text-(18px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
           {{ currentChat.title }}
         </p>
         <n-input
@@ -23,12 +25,12 @@
           autoCorrect="off"
           autoCapitalize="off"
           style="width: 200px"
-          class="leading-7 text-14px rounded-6px"></n-input>
+          class="leading-7 min-h-100px text-14px rounded-6px"></n-input>
 
         <!-- 当前选择的模型显示 -->
-        <n-flex align="center" :size="8" class="mt-8px">
-          <div class="flex items-center gap-8px">
-            <span class="text-(12px #909090)">当前模型:</span>
+        <n-flex align="center" :size="8" class="mt-4px">
+          <div class="flex items-center gap-6px">
+            <span class="text-(11px #909090)">当前模型:</span>
             <n-tag
               v-if="selectedModel"
               size="small"
@@ -47,7 +49,7 @@
               </template>
             </n-tag>
           </div>
-          <p class="text-(14px #707070)">共{{ currentChat.messageCount }}条对话</p>
+          <p class="text-(11px #707070)">共{{ currentChat.messageCount }}条对话</p>
         </n-flex>
       </n-flex>
 
@@ -65,10 +67,11 @@
 
     <!-- 聊天信息框 -->
     <div
+      ref="chatContainerRef"
       :class="{ 'shadow-inner': page.shadow }"
-      class="w-full p-[28px_16px] box-border"
-      style="height: calc(100vh / var(--page-scale, 1) - 300px)">
-      <n-flex :size="6">
+      class="chat-messages-container w-full p-[16px_16px] box-border overflow-y-auto">
+      <!-- 欢迎消息 -->
+      <n-flex :size="6" class="mb-12px">
         <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
         <n-flex vertical justify="space-between">
           <p class="text-(12px [--chat-text-color])">
@@ -85,126 +88,165 @@
           <!--  气泡样式  -->
           <ContextMenu>
             <div style="white-space: pre-wrap" class="bubble select-text">
-              <span v-html="'你好，我是' + selectedModel.name + '，很高兴为您服务。'"></span>
+              <span v-html="'你好，我是' + selectedModel?.name + '，很高兴为您服务。'"></span>
             </div>
           </ContextMenu>
         </n-flex>
+      </n-flex>
+
+      <!-- 消息列表 -->
+      <n-flex vertical :size="12">
+        <template v-for="(message, index) in messageList" :key="index">
+          <!-- 用户消息 -->
+          <n-flex v-if="message.type === 'user'" :size="6" justify="end">
+            <n-flex vertical align="end" class="max-w-70%">
+              <p class="text-(12px #909090)">我</p>
+              <ContextMenu>
+                <div style="white-space: pre-wrap" class="bubble bubble-user select-text">
+                  {{ message.content }}
+                </div>
+              </ContextMenu>
+            </n-flex>
+            <n-avatar
+              class="rounded-8px"
+              :src="userStore.userInfo?.avatar ? AvatarUtils.getAvatarUrl(userStore.userInfo.avatar) : ''"
+              :fallback-src="getDefaultAvatar()" />
+          </n-flex>
+
+          <!-- AI消息 -->
+          <n-flex v-else :size="6">
+            <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
+            <n-flex vertical class="max-w-70%">
+              <p class="text-(12px [--chat-text-color])">
+                {{ selectedModel ? selectedModel.name : 'AI' }}
+              </p>
+              <ContextMenu>
+                <div style="white-space: pre-wrap" class="bubble select-text">
+                  <span v-if="message.streaming" class="streaming-cursor">{{ message.content }}</span>
+                  <span v-else>{{ message.content }}</span>
+                </div>
+              </ContextMenu>
+            </n-flex>
+          </n-flex>
+        </template>
       </n-flex>
     </div>
 
     <div class="h-1px bg-[--line-color]"></div>
     <!-- 下半部分输入框以及功能栏 -->
-    <n-flex vertical :size="6" class="size-full p-[8px_22px] box-border">
-      <n-flex align="center" :size="26" class="options">
-        <!-- 模型选择 -->
-        <n-popover
-          v-model:show="showModelPopover"
-          trigger="click"
-          placement="top-start"
-          :show-arrow="false"
-          style="padding: 0; width: 320px">
-          <template #trigger>
-            <div class="flex items-center gap-6px cursor-pointer" @click="handleModelClick">
-              <svg><use href="#model"></use></svg>
-              <span class="text-(12px [--chat-text-color])">
-                {{ selectedModel ? selectedModel.name : '选择模型' }}
-              </span>
-            </div>
-          </template>
-          <div class="model-selector">
-            <div class="model-header">
-              <span class="model-title">选择模型</span>
-              <n-input
-                v-model:value="modelSearch"
-                placeholder="搜索模型..."
-                clearable
-                size="small"
-                style="width: 180px">
-                <template #prefix>
-                  <Icon icon="mdi:magnify" class="text-16px color-#909090" />
-                </template>
-              </n-input>
-            </div>
-
-            <div class="model-list">
-              <div v-if="modelLoading" class="loading-container">
-                <n-spin size="small" />
-                <span class="loading-text">加载中...</span>
+    <div class="chat-input-container min-h-180px">
+      <n-flex vertical :size="6" class="p-[8px_16px] box-border">
+        <n-flex align="center" :size="26" class="options">
+          <!-- 模型选择 -->
+          <n-popover
+            v-model:show="showModelPopover"
+            trigger="click"
+            placement="top-start"
+            :show-arrow="false"
+            style="padding: 0; width: 320px">
+            <template #trigger>
+              <div class="flex items-center gap-6px cursor-pointer" @click="handleModelClick">
+                <svg><use href="#model"></use></svg>
+                <span class="text-(12px [--chat-text-color])">
+                  {{ selectedModel ? selectedModel.name : '选择模型' }}
+                </span>
               </div>
-
-              <div v-else-if="filteredModels.length === 0" class="empty-container">
-                <n-empty description="暂无模型数据" size="small">
-                  <template #icon>
-                    <Icon icon="mdi:package-variant-closed" class="text-24px color-#909090" />
+            </template>
+            <div class="model-selector">
+              <div class="model-header">
+                <span class="model-title">选择模型</span>
+                <n-input
+                  v-model:value="modelSearch"
+                  placeholder="搜索模型..."
+                  clearable
+                  size="small"
+                  style="width: 180px">
+                  <template #prefix>
+                    <Icon icon="mdi:magnify" class="text-16px color-#909090" />
                   </template>
-                </n-empty>
+                </n-input>
               </div>
 
-              <div v-else class="models-container">
-                <div
-                  v-for="model in filteredModels"
-                  :key="model.id"
-                  :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
-                  @click="selectModel(model)">
-                  <!-- 模型头像 -->
-                  <n-avatar
-                    round
-                    :size="40"
-                    :src="getModelAvatar(model)"
-                    :fallback-src="getDefaultAvatar()"
-                    class="mr-12px flex-shrink-0" />
+              <div class="model-list">
+                <div v-if="modelLoading" class="loading-container">
+                  <n-spin size="small" />
+                  <span class="loading-text">加载中...</span>
+                </div>
 
-                  <div class="model-info">
-                    <div class="model-name">{{ model.name }}</div>
-                    <div class="model-description">{{ model.description || '暂无描述' }}</div>
-                    <div class="model-meta">
-                      <span class="model-provider">{{ model.platform }}</span>
-                      <span class="model-version">v{{ model.model }}</span>
+                <div v-else-if="filteredModels.length === 0" class="empty-container">
+                  <n-empty description="暂无模型数据" size="small">
+                    <template #icon>
+                      <Icon icon="mdi:package-variant-closed" class="text-24px color-#909090" />
+                    </template>
+                  </n-empty>
+                </div>
+
+                <div v-else class="models-container">
+                  <div
+                    v-for="model in filteredModels"
+                    :key="model.id"
+                    :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
+                    @click="selectModel(model)">
+                    <!-- 模型头像 -->
+                    <n-avatar
+                      round
+                      :size="40"
+                      :src="getModelAvatar(model)"
+                      :fallback-src="getDefaultAvatar()"
+                      class="mr-12px flex-shrink-0" />
+
+                    <div class="model-info">
+                      <div class="model-name">{{ model.name }}</div>
+                      <div class="model-description">{{ model.description || '暂无描述' }}</div>
+                      <div class="model-meta">
+                        <span class="model-provider">{{ model.platform }}</span>
+                        <span class="model-version">v{{ model.model }}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="model-status">
-                    <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
-                    <n-tag v-else type="error" size="small">不可用</n-tag>
+                    <div class="model-status">
+                      <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
+                      <n-tag v-else type="error" size="small">不可用</n-tag>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 分页控件 -->
-            <div v-if="modelPagination.total > modelPagination.pageSize" class="model-pagination">
-              <n-pagination
-                v-model:page="modelPagination.pageNo"
-                :page-size="modelPagination.pageSize"
-                :page-count="Math.ceil(modelPagination.total / modelPagination.pageSize)"
-                size="small"
-                @update:page="handleModelPageChange" />
+              <!-- 分页控件 -->
+              <div v-if="modelPagination.total > modelPagination.pageSize" class="model-pagination">
+                <n-pagination
+                  v-model:page="modelPagination.pageNo"
+                  :page-size="modelPagination.pageSize"
+                  :page-count="Math.ceil(modelPagination.total / modelPagination.pageSize)"
+                  size="small"
+                  @update:page="handleModelPageChange" />
+              </div>
             </div>
+          </n-popover>
+
+          <!-- 其他功能图标 -->
+          <n-popover
+            v-for="(item, index) in otherFeatures"
+            :key="index"
+            trigger="hover"
+            :show-arrow="false"
+            placement="top">
+            <template #trigger>
+              <svg><use :href="`#${item.icon}`"></use></svg>
+            </template>
+            <p>{{ item.label }}</p>
+          </n-popover>
+
+          <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
+            <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
+            <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
           </div>
-        </n-popover>
+        </n-flex>
 
-        <!-- 其他功能图标 -->
-        <n-popover
-          v-for="(item, index) in otherFeatures"
-          :key="index"
-          trigger="hover"
-          :show-arrow="false"
-          placement="top">
-          <template #trigger>
-            <svg><use :href="`#${item.icon}`"></use></svg>
-          </template>
-          <p>{{ item.label }}</p>
-        </n-popover>
-
-        <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
-          <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
-          <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
+        <div style="height: 100px" class="flex flex-col items-end gap-6px">
+          <MsgInput ref="MsgInputRef" :isAIMode="!!selectedModel" @send-ai="handleSendAI" />
         </div>
       </n-flex>
-
-      <div class="flex flex-col items-end gap-6px">
-        <MsgInput ref="MsgInputRef" :isAIMode="!!selectedModel" @send-ai="handleSendAI" />
-      </div>
-    </n-flex>
+    </div>
   </main>
 </template>
 <script setup lang="ts">
@@ -213,10 +255,13 @@ import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useUserStore } from '@/stores/user.ts'
 import { modelPage } from '@/utils/ImRequestUtils'
 import { messageSendStream } from '@/utils/ImRequestUtils'
+import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const settingStore = useSettingStore()
+const userStore = useUserStore()
 const { page } = storeToRefs(settingStore)
 const MsgInputRef = ref()
 /** 是否是编辑模式 */
@@ -230,6 +275,26 @@ const currentChat = ref({
   title: '',
   messageCount: 0
 })
+
+// 消息列表
+interface Message {
+  type: 'user' | 'assistant'
+  content: string
+  streaming?: boolean
+  timestamp?: number
+}
+
+const messageList = ref<Message[]>([])
+const chatContainerRef = ref<HTMLElement | null>(null)
+
+// 滚动到底部
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (chatContainerRef.value) {
+      chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight
+    }
+  })
+}
 
 // 模型选择相关状态
 const showModelPopover = ref(false)
@@ -294,14 +359,80 @@ const sendAIMessage = async (content: string, model: any) => {
       会话ID: currentChat.value.id
     })
 
-    // TODO: 这里需要调用实际的AI接口
-    const response = await messageSendStream({
-      conversationId: currentChat.value.id,
+    // 添加用户消息到列表
+    messageList.value.push({
+      type: 'user',
       content: content,
-      useContext: true
+      timestamp: Date.now()
     })
 
-    console.log('✅ AI消息发送成功', response)
+    // 添加AI消息占位符（用于流式更新）
+    const aiMessageIndex = messageList.value.length
+    messageList.value.push({
+      type: 'assistant',
+      content: '',
+      streaming: true,
+      timestamp: Date.now()
+    })
+
+    // 滚动到底部
+    scrollToBottom()
+
+    // 用于累积AI回复内容
+    let accumulatedContent = ''
+
+    // 调用流式 API，使用 Promise 包装
+    await messageSendStream(
+      {
+        conversationId: currentChat.value.id,
+        content: content,
+        useContext: true
+      },
+      {
+        // 接收到数据块时的回调
+        onChunk: (chunk: string) => {
+          try {
+            // 解析JSON数据
+            const data = JSON.parse(chunk)
+            if (data.success && data.data?.receive?.content) {
+              const incrementalContent = data.data.receive.content
+
+              // 手动累加内容（服务器返回的是增量内容）
+              accumulatedContent += incrementalContent
+
+              // 更新AI消息内容
+              messageList.value[aiMessageIndex].content = accumulatedContent
+
+              // 滚动到底部
+              scrollToBottom()
+
+              console.log('📨 收到AI流式数据 [增量]:', {
+                增量内容: incrementalContent,
+                累积长度: accumulatedContent.length,
+                完整内容: accumulatedContent
+              })
+            }
+          } catch (e) {
+            console.error('❌ 解析JSON失败:', e, '原始数据:', chunk)
+          }
+        },
+        // 流结束时的回调
+        onDone: () => {
+          console.log('✅ AI流式响应完成，最终内容:', accumulatedContent)
+          // 标记流式结束
+          messageList.value[aiMessageIndex].streaming = false
+          scrollToBottom()
+        },
+        // 错误回调
+        onError: (error: string) => {
+          console.error('❌ AI流式响应错误:', error)
+          messageList.value[aiMessageIndex].content = '抱歉，发生了错误：' + error
+          messageList.value[aiMessageIndex].streaming = false
+        }
+      }
+    )
+
+    console.log('✅ AI消息发送成功')
 
     // 清空输入框
     if (MsgInputRef.value?.clearInput) {
@@ -309,7 +440,9 @@ const sendAIMessage = async (content: string, model: any) => {
     }
 
     // 更新消息计数
-    currentChat.value.messageCount += 1
+    currentChat.value.messageCount += 2 // 用户消息 + AI消息
+
+    window.$message.success('AI回复完成')
   } catch (error) {
     console.error('❌ AI消息发送失败:', error)
     window.$message.error('发送失败，请检查网络连接')
@@ -481,6 +614,34 @@ onMounted(() => {
 <style scoped lang="scss">
 @use '@/styles/scss/render-message';
 
+/* 主容器布局 */
+.chat-main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 头部区域 */
+.chat-header {
+  flex-shrink: 0;
+  min-height: 60px;
+  max-height: 80px;
+}
+
+/* 聊天消息区域 */
+.chat-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 输入框容器固定在底部 */
+.chat-input-container {
+  flex-shrink: 0;
+  background: var(--bg-color);
+}
+
 .right-btn {
   @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
   svg {
@@ -492,6 +653,34 @@ onMounted(() => {
   padding-left: 4px;
   svg {
     @apply size-22px cursor-pointer outline-none;
+  }
+}
+
+/* 消息气泡样式 */
+.bubble-user {
+  background: var(--primary-color, #18a058);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* 流式光标效果 */
+.streaming-cursor::after {
+  content: '▋';
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
   }
 }
 
