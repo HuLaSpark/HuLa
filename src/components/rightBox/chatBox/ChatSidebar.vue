@@ -109,7 +109,7 @@
         item-resizable
         @scroll="handleScroll($event)"
         :item-size="46"
-        :items="filteredUserList">
+        :items="displayedUserList">
         <template #default="{ item }">
           <n-popover
             :ref="(el: any) => (infoPopoverRefs[item.uid] = el)"
@@ -213,7 +213,6 @@ const announcementStore = useAnnouncementStore()
 const { clearAnnouncements } = announcementStore
 const { themes } = storeToRefs(settingStore)
 // 当前加载的群聊ID
-const currentLoadingRoomId = ref('')
 const onlineCountDisplay = computed(() => groupStore.countInfo?.onlineNum ?? 0)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 // 公告相关计算属性
@@ -223,6 +222,7 @@ const { segments: announcementSegments, openLink: openAnnouncementLink } = useLi
 /** 是否是搜索模式 */
 const isSearch = ref(false)
 const searchRef = ref('')
+const searchRequestId = ref(0)
 /** List中的Popover组件实例 */
 const infoPopoverRefs = ref<Record<string, any>>([])
 const inputInstRef = ref<InputInst | null>(null)
@@ -258,29 +258,6 @@ watch(
   { immediate: true }
 )
 
-// 创建过滤后的用户列表计算属性
-const filteredUserList = computed(() => {
-  let userList = groupStore.userList
-  if (searchRef.value) {
-    userList = userList.filter((user) => {
-      const flag1 = user.name.toLowerCase().includes(searchRef.value.toLowerCase())
-      const flag2 = user.myName?.toLowerCase().includes(searchRef.value.toLowerCase())
-      return flag1 || flag2
-    })
-  }
-  return userList.sort((a, b) => {
-    if (a.roleId && b.roleId && a.roleId !== b.roleId) {
-      return a.roleId - b.roleId
-    }
-
-    if (a.activeStatus !== b.activeStatus) {
-      return a.activeStatus - b.activeStatus
-    }
-
-    return a.name.localeCompare(b.name)
-  })
-})
-
 const onClickMember = async (item: UserItem) => {
   console.log('点击用户', item)
   selectKey.value = item.uid
@@ -295,16 +272,13 @@ const onClickMember = async (item: UserItem) => {
 
 // 监听成员源列表变化
 watch(
-  [() => groupStore.userList],
-  () => {
-    if (groupStore.userList.length > 0 && currentLoadingRoomId.value === globalStore.currentSession?.roomId) {
-      displayedUserList.value = filteredUserList.value
-      // 缓存当前群成员
-      const roomId = globalStore.currentSession?.roomId
-      if (roomId) {
-        groupStore.updateMemberCache(roomId, displayedUserList.value)
-      }
+  () => groupStore.userList,
+  (newList) => {
+    if (searchRef.value.trim()) {
+      return
     }
+
+    displayedUserList.value = Array.isArray(newList) ? [...newList] : []
   },
   { immediate: true }
 )
@@ -313,18 +287,32 @@ watch(
  * 监听搜索输入过滤用户
  * @param value 输入值
  */
-const handleSearch = useDebounceFn((value: string) => {
-  // 直接更新 searchRef，让计算属性处理过滤逻辑
+const handleSearch = useDebounceFn(async (value: string) => {
+  const requestId = ++searchRequestId.value
   searchRef.value = value
+
+  const keyword = value.trim()
+  const roomId = globalStore.currentSession?.roomId
+  if (!roomId) {
+    return
+  }
+
+  try {
+    const result = await groupStore.getGroupUserList(roomId, true, keyword)
+    if (searchRequestId.value !== requestId) {
+      return
+    }
+    displayedUserList.value = Array.isArray(result) ? [...result] : []
+  } catch (error) {
+    console.error('[sidebar] search members failed:', error)
+  }
 }, 10)
 
-/**
- * 重置搜索状态
- */
 const handleBlur = () => {
   if (searchRef.value) return
   isSearch.value = false
-  searchRef.value = ''
+  searchRequestId.value++
+  displayedUserList.value = Array.isArray(groupStore.userList) ? [...groupStore.userList] : []
 }
 
 /**
@@ -332,6 +320,10 @@ const handleBlur = () => {
  * @param event 滚动事件
  */
 const handleScroll = (event: Event) => {
+  if (searchRef.value.trim()) {
+    return
+  }
+
   const target = event.target as HTMLElement
   const isBottom = target.scrollHeight - target.scrollTop === target.clientHeight
 
@@ -345,9 +337,16 @@ const handleScroll = (event: Event) => {
  */
 const handleSelect = () => {
   isSearch.value = !isSearch.value
-  nextTick(() => {
-    inputInstRef.value?.select()
-  })
+
+  if (isSearch.value) {
+    nextTick(() => {
+      inputInstRef.value?.select()
+    })
+  } else {
+    searchRequestId.value++
+    searchRef.value = ''
+    displayedUserList.value = Array.isArray(groupStore.userList) ? [...groupStore.userList] : []
+  }
 }
 
 /**
@@ -395,7 +394,7 @@ onMounted(async () => {
   // 初始化时获取当前群组用户的信息
   if (groupStore.userList.length > 0) {
     // 初始展示当前列表
-    displayedUserList.value = filteredUserList.value
+    displayedUserList.value = [...groupStore.userList]
     const currentRoom = globalStore.currentSession?.roomId
     if (currentRoom) {
       groupStore.updateMemberCache(currentRoom, displayedUserList.value)

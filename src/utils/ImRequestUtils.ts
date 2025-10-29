@@ -1,4 +1,4 @@
-import { ImUrlEnum, type NotificationTypeEnum } from '@/enums'
+import { ImUrlEnum, TauriCommand, type NotificationTypeEnum } from '@/enums'
 import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq, UserItem } from '@/services/types'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useChatStore } from '../stores/chat'
@@ -227,13 +227,13 @@ export async function getBadgesBatch(body: CacheBadgeReq[]) {
   })
 }
 
-export async function groupListMember(roomId: string) {
-  return await imRequest({
-    url: ImUrlEnum.GROUP_LIST_MEMBER,
-    params: {
-      roomId
-    }
-  })
+export async function groupListMember(roomId: string, keyword?: string) {
+  const args: Record<string, any> = { roomId, room_id: roomId }
+  const trimmedKeyword = keyword?.trim()
+  if (trimmedKeyword) {
+    args.keyword = trimmedKeyword
+  }
+  return await invokeWithErrorHandler(TauriCommand.GET_ROOM_MEMBERS, args, { errorType: ErrorType.Network })
 }
 
 export async function getMsgList(body: { msgIds?: string[]; async?: boolean }) {

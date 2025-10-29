@@ -13,6 +13,7 @@ use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::repository::im_room_member_repository;
 use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::ops::Deref;
 use std::sync::Arc;
 use tauri::State;
@@ -75,26 +76,82 @@ pub async fn update_my_room_info(
 #[tauri::command]
 pub async fn get_room_members(
     room_id: String,
+    keyword: Option<String>,
     state: State<'_, AppData>,
 ) -> Result<Vec<im_room_member::Model>, String> {
     info!("Calling to get all member list of room with room_id");
     let result: Result<Vec<im_room_member::Model>, CommonError> = async {
-        // 获取当前登录用户的 uid
         let login_uid = {
             let user_info = state.user_info.lock().await;
             user_info.uid.clone()
         };
 
-        let mut data = fetch_and_update_room_members(
-            room_id.clone(),
-            state.db_conn.clone(),
-            state.rc.clone(),
-            login_uid.clone(),
-        )
-        .await?;
-        // 对从后端获取的数据进行排序
-        sort_room_members(&mut data);
-        return Ok(data);
+        let normalized_keyword = keyword
+            .map(|k| k.trim().to_lowercase())
+            .filter(|k| !k.is_empty());
+
+        let mut members = if normalized_keyword.is_some() {
+            match im_room_member_repository::get_room_members_by_room_id(
+                &room_id,
+                state.db_conn.deref(),
+                &login_uid,
+            )
+            .await
+            {
+                Ok(data) if !data.is_empty() => data,
+                Ok(_) => {
+                    fetch_and_update_room_members(
+                        room_id.clone(),
+                        state.db_conn.clone(),
+                        state.rc.clone(),
+                        login_uid.clone(),
+                    )
+                    .await?
+                }
+                Err(err) => {
+                    error!(
+                        "Failed to load cached room members for room {}: {:?}",
+                        room_id, err
+                    );
+                    fetch_and_update_room_members(
+                        room_id.clone(),
+                        state.db_conn.clone(),
+                        state.rc.clone(),
+                        login_uid.clone(),
+                    )
+                    .await?
+                }
+            }
+        } else {
+            fetch_and_update_room_members(
+                room_id.clone(),
+                state.db_conn.clone(),
+                state.rc.clone(),
+                login_uid.clone(),
+            )
+            .await?
+        };
+
+        sort_room_members(&mut members);
+
+        let filtered_members = if let Some(keyword) = normalized_keyword.as_ref() {
+            let keyword = keyword.as_str();
+            members
+                .into_iter()
+                .filter(|member| {
+                    member.name.to_lowercase().contains(keyword)
+                        || member
+                            .my_name
+                            .as_ref()
+                            .map(|name| name.to_lowercase().contains(keyword))
+                            .unwrap_or(false)
+                })
+                .collect()
+        } else {
+            members
+        };
+
+        Ok(filtered_members)
     }
     .await;
 
@@ -185,38 +242,26 @@ async fn fetch_rooms_from_backend(
     }
 }
 
-/// 对房间成员列表进行排序：群主优先，管理员按在线时间排序，其他用户按在线状态和时间排序
+/// 对房间成员列表进行排序：按角色优先，再按在线状态，最后按名称字母序
 fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
-    // 对于小数据集使用不稳定排序
-    members.sort_unstable_by(|a, b| {
-        use std::cmp::Ordering;
-
-        let a_role = a.group_role.unwrap_or(0);
-        let b_role = b.group_role.unwrap_or(0);
-
-        // 三层排序逻辑，单次遍历
-        match (a_role, b_role) {
-            // 群主(1)优先级最高
-            (1, 1) => Ordering::Equal,
-            (1, _) => Ordering::Less,
-            (_, 1) => Ordering::Greater,
-
-            // 管理员(2)排在群主后面，按在线时间排序（最近在线的在前）
-            (2, 2) => b.last_opt_time.cmp(&a.last_opt_time),
-            (2, _) => Ordering::Less,
-            (_, 2) => Ordering::Greater,
-
-            // 其他用户：先按在线状态排序，再按最新在线时间排序
-            _ => {
-                let a_status = a.active_status.unwrap_or(0);
-                let b_status = b.active_status.unwrap_or(0);
-
-                match a_status.cmp(&b_status) {
-                    Ordering::Equal => b.last_opt_time.cmp(&a.last_opt_time),
-                    other => other,
-                }
-            }
+    members.sort_by(|a, b| {
+        let role_cmp = match (a.group_role, b.group_role) {
+            (Some(a_role), Some(b_role)) if a_role != b_role => a_role.cmp(&b_role),
+            _ => Ordering::Equal,
+        };
+        if role_cmp != Ordering::Equal {
+            return role_cmp;
         }
+
+        let a_status = a.active_status.unwrap_or(u8::MAX);
+        let b_status = b.active_status.unwrap_or(u8::MAX);
+        if a_status != b_status {
+            return a_status.cmp(&b_status);
+        }
+
+        let a_name = a.name.to_lowercase();
+        let b_name = b.name.to_lowercase();
+        a_name.cmp(&b_name)
     });
 }
 

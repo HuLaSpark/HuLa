@@ -73,9 +73,9 @@ use crate::command::file_manager_command::{
 use crate::command::message_command::{page_msg, save_msg, send_msg, update_message_recall_status};
 use crate::command::message_mark_command::save_message_mark;
 
-use tauri::{AppHandle, Manager};
 #[cfg(desktop)]
 use tauri::Listener;
+use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 
 pub fn run() {
@@ -371,10 +371,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     };
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
-    #[cfg(mobile)]
-    use crate::mobiles::splash::hide_splash_screen;
     #[cfg(target_os = "ios")]
     use crate::mobiles::keyboard::set_webview_keyboard_adjustment;
+    #[cfg(mobile)]
+    use crate::mobiles::splash::hide_splash_screen;
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_app_background_state, ws_get_health,
         ws_get_state, ws_init_connection, ws_is_connected, ws_send_message,
