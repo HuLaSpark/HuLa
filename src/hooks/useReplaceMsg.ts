@@ -57,19 +57,6 @@ export const useReplaceMsg = () => {
   }
 
   /**
-   * 获取带有@提醒标记的消息内容
-   * @param isAtMe 是否@当前用户
-   * @param content 原始消息内容
-   * @returns 带有@提醒标记的消息内容
-   */
-  const getAtMeContent = (isAtMe: boolean, content: string) => {
-    if (!isAtMe) return content
-
-    const atPrefix = '<span class="text-#d5304f mr-4px">[有人@我]</span>'
-    return `${atPrefix}${content}`
-  }
-
-  /**
    * 处理撤回消息显示逻辑
    * @param message 消息对象
    * @param roomType 房间类型
@@ -104,19 +91,13 @@ export const useReplaceMsg = () => {
   }
 
   /**
-   * 处理消息内容，包括撤回消息和@提醒
+   * 处理消息内容，包括撤回消息
    * @param message 消息对象
    * @param roomType 房间类型
    * @param userName 发送消息用户的名称（可选，如果不提供会自动从消息中提取）
-   * @param isAtMe 是否有人@我
    * @returns 格式化后的消息内容
    */
-  const formatMessageContent = (
-    message: MessageType,
-    roomType: RoomTypeEnum,
-    userName: string = '',
-    isAtMe: boolean
-  ) => {
+  const formatMessageContent = (message: MessageType, roomType: RoomTypeEnum, userName: string = '') => {
     // 如果没有提供用户名，自动从消息中获取
     const senderName = userName
     // 判断是否是撤回消息
@@ -125,21 +106,17 @@ export const useReplaceMsg = () => {
     }
 
     // 正常消息，处理内容
-    const messageContent = renderReplyContent(
+    return renderReplyContent(
       senderName,
       message.message?.type,
       message.message?.body?.content || message.message?.body,
       roomType
     ) as string
-
-    // 处理@提醒
-    return getAtMeContent(isAtMe, messageContent)
   }
 
   return {
     checkMessageAtMe,
     checkRoomAtMe,
-    getAtMeContent,
     formatRecallMessage,
     formatMessageContent,
     getMessageSenderName

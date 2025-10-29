@@ -304,7 +304,7 @@ const sessionList = computed(() => {
         const lastMsg = messages[messages.length - 1]
         if (lastMsg) {
           const senderName = getMessageSenderName(lastMsg, '', item.roomId)
-          displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
+          displayMsg = formatMessageContent(lastMsg, item.type, senderName)
         }
 
         return {

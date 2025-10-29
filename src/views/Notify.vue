@@ -22,14 +22,15 @@
           <n-flex class="w-full" align="center" justify="space-between" :size="10">
             <span class="max-w-150px truncate text-(12px [--text-color])">
               <template v-if="group.isAtMe">
-                <span
-                  class="text flex-1 leading-tight text-12px truncate"
-                  v-html="group.latestContent.replace(':', '：')" />
+                <span class="text flex-1 leading-tight text-12px truncate">
+                  <span class="text-#d5304f mr-4px">[有人@我]</span>
+                  <span>{{ group.latestContent.replace(':', '：') }}</span>
+                </span>
               </template>
               <template v-else>
-                <span
-                  class="text flex-1 leading-tight text-12px truncate"
-                  v-text="group.latestContent.replace(':', '：')" />
+                <span class="text flex-1 leading-tight text-12px truncate">
+                  {{ group.latestContent.replace(':', '：') }}
+                </span>
               </template>
             </span>
 
@@ -183,6 +184,7 @@ const handleMouseLeave = async () => {
   await hideWindow()
 }
 
+// TODO 在托盘图标闪烁的时候鼠标移动到null的图标上的时候会导致Notify窗口消失或者直接不显示Notify，即使已经移动到Notify了也会消失。
 onMounted(async () => {
   // 初始化窗口高度
   resizeWindow('notify', 280, 140)
@@ -224,13 +226,7 @@ onMounted(async () => {
         const senderName = getMessageSenderName(msg, session?.name || '', session!.roomId)
 
         // 格式化消息内容
-        const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName, isAtMe)
-
-        // 获取会话中已有的未读消息数量（排除已在通知中计算过的）
-        let unreadCount = 0
-        if (session && !existingGroup) {
-          unreadCount = session.unreadCount || 0
-        }
+        const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName)
 
         if (existingGroup) {
           // 如果该房间的消息已存在，更新最新内容和计数
@@ -245,11 +241,14 @@ onMounted(async () => {
           }
         } else {
           // 如果是新的房间，创建新的分组
+          // 使用会话的未读消息数量（当前收到的消息已经包含在 unreadCount 中）
+          const messageCount = session?.unreadCount || 1
+
           content.value.push({
             id: msg.message.id,
             roomId: msg.message.roomId,
             latestContent: formattedContent,
-            messageCount: 1 + unreadCount, // 加上已有的未读消息数量
+            messageCount: messageCount,
             avatar: session?.avatar || '',
             name: session?.name || '',
             timestamp: currentTime,
@@ -259,11 +258,11 @@ onMounted(async () => {
           })
 
           // 调整窗口高度，基础高度140，从第二个分组开始每组增加60px，最多4个分组
-          // const baseHeight = 140
-          // const groupCount = content.value.length
-          // const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
-          // const newHeight = baseHeight + additionalHeight
-          // resizeWindow('notify', 280, newHeight)
+          const baseHeight = 140
+          const groupCount = content.value.length
+          const additionalHeight = Math.min(Math.max(groupCount - 1, 0), 3) * 60
+          const newHeight = baseHeight + additionalHeight
+          resizeWindow('notify', 280, newHeight)
         }
 
         // 对消息进行排序 - 先按置顶状态排序，再按活跃时间排序
