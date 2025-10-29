@@ -131,5 +131,5 @@ const openHomeWindow = async () => {
       console.warn('关闭注册窗口失败:', error)
     })
   }
-  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, undefined, 480, undefined, false)
+  await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, 330, 480, undefined, false)
 }

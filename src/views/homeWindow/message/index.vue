@@ -66,17 +66,19 @@
 
             <n-flex align="center" justify="space-between">
               <template v-if="item.isAtMe">
-                <span
-                  class="text flex-1 leading-tight text-12px truncate"
-                  v-html="String(item.lastMsg || '').replace(':', '：')" />
+                <span class="text flex-1 leading-tight text-12px truncate">
+                  <span class="text-#d5304f mr-4px">[有人@我]</span>
+                  <span>{{ String(item.lastMsg || '').replace(':', '：') }}</span>
+                </span>
               </template>
               <template v-else>
                 <span
                   :class="[
                     'text flex-1 leading-tight text-12px truncate',
                     { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }
-                  ]"
-                  v-text="String(item.lastMsg || '').replace(':', '：')" />
+                  ]">
+                  {{ String(item.lastMsg || '').replace(':', '：') }}
+                </span>
               </template>
 
               <!-- 消息提示 -->
@@ -162,8 +164,13 @@ const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visible
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
 
-// 会话列表 TODO: 需要后端返回对应字段
+// 缓存每个会话的格式化消息，避免重复计算
+const sessionMsgCache = reactive<Record<string, { msg: string; isAtMe: boolean; time: number }>>({})
+
+// 会话列表
 const sessionList = computed(() => {
+  const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
+
   return (
     chatStore.sessionList
       .map((item) => {
@@ -176,29 +183,44 @@ const sessionList = computed(() => {
         // 获取群聊备注名称（如果有）
         let displayName = item.name
         if (item.type === RoomTypeEnum.GROUP && item.remark) {
-          // 使用群组备注（如果存在）
           displayName = item.remark
         }
 
-        const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
         // 获取该会话的所有消息用于检查@我
         const messages = chatStore.chatMessageListByRoomId(item.roomId)
-        // 检查是否有@我的消息
-        const isAtMe = checkRoomAtMe(
-          item.roomId,
-          item.type,
-          globalStore.currentSession?.roomId!,
-          messages,
-          item.unreadCount
-        )
 
-        // 处理显示消息
+        // 优化：使用缓存的消息，或者计算新的消息
         let displayMsg = ''
+        let isAtMe = false
 
         const lastMsg = messages[messages.length - 1]
-        if (lastMsg) {
+        const cacheKey = item.roomId
+        const cached = sessionMsgCache[cacheKey]
+
+        // 如果有消息且缓存不存在或已过期，重新计算
+        if (lastMsg && (!cached || cached.time < (lastMsg.message.sendTime || 0))) {
+          isAtMe = checkRoomAtMe(
+            item.roomId,
+            item.type,
+            globalStore.currentSession?.roomId!,
+            messages,
+            item.unreadCount
+          )
+
           const senderName = getMessageSenderName(lastMsg, '', item.roomId)
-          displayMsg = formatMessageContent(lastMsg, item.type, senderName, isAtMe)
+          // 获取纯文本消息内容（不包含 @我 标记）
+          displayMsg = formatMessageContent(lastMsg, item.type, senderName)
+
+          // 更新缓存（只缓存纯文本消息内容）
+          sessionMsgCache[cacheKey] = {
+            msg: displayMsg,
+            isAtMe,
+            time: lastMsg.message.sendTime || 0
+          }
+        } else if (cached) {
+          // 使用缓存的值，但如果未读数为0，强制isAtMe为false
+          displayMsg = cached.msg
+          isAtMe = item.unreadCount > 0 ? cached.isAtMe : false
         }
 
         if (item.account === UserType.BOT) {
@@ -208,7 +230,7 @@ const sessionList = computed(() => {
         return {
           ...item,
           avatar: latestAvatar,
-          name: displayName, // 使用可能修改过的显示名称
+          name: displayName,
           lastMsg: displayMsg || '欢迎使用HuLa',
           lastMsgTime: formatTimestamp(item?.activeTime),
           isAtMe
