@@ -82,7 +82,23 @@ export const useGlobalStore = defineStore(
 
     // 设置home窗口位置、宽高信息
     const setHomeWindowState = (newState: { width: number; height: number }) => {
-      homeWindowState.value = { ...homeWindowState.value, ...newState }
+      // 验证窗口大小，如果小于最小限制，则使用默认值
+      const MIN_WIDTH = 330
+      const MIN_HEIGHT = 480
+      const DEFAULT_WIDTH = 960
+      const DEFAULT_HEIGHT = 720
+
+      if (newState.width < MIN_WIDTH || newState.height < MIN_HEIGHT) {
+        info(
+          `[global] 窗口大小异常 (${newState.width}x${newState.height})，强制设置为默认值 (${DEFAULT_WIDTH}x${DEFAULT_HEIGHT})`
+        )
+        homeWindowState.value = {
+          width: DEFAULT_WIDTH,
+          height: DEFAULT_HEIGHT
+        }
+      } else {
+        homeWindowState.value = { ...homeWindowState.value, ...newState }
+      }
     }
 
     // 更新全局未读消息计数
