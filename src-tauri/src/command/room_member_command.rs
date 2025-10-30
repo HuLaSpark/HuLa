@@ -1,9 +1,7 @@
 use crate::AppData;
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp, Page, PageParam};
-use crate::repository::im_room_member_repository::{
-    save_room_member_batch, update_my_room_info as update_my_room_info_db,
-};
+use crate::repository::im_room_member_repository::update_my_room_info as update_my_room_info_db;
 use crate::vo::vo::MyRoomInfoReq;
 
 use entity::{im_room, im_room_member};
@@ -18,6 +16,29 @@ use std::ops::Deref;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RoomMemberResponse {
+    pub id: String,
+    pub room_id: Option<String>,
+    pub uid: Option<String>,
+    pub account: Option<String>,
+    pub my_name: Option<String>,
+    pub active_status: Option<u8>,
+    #[serde(rename = "roleId")]
+    pub group_role: Option<i64>,
+    pub loc_place: Option<String>,
+    pub last_opt_time: i64,
+    pub create_time: Option<i64>,
+    pub name: String,
+    pub avatar: Option<String>,
+    pub user_state_id: Option<String>,
+    #[serde(rename = "wearingItemId")]
+    pub wearing_item_id: Option<String>,
+    #[serde(rename = "itemIds")]
+    pub item_ids: Option<Vec<String>>,
+}
 
 #[tauri::command]
 pub async fn update_my_room_info(
@@ -76,82 +97,26 @@ pub async fn update_my_room_info(
 #[tauri::command]
 pub async fn get_room_members(
     room_id: String,
-    keyword: Option<String>,
     state: State<'_, AppData>,
-) -> Result<Vec<im_room_member::Model>, String> {
+) -> Result<Vec<RoomMemberResponse>, String> {
     info!("Calling to get all member list of room with room_id");
-    let result: Result<Vec<im_room_member::Model>, CommonError> = async {
+    let result: Result<Vec<RoomMemberResponse>, CommonError> = async {
         let login_uid = {
             let user_info = state.user_info.lock().await;
             user_info.uid.clone()
         };
 
-        let normalized_keyword = keyword
-            .map(|k| k.trim().to_lowercase())
-            .filter(|k| !k.is_empty());
-
-        let mut members = if normalized_keyword.is_some() {
-            match im_room_member_repository::get_room_members_by_room_id(
-                &room_id,
-                state.db_conn.deref(),
-                &login_uid,
-            )
-            .await
-            {
-                Ok(data) if !data.is_empty() => data,
-                Ok(_) => {
-                    fetch_and_update_room_members(
-                        room_id.clone(),
-                        state.db_conn.clone(),
-                        state.rc.clone(),
-                        login_uid.clone(),
-                    )
-                    .await?
-                }
-                Err(err) => {
-                    error!(
-                        "Failed to load cached room members for room {}: {:?}",
-                        room_id, err
-                    );
-                    fetch_and_update_room_members(
-                        room_id.clone(),
-                        state.db_conn.clone(),
-                        state.rc.clone(),
-                        login_uid.clone(),
-                    )
-                    .await?
-                }
-            }
-        } else {
-            fetch_and_update_room_members(
-                room_id.clone(),
-                state.db_conn.clone(),
-                state.rc.clone(),
-                login_uid.clone(),
-            )
-            .await?
-        };
+        let mut members = fetch_and_update_room_members(
+            room_id.clone(),
+            state.db_conn.clone(),
+            state.rc.clone(),
+            login_uid.clone(),
+        )
+        .await?;
 
         sort_room_members(&mut members);
 
-        let filtered_members = if let Some(keyword) = normalized_keyword.as_ref() {
-            let keyword = keyword.as_str();
-            members
-                .into_iter()
-                .filter(|member| {
-                    member.name.to_lowercase().contains(keyword)
-                        || member
-                            .my_name
-                            .as_ref()
-                            .map(|name| name.to_lowercase().contains(keyword))
-                            .unwrap_or(false)
-                })
-                .collect()
-        } else {
-            members
-        };
-
-        Ok(filtered_members)
+        Ok(members)
     }
     .await;
 
@@ -243,7 +208,7 @@ async fn fetch_rooms_from_backend(
 }
 
 /// 对房间成员列表进行排序：按角色优先，再按在线状态，最后按名称字母序
-fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
+fn sort_room_members(members: &mut Vec<RoomMemberResponse>) {
     members.sort_by(|a, b| {
         let role_cmp = match (a.group_role, b.group_role) {
             (Some(a_role), Some(b_role)) if a_role != b_role => a_role.cmp(&b_role),
@@ -268,12 +233,11 @@ fn sort_room_members(members: &mut Vec<im_room_member::Model>) {
 /// 异步更新房间成员数据
 async fn fetch_and_update_room_members(
     room_id: String,
-    db_conn: Arc<DatabaseConnection>,
+    _db_conn: Arc<DatabaseConnection>,
     request_client: Arc<Mutex<ImRequestClient>>,
-    login_uid: String,
-) -> Result<Vec<im_room_member::Model>, CommonError> {
-    // 从后端API获取最新数据
-    let resp: Option<Vec<im_room_member::Model>> = request_client
+    _login_uid: String,
+) -> Result<Vec<RoomMemberResponse>, CommonError> {
+    let resp: Option<Vec<RoomMemberResponse>> = request_client
         .lock()
         .await
         .im_request(
@@ -285,62 +249,8 @@ async fn fetch_and_update_room_members(
         )
         .await?;
 
-    // 更新本地数据库（添加重试机制）
     if let Some(data) = resp {
-        if !data.is_empty() {
-            let room_id_i64 = room_id.parse::<i64>().unwrap_or(0);
-
-            // 添加重试机制处理数据库锁定问题
-            let mut retry_count = 0;
-            const MAX_RETRIES: u32 = 3;
-
-            while retry_count < MAX_RETRIES {
-                match save_room_member_batch(db_conn.deref(), data.clone(), room_id_i64, &login_uid)
-                    .await
-                {
-                    Ok(_) => {
-                        info!(
-                            "Successfully updated room member data for room_id: {}",
-                            room_id
-                        );
-                        return Ok(data.clone());
-                    }
-                    Err(e) => {
-                        retry_count += 1;
-                        let error_msg = e.to_string();
-
-                        if error_msg.contains("database is locked") && retry_count < MAX_RETRIES {
-                            // 如果是数据库锁定错误，等待一段时间后重试
-                            let delay =
-                                tokio::time::Duration::from_millis(500 * retry_count as u64);
-                            tokio::time::sleep(delay).await;
-                            info!(
-                                "Database locked, retrying ({}/{}) after {}ms delay",
-                                retry_count,
-                                MAX_RETRIES,
-                                delay.as_millis()
-                            );
-                        } else {
-                            // 其他错误或重试次数用完，直接返回错误
-                            return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                                "[{}:{}] 异步更新房间成员数据到本地数据库失败: {}",
-                                file!(),
-                                line!(),
-                                e
-                            )));
-                        }
-                    }
-                }
-            }
-
-            // 如果所有重试都失败了
-            return Err(CommonError::UnexpectedError(anyhow::anyhow!(
-                "[{}:{}] 异步更新房间成员数据到本地数据库失败: 重试 {} 次后仍然失败",
-                file!(),
-                line!(),
-                MAX_RETRIES
-            )));
-        }
+        return Ok(data);
     }
 
     Ok(Vec::new())
