@@ -6,11 +6,16 @@
     <n-flex data-tauri-drag-region vertical justify="center" :size="16" class="p-[30px_20px]">
       <n-flex justify="space-between" align="center">
         <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
-        <n-button type="primary" size="small" @click="handleCreateNewChat">
+        <n-button
+          type="primary"
+          size="small"
+          :disabled="!hasAvailableRoles"
+          :loading="roleLoading"
+          @click="handleCreateNewChat">
           <template #icon>
             <svg class="size-16px"><use href="#plus"></use></svg>
           </template>
-          新建会话
+          {{ hasAvailableRoles ? '新建会话' : '请先创建角色' }}
         </n-button>
       </n-flex>
       <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 210px)">
@@ -37,7 +42,7 @@
 import { NFlex, NImage, NSkeleton } from 'naive-ui'
 import type { VNode } from 'vue'
 import { useMitt } from '@/hooks/useMitt.ts'
-import { conversationCreateMy } from '@/utils/ImRequestUtils'
+import { conversationCreateMy, chatRolePage } from '@/utils/ImRequestUtils'
 
 type Example = {
   title: string
@@ -45,20 +50,47 @@ type Example = {
   content: VNode
 }[]
 
+// 角色相关状态
+const roleList = ref<any[]>([])
+const roleLoading = ref(false)
+const firstAvailableRole = computed(() => roleList.value[0] || null)
+const hasAvailableRoles = computed(() => roleList.value.length > 0)
+
+// 加载角色列表
+const loadRoleList = async () => {
+  roleLoading.value = true
+  try {
+    const data = await chatRolePage({ pageNo: 1, pageSize: 100 })
+    // 只显示可用的角色（status === 0）
+    roleList.value = (data.list || []).filter((item: any) => item.status === 0)
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    roleList.value = []
+  } finally {
+    roleLoading.value = false
+  }
+}
+
 // 新增会话
 const handleCreateNewChat = async () => {
   try {
+    // 检查是否有可用角色
+    if (!hasAvailableRoles.value) {
+      window.$message.warning('请先创建角色')
+      useMitt.emit('open-role-management')
+      return
+    }
+
+    // 使用第一个可用角色的 ID
     const data = await conversationCreateMy({
-      roleId: '1',
+      roleId: firstAvailableRole.value.id,
       knowledgeId: undefined,
       title: '新的会话'
     })
 
     if (data) {
-      console.log('✅ 创建会话成功，后端返回:', data)
       window.$message.success('会话创建成功')
 
-      // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
       const newChat = {
         id: data.id || data,
         title: data.title || '新的会话',
@@ -80,6 +112,17 @@ const handleCreateNewChat = async () => {
     window.$message.error('创建会话失败')
   }
 }
+
+// 组件挂载时加载角色列表
+onMounted(() => {
+  loadRoleList()
+
+  // 监听角色列表刷新事件
+  useMitt.on('refresh-role-list', () => {
+    console.log('🔄 Welcome 页面收到角色列表刷新事件')
+    loadRoleList()
+  })
+})
 const avatars = 'https://picsum.photos/140'
 const examplesList: Example = [
   {

@@ -539,11 +539,18 @@ impl ImUrl {
             // ai相关 - 聊天消息
             ImUrl::MessageSend => (http::Method::POST, "ai/chat/message/send"),
             ImUrl::MessageSendStream => (http::Method::POST, "ai/chat/message/send-stream"),
-            ImUrl::MessageListByConversationId => {(http::Method::GET, "ai/chat/message/list-by-conversation-id")}
+            ImUrl::MessageListByConversationId => {
+                (http::Method::GET, "ai/chat/message/list-by-conversation-id")
+            }
             ImUrl::MessageDelete => (http::Method::DELETE, "ai/chat/message/delete"),
-            ImUrl::MessageDeleteByConversationId => (http::Method::DELETE,"ai/chat/message/delete-by-conversation-id"),
+            ImUrl::MessageDeleteByConversationId => (
+                http::Method::DELETE,
+                "ai/chat/message/delete-by-conversation-id",
+            ),
             ImUrl::MessagePage => (http::Method::GET, "ai/chat/message/page"),
-            ImUrl::MessageDeleteByAdmin => {(http::Method::DELETE, "ai/chat/message/delete-by-admin")}
+            ImUrl::MessageDeleteByAdmin => {
+                (http::Method::DELETE, "ai/chat/message/delete-by-admin")
+            }
 
             // AI 聊天对话
             ImUrl::ConversationCreateMy => (http::Method::POST, "ai/chat/conversation/create-my"),
@@ -551,9 +558,14 @@ impl ImUrl {
             ImUrl::ConversationMyList => (http::Method::GET, "ai/chat/conversation/my-list"),
             ImUrl::ConversationGetMy => (http::Method::GET, "ai/chat/conversation/get-my"),
             ImUrl::ConversationDeleteMy => (http::Method::DELETE, "ai/chat/conversation/delete-my"),
-            ImUrl::ConversationDeleteByUnpinned => (http::Method::DELETE,"ai/chat/conversation/delete-by-unpinned"),
+            ImUrl::ConversationDeleteByUnpinned => (
+                http::Method::DELETE,
+                "ai/chat/conversation/delete-by-unpinned",
+            ),
             ImUrl::ConversationPage => (http::Method::GET, "ai/chat/conversation/page"),
-            ImUrl::ConversationDeleteByAdmin => {(http::Method::DELETE, "ai/chat/conversation/delete-by-admin")}
+            ImUrl::ConversationDeleteByAdmin => {
+                (http::Method::DELETE, "ai/chat/conversation/delete-by-admin")
+            }
 
             // AI 模型相关接口
             ImUrl::ModelCreate => (http::Method::POST, "ai/model/create"),
@@ -618,19 +630,29 @@ impl ImUrl {
             ImUrl::KnowledgeDocumentPage => (http::Method::GET, "ai/knowledge/document/page"),
             ImUrl::KnowledgeDocumentGet => (http::Method::GET, "ai/knowledge/document/get"),
             ImUrl::KnowledgeDocumentCreate => (http::Method::POST, "ai/knowledge/document/create"),
-            ImUrl::KnowledgeDocumentCreateList => {(http::Method::POST, "ai/knowledge/document/create-list")}
+            ImUrl::KnowledgeDocumentCreateList => {
+                (http::Method::POST, "ai/knowledge/document/create-list")
+            }
             ImUrl::KnowledgeDocumentUpdate => (http::Method::PUT, "ai/knowledge/document/update"),
-            ImUrl::KnowledgeDocumentUpdateStatus => {(http::Method::PUT, "ai/knowledge/document/update-status")}
-            ImUrl::KnowledgeDocumentDelete => {(http::Method::DELETE, "ai/knowledge/document/delete")}
+            ImUrl::KnowledgeDocumentUpdateStatus => {
+                (http::Method::PUT, "ai/knowledge/document/update-status")
+            }
+            ImUrl::KnowledgeDocumentDelete => {
+                (http::Method::DELETE, "ai/knowledge/document/delete")
+            }
 
             // 知识库文档片段相关接口
             ImUrl::KnowledgeSegmentGet => (http::Method::GET, "ai/knowledge/segment/get"),
             ImUrl::KnowledgeSegmentPage => (http::Method::GET, "ai/knowledge/segment/page"),
             ImUrl::KnowledgeSegmentCreate => (http::Method::POST, "ai/knowledge/segment/create"),
             ImUrl::KnowledgeSegmentUpdate => (http::Method::PUT, "ai/knowledge/segment/update"),
-            ImUrl::KnowledgeSegmentUpdateStatus => {(http::Method::PUT, "ai/knowledge/segment/update-status")}
+            ImUrl::KnowledgeSegmentUpdateStatus => {
+                (http::Method::PUT, "ai/knowledge/segment/update-status")
+            }
             ImUrl::KnowledgeSegmentSplit => (http::Method::GET, "ai/knowledge/segment/split"),
-            ImUrl::KnowledgeSegmentGetProcessList => {(http::Method::GET, "ai/knowledge/segment/get-process-list")}
+            ImUrl::KnowledgeSegmentGetProcessList => {
+                (http::Method::GET, "ai/knowledge/segment/get-process-list")
+            }
             ImUrl::KnowledgeSegmentSearch => (http::Method::GET, "ai/knowledge/segment/search"),
 
             // AI 思维导图相关接口

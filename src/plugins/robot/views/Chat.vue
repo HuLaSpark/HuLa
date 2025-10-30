@@ -1,341 +1,433 @@
 <template>
   <!-- 主体内容 -->
   <main class="chat-main-container">
-    <div
-      data-tauri-drag-region
-      class="chat-header flex truncate p-[8px_16px_10px_16px] justify-between items-center gap-50px">
-      <n-flex :size="10" vertical class="truncate">
-        <p
-          v-if="!isEdit"
-          @click="handleEdit"
-          class="leading-6 text-(18px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
-          {{ currentChat.title || '新的会话' }}
-        </p>
-        <n-input
-          v-else
-          @blur="handleBlur"
-          ref="inputInstRef"
-          v-model:value="currentChat.title"
-          clearable
-          placeholder="输入标题"
-          type="text"
-          size="small"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          style="width: 200px; height: 28px"
-          class="text-14px rounded-6px"></n-input>
-
-        <!-- 当前选择的模型显示 -->
-        <n-flex align="center" :size="8" class="mt-4px">
-          <div class="flex items-center gap-6px">
-            <span class="text-(11px #909090)">当前模型:</span>
-            <n-tag
-              v-if="selectedModel"
-              size="small"
-              :type="selectedModel.status === 0 ? 'success' : 'error'"
-              class="cursor-pointer"
-              @click="handleModelClick">
-              {{ selectedModel.name }}
-              <template #icon>
-                <Icon icon="mdi:robot" class="text-14px" />
-              </template>
-            </n-tag>
-            <n-tag v-else size="small" type="warning" class="cursor-pointer" @click="handleModelClick">
-              未选择模型
-              <template #icon>
-                <Icon icon="mdi:robot-off" class="text-14px" />
-              </template>
-            </n-tag>
-          </div>
-          <p class="text-(11px #707070)">共{{ currentChat.messageCount }}条对话</p>
-        </n-flex>
-      </n-flex>
-
-      <n-flex class="min-w-fit">
-        <!-- 新增会话按钮 -->
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <div class="right-btn" @click="handleCreateNewChat">
-              <svg><use href="#plus"></use></svg>
-            </div>
-          </template>
-          <p>新建会话</p>
-        </n-popover>
-
-        <!-- 编辑标题按钮 -->
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <div class="right-btn" @click="handleEdit">
-              <svg><use href="#edit"></use></svg>
-            </div>
-          </template>
-          <p>编辑标题</p>
-        </n-popover>
-
-        <!-- 删除会话按钮 -->
-        <n-popover
-          v-model:show="showDeleteChatConfirm"
-          trigger="click"
-          placement="bottom"
-          :show-arrow="true"
-          style="padding: 16px; width: 280px">
-          <template #trigger>
-            <div class="right-btn right-btn-danger" title="删除会话">
-              <svg><use href="#delete"></use></svg>
-            </div>
-          </template>
-          <n-flex vertical :size="12">
-            <p class="text-(14px [--chat-text-color]) font-500">确定要删除当前会话吗？</p>
-            <p class="text-(12px red-500)">删除后将无法恢复！</p>
-
-            <!-- 是否同时删除消息选项 -->
-            <n-checkbox v-model:checked="deleteWithMessages" size="small">
-              <span class="text-(12px [--chat-text-color])">同时删除会话中的所有消息</span>
-            </n-checkbox>
-
-            <n-flex justify="end" :size="8">
-              <n-button size="small" @click="showDeleteChatConfirm = false">取消</n-button>
-              <n-button size="small" type="error" @click="handleDeleteChat">确定删除</n-button>
-            </n-flex>
-          </n-flex>
-        </n-popover>
-
-        <!-- 分享按钮 -->
-        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
-          <template #trigger>
-            <div class="right-btn">
-              <svg><use href="#Sharing"></use></svg>
-            </div>
-          </template>
-          <p>分享</p>
-        </n-popover>
-      </n-flex>
-    </div>
-    <div class="h-1px bg-[--line-color]"></div>
-
-    <!-- 聊天信息框 -->
-    <div
-      ref="chatContainerRef"
-      :class="{ 'shadow-inner': page.shadow }"
-      class="chat-messages-container w-full p-[16px_16px] box-border overflow-y-auto">
-      <!-- 欢迎消息 -->
-      <n-flex :size="6" class="mb-12px">
-        <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
-        <n-flex vertical justify="space-between">
-          <p class="text-(12px [--chat-text-color])">
-            {{ selectedModel ? selectedModel.name : 'GPT-4' }}
-            <n-tag
-              v-if="selectedModel"
-              :type="selectedModel.status === 0 ? 'success' : 'error'"
-              size="tiny"
-              class="ml-8px">
-              {{ selectedModel.status === 0 ? '可用' : '不可用' }}
-            </n-tag>
+    <div class="chat-content-area">
+      <div
+        data-tauri-drag-region
+        class="chat-header flex truncate p-[8px_16px_10px_16px] justify-between items-center gap-50px">
+        <n-flex :size="10" vertical class="truncate">
+          <p
+            v-if="!isEdit"
+            @click="handleEdit"
+            class="leading-6 text-(18px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
+            {{ currentChat.title || '新的会话' }}
           </p>
+          <n-input
+            v-else
+            @blur="handleBlur"
+            ref="inputInstRef"
+            v-model:value="currentChat.title"
+            clearable
+            placeholder="输入标题"
+            type="text"
+            size="small"
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            style="width: 200px; height: 28px"
+            class="text-14px rounded-6px"></n-input>
 
-          <!--  气泡样式  -->
-          <ContextMenu>
-            <div style="white-space: pre-wrap" class="bubble select-text">
-              <span v-html="'你好，我是' + selectedModel?.name + '，很高兴为您服务。'"></span>
+          <!-- 当前选择的模型显示 -->
+          <n-flex align="center" :size="8" class="mt-4px">
+            <div class="flex items-center gap-6px">
+              <span class="text-(11px #909090)">当前模型:</span>
+              <n-tag
+                v-if="selectedModel"
+                size="small"
+                :type="selectedModel.status === 0 ? 'success' : 'error'"
+                class="cursor-pointer"
+                @click="handleModelClick">
+                {{ selectedModel.name }}
+                <template #icon>
+                  <Icon icon="mdi:robot" class="text-14px" />
+                </template>
+              </n-tag>
+              <n-tag v-else size="small" type="warning" class="cursor-pointer" @click="handleModelClick">
+                未选择模型
+                <template #icon>
+                  <Icon icon="mdi:robot-off" class="text-14px" />
+                </template>
+              </n-tag>
             </div>
-          </ContextMenu>
+            <p class="text-(11px #707070)">共{{ currentChat.messageCount }}条对话</p>
+          </n-flex>
         </n-flex>
-      </n-flex>
 
-      <!-- 加载状态 -->
-      <div v-if="loadingMessages" class="flex justify-center items-center py-20px">
-        <n-spin size="small" />
-        <span class="ml-10px text-(12px #909090)">加载消息中...</span>
-      </div>
-
-      <!-- 消息列表 -->
-      <n-flex vertical :size="12">
-        <template v-for="(message, index) in messageList" :key="index">
-          <!-- 用户消息 -->
-          <n-flex v-if="message.type === 'user'" :size="6" justify="end" class="message-item group">
-            <n-flex vertical align="end" class="max-w-70%">
-              <n-flex align="center" :size="8">
-                <p class="text-(12px #909090)">我</p>
-                <!-- 删除按钮 -->
-                <n-popconfirm
-                  v-if="message.id"
-                  @positive-click="() => handleDeleteMessage(message.id!, index)"
-                  positive-text="删除"
-                  negative-text="取消">
-                  <template #trigger>
-                    <div
-                      class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
-                      title="删除消息">
-                      <svg class="w-14px h-14px"><use href="#delete"></use></svg>
-                    </div>
-                  </template>
-                  <p>确定要删除这条消息吗？</p>
-                </n-popconfirm>
-              </n-flex>
-              <ContextMenu>
-                <div style="white-space: pre-wrap" class="bubble bubble-user select-text">
-                  {{ message.content }}
-                </div>
-              </ContextMenu>
-            </n-flex>
-            <n-avatar
-              class="rounded-8px"
-              :src="userStore.userInfo?.avatar ? AvatarUtils.getAvatarUrl(userStore.userInfo.avatar) : ''"
-              :fallback-src="getDefaultAvatar()" />
-          </n-flex>
-
-          <!-- AI消息 -->
-          <n-flex v-else :size="6" class="message-item group">
-            <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
-            <n-flex vertical class="max-w-70%">
-              <n-flex align="center" :size="8">
-                <p class="text-(12px [--chat-text-color])">
-                  {{ selectedModel ? selectedModel.name : 'AI' }}
-                </p>
-                <!-- 删除按钮 -->
-                <n-popconfirm
-                  v-if="message.id"
-                  @positive-click="() => handleDeleteMessage(message.id!, index)"
-                  positive-text="删除"
-                  negative-text="取消">
-                  <template #trigger>
-                    <div
-                      class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
-                      title="删除消息">
-                      <svg class="w-14px h-14px"><use href="#delete"></use></svg>
-                    </div>
-                  </template>
-                  <p>确定要删除这条消息吗？</p>
-                </n-popconfirm>
-              </n-flex>
-              <ContextMenu>
-                <div style="white-space: pre-wrap" class="bubble select-text">
-                  <span v-if="message.streaming" class="streaming-cursor">{{ message.content }}</span>
-                  <span v-else>{{ message.content }}</span>
-                </div>
-              </ContextMenu>
-            </n-flex>
-          </n-flex>
-        </template>
-      </n-flex>
-    </div>
-
-    <div class="h-1px bg-[--line-color]"></div>
-    <!-- 下半部分输入框以及功能栏 -->
-    <div class="chat-input-container min-h-180px">
-      <n-flex vertical :size="6" class="p-[8px_16px] box-border">
-        <n-flex align="center" :size="26" class="options">
-          <!-- 模型选择 -->
-          <n-popover
-            v-model:show="showModelPopover"
-            trigger="click"
-            placement="top-start"
-            :show-arrow="false"
-            style="padding: 0; width: 320px">
+        <n-flex class="min-w-fit">
+          <!-- 新增会话按钮 - 只有在有可用角色时才显示 -->
+          <n-popover v-if="hasAvailableRoles" trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
-              <div class="flex items-center gap-6px cursor-pointer" @click="handleModelClick">
-                <svg><use href="#model"></use></svg>
-                <span class="text-(12px [--chat-text-color])">
-                  {{ selectedModel ? selectedModel.name : '选择模型' }}
-                </span>
+              <div class="right-btn" @click="handleCreateNewChat">
+                <svg><use href="#plus"></use></svg>
               </div>
             </template>
-            <div class="model-selector">
-              <div class="model-header">
-                <span class="model-title">选择模型</span>
-                <n-input
-                  v-model:value="modelSearch"
-                  placeholder="搜索模型..."
-                  clearable
-                  size="small"
-                  style="width: 180px">
-                  <template #prefix>
-                    <Icon icon="mdi:magnify" class="text-16px color-#909090" />
-                  </template>
-                </n-input>
+            <p>新建会话</p>
+          </n-popover>
+
+          <!-- 没有角色时的提示 -->
+          <n-popover v-else trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <div class="right-btn right-btn-disabled" @click="handleNoRoleWarning">
+                <svg><use href="#plus"></use></svg>
               </div>
+            </template>
+            <p>请先创建角色</p>
+          </n-popover>
 
-              <div class="model-list">
-                <div v-if="modelLoading" class="loading-container">
-                  <n-spin size="small" />
-                  <span class="loading-text">加载中...</span>
-                </div>
+          <!-- 编辑标题按钮 -->
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <div class="right-btn" @click="handleEdit">
+                <svg><use href="#edit"></use></svg>
+              </div>
+            </template>
+            <p>编辑标题</p>
+          </n-popover>
 
-                <div v-else-if="filteredModels.length === 0" class="empty-container">
-                  <n-empty description="暂无模型数据" size="small">
-                    <template #icon>
-                      <Icon icon="mdi:package-variant-closed" class="text-24px color-#909090" />
-                    </template>
-                  </n-empty>
-                </div>
+          <!-- 删除会话按钮 -->
+          <n-popover
+            v-model:show="showDeleteChatConfirm"
+            trigger="click"
+            placement="bottom"
+            :show-arrow="true"
+            style="padding: 16px; width: 280px">
+            <template #trigger>
+              <div class="right-btn right-btn-danger" title="删除会话">
+                <svg><use href="#delete"></use></svg>
+              </div>
+            </template>
+            <n-flex vertical :size="12">
+              <p class="text-(14px [--chat-text-color]) font-500">确定要删除当前会话吗？</p>
+              <p class="text-(12px red-500)">删除后将无法恢复！</p>
 
-                <div v-else class="models-container">
-                  <div
-                    v-for="model in filteredModels"
-                    :key="model.id"
-                    :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
-                    @click="selectModel(model)">
-                    <!-- 模型头像 -->
-                    <n-avatar
-                      round
-                      :size="40"
-                      :src="getModelAvatar(model)"
-                      :fallback-src="getDefaultAvatar()"
-                      class="mr-12px flex-shrink-0" />
+              <!-- 是否同时删除消息选项 -->
+              <n-checkbox v-model:checked="deleteWithMessages" size="small">
+                <span class="text-(12px [--chat-text-color])">同时删除会话中的所有消息</span>
+              </n-checkbox>
 
-                    <div class="model-info">
-                      <div class="model-name">{{ model.name }}</div>
-                      <div class="model-description">{{ model.description || '暂无描述' }}</div>
-                      <div class="model-meta">
-                        <span class="model-provider">{{ model.platform }}</span>
-                        <span class="model-version">v{{ model.model }}</span>
+              <n-flex justify="end" :size="8">
+                <n-button size="small" @click="showDeleteChatConfirm = false">取消</n-button>
+                <n-button size="small" type="error" @click="handleDeleteChat">确定删除</n-button>
+              </n-flex>
+            </n-flex>
+          </n-popover>
+
+          <!-- 分享按钮 -->
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+            <template #trigger>
+              <div class="right-btn">
+                <svg><use href="#Sharing"></use></svg>
+              </div>
+            </template>
+            <p>分享</p>
+          </n-popover>
+        </n-flex>
+      </div>
+      <div class="h-1px bg-[--line-color]"></div>
+
+      <!-- 聊天信息框 -->
+      <div
+        ref="chatContainerRef"
+        :class="{ 'shadow-inner': page.shadow }"
+        class="chat-messages-container w-full p-[16px_16px] box-border overflow-y-auto">
+        <!-- 欢迎消息 -->
+        <n-flex :size="6" class="mb-12px">
+          <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
+          <n-flex vertical justify="space-between">
+            <p class="text-(12px [--chat-text-color])">
+              {{ selectedModel ? selectedModel.name : 'GPT-4' }}
+              <n-tag
+                v-if="selectedModel"
+                :type="selectedModel.status === 0 ? 'success' : 'error'"
+                size="tiny"
+                class="ml-8px">
+                {{ selectedModel.status === 0 ? '可用' : '不可用' }}
+              </n-tag>
+            </p>
+
+            <!--  气泡样式  -->
+            <ContextMenu>
+              <div style="white-space: pre-wrap" class="bubble select-text">
+                <span v-html="'你好，我是' + selectedModel?.name + '，很高兴为您服务。'"></span>
+              </div>
+            </ContextMenu>
+          </n-flex>
+        </n-flex>
+
+        <!-- 加载状态 -->
+        <div v-if="loadingMessages" class="flex justify-center items-center py-20px">
+          <n-spin size="small" />
+          <span class="ml-10px text-(12px #909090)">加载消息中...</span>
+        </div>
+
+        <!-- 消息列表 -->
+        <n-flex vertical :size="12">
+          <template v-for="(message, index) in messageList" :key="index">
+            <!-- 用户消息 -->
+            <n-flex v-if="message.type === 'user'" :size="6" justify="end" class="message-item group">
+              <n-flex vertical align="end" class="max-w-70%">
+                <n-flex align="center" :size="8">
+                  <p class="text-(12px #909090)">我</p>
+                  <!-- 删除按钮 -->
+                  <n-popconfirm
+                    v-if="message.id"
+                    @positive-click="() => handleDeleteMessage(message.id!, index)"
+                    positive-text="删除"
+                    negative-text="取消">
+                    <template #trigger>
+                      <div
+                        class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
+                        title="删除消息">
+                        <svg class="w-14px h-14px"><use href="#delete"></use></svg>
                       </div>
-                    </div>
-                    <div class="model-status">
-                      <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
-                      <n-tag v-else type="error" size="small">不可用</n-tag>
+                    </template>
+                    <p>确定要删除这条消息吗？</p>
+                  </n-popconfirm>
+                </n-flex>
+                <ContextMenu>
+                  <div style="white-space: pre-wrap" class="bubble bubble-user select-text">
+                    {{ message.content }}
+                  </div>
+                </ContextMenu>
+              </n-flex>
+              <n-avatar
+                class="rounded-8px"
+                :src="userStore.userInfo?.avatar ? AvatarUtils.getAvatarUrl(userStore.userInfo.avatar) : ''"
+                :fallback-src="getDefaultAvatar()" />
+            </n-flex>
+
+            <!-- AI消息 -->
+            <n-flex v-else :size="6" class="message-item group">
+              <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
+              <n-flex vertical class="max-w-70%">
+                <n-flex align="center" :size="8">
+                  <p class="text-(12px [--chat-text-color])">
+                    {{ selectedModel ? selectedModel.name : 'AI' }}
+                  </p>
+                  <!-- 删除按钮 -->
+                  <n-popconfirm
+                    v-if="message.id"
+                    @positive-click="() => handleDeleteMessage(message.id!, index)"
+                    positive-text="删除"
+                    negative-text="取消">
+                    <template #trigger>
+                      <div
+                        class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
+                        title="删除消息">
+                        <svg class="w-14px h-14px"><use href="#delete"></use></svg>
+                      </div>
+                    </template>
+                    <p>确定要删除这条消息吗？</p>
+                  </n-popconfirm>
+                </n-flex>
+                <ContextMenu>
+                  <div style="white-space: pre-wrap" class="bubble select-text">
+                    <span v-if="message.streaming" class="streaming-cursor">{{ message.content }}</span>
+                    <span v-else>{{ message.content }}</span>
+                  </div>
+                </ContextMenu>
+              </n-flex>
+            </n-flex>
+          </template>
+        </n-flex>
+      </div>
+
+      <div class="h-1px bg-[--line-color]"></div>
+      <!-- 下半部分输入框以及功能栏 -->
+      <div class="chat-input-container min-h-180px">
+        <n-flex vertical :size="6" class="p-[8px_16px] box-border">
+          <n-flex align="center" :size="26" class="options">
+            <!-- 角色选择 -->
+            <n-popover
+              v-model:show="showRolePopover"
+              trigger="click"
+              placement="top-start"
+              :show-arrow="false"
+              style="padding: 0; width: 320px">
+              <template #trigger>
+                <div class="flex items-center gap-6px cursor-pointer" @click="showRolePopover = !showRolePopover">
+                  <n-avatar
+                    v-if="selectedRole"
+                    :src="selectedRole.avatar"
+                    :size="24"
+                    round
+                    :fallback-src="getDefaultAvatar()" />
+                  <Icon v-else icon="mdi:account-circle" class="text-24px color-#909090" />
+                  <span class="text-(12px [--chat-text-color])">
+                    {{ selectedRole ? selectedRole.name : '选择角色' }}
+                  </span>
+                  <Icon icon="mdi:chevron-down" class="text-16px color-#909090" />
+                </div>
+              </template>
+              <div class="role-selector">
+                <div class="role-header">
+                  <span class="role-title">选择角色</span>
+                  <n-button size="small" @click="handleOpenRoleManagement">
+                    <template #icon>
+                      <Icon icon="mdi:cog" />
+                    </template>
+                    管理
+                  </n-button>
+                </div>
+
+                <div class="role-list">
+                  <div v-if="roleLoading" class="loading-container">
+                    <n-spin size="small" />
+                    <span class="loading-text">加载中...</span>
+                  </div>
+
+                  <div v-else-if="roleList.length === 0" class="empty-container">
+                    <n-empty description="暂无角色数据" size="small">
+                      <template #icon>
+                        <Icon icon="mdi:account-off" class="text-24px color-#909090" />
+                      </template>
+                    </n-empty>
+                  </div>
+
+                  <div v-else class="roles-container">
+                    <div
+                      v-for="role in roleList"
+                      :key="role.id"
+                      class="role-item"
+                      :class="{ active: selectedRole?.id === role.id }"
+                      @click="handleSelectRole(role)">
+                      <n-avatar :src="role.avatar" :size="32" round :fallback-src="getDefaultAvatar()" />
+                      <n-flex vertical :size="2" class="flex-1 min-w-0">
+                        <n-flex align="center" :size="8">
+                          <span class="role-name">{{ role.name }}</span>
+                          <n-tag v-if="role.status === 0" size="tiny" type="success">可用</n-tag>
+                        </n-flex>
+                        <span class="role-desc">{{ role.description }}</span>
+                      </n-flex>
+                      <Icon
+                        v-if="selectedRole?.id === role.id"
+                        icon="mdi:check-circle"
+                        class="text-18px color-[--primary-color]" />
                     </div>
                   </div>
                 </div>
               </div>
+            </n-popover>
 
-              <!-- 分页控件 -->
-              <div v-if="modelPagination.total > modelPagination.pageSize" class="model-pagination">
-                <n-pagination
-                  v-model:page="modelPagination.pageNo"
-                  :page-size="modelPagination.pageSize"
-                  :page-count="Math.ceil(modelPagination.total / modelPagination.pageSize)"
-                  size="small"
-                  @update:page="handleModelPageChange" />
+            <!-- 模型选择 -->
+            <n-popover
+              v-model:show="showModelPopover"
+              trigger="click"
+              placement="top-start"
+              :show-arrow="false"
+              style="padding: 0; width: 320px">
+              <template #trigger>
+                <div class="flex items-center gap-6px cursor-pointer" @click="handleModelClick">
+                  <svg><use href="#model"></use></svg>
+                  <span class="text-(12px [--chat-text-color])">
+                    {{ selectedModel ? selectedModel.name : '选择模型' }}
+                  </span>
+                </div>
+              </template>
+              <div class="model-selector">
+                <div class="model-header">
+                  <span class="model-title">选择模型</span>
+                  <n-flex :size="8">
+                    <n-button size="small" @click="handleOpenModelManagement">
+                      <template #icon>
+                        <Icon icon="mdi:cog" />
+                      </template>
+                      管理
+                    </n-button>
+                    <n-input
+                      v-model:value="modelSearch"
+                      placeholder="搜索模型..."
+                      clearable
+                      size="small"
+                      style="width: 140px">
+                      <template #prefix>
+                        <Icon icon="mdi:magnify" class="text-16px color-#909090" />
+                      </template>
+                    </n-input>
+                  </n-flex>
+                </div>
+
+                <div class="model-list">
+                  <div v-if="modelLoading" class="loading-container">
+                    <n-spin size="small" />
+                    <span class="loading-text">加载中...</span>
+                  </div>
+
+                  <div v-else-if="filteredModels.length === 0" class="empty-container">
+                    <n-empty description="暂无模型数据" size="small">
+                      <template #icon>
+                        <Icon icon="mdi:package-variant-closed" class="text-24px color-#909090" />
+                      </template>
+                    </n-empty>
+                  </div>
+
+                  <div v-else class="models-container">
+                    <div
+                      v-for="model in filteredModels"
+                      :key="model.id"
+                      :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
+                      @click="selectModel(model)">
+                      <!-- 模型头像 -->
+                      <n-avatar
+                        round
+                        :size="40"
+                        :src="getModelAvatar(model)"
+                        :fallback-src="getDefaultAvatar()"
+                        class="mr-12px flex-shrink-0" />
+
+                      <div class="model-info">
+                        <div class="model-name">{{ model.name }}</div>
+                        <div class="model-description">{{ model.description || '暂无描述' }}</div>
+                        <div class="model-meta">
+                          <span class="model-provider">{{ model.platform }}</span>
+                          <span class="model-version">v{{ model.model }}</span>
+                        </div>
+                      </div>
+                      <div class="model-status">
+                        <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
+                        <n-tag v-else type="error" size="small">不可用</n-tag>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 分页控件 -->
+                <div v-if="modelPagination.total > modelPagination.pageSize" class="model-pagination">
+                  <n-pagination
+                    v-model:page="modelPagination.pageNo"
+                    :page-size="modelPagination.pageSize"
+                    :page-count="Math.ceil(modelPagination.total / modelPagination.pageSize)"
+                    size="small"
+                    @update:page="handleModelPageChange" />
+                </div>
               </div>
+            </n-popover>
+
+            <!-- 其他功能图标 -->
+            <n-popover
+              v-for="(item, index) in otherFeatures"
+              :key="index"
+              trigger="hover"
+              :show-arrow="false"
+              placement="top">
+              <template #trigger>
+                <svg><use :href="`#${item.icon}`"></use></svg>
+              </template>
+              <p>{{ item.label }}</p>
+            </n-popover>
+
+            <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
+              <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
+              <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
             </div>
-          </n-popover>
+          </n-flex>
 
-          <!-- 其他功能图标 -->
-          <n-popover
-            v-for="(item, index) in otherFeatures"
-            :key="index"
-            trigger="hover"
-            :show-arrow="false"
-            placement="top">
-            <template #trigger>
-              <svg><use :href="`#${item.icon}`"></use></svg>
-            </template>
-            <p>{{ item.label }}</p>
-          </n-popover>
-
-          <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
-            <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
-            <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
+          <div style="height: 100px" class="flex flex-col items-end gap-6px">
+            <MsgInput ref="MsgInputRef" :isAIMode="!!selectedModel" @send-ai="handleSendAI" />
           </div>
         </n-flex>
-
-        <div style="height: 100px" class="flex flex-col items-end gap-6px">
-          <MsgInput ref="MsgInputRef" :isAIMode="!!selectedModel" @send-ai="handleSendAI" />
-        </div>
-      </n-flex>
+      </div>
     </div>
   </main>
 </template>
@@ -391,6 +483,15 @@ const chatContainerRef = ref<HTMLElement | null>(null)
 const loadingMessages = ref(false) // 消息加载状态
 const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
 const deleteWithMessages = ref(false) // 是否同时删除消息
+const showRolePopover = ref(false) // 角色选择弹窗显示状态
+const selectedRole = ref<any>(null) // 当前选中的角色
+const roleList = ref<any[]>([]) // 角色列表
+const roleLoading = ref(false) // 角色加载状态
+
+// 计算属性：是否有可用角色
+const hasAvailableRoles = computed(() => {
+  return roleList.value.length > 0
+})
 
 // 滚动到底部
 const scrollToBottom = () => {
@@ -637,6 +738,44 @@ const handleModelPageChange = (page: number) => {
   fetchModelList()
 }
 
+// 打开模型管理
+const handleOpenModelManagement = () => {
+  showModelPopover.value = false
+  useMitt.emit('open-model-management')
+}
+
+// 加载角色列表
+const loadRoleList = async () => {
+  roleLoading.value = true
+  try {
+    const { chatRolePage } = await import('@/utils/ImRequestUtils')
+    const data = await chatRolePage({ pageNo: 1, pageSize: 100 })
+    roleList.value = (data.list || []).filter((item: any) => item.status === 0) // 只显示可用的角色
+
+    // 如果没有选中角色，默认选中第一个
+    if (!selectedRole.value && roleList.value.length > 0) {
+      selectedRole.value = roleList.value[0]
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    window.$message.error('加载角色列表失败')
+  } finally {
+    roleLoading.value = false
+  }
+}
+
+// 选择角色
+const handleSelectRole = (role: any) => {
+  selectedRole.value = role
+  showRolePopover.value = false
+}
+
+// 打开角色管理
+const handleOpenRoleManagement = () => {
+  showRolePopover.value = false
+  useMitt.emit('open-role-management')
+}
+
 const handleBlur = async () => {
   isEdit.value = false
   if (originalTitle.value === currentChat.value.title) {
@@ -718,17 +857,35 @@ const loadMessages = async (conversationId: string) => {
   }
 }
 
+// 没有角色时的警告
+const handleNoRoleWarning = () => {
+  window.$message.warning('请先创建角色')
+  // 自动打开角色管理
+  useMitt.emit('open-role-management')
+}
+
 // 新增会话
 const handleCreateNewChat = async () => {
   try {
+    // 检查是否有可用角色
+    if (!hasAvailableRoles.value) {
+      handleNoRoleWarning()
+      return
+    }
+
+    // 检查是否选择了角色
+    if (!selectedRole.value) {
+      window.$message.warning('请先选择一个角色')
+      return
+    }
+
     const data = await conversationCreateMy({
-      roleId: '1',
+      roleId: selectedRole.value.id,
       knowledgeId: undefined,
       title: '新的会话'
     })
 
     if (data) {
-      console.log('✅ 创建会话成功，后端返回:', data)
       window.$message.success('会话创建成功')
 
       // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
@@ -826,6 +983,21 @@ onMounted(() => {
     fetchModelList()
   }
 
+  // 加载角色列表
+  loadRoleList()
+
+  // 监听角色列表刷新事件
+  useMitt.on('refresh-role-list', () => {
+    console.log('🔄 收到角色列表刷新事件')
+    loadRoleList()
+  })
+
+  // 监听模型列表刷新事件
+  useMitt.on('refresh-model-list', () => {
+    console.log('🔄 收到模型列表刷新事件')
+    fetchModelList()
+  })
+
   useMitt.on('left-chat-title', (e) => {
     const { title, id } = e
     if (id === currentChat.value.id) {
@@ -855,8 +1027,37 @@ onMounted(() => {
 /* 主容器布局 */
 .chat-main-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100vh;
+  overflow: hidden;
+}
+
+/* 左侧角色选择区域 */
+.chat-role-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line-color);
+  background: var(--bg-color);
+
+  .role-sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--line-color);
+  }
+
+  .role-sidebar-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+}
+
+/* 右侧聊天区域 */
+.chat-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -895,6 +1096,13 @@ onMounted(() => {
     @apply border-red-500 bg-red-50;
     svg {
       @apply color-red-500;
+    }
+  }
+
+  &.right-btn-disabled {
+    @apply opacity-50 cursor-not-allowed;
+    &:hover {
+      @apply bg-[--chat-bt-color];
     }
   }
 }
@@ -1048,6 +1256,91 @@ onMounted(() => {
     justify-content: center;
     padding-top: 8px;
     border-top: 1px solid var(--line-color);
+  }
+}
+
+/* 角色选择器样式 */
+.role-selector {
+  background: var(--chat-bt-color);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+
+  .role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    .role-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--chat-text-color);
+    }
+  }
+
+  .role-list {
+    flex: 1;
+    overflow-y: auto;
+
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+
+      .loading-text {
+        margin-left: 8px;
+        font-size: 12px;
+        color: #909090;
+      }
+    }
+
+    .empty-container {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .roles-container {
+      .role-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 4px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        gap: 12px;
+
+        &:hover {
+          background: var(--chat-hover-color);
+        }
+
+        &.active {
+          border-color: #13987f;
+          background: rgba(19, 152, 127, 0.1);
+        }
+
+        .role-name {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--chat-text-color);
+        }
+
+        .role-desc {
+          font-size: 11px;
+          color: #909090;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
   }
 }
 </style>

@@ -757,7 +757,33 @@ export enum ImUrlEnum {
   /** 删除会话 */
   CONVERSATION_DELETE_MY = 'conversationDeleteMy',
   /** 模型页面 */
-  MODEL_PAGE = 'modelPage'
+  MODEL_PAGE = 'modelPage',
+  /** 创建模型 */
+  MODEL_CREATE = 'modelCreate',
+  /** 更新模型 */
+  MODEL_UPDATE = 'modelUpdate',
+  /** 删除模型 */
+  MODEL_DELETE = 'modelDelete',
+  /** API 密钥分页 */
+  API_KEY_PAGE = 'apiKeyPage',
+  /** API 密钥简单列表 */
+  API_KEY_SIMPLE_LIST = 'apiKeySimpleList',
+  /** 创建 API 密钥 */
+  API_KEY_CREATE = 'apiKeyCreate',
+  /** 更新 API 密钥 */
+  API_KEY_UPDATE = 'apiKeyUpdate',
+  /** 删除 API 密钥 */
+  API_KEY_DELETE = 'apiKeyDelete',
+  /** 聊天角色分页 */
+  CHAT_ROLE_PAGE = 'chatRolePage',
+  /** 聊天角色类别列表 */
+  CHAT_ROLE_CATEGORY_LIST = 'chatRoleCategoryList',
+  /** 创建聊天角色 */
+  CHAT_ROLE_CREATE = 'chatRoleCreate',
+  /** 更新聊天角色 */
+  CHAT_ROLE_UPDATE = 'chatRoleUpdate',
+  /** 删除聊天角色 */
+  CHAT_ROLE_DELETE = 'chatRoleDelete'
 }
 
 // 滚动意图管理枚举
