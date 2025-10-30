@@ -9,7 +9,7 @@
           v-if="!isEdit"
           @click="handleEdit"
           class="leading-6 text-(18px [--chat-text-color]) truncate font-500 hover:underline cursor-pointer">
-          {{ currentChat.title }}
+          {{ currentChat.title || '新的会话' }}
         </p>
         <n-input
           v-else
@@ -19,13 +19,13 @@
           clearable
           placeholder="输入标题"
           type="text"
-          size="tiny"
+          size="small"
           spellCheck="false"
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
-          style="width: 200px"
-          class="leading-7 min-h-100px text-14px rounded-6px"></n-input>
+          style="width: 200px; height: 28px"
+          class="text-14px rounded-6px"></n-input>
 
         <!-- 当前选择的模型显示 -->
         <n-flex align="center" :size="8" class="mt-4px">
@@ -54,13 +54,63 @@
       </n-flex>
 
       <n-flex class="min-w-fit">
-        <div class="right-btn" @click="handleEdit">
-          <svg><use href="#edit"></use></svg>
-        </div>
+        <!-- 新增会话按钮 -->
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+          <template #trigger>
+            <div class="right-btn" @click="handleCreateNewChat">
+              <svg><use href="#plus"></use></svg>
+            </div>
+          </template>
+          <p>新建会话</p>
+        </n-popover>
 
-        <div class="right-btn">
-          <svg><use href="#Sharing"></use></svg>
-        </div>
+        <!-- 编辑标题按钮 -->
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+          <template #trigger>
+            <div class="right-btn" @click="handleEdit">
+              <svg><use href="#edit"></use></svg>
+            </div>
+          </template>
+          <p>编辑标题</p>
+        </n-popover>
+
+        <!-- 删除会话按钮 -->
+        <n-popover
+          v-model:show="showDeleteChatConfirm"
+          trigger="click"
+          placement="bottom"
+          :show-arrow="true"
+          style="padding: 16px; width: 280px">
+          <template #trigger>
+            <div class="right-btn right-btn-danger" title="删除会话">
+              <svg><use href="#delete"></use></svg>
+            </div>
+          </template>
+          <n-flex vertical :size="12">
+            <p class="text-(14px [--chat-text-color]) font-500">确定要删除当前会话吗？</p>
+            <p class="text-(12px red-500)">删除后将无法恢复！</p>
+
+            <!-- 是否同时删除消息选项 -->
+            <n-checkbox v-model:checked="deleteWithMessages" size="small">
+              <span class="text-(12px [--chat-text-color])">同时删除会话中的所有消息</span>
+            </n-checkbox>
+
+            <n-flex justify="end" :size="8">
+              <n-button size="small" @click="showDeleteChatConfirm = false">取消</n-button>
+              <n-button size="small" type="error" @click="handleDeleteChat">确定删除</n-button>
+            </n-flex>
+          </n-flex>
+        </n-popover>
+
+        <!-- 分享按钮 -->
+        <n-popover trigger="hover" :show-arrow="false" placement="bottom">
+          <template #trigger>
+            <div class="right-btn">
+              <svg><use href="#Sharing"></use></svg>
+            </div>
+          </template>
+          <p>分享</p>
+        </n-popover>
       </n-flex>
     </div>
     <div class="h-1px bg-[--line-color]"></div>
@@ -94,13 +144,36 @@
         </n-flex>
       </n-flex>
 
+      <!-- 加载状态 -->
+      <div v-if="loadingMessages" class="flex justify-center items-center py-20px">
+        <n-spin size="small" />
+        <span class="ml-10px text-(12px #909090)">加载消息中...</span>
+      </div>
+
       <!-- 消息列表 -->
       <n-flex vertical :size="12">
         <template v-for="(message, index) in messageList" :key="index">
           <!-- 用户消息 -->
-          <n-flex v-if="message.type === 'user'" :size="6" justify="end">
+          <n-flex v-if="message.type === 'user'" :size="6" justify="end" class="message-item group">
             <n-flex vertical align="end" class="max-w-70%">
-              <p class="text-(12px #909090)">我</p>
+              <n-flex align="center" :size="8">
+                <p class="text-(12px #909090)">我</p>
+                <!-- 删除按钮 -->
+                <n-popconfirm
+                  v-if="message.id"
+                  @positive-click="() => handleDeleteMessage(message.id!, index)"
+                  positive-text="删除"
+                  negative-text="取消">
+                  <template #trigger>
+                    <div
+                      class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
+                      title="删除消息">
+                      <svg class="w-14px h-14px"><use href="#delete"></use></svg>
+                    </div>
+                  </template>
+                  <p>确定要删除这条消息吗？</p>
+                </n-popconfirm>
+              </n-flex>
               <ContextMenu>
                 <div style="white-space: pre-wrap" class="bubble bubble-user select-text">
                   {{ message.content }}
@@ -114,12 +187,29 @@
           </n-flex>
 
           <!-- AI消息 -->
-          <n-flex v-else :size="6">
+          <n-flex v-else :size="6" class="message-item group">
             <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
             <n-flex vertical class="max-w-70%">
-              <p class="text-(12px [--chat-text-color])">
-                {{ selectedModel ? selectedModel.name : 'AI' }}
-              </p>
+              <n-flex align="center" :size="8">
+                <p class="text-(12px [--chat-text-color])">
+                  {{ selectedModel ? selectedModel.name : 'AI' }}
+                </p>
+                <!-- 删除按钮 -->
+                <n-popconfirm
+                  v-if="message.id"
+                  @positive-click="() => handleDeleteMessage(message.id!, index)"
+                  positive-text="删除"
+                  negative-text="取消">
+                  <template #trigger>
+                    <div
+                      class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
+                      title="删除消息">
+                      <svg class="w-14px h-14px"><use href="#delete"></use></svg>
+                    </div>
+                  </template>
+                  <p>确定要删除这条消息吗？</p>
+                </n-popconfirm>
+              </n-flex>
               <ContextMenu>
                 <div style="white-space: pre-wrap" class="bubble select-text">
                   <span v-if="message.streaming" class="streaming-cursor">{{ message.content }}</span>
@@ -256,9 +346,18 @@ import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { modelPage } from '@/utils/ImRequestUtils'
+import {
+  modelPage,
+  conversationCreateMy,
+  conversationUpdateMy,
+  conversationDeleteMy,
+  messageListByConversationId,
+  messageDelete,
+  messageDeleteByConversationId
+} from '@/utils/ImRequestUtils'
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import router from '@/router'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -282,10 +381,16 @@ interface Message {
   content: string
   streaming?: boolean
   timestamp?: number
+  id?: string // 消息ID，用于删除
+  replyId?: string | null // 回复的消息ID
+  model?: string // 使用的模型
 }
 
 const messageList = ref<Message[]>([])
 const chatContainerRef = ref<HTMLElement | null>(null)
+const loadingMessages = ref(false) // 消息加载状态
+const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
+const deleteWithMessages = ref(false) // 是否同时删除消息
 
 // 滚动到底部
 const scrollToBottom = () => {
@@ -328,12 +433,6 @@ const filteredModels = computed(() => {
 
 // AI消息发送处理
 const handleSendAI = (data: { content: string }) => {
-  console.log('🎯 Chat页面收到AI发送请求:', {
-    内容: data.content,
-    当前模型: selectedModel.value?.name,
-    时间: new Date().toISOString()
-  })
-
   if (!selectedModel.value) {
     window.$message.warning('请先选择AI模型')
     return
@@ -375,13 +474,10 @@ const sendAIMessage = async (content: string, model: any) => {
       timestamp: Date.now()
     })
 
-    // 滚动到底部
+    // 滚动到底部、用于累积AI回复内容
     scrollToBottom()
-
-    // 用于累积AI回复内容
     let accumulatedContent = ''
 
-    // 调用流式 API，使用 Promise 包装
     await messageSendStream(
       {
         conversationId: currentChat.value.id,
@@ -389,41 +485,25 @@ const sendAIMessage = async (content: string, model: any) => {
         useContext: true
       },
       {
-        // 接收到数据块时的回调
         onChunk: (chunk: string) => {
           try {
-            // 解析JSON数据
             const data = JSON.parse(chunk)
             if (data.success && data.data?.receive?.content) {
               const incrementalContent = data.data.receive.content
-
-              // 手动累加内容（服务器返回的是增量内容）
+              // 手动累加内容、更新AI消息内容
               accumulatedContent += incrementalContent
-
-              // 更新AI消息内容
               messageList.value[aiMessageIndex].content = accumulatedContent
 
-              // 滚动到底部
               scrollToBottom()
-
-              console.log('📨 收到AI流式数据 [增量]:', {
-                增量内容: incrementalContent,
-                累积长度: accumulatedContent.length,
-                完整内容: accumulatedContent
-              })
             }
           } catch (e) {
             console.error('❌ 解析JSON失败:', e, '原始数据:', chunk)
           }
         },
-        // 流结束时的回调
         onDone: () => {
-          console.log('✅ AI流式响应完成，最终内容:', accumulatedContent)
-          // 标记流式结束
           messageList.value[aiMessageIndex].streaming = false
           scrollToBottom()
         },
-        // 错误回调
         onError: (error: string) => {
           console.error('❌ AI流式响应错误:', error)
           messageList.value[aiMessageIndex].content = '抱歉，发生了错误：' + error
@@ -432,8 +512,6 @@ const sendAIMessage = async (content: string, model: any) => {
       }
     )
 
-    console.log('✅ AI消息发送成功')
-
     // 清空输入框
     if (MsgInputRef.value?.clearInput) {
       MsgInputRef.value.clearInput()
@@ -441,8 +519,6 @@ const sendAIMessage = async (content: string, model: any) => {
 
     // 更新消息计数
     currentChat.value.messageCount += 2 // 用户消息 + AI消息
-
-    window.$message.success('AI回复完成')
   } catch (error) {
     console.error('❌ AI消息发送失败:', error)
     window.$message.error('发送失败，请检查网络连接')
@@ -517,18 +593,11 @@ const fetchModelList = async () => {
     modelList.value = data.list || []
     modelPagination.value.total = data.total || 0
 
-    console.log('📋 获取到模型列表:', {
-      数量: modelList.value.length,
-      模型名称: modelList.value.map((m) => m.name)
-    })
-
     // 如果模型列表不为空且当前没有选择模型，自动选择第一个
     if (modelList.value.length > 0 && !selectedModel.value) {
       // 优先选择可用的模型，否则选择第一个
       const firstAvailableModel = modelList.value.find((model) => model.status === 0) || modelList.value[0]
       if (firstAvailableModel) {
-        console.log('🤖 自动选择模型:', firstAvailableModel.name)
-        // 使用 nextTick 确保 DOM 更新完成
         nextTick(() => {
           selectModel(firstAvailableModel)
         })
@@ -553,7 +622,6 @@ const handleModelClick = () => {
 // 选择模型
 const selectModel = (model: any) => {
   selectedModel.value = model
-  console.log('✅ 选择模型:', model.name)
 
   // 这里可以添加选择模型后的逻辑，比如更新当前会话的模型
   window.$message.success(`已选择模型: ${selectedModel.value.name}`)
@@ -569,7 +637,7 @@ const handleModelPageChange = (page: number) => {
   fetchModelList()
 }
 
-const handleBlur = () => {
+const handleBlur = async () => {
   isEdit.value = false
   if (originalTitle.value === currentChat.value.title) {
     return
@@ -577,10 +645,23 @@ const handleBlur = () => {
   if (currentChat.value.title === '') {
     currentChat.value.title = `新的聊天${currentChat.value.id}`
   }
-  window.$message.success(`已重命名为 ${currentChat.value.title}`, {
-    icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
-  })
-  useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
+
+  try {
+    await conversationUpdateMy({
+      id: currentChat.value.id,
+      title: currentChat.value.title
+    })
+
+    window.$message.success(`已重命名为 ${currentChat.value.title}`, {
+      icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
+    })
+
+    useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
+  } catch (error) {
+    console.error('❌ 更新会话标题失败:', error)
+    window.$message.error('重命名失败')
+    currentChat.value.title = originalTitle.value
+  }
 }
 
 const handleEdit = () => {
@@ -591,9 +672,159 @@ const handleEdit = () => {
   })
 }
 
+// 加载会话的历史消息
+const loadMessages = async (conversationId: string) => {
+  if (!conversationId || conversationId === '0') {
+    console.log('⚠️ 会话ID无效，跳过加载消息')
+    return
+  }
+
+  try {
+    loadingMessages.value = true
+    const data = await messageListByConversationId({
+      conversationId: conversationId,
+      pageNo: 1,
+      pageSize: 100
+    })
+
+    if (data && Array.isArray(data) && data.length > 0) {
+      // 清空当前消息列表
+      messageList.value = []
+
+      data.forEach((msg: any) => {
+        messageList.value.push({
+          type: msg.type,
+          content: msg.content || '',
+          streaming: false,
+          timestamp: msg.createTime,
+          id: msg.id,
+          replyId: msg.replyId,
+          model: msg.model
+        })
+      })
+
+      nextTick(() => {
+        scrollToBottom()
+      })
+    } else {
+      messageList.value = []
+    }
+  } catch (error) {
+    console.error('❌ 加载消息失败:', error)
+    window.$message.error('加载消息失败')
+    messageList.value = []
+  } finally {
+    loadingMessages.value = false
+  }
+}
+
+// 新增会话
+const handleCreateNewChat = async () => {
+  try {
+    const data = await conversationCreateMy({
+      roleId: '1',
+      knowledgeId: undefined,
+      title: '新的会话'
+    })
+
+    if (data) {
+      console.log('✅ 创建会话成功，后端返回:', data)
+      window.$message.success('会话创建成功')
+
+      // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
+      const newChat = {
+        id: data.id || data,
+        title: data.title || '新的会话',
+        createTime: data.createTime || new Date().toISOString(),
+        messageCount: data.messageCount || 0,
+        isPinned: data.pinned || false
+      }
+
+      useMitt.emit('add-conversation', newChat)
+
+      // 立即切换到新会话
+      useMitt.emit('chat-active', newChat)
+
+      // 跳转到聊天页面
+      router.push('/chat')
+    }
+  } catch (error) {
+    console.error('❌ 创建会话失败:', error)
+    window.$message.error('创建会话失败')
+  }
+}
+
+// 删除单条消息
+const handleDeleteMessage = async (messageId: string, index: number) => {
+  if (!messageId) {
+    window.$message.warning('消息ID无效')
+    return
+  }
+
+  try {
+    await messageDelete({ id: messageId })
+
+    // 从消息列表中移除
+    messageList.value.splice(index, 1)
+    window.$message.success('消息已删除')
+
+    // 更新会话的消息数量
+    if (currentChat.value.messageCount && currentChat.value.messageCount > 0) {
+      currentChat.value.messageCount--
+    }
+  } catch (error) {
+    console.error('❌ 删除消息失败:', error)
+    window.$message.error('删除消息失败')
+  }
+}
+
+// 删除会话
+const handleDeleteChat = async () => {
+  if (!currentChat.value.id || currentChat.value.id === '0') {
+    window.$message.warning('请先选择一个会话')
+    showDeleteChatConfirm.value = false
+    return
+  }
+
+  try {
+    if (deleteWithMessages.value) {
+      try {
+        await messageDeleteByConversationId({ conversationIdList: [currentChat.value.id] })
+      } catch (error) {
+        console.error('❌ 删除会话消息失败:', error)
+      }
+    }
+
+    // 删除会话
+    await conversationDeleteMy({ conversationIdList: [currentChat.value.id] })
+    window.$message.success(deleteWithMessages.value ? '会话及消息已删除' : '会话删除成功')
+
+    // 关闭确认框
+    showDeleteChatConfirm.value = false
+    deleteWithMessages.value = false // 重置选项
+
+    // 清空当前会话数据
+    currentChat.value = {
+      id: '0',
+      title: '',
+      messageCount: 0
+    }
+    messageList.value = []
+
+    // 先跳转到欢迎页、然后通知左侧列表刷新
+    await router.push('/welcome')
+    useMitt.emit('refresh-conversations')
+  } catch (error) {
+    console.error('❌ 删除会话失败:', error)
+    window.$message.error('删除会话失败')
+    showDeleteChatConfirm.value = false
+  }
+}
+
 onMounted(() => {
-  console.log('为什么会被挂载两次?')
-  fetchModelList()
+  if (modelList.value.length === 0) {
+    fetchModelList()
+  }
 
   useMitt.on('left-chat-title', (e) => {
     const { title, id } = e
@@ -602,13 +833,20 @@ onMounted(() => {
       currentChat.value.messageCount = e.messageCount
     }
   })
-  useMitt.on('chat-active', (e) => {
+  useMitt.on('chat-active', async (e) => {
     const { title, id, messageCount } = e
+
     currentChat.value.title = title || `新的聊天${currentChat.value.id}`
     currentChat.value.id = id
     currentChat.value.messageCount = messageCount
+
+    await loadMessages(id)
   })
 })
+
+// 注意: useMitt.on 已经在内部自动处理了 onUnmounted 清理
+// 参考 src/hooks/useMitt.ts 第 11-14 行
+// 所以不需要手动调用 useMitt.off
 </script>
 
 <style scoped lang="scss">
@@ -644,8 +882,20 @@ onMounted(() => {
 
 .right-btn {
   @apply size-fit border-(1px solid [--line-color]) cursor-pointer bg-[--chat-bt-color] color-[--chat-text-color] rounded-8px custom-shadow p-[10px_11px];
+  transition: all 0.2s ease;
   svg {
     @apply size-18px;
+  }
+
+  &:hover {
+    @apply bg-[--chat-hover-color];
+  }
+
+  &.right-btn-danger:hover {
+    @apply border-red-500 bg-red-50;
+    svg {
+      @apply color-red-500;
+    }
   }
 }
 

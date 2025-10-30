@@ -9,7 +9,12 @@
       :current-label="WebviewWindow.getCurrent().label"
       :top-win-label="WebviewWindow.getCurrent().label" />
 
-    <RouterView />
+    <!-- ✅ 使用 keep-alive 缓存 Chat.vue，避免重复挂载 -->
+    <RouterView v-slot="{ Component }">
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </RouterView>
   </n-flex>
 </template>
 <script setup lang="ts">
