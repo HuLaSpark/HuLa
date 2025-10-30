@@ -231,16 +231,16 @@ export const useLogin = () => {
         loginDisabled.value = true
         loading.value = false
         loginText.value = '登录成功正在跳转...'
+
+        // 首次登录时自动启用自动登录
+        if (!auto) {
+          settingStore.setAutoLogin(true)
+        }
+
         // 移动端登录之后，初始化数据
         if (isMobile()) {
           await init()
           await invoke('hide_splash_screen') // 初始化完再关闭启动页
-
-          // if (!auto) {
-          //   // 跳转到同步数据页面
-          //   router.push('/mobile/syncData') // 首次登录，跳转到同步数据页面
-          //   return
-          // }
         }
         ;+useMitt.emit(MittEnum.MSG_INIT)
 

@@ -111,7 +111,7 @@
           tertiary
           style="color: #fff"
           class="w-full mt-8px mb-50px gradient-button"
-          @click="normalLogin('MOBILE', true)">
+          @click="normalLogin('MOBILE', true, false)">
           <span>{{ loginText }}</span>
         </n-button>
 
