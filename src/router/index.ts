@@ -42,6 +42,8 @@ import MyMessages from '#/views/my/MyMessages.vue'
 import PublishCommunity from '#/views/my/PublishCommunity.vue'
 import Share from '#/views/my/Share.vue'
 import SimpleBio from '#/views/my/SimpleBio.vue'
+import AiAssistant from '#/views/my/AiAssistant.vue'
+import MyAlbum from '#/views/my/MyAlbum.vue'
 import { TauriCommand } from '@/enums'
 import ConfirmQRLogin from '#/views/ConfirmQRLogin.vue'
 import MyQRCode from '#/views/MyQRCode.vue'
@@ -251,6 +253,16 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
         path: 'SimpleBio',
         name: 'mobileSimpleBio',
         component: SimpleBio
+      },
+      {
+        path: 'aiAssistant',
+        name: 'mobileAiAssistant',
+        component: AiAssistant
+      },
+      {
+        path: 'myAlbum',
+        name: 'mobileMyAlbum',
+        component: MyAlbum
       }
     ]
   },

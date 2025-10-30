@@ -36,14 +36,15 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
-import { isWindows } from '@/utils/PlatformConstants'
-import { MittEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
+import { isMobile, isWindows } from '@/utils/PlatformConstants'
+import { MittEnum, MsgEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { emitTo, listen } from '@tauri-apps/api/event'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import type { MessageType } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType.ts'
 import { useChatStore } from '@/stores/chat'
+import { useFileStore } from '@/stores/file'
 import { useUserStore } from '@/stores/user'
 import { useSettingStore } from '@/stores/setting.ts'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
@@ -53,6 +54,7 @@ import { audioManager } from '@/utils/AudioManager'
 const route = useRoute()
 const userStore = useUserStore()
 const chatStore = useChatStore()
+const fileStore = useFileStore()
 const settingStore = useSettingStore()
 const userUid = computed(() => userStore.userInfo!.uid)
 const appWindow = WebviewWindow.getCurrent()
@@ -169,6 +171,62 @@ const playMessageSound = async () => {
   }
 }
 
+/**
+ * 从消息中提取文件信息并添加到 file store
+ */
+const addFileToStore = (data: MessageType) => {
+  const { message } = data
+  const { type, body, roomId, id } = message
+
+  // 只处理图片和视频类型
+  if (type !== MsgEnum.IMAGE && type !== MsgEnum.VIDEO) {
+    return
+  }
+
+  // 提取文件信息
+  const fileUrl = body.url
+  if (!fileUrl) {
+    return
+  }
+
+  // 从 URL 中提取文件名
+  let fileName = ''
+  try {
+    const urlObj = new URL(fileUrl)
+    const pathname = urlObj.pathname
+    fileName = pathname.substring(pathname.lastIndexOf('/') + 1)
+  } catch (e) {
+    // 如果不是有效的 URL，直接使用消息 ID 作为文件名
+    fileName = `${id}.${type === MsgEnum.IMAGE ? 'jpg' : 'mp4'}`
+  }
+
+  // 从文件名中提取后缀
+  const suffix = fileName.includes('.')
+    ? fileName.substring(fileName.lastIndexOf('.') + 1)
+    : type === MsgEnum.IMAGE
+      ? 'jpg'
+      : 'mp4'
+
+  // 确定 MIME 类型
+  let mimeType = ''
+  if (type === MsgEnum.IMAGE) {
+    mimeType = `image/${suffix === 'jpg' ? 'jpeg' : suffix}`
+  } else if (type === MsgEnum.VIDEO) {
+    mimeType = `video/${suffix}`
+  }
+
+  // 添加到 file store
+  fileStore.addFile({
+    id,
+    roomId,
+    fileName,
+    type: type === MsgEnum.IMAGE ? 'image' : 'video',
+    url: fileUrl,
+    suffix,
+    mimeType
+  })
+}
+
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
     return
@@ -183,6 +241,11 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
+
+  // 如果是图片或视频消息，添加到 file store（仅移动端需要）
+  if (isMobile()) {
+    addFileToStore(data)
+  }
 
   // 不是自己发的消息才通知
   if (data.fromUser.uid !== userUid.value) {

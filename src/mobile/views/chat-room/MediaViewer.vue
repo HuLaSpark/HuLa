@@ -82,7 +82,8 @@ const imageList = ref<
 
 const getImageList = async () => {
   const data = await fileStore.getRoomFilesForDisplay(globalStore.currentSessionRoomId)
-  imageList.value = data.filter((item) => item.type === 'image').map((item) => ({ url: item.displayUrl }))
+  const filteredImages = data.filter((item) => item.type === 'image')
+  imageList.value = filteredImages.map((item) => ({ url: item.displayUrl }))
 }
 
 onMounted(() => {

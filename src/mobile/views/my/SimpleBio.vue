@@ -40,13 +40,14 @@
               <div
                 v-for="item in options"
                 :key="item.label"
-                class="flex flex-wrap items-center gap-15px p-[15px_10px_5px_10px]">
+                @click="item.onClick"
+                class="flex flex-wrap items-center gap-15px p-[15px_10px_5px_10px] cursor-pointer">
                 <div>
                   <svg class="iconpark-icon w-30px h-30px"><use :href="'#' + item.icon"></use></svg>
                 </div>
                 <div class="flex-1 text-14px">{{ item.label }}</div>
                 <div>
-                  <svg @click="handleBack" class="w-20px text-gray h-20px iconpark-icon"><use href="#right"></use></svg>
+                  <svg class="w-20px text-gray h-20px iconpark-icon"><use href="#right"></use></svg>
                 </div>
               </div>
             </div>
@@ -67,19 +68,41 @@ const userStore = useUserStore()
 const options = ref([
   {
     icon: 'xiangce',
-    label: '相册'
+    label: '相册',
+    onClick: () => {
+      router.push('/mobile/mobileMy/myAlbum')
+    }
   },
   {
     icon: 'shoucang',
-    label: '收藏'
+    label: '收藏',
+    onClick: () => {
+      // TODO: 跳转到收藏页面
+      console.log('收藏')
+    }
   },
   {
     icon: 'wenjian',
-    label: '文件'
+    label: '文件',
+    onClick: () => {
+      // TODO: 跳转到文件页面
+      console.log('文件')
+    }
   },
   {
     icon: 'gexingzhuangban',
-    label: '个性装扮'
+    label: '个性装扮',
+    onClick: () => {
+      // TODO: 跳转到个性装扮页面
+      console.log('个性装扮')
+    }
+  },
+  {
+    icon: 'robot',
+    label: 'AI助手',
+    onClick: () => {
+      router.push('/mobile/mobileMy/aiAssistant')
+    }
   }
 ])
 

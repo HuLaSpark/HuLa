@@ -22,11 +22,12 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { NotificationTypeEnum, TauriCommand } from '@/enums'
+import { MsgEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import type { MessageType } from '@/services/types'
 import { WsResponseMessageType } from '@/services/wsType'
 import { useChatStore } from '@/stores/chat'
+import { useFileStore } from '@/stores/file'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user'
@@ -50,6 +51,7 @@ interface MobileLayoutProps {
 
 const route = useRoute()
 const chatStore = useChatStore()
+const fileStore = useFileStore()
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
@@ -92,6 +94,62 @@ const backgroundImageStyle = computed(() => {
   return styles
 })
 
+/**
+ * 从消息中提取文件信息并添加到 file store
+ */
+const addFileToStore = (data: MessageType) => {
+  const { message } = data
+  const { type, body, roomId, id } = message
+
+  // 只处理图片和视频类型
+  if (type !== MsgEnum.IMAGE && type !== MsgEnum.VIDEO) {
+    return
+  }
+
+  // 提取文件信息
+  const fileUrl = body.url
+  if (!fileUrl) {
+    return
+  }
+
+  // 从 URL 中提取文件名
+  let fileName = ''
+  try {
+    const urlObj = new URL(fileUrl)
+    const pathname = urlObj.pathname
+    fileName = pathname.substring(pathname.lastIndexOf('/') + 1)
+  } catch (e) {
+    // 如果不是有效的 URL，直接使用消息 ID 作为文件名
+    fileName = `${id}.${type === MsgEnum.IMAGE ? 'jpg' : 'mp4'}`
+  }
+
+  // 从文件名中提取后缀
+  const suffix = fileName.includes('.')
+    ? fileName.substring(fileName.lastIndexOf('.') + 1)
+    : type === MsgEnum.IMAGE
+      ? 'jpg'
+      : 'mp4'
+
+  // 确定 MIME 类型
+  let mimeType = ''
+  if (type === MsgEnum.IMAGE) {
+    mimeType = `image/${suffix === 'jpg' ? 'jpeg' : suffix}`
+  } else if (type === MsgEnum.VIDEO) {
+    mimeType = `video/${suffix}`
+  }
+
+  // 添加到 file store
+  fileStore.addFile({
+    id,
+    roomId,
+    fileName,
+    type: type === MsgEnum.IMAGE ? 'image' : 'video',
+    url: fileUrl,
+    suffix,
+    mimeType
+  })
+}
+
 /** 处理收到的消息 */
 useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   if (chatStore.checkMsgExist(data.message.roomId, data.message.id)) {
@@ -106,6 +164,9 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   await invokeSilently(TauriCommand.SAVE_MSG, {
     data
   })
+
+  // 如果是图片或视频消息，添加到 file store
+  addFileToStore(data)
   if (data.fromUser.uid !== userUid.value) {
     // 获取该消息的会话信息
     const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
