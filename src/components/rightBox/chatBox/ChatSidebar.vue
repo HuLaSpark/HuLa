@@ -287,25 +287,24 @@ watch(
  * 监听搜索输入过滤用户
  * @param value 输入值
  */
-const handleSearch = useDebounceFn(async (value: string) => {
-  const requestId = ++searchRequestId.value
+const handleSearch = useDebounceFn((value: string) => {
   searchRef.value = value
+  const keyword = value.trim().toLowerCase()
 
-  const keyword = value.trim()
-  const roomId = globalStore.currentSession?.roomId
-  if (!roomId) {
+  // 如果没有搜索关键字,显示全部成员
+  if (!keyword) {
+    displayedUserList.value = Array.isArray(groupStore.userList) ? [...groupStore.userList] : []
     return
   }
 
-  try {
-    const result = await groupStore.getGroupUserList(roomId, true, keyword)
-    if (searchRequestId.value !== requestId) {
-      return
-    }
-    displayedUserList.value = Array.isArray(result) ? [...result] : []
-  } catch (error) {
-    console.error('[sidebar] search members failed:', error)
-  }
+  // 前端本地过滤成员列表
+  const filteredList = groupStore.userList.filter((member) => {
+    const matchName = member.name?.toLowerCase().includes(keyword)
+    const matchMyName = member.myName?.toLowerCase().includes(keyword)
+    return matchName || matchMyName
+  })
+
+  displayedUserList.value = filteredList
 }, 10)
 
 const handleBlur = () => {

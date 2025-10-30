@@ -411,11 +411,9 @@ export const useGroupStore = defineStore(
     /**
      * 获取群成员列表
      * @param roomId 群聊房间ID
-     * @param forceRefresh 是否强制刷新，默认false
+     * @param forceRefresh 是否强制刷新,默认false
      */
-    const getGroupUserList = async (roomId: string, forceRefresh = false, keyword = '') => {
-      const trimmedKeyword = keyword.trim()
-
+    const getGroupUserList = async (roomId: string, forceRefresh = false) => {
       if (!isValidGroupRoom(roomId)) {
         console.warn('[group] skip member refresh, invalid room id:', roomId)
         return []
@@ -423,7 +421,7 @@ export const useGroupStore = defineStore(
 
       const cachedList = userListMap[roomId]
 
-      if (!trimmedKeyword && !forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
+      if (!forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
         return cachedList
       }
 
@@ -431,7 +429,7 @@ export const useGroupStore = defineStore(
         userListMap[roomId] = []
       }
 
-      const data = await ImRequestUtils.groupListMember(roomId, trimmedKeyword)
+      const data = await ImRequestUtils.groupListMember(roomId)
       if (!data) {
         userListOptions.loading = false
         return []
@@ -439,10 +437,8 @@ export const useGroupStore = defineStore(
 
       userListOptions.loading = false
 
-      if (!trimmedKeyword) {
-        userListMap[roomId] = Array.isArray(data) ? [...data] : []
-        updateMemberCache(roomId, userListMap[roomId])
-      }
+      userListMap[roomId] = Array.isArray(data) ? [...data] : []
+      updateMemberCache(roomId, userListMap[roomId])
 
       return data
     }

@@ -227,12 +227,8 @@ export async function getBadgesBatch(body: CacheBadgeReq[]) {
   })
 }
 
-export async function groupListMember(roomId: string, keyword?: string) {
+export async function groupListMember(roomId: string) {
   const args: Record<string, any> = { roomId, room_id: roomId }
-  const trimmedKeyword = keyword?.trim()
-  if (trimmedKeyword) {
-    args.keyword = trimmedKeyword
-  }
   return await invokeWithErrorHandler(TauriCommand.GET_ROOM_MEMBERS, args, { errorType: ErrorType.Network })
 }
 
