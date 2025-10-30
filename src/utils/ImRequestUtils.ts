@@ -906,3 +906,152 @@ export async function modelPage(params?: { pageNo?: number; pageSize?: number })
     params
   })
 }
+
+// 更新模型
+export async function modelUpdate(body: {
+  id?: string
+  keyId: string
+  name: string
+  model: string
+  platform: string
+  type: number
+  sort: number
+  status: number
+  temperature?: number
+  maxTokens?: number
+  maxContexts?: number
+  publicStatus?: boolean
+}) {
+  return await imRequest({
+    url: body.id ? ImUrlEnum.MODEL_UPDATE : ImUrlEnum.MODEL_CREATE,
+    body
+  })
+}
+
+// 删除模型
+export async function modelDelete(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.MODEL_DELETE,
+    params
+  })
+}
+
+// ==================== API 密钥管理 ====================
+
+// API 密钥分页列表
+export async function apiKeyPage(params?: { pageNo?: number; pageSize?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_PAGE,
+    params
+  })
+}
+
+// API 密钥简单列表（用于下拉选择）
+export async function apiKeySimpleList() {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_SIMPLE_LIST
+  })
+}
+
+// 创建 API 密钥
+export async function apiKeyCreate(body: {
+  name: string
+  apiKey: string
+  platform: string
+  url?: string
+  status: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_CREATE,
+    body
+  })
+}
+
+// 更新 API 密钥
+export async function apiKeyUpdate(body: {
+  id: string
+  name: string
+  apiKey: string
+  platform: string
+  url?: string
+  status: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_UPDATE,
+    body
+  })
+}
+
+// 删除 API 密钥
+export async function apiKeyDelete(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_DELETE,
+    params
+  })
+}
+
+// ==================== 聊天角色管理 ====================
+
+// 聊天角色分页列表
+export async function chatRolePage(params?: { pageNo?: number; pageSize?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.CHAT_ROLE_PAGE,
+    params
+  })
+}
+
+// 聊天角色类别列表
+export async function chatRoleCategoryList() {
+  return await imRequest({
+    url: ImUrlEnum.CHAT_ROLE_CATEGORY_LIST
+  })
+}
+
+// 创建聊天角色
+export async function chatRoleCreate(body: {
+  modelId?: string
+  name: string
+  avatar: string
+  category: string
+  sort: number
+  description: string
+  systemMessage: string
+  knowledgeIds?: string[]
+  toolIds?: string[]
+  publicStatus: boolean
+  status: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.CHAT_ROLE_CREATE,
+    body
+  })
+}
+
+// 更新聊天角色
+export async function chatRoleUpdate(body: {
+  id: string
+  modelId?: string
+  name: string
+  avatar: string
+  category: string
+  sort: number
+  description: string
+  systemMessage: string
+  knowledgeIds?: string[]
+  toolIds?: string[]
+  publicStatus: boolean
+  status: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.CHAT_ROLE_UPDATE,
+    body
+  })
+}
+
+// 删除聊天角色
+export async function chatRoleDelete(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.CHAT_ROLE_DELETE,
+    params
+  })
+}

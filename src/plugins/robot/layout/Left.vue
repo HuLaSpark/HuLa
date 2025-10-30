@@ -123,29 +123,52 @@
     </n-flex>
 
     <!-- 底部选项栏 -->
-    <n-flex data-tauri-drag-region :size="6" justify="space-between" align="center" class="m-[auto_0_10px_0]">
-      <n-flex :size="4" align="center">
-        <div
-          @click="jump"
-          class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
-          <svg class="size-18px"><use href="#settings"></use></svg>
-        </div>
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://github.com/HuLaSpark/HuLa"
-          class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
-          <svg class="size-18px"><use href="#github"></use></svg>
-        </a>
+    <n-flex data-tauri-drag-region vertical :size="8" class="m-[auto_0_10px_0]">
+      <!-- 管理按钮行 -->
+      <n-flex :size="4" align="center" justify="space-between">
+        <n-flex :size="4" align="center">
+          <div
+            @click="jump"
+            class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
+            <svg class="size-18px"><use href="#settings"></use></svg>
+          </div>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/HuLaSpark/HuLa"
+            class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer">
+            <svg class="size-18px"><use href="#github"></use></svg>
+          </a>
+        </n-flex>
+
+        <n-flex :size="4" align="center">
+          <div
+            @click="openModelManagement"
+            class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer"
+            title="管理模型">
+            <Icon icon="mdi:robot-outline" class="text-18px" />
+          </div>
+          <div
+            @click="openRoleManagement"
+            class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer"
+            title="管理角色">
+            <Icon icon="mdi:account-cog" class="text-18px" />
+          </div>
+        </n-flex>
       </n-flex>
 
-      <n-flex :size="4" align="center">
+      <!-- 操作按钮行 -->
+      <n-flex :size="4" align="center" justify="space-between">
+        <!-- 提示信息或新建按钮 -->
+        <div v-if="!hasRoles" class="flex-1 text-(11px #ff6b6b) text-center">请先创建角色</div>
         <div
+          v-else
           @click="add"
           class="flex items-center justify-center gap-4px bg-[--chat-bt-color] border-(1px solid [--line-color]) select-none text-(12px [--chat-text-color]) size-fit w-80px h-32px rounded-8px custom-shadow cursor-pointer">
           <svg class="size-15px pb-2px"><use href="#plus"></use></svg>
           <p>新的聊天</p>
         </div>
+
         <n-popconfirm v-model:show="showDeleteConfirm">
           <template #icon>
             <svg class="size-22px"><use href="#explosion"></use></svg>
@@ -170,11 +193,12 @@
 
 <script setup lang="ts">
 import { type InputInst, type VirtualListInst, NSpin, NButton } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { conversationPage, conversationCreateMy, conversationDeleteMy } from '@/utils/ImRequestUtils'
+import { conversationPage, conversationCreateMy, conversationDeleteMy, chatRolePage } from '@/utils/ImRequestUtils'
 
 const userStore = useUserStore()
 const activeItem = ref<string>('')
@@ -186,6 +210,8 @@ const loadingMore = ref(false)
 /** 原始标题 */
 const originalTitle = ref('')
 const showDeleteConfirm = ref(false)
+/** 是否有可用角色 */
+const hasRoles = ref(false)
 
 // 分页参数
 const pageNo = ref(1)
@@ -361,8 +387,38 @@ const handleActive = (item: ChatItem) => {
   }
 }
 
+// 检查是否有可用角色
+const checkHasRoles = async () => {
+  try {
+    const data = await chatRolePage({ pageNo: 1, pageSize: 1 })
+    // 检查是否有可用的角色（status === 0）
+    const availableRoles = (data.list || []).filter((item: any) => item.status === 0)
+    hasRoles.value = availableRoles.length > 0
+  } catch (error) {
+    console.error('检查角色失败:', error)
+    hasRoles.value = false
+  }
+}
+
+// 打开角色管理
+const openRoleManagement = () => {
+  useMitt.emit('open-role-management')
+}
+
+// 打开模型管理
+const openModelManagement = () => {
+  useMitt.emit('open-model-management')
+}
+
 /** 添加会话 */
 const add = async () => {
+  // 检查是否有可用角色
+  if (!hasRoles.value) {
+    window.$message.warning('请先创建角色')
+    openRoleManagement()
+    return
+  }
+
   try {
     const data = await conversationCreateMy({
       roleId: '1',
@@ -371,8 +427,6 @@ const add = async () => {
     })
 
     if (data) {
-      console.log('✅ 创建会话成功，后端返回:', data)
-
       // ✅ 直接使用后端返回的会话对象，避免刷新闪烁
       const newChat: ChatItem = {
         id: data.id || data, // 兼容后端返回整个对象或只返回ID
@@ -509,6 +563,9 @@ onMounted(() => {
   // 加载会话列表
   fetchConversationList()
 
+  // 检查是否有可用角色
+  checkHasRoles()
+
   /** 刚加载的时候默认跳转到欢迎页面 */
   router.push('/welcome')
 
@@ -529,6 +586,11 @@ onMounted(() => {
   // 监听会话刷新事件
   useMitt.on('refresh-conversations', () => {
     refreshConversationList()
+  })
+
+  // 监听角色管理刷新事件
+  useMitt.on('refresh-roles', () => {
+    checkHasRoles()
   })
 
   // ✅ 监听添加会话事件（直接添加到列表，避免刷新闪烁）
