@@ -144,16 +144,21 @@ const handleSave = async () => {
       // 保存文件信息到 file store
       const roomId = getCurrentRoomId()
       if (roomId) {
+        // 获取文件状态，使用相对路径（localPath）而不是绝对路径
+        const fileStatus = fileDownloadStore.getFileStatus(imageUrl)
+        const localPath = fileStatus.localPath || result
+
         // 如果没有消息信息，手动创建文件信息
         const fileInfo = {
           id: props.message!.id, // 生成唯一ID
           roomId,
           fileName,
           type: 'image' as const,
-          url: result,
+          url: localPath, // 使用相对路径
           suffix: fileName.split('.').pop()?.toLowerCase()
         }
         fileStore.addFile(fileInfo)
+        console.log('🔍 [ImagePreview Debug] 保存文件信息到 fileStore:', fileInfo)
       }
     }
   } catch (e) {
