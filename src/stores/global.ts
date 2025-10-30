@@ -110,21 +110,30 @@ export const useGlobalStore = defineStore(
 
     // 监听当前会话变化，添加防重复触发逻辑
     watch(currentSessionRoomId, async (val, oldVal) => {
+      if (!val || val === oldVal) {
+        return
+      }
+
+      try {
+        await chatStore.changeRoom()
+      } catch (error) {
+        console.error('[global] 切换会话时加载消息失败:', error)
+      }
+
       const webviewWindowLabel = WebviewWindow.getCurrent()
       if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== '/mobile/message') {
         return
       }
-      // 只有当房间ID真正发生变化时才执行操作
-      if (currentSession.value.unreadCount > 0 && (!oldVal || val! !== oldVal)) {
+
+      const session = chatStore.getSession(val)
+      if (session?.unreadCount) {
         info(`[global]当前会话发生实际变化: ${oldVal} -> ${val}`)
         // 清理已读数查询队列
         clearQueue()
         // 延攱1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
-        // 标记该房间的消息为已读
-        markMsgRead(val! || '1')
-        // 更新会话的已读状态
-        chatStore.markSessionRead(val! || '1')
+        markMsgRead(val)
+        chatStore.markSessionRead(val)
       }
     })
 

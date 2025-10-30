@@ -549,21 +549,21 @@ const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) =
   }
 }, 16)
 
-// 监听会话切换（仅切换数据，不清空 DOM）
+// 监听会话切换（仅处理 UI 相关逻辑）
+// 注意：消息数据的重置和加载已经在 global.ts 的 changeRoom() 中统一处理，这里只处理 UI 相关的逻辑
 watch(
   () => globalStore.currentSession!,
   async (value, oldValue) => {
-    if (oldValue.roomId !== value.roomId) {
+    if (oldValue?.roomId !== value?.roomId) {
       // 使用音频管理器停止所有音频
       audioManager.stopAll()
-
-      // 重置并刷新当前房间的消息
-      await chatStore.resetAndRefreshCurrentRoomMessages()
 
       // 如果不是群聊，清空置顶公告
       if (!isGroup.value) {
         topAnnouncement.value = null
       }
+      await nextTick()
+      // 滚动到底部
       scrollToBottom()
     }
   }
