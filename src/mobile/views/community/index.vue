@@ -32,7 +32,8 @@
             mode="mobile"
             @preview-image="previewImage"
             @video-play="handleVideoPlay"
-            @load-more="loadMore" />
+            @load-more="loadMore"
+            @item-click="handleItemClick" />
         </div>
       </n-scrollbar>
     </van-pull-refresh>
@@ -42,6 +43,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useFeedStore } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -49,6 +51,7 @@ import { useMessage } from 'naive-ui'
 import { debounce, throttle } from 'lodash-es'
 import DynamicList from '@/components/common/DynamicList.vue'
 
+const router = useRouter()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
 const message = useMessage()
@@ -126,6 +129,14 @@ const handleScroll = (event: any) => {
 const loadMore = async () => {
   if (feedOptions.value.isLoading || feedOptions.value.isLast) return
   await feedStore.loadMore()
+}
+
+// 处理动态项点击
+const handleItemClick = (feedId: string) => {
+  router.push({
+    name: 'mobileDynamicDetail',
+    params: { id: feedId }
+  })
 }
 
 // 初始化数据

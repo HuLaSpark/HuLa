@@ -41,6 +41,7 @@
           </div>
         </ActionBar>
         <img
+          data-tauri-drag-region
           class="w-full h-full object-cover"
           src="https://ts3.tc.mm.bing.net/th/id/OIP-C.ynSetSr3z884UC6sEp4yiwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
           alt="" />
@@ -75,7 +76,8 @@
           play-icon-inner-size="size-24px"
           @preview-image="previewImage"
           @video-play="handleVideoPlay"
-          @load-more="loadMore" />
+          @load-more="loadMore"
+          @item-click="handleItemClick" />
       </n-scrollbar>
     </div>
 
@@ -272,7 +274,9 @@ import { useMessage } from 'naive-ui'
 import type { FriendItem } from '@/services/types'
 import { storeToRefs } from 'pinia'
 import DynamicList from '@/components/common/DynamicList.vue'
+import { useWindow } from '@/hooks/useWindow'
 
+const { createWebviewWindow, sendWindowPayload, checkWinExist } = useWindow()
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const feedStore = useFeedStore()
@@ -443,6 +447,40 @@ const handleRefresh = async () => {
   } catch (error) {
     console.error('刷新动态失败:', error)
     message.error('刷新失败，请重试')
+  }
+}
+
+// 处理动态项点击 - 在新窗口中打开
+const handleItemClick = async (feedId: string) => {
+  const windowLabel = `dynamicDetail`
+
+  // 先检查窗口是否已存在
+  const existingWindow = await WebviewWindow.getByLabel(windowLabel)
+  if (existingWindow) {
+    // 如果窗口已存在，激活它并更新内容
+    await checkWinExist(windowLabel)
+    // 发送事件通知窗口更新内容
+    await existingWindow.emit('window-payload-updated', { feedId })
+    return
+  }
+
+  // 创建新的webview窗口来显示动态详情
+  const webview = await createWebviewWindow(
+    '动态详情', // 窗口标题
+    windowLabel, // 窗口标签
+    800, // 宽度
+    900, // 高度
+    undefined, // 不需要关闭其他窗口
+    true, // 可调整大小
+    600, // 最小宽度
+    700, // 最小高度
+    false, // 不透明
+    false // 初始不显示（等待加载完成）
+  )
+
+  // 窗口创建后，发送payload
+  if (webview) {
+    await sendWindowPayload(windowLabel, { feedId })
   }
 }
 

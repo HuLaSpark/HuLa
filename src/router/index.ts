@@ -24,6 +24,7 @@ import NoticeDetail from '#/views/chat-room/notice/NoticeDetail.vue'
 import NoticeEdit from '#/views/chat-room/notice/NoticeEdit.vue'
 import NoticeList from '#/views/chat-room/notice/NoticeList.vue'
 import MobileCommunity from '#/views/community/index.vue'
+import DynamicDetailPage from '#/views/community/DynamicDetailPage.vue'
 import AddFriends from '#/views/friends/AddFriends.vue'
 import ConfirmAddFriend from '#/views/friends/ConfirmAddFriend.vue'
 import ConfirmAddGroup from '#/views/friends/ConfirmAddGroup.vue'
@@ -305,6 +306,12 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     path: '/mobile/rtcCall',
     name: 'rtcCall',
     component: () => import('../mobile/views/rtcCall/index.vue')
+  },
+  {
+    path: '/mobile/dynamic/:id',
+    name: 'mobileDynamicDetail',
+    component: DynamicDetailPage,
+    props: true
   }
 ]
 
@@ -368,6 +375,16 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     path: '/dynamic',
     name: 'dynamic',
     component: () => import('@/plugins/dynamic/index.vue')
+  },
+  {
+    path: '/dynamic/:id',
+    name: 'dynamicDetailWithId',
+    component: () => import('@/plugins/dynamic/detail.vue')
+  },
+  {
+    path: '/dynamicDetail',
+    name: 'dynamicDetail',
+    component: () => import('@/plugins/dynamic/detail.vue')
   },
   {
     path: '/onlineStatus',

@@ -22,7 +22,8 @@
                 mode="mobile"
                 @preview-image="previewImage"
                 @video-play="handleVideoPlay"
-                @load-more="loadMore" />
+                @load-more="loadMore"
+                @item-click="handleItemClick" />
             </div>
           </n-scrollbar>
         </div>
@@ -76,6 +77,14 @@ const previewImage = (images: string[], index: number) => {
 const handleVideoPlay = (url: string) => {
   console.log('播放视频:', url)
   // TODO: 实现视频播放功能
+}
+
+// 处理动态项点击
+const handleItemClick = (feedId: string) => {
+  router.push({
+    name: 'mobileDynamicDetail',
+    params: { id: feedId }
+  })
 }
 
 const isShow = ref(true)

@@ -19,7 +19,8 @@
         v-for="item in feedList"
         :key="item.id"
         :class="itemClass"
-        class="bg-white rounded-12px p-16px shadow hover:shadow-md transition-shadow">
+        class="bg-white rounded-12px p-16px shadow hover:shadow-md transition-shadow"
+        @click="handleItemClick(item)">
         <!-- 用户信息 -->
         <div class="flex items-center gap-12px mb-12px">
           <n-avatar :size="avatarSize" round :src="getUserAvatar(item)" />
@@ -168,6 +169,7 @@ const emit = defineEmits<{
   previewImage: [images: string[], index: number]
   videoPlay: [url: string]
   loadMore: []
+  itemClick: [feedId: string]
 }>()
 
 // Store
@@ -259,6 +261,11 @@ const handleVideoPlay = (url: string) => {
 // 加载更多
 const handleLoadMore = () => {
   emit('loadMore')
+}
+
+// 处理动态项点击
+const handleItemClick = (feed: FeedItem) => {
+  emit('itemClick', feed.id)
 }
 </script>
 
