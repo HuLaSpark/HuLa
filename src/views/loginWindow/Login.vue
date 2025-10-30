@@ -98,7 +98,7 @@
           tertiary
           style="color: #fff"
           class="gradient-button w-full mt-8px mb-50px"
-          @click="normalLogin('PC', true)">
+          @click="normalLogin('PC', true, false)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -368,7 +368,7 @@ const closeMenu = (event: MouseEvent) => {
 
 const enterKey = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && !loginDisabled.value) {
-    normalLogin('PC', true)
+    normalLogin('PC', true, false)
   }
 }
 
