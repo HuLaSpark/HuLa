@@ -137,12 +137,26 @@ export const useChatStore = defineStore(
       }
     })
 
+    /**
+     * 切换聊天室
+     * @description
+     * 当用户切换到不同的聊天室时调用此方法，执行完整的房间切换流程。
+     * 该方法会清空旧房间的消息数据，重新加载新房间的消息，并处理相关的状态重置。
+     */
     const changeRoom = async () => {
       const currentWindowLabel = WebviewWindow.getCurrent()
       if (currentWindowLabel.label !== 'home' && currentWindowLabel.label !== 'mobile-home') {
         return
       }
 
+      const roomId = globalStore.currentSession!.roomId
+
+      // 1. 清空当前房间的旧消息数据
+      if (messageMap[roomId]) {
+        messageMap[roomId] = {}
+      }
+
+      // 2. 重置消息加载状态
       currentMessageOptions.value = {
         isLast: false,
         isLoading: false,
@@ -158,7 +172,7 @@ export const useChatStore = defineStore(
 
       try {
         // 从服务器加载消息
-        await getMsgList(pageSize, true)
+        await getPageMsg(pageSize, roomId, '')
       } catch (error) {
         console.error('无法加载消息:', error)
         currentMessageOptions.value = {
@@ -762,7 +776,12 @@ export const useChatStore = defineStore(
       }
     }
 
-    // 重置当前聊天室的消息并刷新最新消息
+    /**
+     * 重置并刷新当前聊天室的消息列表
+     * @description
+     * 清空当前聊天室的所有本地消息缓存，并从服务器重新获取最新的消息列表。
+     * 主要用于需要强制刷新消息的场景，确保显示的是最新的服务器数据。
+     */
     const resetAndRefreshCurrentRoomMessages = async () => {
       if (!globalStore.currentSession!.roomId) return
 

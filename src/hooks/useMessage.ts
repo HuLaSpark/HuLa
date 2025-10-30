@@ -25,24 +25,18 @@ export const useMessage = () => {
   })
 
   /** 处理点击选中消息 */
-  const handleMsgClick = async (item: SessionItem) => {
+  const handleMsgClick = (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
     globalStore.updateCurrentSessionRoomId(item.roomId)
-    await chatStore.changeRoom()
   }
 
   /**
    * 预加载聊天室
    * @param roomId
    */
-  const preloadChatRoom = async (roomId: string = '1') => {
+  const preloadChatRoom = (roomId: string = '1') => {
     globalStore.updateCurrentSessionRoomId(roomId)
-    try {
-      await chatStore.changeRoom()
-    } catch (error) {
-      console.error('尝试进入聊天室时出现错误：', error)
-    }
   }
 
   /**
@@ -71,7 +65,10 @@ export const useMessage = () => {
 
     // 选择下一个或上一个会话
     const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
-    handleMsgClick(updatedSessions[nextIndex])
+    const nextSession = updatedSessions[nextIndex]
+    if (nextSession) {
+      handleMsgClick(nextSession)
+    }
   }
 
   /** 处理双击事件 */
