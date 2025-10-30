@@ -345,28 +345,41 @@ const jump = () => {
 /** 选中会话 */
 const handleActive = (item: ChatItem) => {
   activeItem.value = item.id
-  router.push('/chat').then(() => {
+
+  // ✅ 只有当前路由不是 /chat 时才跳转，避免重复挂载
+  if (router.currentRoute.value.path !== '/chat') {
+    router.push('/chat').then(() => {
+      nextTick(() => {
+        useMitt.emit('chat-active', item)
+      })
+    })
+  } else {
+    // 已经在 /chat 路由，直接触发事件
     nextTick(() => {
       useMitt.emit('chat-active', item)
     })
-  })
+  }
 }
 
 /** 添加会话 */
 const add = async () => {
   try {
-    const response = await conversationCreateMy({
-      roleId: undefined,
+    const data = await conversationCreateMy({
+      roleId: '1',
       knowledgeId: undefined,
       title: '新的会话'
     })
 
-    if (response.code === 200 && response.data) {
+    if (data) {
+      console.log('✅ 创建会话成功，后端返回:', data)
+
+      // ✅ 直接使用后端返回的会话对象，避免刷新闪烁
       const newChat: ChatItem = {
-        id: response.data,
-        title: '新的会话',
-        createTime: new Date().toISOString(),
-        messageCount: 0
+        id: data.id || data, // 兼容后端返回整个对象或只返回ID
+        title: data.title || '新的会话',
+        createTime: data.createTime || new Date().toISOString(),
+        messageCount: data.messageCount || 0,
+        isPinned: data.pinned || false
       }
 
       // 新会话添加到列表顶部
@@ -378,10 +391,17 @@ const add = async () => {
         scrollbar.value?.scrollTo({ position: 'top' })
       })
 
+      // 跳转到聊天页面并触发激活事件
+      router.push('/chat').then(() => {
+        nextTick(() => {
+          useMitt.emit('chat-active', newChat)
+        })
+      })
+
       window.$message.success('会话创建成功')
     }
   } catch (error) {
-    console.error('创建会话失败:', error)
+    console.error('❌ 创建会话失败:', error)
     window.$message.error('创建会话失败')
   }
 }
@@ -389,28 +409,39 @@ const add = async () => {
 /** 删除单个会话 */
 const deleteChat = async (item: ChatItem) => {
   try {
-    const response = await conversationDeleteMy({ id: item.id })
+    console.log('🗑️ 删除会话:', item.id)
+    const data = await conversationDeleteMy({ conversationIdList: [item.id] })
 
-    if (response.code === 200) {
-      const index = chatList.value.findIndex((chat) => chat.id === item.id)
-      if (index !== -1) {
-        chatList.value.splice(index, 1)
+    console.log('✅ 删除会话成功:', data)
 
-        // 如果删除的是当前选中的会话，需要重新选择
-        if (activeItem.value === item.id) {
-          if (chatList.value.length > 0) {
-            activeItem.value = chatList.value[0]?.id || ''
-          } else {
-            activeItem.value = ''
-            await add() // 如果没有会话了，创建一个新的
-          }
+    const index = chatList.value.findIndex((chat) => chat.id === item.id)
+    if (index !== -1) {
+      chatList.value.splice(index, 1)
+
+      // 如果删除的是当前选中的会话，需要重新选择
+      if (activeItem.value === item.id) {
+        if (chatList.value.length > 0) {
+          // 选中第一个会话
+          const firstChat = chatList.value[0]
+          activeItem.value = firstChat.id
+
+          // 跳转到聊天页面并触发激活事件
+          router.push('/chat').then(() => {
+            nextTick(() => {
+              useMitt.emit('chat-active', firstChat)
+            })
+          })
+        } else {
+          // 如果没有会话了，跳转到欢迎页
+          activeItem.value = ''
+          router.push('/welcome')
         }
-
-        window.$message.success('会话删除成功')
       }
+
+      window.$message.success('会话删除成功')
     }
   } catch (error) {
-    console.error('删除会话失败:', error)
+    console.error('❌ 删除会话失败:', error)
     window.$message.error('删除会话失败')
   }
 }
@@ -418,14 +449,29 @@ const deleteChat = async (item: ChatItem) => {
 /** 删除全部会话 */
 const deleteAllChats = async () => {
   try {
-    // 这里需要调用删除全部会话的接口
-    // 暂时先清空本地列表
+    console.log('🗑️ 删除全部会话，共', chatList.value.length, '个')
+
+    if (chatList.value.length === 0) {
+      window.$message.warning('没有会话可删除')
+      showDeleteConfirm.value = false
+      return
+    }
+
+    // 保存所有会话ID
+    const allChatIds = chatList.value.map((chat) => chat.id)
+
+    // ✅ 使用批量删除接口
+    const data = await conversationDeleteMy({ conversationIdList: allChatIds })
+
+    console.log('✅ 全部会话删除成功:', data)
+
+    // 清空本地列表
     chatList.value = []
     activeItem.value = ''
     showDeleteConfirm.value = false
 
-    // 如果没有会话了，自动创建一个新的
-    await add()
+    // 跳转到欢迎页
+    router.push('/welcome')
 
     window.$message.success('全部会话已删除')
   } catch (error) {
@@ -483,6 +529,33 @@ onMounted(() => {
   // 监听会话刷新事件
   useMitt.on('refresh-conversations', () => {
     refreshConversationList()
+  })
+
+  // ✅ 监听添加会话事件（直接添加到列表，避免刷新闪烁）
+  useMitt.on('add-conversation', (newChat: any) => {
+    console.log('📥 收到添加会话事件:', newChat)
+    if (newChat && newChat.id) {
+      // 检查是否已存在
+      const exists = chatList.value.some((chat) => chat.id === newChat.id)
+      if (!exists) {
+        // 添加到列表顶部
+        chatList.value.unshift(newChat)
+        activeItem.value = newChat.id
+
+        // 滚动到顶部
+        nextTick(() => {
+          scrollbar.value?.scrollTo({ position: 'top' })
+        })
+      }
+    }
+  })
+
+  // 监听会话激活事件（从其他组件触发）
+  useMitt.on('chat-active', (e: any) => {
+    // 更新左侧列表的选中状态
+    if (e && e.id) {
+      activeItem.value = e.id
+    }
   })
 })
 </script>

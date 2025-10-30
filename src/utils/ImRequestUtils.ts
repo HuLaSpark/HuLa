@@ -824,6 +824,22 @@ export async function messageListByConversationId(params: {
   })
 }
 
+// 删除单条消息
+export async function messageDelete(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.MESSAGE_DELETE,
+    params
+  })
+}
+
+// 删除指定对话的消息
+export async function messageDeleteByConversationId(body: { conversationIdList: string[] }) {
+  return await imRequest({
+    url: ImUrlEnum.MESSAGE_DELETE_BY_CONVERSATION_ID,
+    body
+  })
+}
+
 // 获取会话列表（我的）
 export async function conversationPage(params?: { pageNo?: number; pageSize?: number }) {
   return await imRequest({
@@ -841,18 +857,45 @@ export async function conversationGetMy(params?: { id: string }) {
 }
 
 // 创建会话（我的）
-export async function conversationCreateMy(params: { roleId?: string; knowledgeId?: string; title?: string }) {
+export async function conversationCreateMy(body: {
+  roleId?: string
+  knowledgeId?: string
+  title?: string
+  modelId?: string
+  systemMessage?: string
+  temperature?: number
+  maxTokens?: number
+  maxContexts?: number
+}) {
   return await imRequest({
     url: ImUrlEnum.CONVERSATION_CREATE_MY,
-    params
+    body
   })
 }
 
-// 删除会话（我的）
-export async function conversationDeleteMy(params: { id: string }) {
+// 更新会话（我的）
+export async function conversationUpdateMy(body: {
+  id: string
+  title?: string
+  pinned?: boolean
+  modelId?: string
+  knowledgeId?: string
+  systemMessage?: string
+  temperature?: number
+  maxTokens?: number
+  maxContexts?: number
+}) {
+  return await imRequest({
+    url: ImUrlEnum.CONVERSATION_UPDATE_MY,
+    body
+  })
+}
+
+// 删除会话（我的）- 支持批量删除
+export async function conversationDeleteMy(body: { conversationIdList: string[] }) {
   return await imRequest({
     url: ImUrlEnum.CONVERSATION_DELETE_MY,
-    params
+    body
   })
 }
 

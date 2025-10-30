@@ -742,12 +742,18 @@ export enum ImUrlEnum {
   MESSAGE_SEND_STREAM = 'messageSendStream',
   /** 获取指定会话消息列表 */
   MESSAGE_LIST_BY_CONVERSATION_ID = 'messageListByConversationId',
+  /** 删除单条消息 */
+  MESSAGE_DELETE = 'messageDelete',
+  /** 删除指定对话的消息 */
+  MESSAGE_DELETE_BY_CONVERSATION_ID = 'messageDeleteByConversationId',
   /** 获取会话消息列表 */
   CONVERSATION_PAGE = 'conversationPage',
   /** 获得【我的】聊天对话 */
   CONVERSATION_GET_MY = 'conversationGetMy',
   /** 创建会话 */
   CONVERSATION_CREATE_MY = 'conversationCreateMy',
+  /** 更新会话 */
+  CONVERSATION_UPDATE_MY = 'conversationUpdateMy',
   /** 删除会话 */
   CONVERSATION_DELETE_MY = 'conversationDeleteMy',
   /** 模型页面 */

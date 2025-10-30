@@ -4,7 +4,15 @@
     <img data-tauri-drag-region class="w-275px h-125px drop-shadow-2xl" src="/hula.png" alt="" />
 
     <n-flex data-tauri-drag-region vertical justify="center" :size="16" class="p-[30px_20px]">
-      <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
+      <n-flex justify="space-between" align="center">
+        <p class="text-(14px [--chat-text-color])">你可以尝试使用以下功能：</p>
+        <n-button type="primary" size="small" @click="handleCreateNewChat">
+          <template #icon>
+            <svg class="size-16px"><use href="#plus"></use></svg>
+          </template>
+          新建会话
+        </n-button>
+      </n-flex>
       <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 210px)">
         <n-flex style="padding: 6px" align="center" :size="[24, 16]">
           <n-flex
@@ -28,12 +36,50 @@
 <script setup lang="tsx">
 import { NFlex, NImage, NSkeleton } from 'naive-ui'
 import type { VNode } from 'vue'
+import { useMitt } from '@/hooks/useMitt.ts'
+import { conversationCreateMy } from '@/utils/ImRequestUtils'
 
 type Example = {
   title: string
   icon: string
   content: VNode
 }[]
+
+// 新增会话
+const handleCreateNewChat = async () => {
+  try {
+    const data = await conversationCreateMy({
+      roleId: '1',
+      knowledgeId: undefined,
+      title: '新的会话'
+    })
+
+    if (data) {
+      console.log('✅ 创建会话成功，后端返回:', data)
+      window.$message.success('会话创建成功')
+
+      // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
+      const newChat = {
+        id: data.id || data,
+        title: data.title || '新的会话',
+        createTime: data.createTime || new Date().toISOString(),
+        messageCount: data.messageCount || 0,
+        isPinned: data.pinned || false
+      }
+
+      useMitt.emit('add-conversation', newChat)
+
+      // 立即切换到新会话
+      useMitt.emit('chat-active', newChat)
+
+      // 触发返回聊天页面
+      useMitt.emit('return-chat')
+    }
+  } catch (error) {
+    console.error('❌ 创建会话失败:', error)
+    window.$message.error('创建会话失败')
+  }
+}
 const avatars = 'https://picsum.photos/140'
 const examplesList: Example = [
   {
