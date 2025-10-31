@@ -38,15 +38,17 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useMitt } from '@/hooks/useMitt'
+import { useWindow } from '@/hooks/useWindow'
 import { getDisabledOptions, getFilteredOptions, renderLabel, renderSourceList } from '@/layout/center/model.tsx'
-import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { inviteGroupMember } from '@/utils/ImRequestUtils'
 
-const globalStore = useGlobalStore()
+const { getWindowPayload } = useWindow()
 const groupStore = useGroupStore()
 const windowTitle = ref('')
 const selectedValue = ref([])
+// 从父窗口传递过来的 roomId
+const roomId = ref<string>('')
 // 使用model.tsx中的getDisabledOptions
 const disabledOptions = computed(() => getDisabledOptions())
 
@@ -55,8 +57,8 @@ const filteredOptions = computed(() => getFilteredOptions())
 
 // 初始化群成员数据
 const initGroupMembers = async () => {
-  if (globalStore.currentSession?.roomId) {
-    await groupStore.getGroupUserList(globalStore.currentSession.roomId)
+  if (roomId.value) {
+    await groupStore.getGroupUserList(roomId.value)
   }
 }
 
@@ -66,7 +68,7 @@ const handleInvite = async () => {
   try {
     // 调用邀请群成员API
     await inviteGroupMember({
-      roomId: globalStore.currentSession!.roomId,
+      roomId: roomId.value,
       uidList: selectedValue.value
     })
 
@@ -86,6 +88,12 @@ onMounted(async () => {
 
   // 获取窗口标题
   windowTitle.value = await getCurrentWebviewWindow().title()
+
+  // 获取父窗口传递的 payload
+  const payload = await getWindowPayload<{ roomId: string; type: number }>('modal-invite')
+  if (payload?.roomId) {
+    roomId.value = payload.roomId
+  }
 
   // 初始化群成员数据
   await initGroupMembers()
