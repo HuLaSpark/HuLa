@@ -1,10 +1,11 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { defineStore } from 'pinia'
-import { StoresEnum } from '@/enums'
+import { MittEnum, StoresEnum } from '@/enums'
 import type { FriendItem, RequestFriendItem, SessionItem } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { clearQueue, readCountQueue } from '@/utils/ReadCountQueue.ts'
+import { useMitt } from '@/hooks/useMitt.ts'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import { markMsgRead } from '../utils/ImRequestUtils'
 
@@ -118,10 +119,15 @@ export const useGlobalStore = defineStore(
         await chatStore.changeRoom()
       } catch (error) {
         console.error('[global] 切换会话时加载消息失败:', error)
+        return
       }
 
       const webviewWindowLabel = WebviewWindow.getCurrent()
       if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== '/mobile/message') {
+        useMitt.emit(MittEnum.SESSION_CHANGED, {
+          roomId: val,
+          oldRoomId: oldVal ?? null
+        })
         return
       }
 
@@ -135,6 +141,11 @@ export const useGlobalStore = defineStore(
         markMsgRead(val)
         chatStore.markSessionRead(val)
       }
+
+      useMitt.emit(MittEnum.SESSION_CHANGED, {
+        roomId: val,
+        oldRoomId: oldVal ?? null
+      })
     })
 
     const updateCurrentSessionRoomId = (id: string) => {

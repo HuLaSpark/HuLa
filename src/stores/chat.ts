@@ -1,6 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
+import { orderBy, uniqBy } from 'es-toolkit'
 import pLimit from 'p-limit'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
@@ -158,7 +159,6 @@ export const useChatStore = defineStore(
 
       // 如果 currentSession 不存在，直接返回
       if (!globalStore.currentSession?.roomId) {
-        console.warn('[changeRoom] currentSession 未初始化')
         return
       }
 
@@ -344,14 +344,15 @@ export const useChatStore = defineStore(
       }
     }
 
-    /** 会话列表排序 */
+    /** 会话列表去重并排序 */
     const sortAndUniqueSessionList = () => {
-      // const temp: Record<string, SessionItem> = {}
-      // for (const item of sessionList.value) {
-      //   temp[item.roomId] = item
-      // }
-      // sessionList.value.splice(0, sessionList.value.length, ...Object.values(temp))
-      sessionList.value.sort((pre, cur) => cur.activeTime - pre.activeTime)
+      // 使用 uniqBy 按 roomId 去重，使用 orderBy 按 activeTime 降序排序
+      const uniqueAndSorted = orderBy(
+        uniqBy(sessionList.value, (item) => item.roomId),
+        [(item) => item.activeTime],
+        ['desc']
+      )
+      sessionList.value.splice(0, sessionList.value.length, ...uniqueAndSorted)
     }
 
     // 更新会话

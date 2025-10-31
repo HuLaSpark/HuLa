@@ -436,8 +436,6 @@ const listenMobileReLogin = async () => {
  * 在应用启动时发起一个轻量级网络请求，触发iOS的网络权限弹窗
  */
 const requestNetworkPermissionForIOS = async () => {
-  if (!isIOS()) return
-
   await fetch('https://www.apple.com/favicon.ico', {
     method: 'HEAD',
     cache: 'no-cache'
@@ -446,7 +444,9 @@ const requestNetworkPermissionForIOS = async () => {
 
 onMounted(() => {
   // iOS应用启动时预请求网络权限（必须在最开始执行）
-  requestNetworkPermissionForIOS()
+  if (isIOS()) {
+    requestNetworkPermissionForIOS()
+  }
 
   // 仅在windows上使用
   if (isWindows()) {
