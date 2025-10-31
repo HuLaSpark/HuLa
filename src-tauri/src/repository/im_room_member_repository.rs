@@ -7,6 +7,7 @@ use sea_orm::TransactionTrait;
 use sea_orm::{ActiveModelTrait, Set};
 use sea_orm::{ColumnTrait, DatabaseConnection, QueryFilter, QueryOrder};
 use tracing::{debug, info};
+use chrono;
 
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
 use crate::{
@@ -272,7 +273,7 @@ pub async fn update_my_room_info(
 
     if let Some(member) = member {
         debug!("Found room member record: {:?}", member);
-        // 如果找到记录，更新 nickname 字段
+        // 如果找到记录，更新 my_name 字段
         let mut member_active = member.into_active_model();
         member_active.my_name = Set(Some(my_name.to_string()));
 
@@ -283,11 +284,26 @@ pub async fn update_my_room_info(
         info!("Successfully updated member room member information");
         Ok(())
     } else {
-        // 如果没有找到记录，返回错误
-        Err(CommonError::UnexpectedError(anyhow::anyhow!(
-            "Failed to find specified room member record: room_id={}, uid={}",
-            room_id,
-            uid
-        )))
+        // 如果没有找到记录，创建一个新记录（仅包含必要字段）
+        debug!("Room member record not found, creating new record for room_id: {}, uid: {}", room_id, uid);
+        
+        let new_member = im_room_member::ActiveModel {
+            id: Set(format!("{}_{}", room_id, uid)), // 使用 room_id + uid 作为主键
+            room_id: Set(Some(room_id.to_string())),
+            uid: Set(Some(uid.to_string())),
+            my_name: Set(Some(my_name.to_string())),
+            login_uid: Set(login_uid.to_string()),
+            last_opt_time: Set(chrono::Utc::now().timestamp()),
+            name: Set(String::new()), // 设置默认空值，实际名称会在下次同步时更新
+            ..Default::default()
+        };
+
+        new_member
+            .insert(db)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to insert new room member record: {}", e))?;
+        
+        info!("Successfully created new room member record with my_name");
+        Ok(())
     }
 }

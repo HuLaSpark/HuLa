@@ -519,6 +519,19 @@ const handleVoiceClick = () => {
 
 const getInputContent = (): string => {
   if (messageInputDom.value) {
+    const innerHTML = messageInputDom.value.innerHTML || ''
+
+    // 检查是否有表情包
+    if (innerHTML.includes('data-type="emoji"')) {
+      return 'emoji' // 返回非空字符串表示有内容
+    }
+
+    // 检查是否有图片
+    if (innerHTML.includes('<img') || innerHTML.includes('data-type=')) {
+      return 'image' // 返回非空字符串表示有内容
+    }
+
+    // 返回文本内容
     return messageInputDom.value.textContent?.trim() || ''
   }
   return ''

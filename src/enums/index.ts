@@ -115,7 +115,9 @@ export enum MittEnum {
   /** 移动端关闭输入框面板 */
   MOBILE_CLOSE_PANEL = 'mobileClosePanel',
   /** 切换会话 */
-  MSG_INIT = 'msg_init'
+  MSG_INIT = 'msg_init',
+  /** 会话切换完成*/
+  SESSION_CHANGED = 'sessionChanged'
 }
 
 /** 主题类型 */
