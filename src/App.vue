@@ -291,7 +291,7 @@ useMitt.on(WsResponseMessageType.INVALID_USER, (param: { uid: string }) => {
   console.log('无效用户')
   const data = param
   // 消息列表删掉拉黑的发言
-  chatStore.filterUser(data.uid)
+  // chatStore.filterUser(data.uid)
   // 群成员列表删掉拉黑的用户
   groupStore.removeUserItem(data.uid)
 })

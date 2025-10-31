@@ -1,5 +1,6 @@
 import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
+import { sumBy } from 'es-toolkit'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import type { FilesMeta } from '@/services/types'
@@ -244,7 +245,7 @@ export const useFileDownloadStore = defineStore(
         }
 
         // 合并所有数据块
-        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0)
+        const totalLength = sumBy(chunks, (chunk) => chunk.length)
         const fileData = new Uint8Array(totalLength)
         let offset = 0
 

@@ -52,6 +52,7 @@ import { type Event, emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
+import { sumBy } from 'es-toolkit'
 import { RoomTypeEnum } from '@/enums'
 import { useReplaceMsg } from '@/hooks/useReplaceMsg.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -275,7 +276,7 @@ onMounted(async () => {
           return b.timestamp - a.timestamp
         })
 
-        msgCount.value = content.value.reduce((acc, group) => acc + group.messageCount, 0)
+        msgCount.value = sumBy(content.value, (group) => group.messageCount)
       }
     })
 

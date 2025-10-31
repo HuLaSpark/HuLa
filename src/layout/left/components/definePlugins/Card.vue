@@ -144,6 +144,7 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { cloneDeep } from 'es-toolkit'
 import { PluginEnum } from '@/enums'
 import { pluginsList } from '@/layout/left/config.tsx'
 import { usePluginsStore } from '@/stores/plugins.ts'
@@ -156,7 +157,7 @@ const { page } = storeToRefs(settingStore)
 const { plugins } = storeToRefs(pluginsStore)
 const isCurrently = ref(-1)
 const allPlugins = ref([] as STO.Plugins<PluginEnum>[])
-const pluginsLists = ref<STO.Plugins<PluginEnum>[]>(JSON.parse(JSON.stringify(pluginsList.value)))
+const pluginsLists = ref<STO.Plugins<PluginEnum>[]>(cloneDeep(pluginsList.value))
 
 const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   if (plugin.state === PluginEnum.INSTALLED) return

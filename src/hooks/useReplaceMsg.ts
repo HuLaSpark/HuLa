@@ -81,7 +81,10 @@ export const useReplaceMsg = () => {
    */
   const getMessageSenderName = (message: MessageType, defaultName: string = '', roomId: string) => {
     if (!message?.fromUser?.uid) return defaultName
-    const session = chatStore.getSession(roomId)!
+    const session = chatStore.getSession(roomId)
+    // 防御性检查：如果 session 不存在，返回默认名称
+    if (!session) return defaultName
+
     if (session.type === RoomTypeEnum.GROUP) {
       const user = groupStore.getUser(roomId, message.fromUser.uid)
       return user?.myName || user?.name || ''

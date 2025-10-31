@@ -261,6 +261,7 @@
 </template>
 
 <script setup lang="ts">
+import { sumBy } from 'es-toolkit'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -336,11 +337,7 @@ interface CommentItem {
 }
 
 // 计算属性
-const unreadCount = computed(() => {
-  return dynamicList.value.reduce((total, feed) => {
-    return total + (feed.commentCount || 0)
-  }, 0)
-})
+const unreadCount = computed(() => sumBy(dynamicList.value, (feed) => feed.commentCount || 0))
 
 // 验证发布内容是否有效（只验证文本内容）
 const isPublishValid = computed(() => {
