@@ -1,5 +1,5 @@
 <template>
-  <div :style="containerStyle" @dblclick="handleOpenVideoViewer">
+  <div ref="videoContainerRef" :style="containerStyle" @dblclick="handleOpenVideoViewer">
     <n-image
       v-if="body?.thumbUrl"
       class="video-thumbnail"
@@ -95,15 +95,17 @@
         </div>
         <!-- 打开中显示加载动画 -->
         <div v-else-if="isOpening" class="loading-spinner"></div>
-        <!-- 未下载显示下载图标 -->
-        <svg v-else-if="!isVideoDownloaded" class="size-32px color-white"><use href="#Importing"></use></svg>
+        <!-- 未检查状态或未下载显示下载图标 -->
+        <svg v-else-if="isVideoDownloaded === null || !isVideoDownloaded" class="size-32px color-white">
+          <use href="#Importing"></use>
+        </svg>
         <!-- 已下载显示播放图标 -->
         <svg v-else class="size-full color-white"><use href="#play"></use></svg>
       </div>
 
       <!-- 视频信息 -->
       <div class="video-info">
-        <div class="video-filename">{{ getVideoFilenameEllipsis(body?.url) }}</div>
+        <div class="video-filename">{{ body?.filename || '视频文件' }}</div>
         <div class="video-filesize">{{ formatBytes(body?.size) }}</div>
       </div>
 
@@ -133,7 +135,7 @@ import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
 import { formatBytes } from '@/utils/Formatting.ts'
 import { isMobile } from '@/utils/PlatformConstants'
 
-const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded, getVideoFilenameEllipsis } = useVideoViewer()
+const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
 const { downloadFile, isDownloading, process } = useDownload()
 const props = defineProps<{
@@ -142,6 +144,9 @@ const props = defineProps<{
   uploadProgress?: number
   onVideoClick?: (url: string) => void
 }>()
+
+// 视频容器引用
+const videoContainerRef = ref<HTMLElement | null>(null)
 const MAX_WIDTH = 300
 const MAX_HEIGHT = 150
 const MIN_WIDTH = 60
@@ -150,8 +155,10 @@ const MIN_HEIGHT = 60
 const isError = ref(false)
 // 视频打开状态
 const isOpening = ref(false)
-// 视频下载状态
-const isVideoDownloaded = ref(false)
+// 视频下载状态（延迟加载，只在需要时检查）
+const isVideoDownloaded = ref<boolean | null>(null)
+// 是否已检查过下载状态
+const hasCheckedDownloadStatus = ref(false)
 // 视频上传状态
 const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
 const uploadProgress = computed(() => {
@@ -201,16 +208,41 @@ const containerStyle = computed(() => {
   return `width: ${style.width}; height: ${style.height}; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;`
 })
 
-// 监听视频URL变化，重新检查下载状态
-watch(
-  () => props.body?.url,
-  async () => {
-    if (props.body?.url) {
-      isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
+// 检查视频下载状态（延迟加载）
+const checkDownloadStatusLazy = async () => {
+  if (!props.body?.url || hasCheckedDownloadStatus.value) return
+  hasCheckedDownloadStatus.value = true
+  isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
+}
+
+// 使用 IntersectionObserver 在视频进入视口时检查下载状态
+const setupIntersectionObserver = () => {
+  if (!videoContainerRef.value || hasCheckedDownloadStatus.value) return
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // 视频进入视口，检查下载状态
+          checkDownloadStatusLazy()
+          // 检查后断开观察
+          observer.disconnect()
+        }
+      })
+    },
+    {
+      // 当视频50%可见时触发
+      threshold: 0.5
     }
-  },
-  { immediate: true }
-)
+  )
+
+  observer.observe(videoContainerRef.value)
+
+  // 组件卸载时清理
+  onUnmounted(() => {
+    observer.disconnect()
+  })
+}
 
 // 处理图片加载错误
 const handleImageError = () => {
@@ -246,6 +278,11 @@ const handlePlayButtonClick = async () => {
 
   // 如果正在上传，不允许点击
   if (isUploading.value) return
+
+  // 首次点击时检查下载状态
+  if (!hasCheckedDownloadStatus.value) {
+    await checkDownloadStatusLazy()
+  }
 
   // 如果视频未下载，先下载
   if (!isVideoDownloaded.value) {
@@ -302,12 +339,19 @@ const handleVideoDownloadStatusUpdate = (data: { url: string; downloaded: boolea
   }
 }
 
-onMounted(async () => {
-  // 检查视频是否已下载
-  isVideoDownloaded.value = await checkVideoDownloaded(props.body?.url)
-
+onMounted(() => {
   // 监听视频下载状态更新事件
   useMitt.on(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, handleVideoDownloadStatusUpdate)
+
+  // 设置视口观察器
+  nextTick(() => {
+    setupIntersectionObserver()
+  })
+})
+
+onUnmounted(() => {
+  // 清理事件监听
+  useMitt.off(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, handleVideoDownloadStatusUpdate)
 })
 </script>
 

@@ -26,11 +26,11 @@ export const useUserStore = defineStore(
     })
 
     const getUserRoomDir = async () => {
-      return await PathUtil.getUserVideosDir(userInfo.value!.uid, globalStore.currentSession!.roomId)
+      return await PathUtil.getUserVideosDir(userInfo.value!.uid, globalStore.currentSessionRoomId)
     }
 
     const getUserRoomAbsoluteDir = async () => {
-      return await PathUtil.getUserAbsoluteVideosDir(userInfo.value!.uid, globalStore.currentSession!.roomId)
+      return await PathUtil.getUserAbsoluteVideosDir(userInfo.value!.uid, globalStore.currentSessionRoomId)
     }
 
     return { userInfo, getUserDetailAction, isMe, getUserRoomDir, getUserRoomAbsoluteDir }

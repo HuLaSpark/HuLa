@@ -74,13 +74,13 @@ export const useChatStore = defineStore(
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed(() => {
-      return messageMap[globalStore.currentSession!.roomId] || {}
+      return messageMap[globalStore.currentSessionRoomId] || {}
     })
 
     // 当前聊天室的消息加载状态计算属性
     const currentMessageOptions = computed({
       get: () => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         const current = messageOptions[roomId]
         if (current === undefined) {
           messageOptions[roomId] = { isLast: false, isLoading: false, cursor: '' }
@@ -88,7 +88,7 @@ export const useChatStore = defineStore(
         return messageOptions[roomId]
       },
       set: (val) => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         messageOptions[roomId] = val as { isLast: boolean; isLoading: boolean; cursor: string }
       }
     })
@@ -96,7 +96,7 @@ export const useChatStore = defineStore(
     // 当前聊天室的回复消息映射计算属性
     const currentReplyMap = computed({
       get: () => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         const current = replyMapping[roomId]
         if (current === undefined) {
           replyMapping[roomId] = {}
@@ -104,7 +104,7 @@ export const useChatStore = defineStore(
         return replyMapping[roomId]
       },
       set: (val) => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         replyMapping[roomId] = val as Record<string, string[]>
       }
     })
@@ -119,7 +119,7 @@ export const useChatStore = defineStore(
 
     // 获取当前会话信息的计算属性
     const currentSessionInfo = computed(() => {
-      const roomId = globalStore.currentSession?.roomId
+      const roomId = globalStore.currentSessionRoomId
       if (!roomId) return undefined
 
       // 直接从 sessionMap 中查找（页面刷新后会自动恢复）
@@ -132,7 +132,7 @@ export const useChatStore = defineStore(
     // 当前聊天室的新消息计数计算属性
     const currentNewMsgCount = computed({
       get: () => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         const current = newMsgCount[roomId]
         if (current === undefined) {
           newMsgCount[roomId] = { count: 0, isStart: false }
@@ -140,7 +140,7 @@ export const useChatStore = defineStore(
         return newMsgCount[roomId]
       },
       set: (val) => {
-        const roomId = globalStore.currentSession!.roomId
+        const roomId = globalStore.currentSessionRoomId
         newMsgCount[roomId] = val as { count: number; isStart: boolean }
       }
     })
@@ -158,11 +158,11 @@ export const useChatStore = defineStore(
       }
 
       // 如果 currentSession 不存在，直接返回
-      if (!globalStore.currentSession?.roomId) {
+      if (!globalStore.currentSessionRoomId) {
         return
       }
 
-      const roomId = globalStore.currentSession.roomId
+      const roomId = globalStore.currentSessionRoomId
 
       // 1. 清空当前房间的旧消息数据
       if (messageMap[roomId]) {
@@ -196,10 +196,10 @@ export const useChatStore = defineStore(
       }
 
       // 标记当前会话已读
-      if (globalStore.currentSession?.roomId) {
-        const session = sessionMap.value[globalStore.currentSession.roomId]
+      if (globalStore.currentSessionRoomId) {
+        const session = sessionMap.value[globalStore.currentSessionRoomId]
         if (session?.unreadCount) {
-          markSessionRead(globalStore.currentSession.roomId)
+          markSessionRead(globalStore.currentSessionRoomId)
           updateTotalUnreadCount()
         }
       }
@@ -269,7 +269,7 @@ export const useChatStore = defineStore(
     const getMsgList = async (size = pageSize, async?: boolean) => {
       await info('获取消息列表')
       // 获取当前房间ID，用于后续比较
-      const requestRoomId = globalStore.currentSession!.roomId
+      const requestRoomId = globalStore.currentSessionRoomId
 
       await getPageMsg(size, requestRoomId, currentMessageOptions.value?.cursor, async)
     }
@@ -726,7 +726,7 @@ export const useChatStore = defineStore(
             currentMessageMap.value[msg.message.id] = updatedMsg
           }
           // 强制触发响应式更新
-          messageMap[globalStore.currentSession!.roomId] = { ...currentMessageMap.value }
+          messageMap[globalStore.currentSessionRoomId] = { ...currentMessageMap.value }
         } else {
           if (currentMessageMap.value) {
             currentMessageMap.value[msg.message.id] = msg
@@ -862,10 +862,10 @@ export const useChatStore = defineStore(
      * 主要用于需要强制刷新消息的场景，确保显示的是最新的服务器数据。
      */
     const resetAndRefreshCurrentRoomMessages = async () => {
-      if (!globalStore.currentSession!.roomId) return
+      if (!globalStore.currentSessionRoomId) return
 
       // 保存当前房间ID，用于后续比较
-      const requestRoomId = globalStore.currentSession!.roomId
+      const requestRoomId = globalStore.currentSessionRoomId
 
       try {
         // 1. 清空消息数据 避免竞态条件
@@ -895,7 +895,7 @@ export const useChatStore = defineStore(
       } catch (error) {
         console.error('[Network] 重置并刷新消息列表失败:', error)
         // 如果获取失败，确保重置加载状态
-        if (globalStore.currentSession!.roomId === requestRoomId) {
+        if (globalStore.currentSessionRoomId === requestRoomId) {
           messageOptions[requestRoomId] = {
             isLast: false,
             isLoading: false,

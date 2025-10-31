@@ -8,6 +8,10 @@ import {
   type RouteRecordRaw
 } from 'vue-router'
 
+import FriendsList from '@/views/homeWindow/FriendsList.vue'
+import Message from '@/views/homeWindow/message/index.vue'
+import SearchDetails from '@/views/homeWindow/SearchDetails.vue'
+
 import ChatRoomLayout from '#/layout/chat-room/ChatRoomLayout.vue'
 import NoticeLayout from '#/layout/chat-room/NoticeLayout.vue'
 import FriendsLayout from '#/layout/friends/FriendsLayout.vue'
@@ -337,17 +341,17 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
       {
         path: '/message',
         name: 'message',
-        component: () => import('@/views/homeWindow/message/index.vue')
+        component: Message
       },
       {
         path: '/friendsList',
         name: 'friendsList',
-        component: () => import('@/views/homeWindow/FriendsList.vue')
+        component: FriendsList
       },
       {
         path: '/searchDetails',
         name: 'searchDetails',
-        component: () => import('@/views/homeWindow/SearchDetails.vue')
+        component: SearchDetails
       }
     ]
   },

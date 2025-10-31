@@ -105,7 +105,7 @@
 
           <!-- 管理群成员 -->
           <div
-            v-if="isGroup && groupStore.isAdminOrLord() && globalStore.currentSession?.roomId !== '1'"
+            v-if="isGroup && groupStore.isAdminOrLord() && globalStore.currentSessionRoomId !== '1'"
             class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
             @click="toManageGroupMember">
             管理群成员
@@ -221,7 +221,7 @@
             <div class="p-15px">删除聊天记录</div>
           </div>
           <!-- 解散群聊、退出群聊、删除好友按钮 -->
-          <div v-if="isGroup && globalStore.currentSession.roomId !== '1'" class="mt-auto flex justify-center mb-20px">
+          <div v-if="isGroup && globalStore.currentSessionRoomId !== '1'" class="mt-auto flex justify-center mb-20px">
             <n-button type="error" @click="handleExit">
               {{ isGroup ? (isLord ? '解散群聊' : '退出群聊') : '删除好友' }}
             </n-button>
@@ -353,7 +353,7 @@ const goToNotice = () => {
     path: '/mobile/chatRoom/notice',
     query: {
       announList: JSON.stringify(announList.value),
-      roomId: globalStore.currentSession.roomId
+      roomId: globalStore.currentSessionRoomId
     }
   })
 }
@@ -410,7 +410,7 @@ async function handleExit() {
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
 const hasBadge6 = computed(() => {
   // 只有当 roomId 为 "1" 时才进行徽章判断（频道）
-  if (globalStore.currentSession?.roomId !== '1') return false
+  if (globalStore.currentSessionRoomId !== '1') return false
 
   const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid!)!
   return currentUser?.itemIds?.includes('6')
@@ -428,7 +428,7 @@ const clickInfo = () => {
  */
 const handleLoadGroupAnnoun = async () => {
   try {
-    const roomId = globalStore.currentSession?.roomId
+    const roomId = globalStore.currentSessionRoomId
     if (!roomId) {
       console.error('当前会话没有roomId')
       return
@@ -483,7 +483,7 @@ const handleInfoUpdate = async () => {
 
   if (isGroup.value) {
     await persistMyRoomInfo({
-      roomId: globalStore.currentSession.roomId,
+      roomId: globalStore.currentSessionRoomId,
       remark: remarkValue.value,
       myName: nicknameValue.value
     })
@@ -566,7 +566,7 @@ const handleShield = (value: boolean) => {
       })
 
       // 1. 先保存当前聊天室ID
-      const tempRoomId = globalStore.currentSession!.roomId
+      const tempRoomId = globalStore.currentSessionRoomId
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {
@@ -636,7 +636,7 @@ const handleSearchChatContent = () => {
 onMounted(async () => {
   await handleLoadGroupAnnoun()
   if (isGroup.value) {
-    await getGroupDetail(globalStore.currentSession.roomId)
+    await getGroupDetail(globalStore.currentSessionRoomId)
       .then((response: any) => {
         item.value = response
         nameValue.value = response.groupName || ''

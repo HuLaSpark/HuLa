@@ -206,7 +206,7 @@ const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => ite
 /** 是否为群聊 */
 const isGroupChat = computed<boolean>(() => chatStore.isGroup)
 /** 当前会话 roomId */
-const currentRoomId = computed(() => globalStore.currentSession?.roomId)
+const currentRoomId = computed(() => globalStore.currentSessionRoomId)
 /** 当前房间用户信息 */
 const currentRoomUserInfo = computed(() => {
   if (!isGroupChat.value || !currentRoomId.value) return null

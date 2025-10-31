@@ -48,7 +48,7 @@ export const useMessage = () => {
     const currentIndex = currentSessions.findIndex((session) => session.roomId === roomId)
 
     // 检查是否是当前选中的会话
-    const isCurrentSession = roomId === globalStore.currentSession!.roomId
+    const isCurrentSession = roomId === globalStore.currentSessionRoomId
 
     chatStore.removeSession(roomId)
     // TODO: 使用隐藏会话接口

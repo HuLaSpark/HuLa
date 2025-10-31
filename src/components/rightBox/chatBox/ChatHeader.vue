@@ -834,7 +834,7 @@ const handleShield = (value: boolean) => {
       })
 
       // 1. 先保存当前聊天室ID
-      const tempRoomId = globalStore.currentSession!.roomId
+      const tempRoomId = globalStore.currentSessionRoomId
 
       // 3. 在下一个tick中恢复原来的聊天室ID，触发重新加载消息
       nextTick(() => {

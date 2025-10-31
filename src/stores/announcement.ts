@@ -28,7 +28,7 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
 
     // 判断当前用户是否拥有id为6的徽章 并且是频道
     const hasBadge6 = () => {
-      if (globalStore.currentSession?.roomId !== '1') return false
+      if (globalStore.currentSessionRoomId !== '1') return false
 
       const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid)
       return currentUser?.itemIds?.includes('6') ?? false
@@ -54,7 +54,7 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
   }
 
   const loadGroupAnnouncements = async (roomId?: string) => {
-    const targetRoomId = roomId ?? globalStore.currentSession?.roomId
+    const targetRoomId = roomId ?? globalStore.currentSessionRoomId
     if (!targetRoomId) {
       console.error('当前会话没有roomId')
       return
@@ -68,7 +68,7 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
       const data = await cachedStore.getGroupAnnouncementList(targetRoomId, 1, 10)
 
       // 会话已切换，避免覆盖其他房间的数据
-      if (targetRoomId !== globalStore.currentSession?.roomId) {
+      if (targetRoomId !== globalStore.currentSessionRoomId) {
         return
       }
 
@@ -83,7 +83,7 @@ export const useAnnouncementStore = defineStore(StoresEnum.ANNOUNCEMENT, () => {
       }
     } catch (error) {
       console.error('加载群公告失败:', error)
-      if (targetRoomId === globalStore.currentSession?.roomId) {
+      if (targetRoomId === globalStore.currentSessionRoomId) {
         announError.value = true
       }
     }

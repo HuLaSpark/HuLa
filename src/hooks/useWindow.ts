@@ -330,7 +330,7 @@ export const useWindow = () => {
         window.$message.error('无法获取对方用户信息')
         return
       }
-      await createRtcCallWindow(false, remoteUid, globalStore.currentSession.roomId, callType)
+      await createRtcCallWindow(false, remoteUid, globalStore.currentSessionRoomId, callType)
     } catch (error) {
       console.error('创建视频通话窗口失败:', error)
     }

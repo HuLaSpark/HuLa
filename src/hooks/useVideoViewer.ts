@@ -26,33 +26,33 @@ export const useVideoViewer = () => {
     return 'video.mp4'
   }
 
-  // 获取省略显示的视频文件名
-  const getVideoFilenameEllipsis = (url: string, maxLength: number = 20) => {
-    const filename = getVideoFilename(url)
-    if (filename.length <= maxLength) {
-      return filename
-    }
+  // // 获取省略显示的视频文件名
+  // const getVideoFilenameEllipsis = (url: string, maxLength: number = 20) => {
+  //   const filename = getVideoFilename(url)
+  //   if (filename.length <= maxLength) {
+  //     return filename
+  //   }
 
-    // 找到最后一个点的位置（文件扩展名）
-    const lastDotIndex = filename.lastIndexOf('.')
-    if (lastDotIndex === -1) {
-      // 没有扩展名，直接截断
-      return filename.substring(0, maxLength - 3) + '...'
-    }
+  //   // 找到最后一个点的位置（文件扩展名）
+  //   const lastDotIndex = filename.lastIndexOf('.')
+  //   if (lastDotIndex === -1) {
+  //     // 没有扩展名，直接截断
+  //     return filename.substring(0, maxLength - 3) + '...'
+  //   }
 
-    const extension = filename.substring(lastDotIndex)
-    const nameWithoutExt = filename.substring(0, lastDotIndex)
+  //   const extension = filename.substring(lastDotIndex)
+  //   const nameWithoutExt = filename.substring(0, lastDotIndex)
 
-    // 计算可用于文件名主体的长度（减去扩展名和省略号的长度）
-    const availableLength = maxLength - extension.length - 3
+  //   // 计算可用于文件名主体的长度（减去扩展名和省略号的长度）
+  //   const availableLength = maxLength - extension.length - 3
 
-    if (availableLength <= 0) {
-      // 如果扩展名太长，只显示省略号和扩展名
-      return '...' + extension
-    }
+  //   if (availableLength <= 0) {
+  //     // 如果扩展名太长，只显示省略号和扩展名
+  //     return '...' + extension
+  //   }
 
-    return nameWithoutExt.substring(0, availableLength) + '...' + extension
-  }
+  //   return nameWithoutExt.substring(0, availableLength) + '...' + extension
+  // }
 
   // 获取本地视频路径
   const getLocalVideoPath = async (url: string) => {
@@ -183,7 +183,6 @@ export const useVideoViewer = () => {
     openVideoViewer,
     getLocalVideoPath,
     checkVideoDownloaded,
-    getVideoFilename,
-    getVideoFilenameEllipsis
+    getVideoFilename
   }
 }

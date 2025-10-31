@@ -395,7 +395,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
   const send = async () => {
-    const targetRoomId = globalStore.currentSession!.roomId
+    const targetRoomId = globalStore.currentSessionRoomId
     // 判断输入框中的图片或者文件数量是否超过限制
     if (messageInputDom.value.querySelectorAll('img').length > LimitEnum.COM_COUNT) {
       window.$message.warning(`一次性只能上传${LimitEnum.COM_COUNT}个文件或图片`)
@@ -1143,7 +1143,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param files 要发送的文件数组
    */
   const sendFilesDirect = async (files: File[]) => {
-    const targetRoomId = globalStore.currentSession!.roomId
+    const targetRoomId = globalStore.currentSessionRoomId
 
     // 初始化文件上传队列
     globalFileUploadQueue.initQueue(files)
@@ -1215,7 +1215,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
       await nextTick()
       if (
         messageInputDom.value?.querySelectorAll('img').length > 0 &&
-        globalStore.currentSession!.roomId === targetRoomId
+        globalStore.currentSessionRoomId === targetRoomId
       ) {
         const contentType = getMessageContentType(messageInputDom)
         if (contentType === MsgEnum.IMAGE || contentType === MsgEnum.EMOJI) {
@@ -1228,7 +1228,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }
 
   const sendVoiceDirect = async (voiceData: any) => {
-    const targetRoomId = globalStore.currentSession!.roomId
+    const targetRoomId = globalStore.currentSessionRoomId
     try {
       // 创建语音消息数据
       const msg = {
@@ -1374,7 +1374,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param locationData 地图数据
    */
   const sendLocationDirect = async (locationData: any) => {
-    const targetRoomId = globalStore.currentSession!.roomId
+    const targetRoomId = globalStore.currentSessionRoomId
     try {
       const tempMsgId = 'T' + Date.now().toString()
       const messageStrategy = messageStrategyMap[MsgEnum.LOCATION]

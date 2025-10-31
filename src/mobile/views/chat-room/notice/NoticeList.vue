@@ -88,7 +88,7 @@ const canAddAnnouncement = computed(() => {
 
   // 判断当前用户是否拥有id为6的徽章 并且是频道
   const hasBadge6 = () => {
-    if (globalStore.currentSession?.roomId !== '1') return false
+    if (globalStore.currentSessionRoomId !== '1') return false
 
     const currentUser = groupStore.getUserInfo(userStore.userInfo!.uid)
     return currentUser?.itemIds?.includes('6') ?? false
@@ -100,7 +100,7 @@ const canAddAnnouncement = computed(() => {
 // 加载群公告列表
 const loadAnnouncementList = async () => {
   try {
-    const roomId = globalStore.currentSession?.roomId
+    const roomId = globalStore.currentSessionRoomId
     if (!roomId) {
       console.error('当前会话没有roomId')
       return

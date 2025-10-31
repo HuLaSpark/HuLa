@@ -7,7 +7,7 @@
           globalStore.currentSession.remark ? globalStore.currentSession.remark : globalStore.currentSession.name
         "
         :msg-count="1002"
-        :is-official="globalStore.currentSession.roomId === '1'"
+        :is-official="globalStore.currentSessionRoomId === '1'"
         @room-name-click="handleRoomNameClick" />
     </template>
     <template #container>
@@ -179,7 +179,7 @@ watch(
 )
 
 watch(
-  () => globalStore.currentSession?.roomId,
+  () => globalStore.currentSessionRoomId,
   () => {
     resetAssistantModel({ reapplyFirst: true })
   }

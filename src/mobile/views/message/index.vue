@@ -293,7 +293,7 @@ const sessionList = computed(() => {
         const isAtMe = checkRoomAtMe(
           item.roomId,
           item.type,
-          globalStore.currentSession?.roomId!,
+          globalStore.currentSessionRoomId!,
           messages,
           item.unreadCount
         )

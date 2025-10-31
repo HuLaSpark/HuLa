@@ -213,7 +213,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
         const msg = { ...item }
-        const res = await recallMsg({ roomId: globalStore.currentSession!.roomId, msgId: item.message.id })
+        const res = await recallMsg({ roomId: globalStore.currentSessionRoomId, msgId: item.message.id })
         if (res) {
           window.$message.error(res)
           return
@@ -434,7 +434,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
                 const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
                 console.log('找到的文件状态：', fileStatus)
-                const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+                const currentChatRoomId = globalStore.currentSessionRoomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
                 const currentUserUid = userStore.userInfo!.uid as string
 
                 const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
@@ -503,7 +503,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
           const fileStatus: FileDownloadStatus = fileDownloadStore.getFileStatus(item.message.body.url)
 
-          const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+          const currentChatRoomId = globalStore.currentSessionRoomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
           const currentUserUid = userStore.userInfo!.uid as string
 
           /**
@@ -631,7 +631,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
 
         console.log('找到的文件状态：', fileStatus)
-        const currentChatRoomId = globalStore.currentSession!.roomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
+        const currentChatRoomId = globalStore.currentSessionRoomId // 这个id可能为群id可能为用户uid，所以不能只用用户uid
         const currentUserUid = userStore.userInfo!.uid as string
 
         const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
@@ -745,7 +745,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       click: (item: any) => {
         const targetUid = item.uid || item.fromUser?.uid
         const currentUid = userUid.value
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         const isGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
 
         if (!isGroup || targetUid !== currentUid) {
@@ -778,7 +778,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'people-safe',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId) return
 
         try {
@@ -794,7 +794,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!isInGroup) return false
 
         // 2. 检查房间号是否为1(频道)
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId || roomId === '1') return false
 
         // 3. 获取目标用户ID
@@ -823,7 +823,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'reduce-user',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId) return
 
         try {
@@ -839,7 +839,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!isInGroup) return false
 
         // 2. 检查房间号是否为1(频道)
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId || roomId === '1') return false
 
         // 3. 获取目标用户ID
@@ -871,7 +871,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'people-delete-one',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId) return
 
         try {
@@ -889,7 +889,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!isInGroup) return false
 
         // 2. 检查房间号是否为1(频道)
-        const roomId = globalStore.currentSession?.roomId
+        const roomId = globalStore.currentSessionRoomId
         if (!roomId || roomId === '1') return false
 
         // 3. 获取目标用户ID

@@ -35,7 +35,7 @@ export const options = computed(() => {
 // 获取已禁用选项的值列表
 export const getDisabledOptions = () => {
   // 当前选中的房间id
-  const currentRoomId = globalStore.currentSession?.roomId
+  const currentRoomId = globalStore.currentSessionRoomId
 
   if (!currentRoomId || !groupStore.userList.length) return []
 
@@ -49,7 +49,7 @@ export const getFilteredOptions = () => {
   // 获取禁用选项列表
   const disabledOptions = getDisabledOptions()
   // 当前选中的房间id
-  const currentRoomId = globalStore.currentSession?.roomId
+  const currentRoomId = globalStore.currentSessionRoomId
   // 如果没有房间ID，返回所有好友
   if (!currentRoomId) return options.value
 

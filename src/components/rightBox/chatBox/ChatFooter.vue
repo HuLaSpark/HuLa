@@ -555,8 +555,7 @@ const handleLocationSelected = async (locationData: any) => {
 
 // 打开聊天记录窗口
 const openChatHistory = async () => {
-  const currentRoomId = globalStore.currentSession?.roomId
-  if (!currentRoomId) return
+  const currentRoomId = globalStore.currentSessionRoomId
 
   // 创建聊天记录窗口
   await createWebviewWindow('聊天记录', 'chat-history', 800, 600, undefined, true, 600, 400, false, false, {

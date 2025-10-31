@@ -260,7 +260,7 @@ const scrollIntent = ref<ScrollIntentEnum>(ScrollIntentEnum.NONE)
 const isGroup = computed<boolean>(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid || '')
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
-const currentRoomId = computed(() => globalStore.currentSession?.roomId ?? null)
+const currentRoomId = computed(() => globalStore.currentSessionRoomId ?? null)
 const computeMsgHover = computed(() => (item: MessageType) => {
   if (!chatStore.isMsgMultiChoose || !isMessageMultiSelectEnabled(item.message.type)) {
     return false
@@ -590,7 +590,7 @@ watch(
           latestMessage?.fromUser?.uid && String(latestMessage.fromUser.uid) !== String(userUid.value)
         // 只有当不在底部且是他人消息时才增加计数
         if (shouldShowFloatFooter.value && isOtherUserMessage) {
-          const roomId = globalStore.currentSession!.roomId
+          const roomId = globalStore.currentSessionRoomId
           const current = chatStore.newMsgCount[roomId]
           if (!current) {
             chatStore.newMsgCount[roomId] = {
@@ -679,7 +679,7 @@ const handleViewAnnouncement = (): void => {
 useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {
   // 只有消息数量超过60条才进行重置和刷新
   if (chatStore.chatMessageList.length > 20) {
-    chatStore.clearRedundantMessages(globalStore.currentSession!.roomId)
+    chatStore.clearRedundantMessages(globalStore.currentSessionRoomId)
   }
   scrollToBottom()
 })

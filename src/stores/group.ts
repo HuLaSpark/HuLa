@@ -24,7 +24,59 @@ export const useGroupStore = defineStore(
       lastLoadedRoomId: ''
     })
 
+    type InternalUserItem = UserItem & { __order?: number }
+
     const userListMap = reactive<Record<string, UserItem[]>>({})
+    const memberOrderCounters = reactive<Record<string, number>>({})
+
+    const getRoleSortWeight = (roleId?: number) => {
+      switch (roleId) {
+        case RoleEnum.LORD:
+          return 0
+        case RoleEnum.ADMIN:
+          return 1
+        case RoleEnum.NORMAL:
+          return 2
+        default:
+          return 3
+      }
+    }
+
+    const ensureMemberOrder = (roomId: string, members: InternalUserItem[]) => {
+      if (!memberOrderCounters[roomId]) {
+        memberOrderCounters[roomId] = 0
+      }
+
+      members.forEach((member) => {
+        if (member.__order === undefined) {
+          member.__order = memberOrderCounters[roomId]++
+        }
+      })
+    }
+
+    const sortMembersByRole = (roomId: string, members: InternalUserItem[]) => {
+      ensureMemberOrder(roomId, members)
+
+      return [...members].sort((a, b) => {
+        const roleDiff = getRoleSortWeight(a.roleId) - getRoleSortWeight(b.roleId)
+        if (roleDiff !== 0) {
+          return roleDiff
+        }
+
+        return (a.__order ?? Number.MAX_SAFE_INTEGER) - (b.__order ?? Number.MAX_SAFE_INTEGER)
+      })
+    }
+
+    const setRoomMemberList = (roomId: string, members: UserItem[]) => {
+      if (!Array.isArray(members) || members.length === 0) {
+        userListMap[roomId] = []
+        memberOrderCounters[roomId] = 0
+        return
+      }
+
+      const sortedMembers = sortMembersByRole(roomId, members as InternalUserItem[])
+      userListMap[roomId] = sortedMembers
+    }
     const groupDetails = ref<GroupDetailReq[]>([])
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
     const myNameInCurrentGroup = computed({
@@ -67,8 +119,8 @@ export const useGroupStore = defineStore(
       return userListMap[roomId] || []
     }
 
-    const updateMemberCache = (roomId: string, members: any[]) => {
-      userListMap[roomId] = members
+    const updateMemberCache = (roomId: string, members: UserItem[]) => {
+      setRoomMemberList(roomId, members)
     }
 
     /**
@@ -88,7 +140,7 @@ export const useGroupStore = defineStore(
         const cachedMembers = getCachedMembers(newSession.roomId)
         if (cachedMembers && Array.isArray(cachedMembers)) {
           // 先设置缓存数据避免空白
-          userListMap[newSession.roomId] = cachedMembers
+          setRoomMemberList(newSession.roomId, cachedMembers)
         }
 
         // 重置群组并加载新的群成员数据
@@ -259,7 +311,7 @@ export const useGroupStore = defineStore(
       })
 
       // 更新用户列表
-      userListMap[roomId] = updatedUserList
+      setRoomMemberList(roomId, updatedUserList)
     }
 
     /**
@@ -426,7 +478,7 @@ export const useGroupStore = defineStore(
       }
 
       if (!Array.isArray(cachedList)) {
-        userListMap[roomId] = []
+        setRoomMemberList(roomId, [])
       }
 
       const data = await ImRequestUtils.groupListMember(roomId)
@@ -437,10 +489,10 @@ export const useGroupStore = defineStore(
 
       userListOptions.loading = false
 
-      userListMap[roomId] = Array.isArray(data) ? [...data] : []
-      updateMemberCache(roomId, userListMap[roomId])
+      const list = Array.isArray(data) ? [...data] : []
+      updateMemberCache(roomId, list)
 
-      return data
+      return userListMap[roomId]
     }
 
     const cleanupSession = () => {
@@ -565,7 +617,7 @@ export const useGroupStore = defineStore(
      * @param roomId
      */
     const removeAllUsers = (roomId: string) => {
-      userListMap[roomId] = []
+      setRoomMemberList(roomId, [])
     }
 
     /**
@@ -585,7 +637,7 @@ export const useGroupStore = defineStore(
         }
         return user
       })
-      userListMap[targetRoomId] = updatedList
+      setRoomMemberList(targetRoomId, updatedList)
     }
 
     /**
@@ -605,7 +657,7 @@ export const useGroupStore = defineStore(
         }
         return user
       })
-      userListMap[targetRoomId] = updatedList
+      setRoomMemberList(targetRoomId, updatedList)
     }
 
     /**
@@ -625,7 +677,7 @@ export const useGroupStore = defineStore(
       // 更新本地群成员列表，移除被踢出的成员
       const currentUserList = userListMap[targetRoomId] || []
       const updatedList = currentUserList.filter((user: UserItem) => !uidList.includes(user.uid))
-      userListMap[targetRoomId] = updatedList
+      setRoomMemberList(targetRoomId, updatedList)
     }
 
     /**
@@ -640,7 +692,7 @@ export const useGroupStore = defineStore(
       // 更新群成员缓存，移除自己
       const currentUserList = userListMap[roomId] || []
       const updatedList = currentUserList.filter((user: UserItem) => user.uid !== userStore.userInfo!.uid)
-      userListMap[roomId] = updatedList
+      setRoomMemberList(roomId, updatedList)
 
       // 删除对应的群详情缓存
       removeGroupDetail(roomId)

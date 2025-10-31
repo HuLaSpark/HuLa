@@ -118,7 +118,7 @@ const startCall = (callType: CallTypeEnum) => {
     path: `/mobile/rtcCall`,
     query: {
       remoteUserId: globalStore.currentSession.detailId,
-      roomId: globalStore.currentSession.roomId,
+      roomId: globalStore.currentSessionRoomId,
       callType: callType
     }
   })

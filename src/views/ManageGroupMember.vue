@@ -241,7 +241,7 @@ const handleClose = () => {
 // 处理踢出群聊
 const handleRemove = async () => {
   // 检查是否是频道（roomId === '1'），频道不允许踢人
-  if (globalStore.currentSession?.roomId === '1') {
+  if (globalStore.currentSessionRoomId === '1') {
     window.$message.warning('频道不允许踢出成员')
     return
   }
@@ -261,7 +261,7 @@ const handleRemove = async () => {
       isLoading.value = true
       try {
         // 调用批量踢人接口
-        await groupStore.removeGroupMembers(selectedList.value, globalStore.currentSession!.roomId)
+        await groupStore.removeGroupMembers(selectedList.value, globalStore.currentSessionRoomId)
 
         window.$message.success(`成功踢出 ${selectedList.value.length} 位成员`)
         selectedList.value = []
@@ -288,7 +288,7 @@ const calculateScrollHeight = () => {
 // 初始化时获取群成员列表
 onMounted(async () => {
   // 如果是频道（roomId === '1'），直接返回上一页
-  if (globalStore.currentSession?.roomId === '1') {
+  if (globalStore.currentSessionRoomId === '1') {
     window.$message.warning('频道不支持管理成员')
     handleClose()
     return
@@ -296,8 +296,8 @@ onMounted(async () => {
 
   try {
     // 加载当前群的成员列表
-    if (globalStore.currentSession?.roomId) {
-      await groupStore.getGroupUserList(globalStore.currentSession.roomId)
+    if (globalStore.currentSessionRoomId) {
+      await groupStore.getGroupUserList(globalStore.currentSessionRoomId)
     }
   } catch (error) {
     console.error('加载成员列表失败:', error)
