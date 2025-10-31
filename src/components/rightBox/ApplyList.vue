@@ -107,6 +107,7 @@
   </n-flex>
 </template>
 <script setup lang="ts">
+import { uniq } from 'es-toolkit'
 import type { NoticeItem } from '@/services/types.ts'
 import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -339,10 +340,7 @@ onMounted(() => {
 watch(
   () => applyList.value,
   (newList) => {
-    const roomIds = newList
-      .filter((item) => item.roomId && Number(item.roomId) > 0)
-      .map((item) => item.roomId)
-      .filter((roomId, index, array) => array.indexOf(roomId) === index)
+    const roomIds = uniq(newList.filter((item) => item.roomId && Number(item.roomId) > 0).map((item) => item.roomId))
 
     if (roomIds.length > 0) {
       // 批量加载群组信息

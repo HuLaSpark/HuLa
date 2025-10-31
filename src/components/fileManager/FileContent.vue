@@ -86,6 +86,7 @@
 </template>
 
 <script setup lang="ts">
+import { sumBy } from 'es-toolkit'
 import ContextMenu from '@/components/common/ContextMenu.vue'
 import { useDownload } from '@/hooks/useDownload'
 import type { FileBody } from '@/services/types'
@@ -183,9 +184,7 @@ const displayedTimeGroupedFiles = computed(() => {
 })
 
 // 计算过滤后的文件总数
-const totalDisplayedFiles = computed(() =>
-  displayedTimeGroupedFiles.value.reduce((sum: number, group: TimeGroup) => sum + group.files.length, 0)
-)
+const totalDisplayedFiles = computed(() => sumBy(displayedTimeGroupedFiles.value, (group) => group.files.length))
 
 const { downloadFile } = useDownload()
 

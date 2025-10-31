@@ -1,6 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
+import { sumBy } from 'es-toolkit'
 import { NotificationTypeEnum } from '@/enums'
 import type { SessionItem } from '@/services/types'
 import { isMac } from '@/utils/PlatformConstants'
@@ -62,15 +63,12 @@ export class UnreadCountManager {
     info('[UnreadCountManager] 计算全局未读消息计数')
 
     // 计算总未读数
-    const totalUnread = sessionList.reduce((total, session) => {
-      // 免打扰的会话不计入全局未读数
+    const totalUnread = sumBy(sessionList, (session) => {
       if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-        return total
+        return 0
       }
-      // 确保 unreadCount 是数字且不为负数
-      const unread = Math.max(0, session.unreadCount || 0)
-      return total + unread
-    }, 0)
+      return Math.max(0, session.unreadCount || 0)
+    })
 
     // 更新全局未读计数
     unReadMark.newMsgUnreadCount = totalUnread

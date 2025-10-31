@@ -1,6 +1,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { sendNotification } from '@tauri-apps/plugin-notification'
+import pLimit from 'p-limit'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
@@ -51,6 +52,8 @@ export const useChatStore = defineStore(
 
     // 会话列表
     const sessionList = ref<SessionItem[]>([])
+    // 会话列表的快速查找 Map，通过 roomId 进行 O(1) 查找
+    const sessionMap = ref<Record<string, SessionItem>>({})
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
 
@@ -114,9 +117,13 @@ export const useChatStore = defineStore(
     const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
     // 获取当前会话信息的计算属性
-    const currentSessionInfo = computed(() =>
-      sessionList.value.find((session) => session.roomId === globalStore.currentSession?.roomId)
-    )
+    const currentSessionInfo = computed(() => {
+      const roomId = globalStore.currentSession?.roomId
+      if (!roomId) return undefined
+
+      // 直接从 sessionMap 中查找（页面刷新后会自动恢复）
+      return sessionMap.value[roomId]
+    })
 
     // 新消息计数相关的响应式数据
     const newMsgCount = reactive<Record<string, { count: number; isStart: boolean }>>({})
@@ -149,7 +156,13 @@ export const useChatStore = defineStore(
         return
       }
 
-      const roomId = globalStore.currentSession!.roomId
+      // 如果 currentSession 不存在，直接返回
+      if (!globalStore.currentSession?.roomId) {
+        console.warn('[changeRoom] currentSession 未初始化')
+        return
+      }
+
+      const roomId = globalStore.currentSession.roomId
 
       // 1. 清空当前房间的旧消息数据
       if (messageMap[roomId]) {
@@ -183,10 +196,12 @@ export const useChatStore = defineStore(
       }
 
       // 标记当前会话已读
-      const session = sessionList.value.find((s) => s.roomId === globalStore.currentSession!.roomId)
-      if (session?.unreadCount) {
-        markSessionRead(globalStore.currentSession!.roomId)
-        updateTotalUnreadCount()
+      if (globalStore.currentSession?.roomId) {
+        const session = sessionMap.value[globalStore.currentSession.roomId]
+        if (session?.unreadCount) {
+          markSessionRead(globalStore.currentSession.roomId)
+          updateTotalUnreadCount()
+        }
       }
 
       // 重置当前回复的消息
@@ -209,11 +224,44 @@ export const useChatStore = defineStore(
       return Object.values(messageMap[roomId]).sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
-    // 登录之后，加载一次所有会话的消息
+    /**
+     * 登录之后，加载一次所有会话的消息
+     * @description
+     * 使用受控并发加载（p-limit），避免大量会话时阻塞 UI
+     * - 优先加载最近活跃的会话
+     * - 限制并发数为 5，平衡性能和服务器压力
+     * - 使用 Promise.allSettled 确保部分失败不影响其他会话
+     */
     const setAllSessionMsgList = async (size = pageSize) => {
       await info('初始设置所有会话消息列表')
-      for (const session of sessionList.value) {
-        await getPageMsg(size, session.roomId, '', true)
+
+      if (sessionList.value.length === 0) return
+
+      // 按活跃时间排序，优先加载最近的会话
+      const sortedSessions = [...sessionList.value].sort((a, b) => b.activeTime - a.activeTime)
+
+      // 创建并发限制器（最多同时 5 个请求）
+      const limit = pLimit(5)
+
+      // 使用 p-limit 包装任务并执行
+      const tasks = sortedSessions.map((session) => limit(() => getPageMsg(size, session.roomId, '', true)))
+
+      // 并发执行所有任务
+      const results = await Promise.allSettled(tasks)
+
+      // 统计加载结果
+      const successCount = results.filter((r) => r.status === 'fulfilled').length
+      const failCount = results.filter((r) => r.status === 'rejected').length
+
+      await info(`会话消息加载完成: 成功 ${successCount}/${sortedSessions.length}, 失败 ${failCount}`)
+
+      // 记录失败的会话（可选）
+      if (failCount > 0) {
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.warn(`会话 ${sortedSessions[index].roomId} 消息加载失败:`, result.reason)
+          }
+        })
       }
     }
 
@@ -282,6 +330,11 @@ export const useChatStore = defineStore(
         sessionList.value = [...data]
         sessionOptions.isLoading = false
 
+        // 同步更新 sessionMap
+        for (const session of sessionList.value) {
+          sessionMap.value[session.roomId] = session
+        }
+
         sortAndUniqueSessionList()
       } catch (e) {
         console.error('获取会话列表失败11:', e)
@@ -291,21 +344,30 @@ export const useChatStore = defineStore(
       }
     }
 
-    /** 会话列表去重并排序 */
+    /** 会话列表排序 */
     const sortAndUniqueSessionList = () => {
-      const temp: Record<string, SessionItem> = {}
-      for (const item of sessionList.value) {
-        temp[item.roomId] = item
-      }
-      sessionList.value.splice(0, sessionList.value.length, ...Object.values(temp))
+      // const temp: Record<string, SessionItem> = {}
+      // for (const item of sessionList.value) {
+      //   temp[item.roomId] = item
+      // }
+      // sessionList.value.splice(0, sessionList.value.length, ...Object.values(temp))
       sessionList.value.sort((pre, cur) => cur.activeTime - pre.activeTime)
     }
 
     // 更新会话
     const updateSession = (roomId: string, data: Partial<SessionItem>) => {
-      const index = sessionList.value.findIndex((session) => session.roomId === roomId)
-      if (index !== -1) {
-        sessionList.value[index] = { ...sessionList.value[index], ...data }
+      const session = sessionMap.value[roomId]
+      if (session) {
+        const updatedSession = { ...session, ...data }
+
+        // 同步更新 sessionList
+        const index = sessionList.value.findIndex((s) => s.roomId === roomId)
+        if (index !== -1) {
+          sessionList.value[index] = updatedSession
+        }
+
+        // 同步更新 sessionMap
+        sessionMap.value[roomId] = updatedSession
 
         // 如果更新了免打扰状态，需要重新计算全局未读数
         if ('muteNotification' in data) {
@@ -316,7 +378,8 @@ export const useChatStore = defineStore(
 
     // 更新会话最后活跃时间, 只要更新的过程中会话不存在，那么将会话刷新出来
     const updateSessionLastActiveTime = (roomId: string) => {
-      const session = sessionList.value.find((item) => item.roomId === roomId)
+      // O(1) 查找
+      const session = sessionMap.value[roomId]
       if (session) {
         Object.assign(session, { activeTime: Date.now() })
       } else {
@@ -328,13 +391,19 @@ export const useChatStore = defineStore(
     const addSession = async (roomId: string) => {
       const resp = await getSessionDetail({ id: roomId })
       sessionList.value.unshift(resp)
+      // 同步更新 sessionMap
+      sessionMap.value[roomId] = resp
       sortAndUniqueSessionList()
     }
 
     // 通过房间ID获取会话信息
     const getSession = (roomId: string) => {
-      const currentSession = roomId ? sessionList.value.find((item) => item.roomId === roomId) : sessionList.value[0]
-      return currentSession
+      if (!roomId) {
+        return sessionList.value[0]
+      }
+
+      // O(1) 查找（页面刷新后自动从持久化恢复）
+      return sessionMap.value[roomId]
     }
 
     // 推送消息
@@ -418,17 +487,17 @@ export const useChatStore = defineStore(
     }
 
     // 过滤掉拉黑用户的发言
-    const filterUser = (uid: string) => {
-      for (const roomId in messageMap) {
-        const messages = messageMap[roomId]
-        for (const msgId in messages) {
-          const msg = messages[msgId]
-          if (msg.fromUser.uid === uid) {
-            delete messages[msgId]
-          }
-        }
-      }
-    }
+    // const filterUser = (uid: string) => {
+    //   for (const roomId in messageMap) {
+    //     const messages = messageMap[roomId]
+    //     for (const msgId in messages) {
+    //       const msg = messages[msgId]
+    //       if (msg.fromUser.uid === uid) {
+    //         delete messages[msgId]
+    //       }
+    //     }
+    //   }
+    // }
 
     // 加载更多消息
     const loadMore = async (size?: number) => {
@@ -670,7 +739,8 @@ export const useChatStore = defineStore(
 
     // 标记已读数为 0
     const markSessionRead = (roomId: string) => {
-      const session = sessionList.value.find((s) => s.roomId === roomId)
+      // O(1) 查找
+      const session = sessionMap.value[roomId]
       if (session) {
         // 更新会话的未读数
         session.unreadCount = 0
@@ -687,9 +757,17 @@ export const useChatStore = defineStore(
 
     // 删除会话
     const removeSession = (roomId: string) => {
-      const index = sessionList.value.findIndex((session) => session.roomId === roomId)
-      if (index !== -1) {
-        sessionList.value.splice(index, 1)
+      const session = sessionMap.value[roomId]
+      if (session) {
+        // 从数组中删除
+        const index = sessionList.value.findIndex((s) => s.roomId === roomId)
+        if (index !== -1) {
+          sessionList.value.splice(index, 1)
+        }
+
+        // 从 map 中删除
+        delete sessionMap.value[roomId]
+
         if (globalStore.currentSessionRoomId === roomId) {
           globalStore.updateCurrentSessionRoomId(sessionList.value[0].roomId)
         }
@@ -861,7 +939,6 @@ export const useChatStore = defineStore(
       currentNewMsgCount,
       loadMore,
       currentMsgReply,
-      filterUser,
       sessionList,
       sessionOptions,
       getSessionList,
