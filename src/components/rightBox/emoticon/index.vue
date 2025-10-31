@@ -10,7 +10,7 @@
         <div v-if="activeIndex === 0">
           <div v-if="emojiRef.historyList?.length > 0">
             <span v-if="!checkIsUrl(emojiRef.historyList[0])" class="text-12px text-[--text-color]">最近使用</span>
-            <n-flex align="center" class="mt-12px mb-12px">
+            <n-flex align="center" :class="isMobile() ? 'emoji-grid-mobile mt-12px mb-12px' : 'mt-12px mb-12px'">
               <n-flex
                 align="center"
                 justify="center"
@@ -27,7 +27,7 @@
           <div v-for="items in emojiObj" :key="items?.name">
             <template v-if="items?.name && items.value?.length">
               <span class="text-12px text-[--text-color]">{{ items.name }}</span>
-              <n-flex align="center" class="my-12px">
+              <n-flex align="center" :class="isMobile() ? 'emoji-grid-mobile my-12px' : 'my-12px'">
                 <n-flex
                   align="center"
                   justify="center"
@@ -45,7 +45,7 @@
         <!-- 表情包系列 -->
         <div v-else-if="currentSeries">
           <span class="text-12px text-[--text-color]">{{ currentSeries.name }}</span>
-          <n-flex align="center" class="mx-6px my-12px">
+          <n-flex align="center" :class="isMobile() ? 'emoji-pack-grid-mobile mx-6px my-12px' : 'mx-6px my-12px'">
             <n-flex
               align="center"
               justify="center"
@@ -66,7 +66,7 @@
         <div v-else>
           <div v-if="emojiStore.emojiList?.length > 0">
             <span class="text-12px text-[--text-color]">我的表情包</span>
-            <n-flex align="center" class="mx-6px my-12px">
+            <n-flex align="center" :class="isMobile() ? 'emoji-pack-grid-mobile mx-6px my-12px' : 'mx-6px my-12px'">
               <n-flex
                 align="center"
                 justify="center"
@@ -413,5 +413,23 @@ onMounted(async () => {
 .fade-leave-to {
   opacity: 0;
   transform: translateX(-20px);
+}
+
+// 移动端表情网格布局 - 普通emoji表情（7列）
+.emoji-grid-mobile {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  justify-items: center;
+  width: 100%;
+}
+
+// 移动端表情包网格布局 - 表情包图片（4列）
+.emoji-pack-grid-mobile {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  justify-items: center;
+  width: 100%;
 }
 </style>

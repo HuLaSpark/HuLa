@@ -16,7 +16,7 @@
         <div v-if="isMobile()" class="flex items-center justify-center w-6 ms-5px h-2.5rem">
           <svg
             @click="handleVoiceClick"
-            :class="iconClickedStates.isClickedVoice ? 'text-#169781' : ''"
+            :class="mobilePanelState === MobilePanelStateEnum.VOICE ? 'text-#169781' : ''"
             class="w-25px h-25px mt-2px outline-none">
             <use href="#voice"></use>
           </svg>
@@ -189,7 +189,7 @@
           :class="msgInput ? 'grid-cols-[2rem_3rem]' : 'grid-cols-[2rem_2rem]'">
           <div class="w-full flex-center h-full">
             <svg @click="handleEmojiClick" class="w-25px h-25px mt-2px outline-none iconpark-icon">
-              <use :href="iconClickedStates.isClickedEmoji ? '#face' : '#smiling-face'"></use>
+              <use :href="mobilePanelState === MobilePanelStateEnum.EMOJI ? '#face' : '#smiling-face'"></use>
             </svg>
           </div>
           <div
@@ -206,7 +206,7 @@
           <div v-if="!msgInput" class="flex items-center justify-start h-full">
             <svg
               @click="handleMoreClick"
-              :class="iconClickedStates.isClickedMore ? 'rotate-45' : 'rotate-0'"
+              :class="mobilePanelState === MobilePanelStateEnum.MORE ? 'rotate-45' : 'rotate-0'"
               class="w-25px h-25px mt-2px outline-none iconpark-icon transition-transform duration-300 ease">
               <use href="#add-one"></use>
             </svg>
@@ -240,6 +240,8 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useGroupStore } from '@/stores/group'
+import { MobilePanelStateEnum } from '@/enums'
+
 interface Props {
   isAIMode?: boolean
 }
@@ -281,6 +283,7 @@ const {
   sendLocationDirect,
   sendFilesDirect,
   sendVoiceDirect,
+  sendEmojiDirect,
   personList,
   disabledSend,
   ait,
@@ -424,20 +427,12 @@ const handleVoiceCancel = () => {
   isVoiceMode.value = false
 }
 
-// 记录当前点击状态
-const iconClickedStates = ref({
-  isClickedMore: false,
-  isClickedEmoji: false,
-  isClickedVoice: false,
-  isFocus: false
-})
+// 使用枚举管理移动端面板状态
+const mobilePanelState = ref<MobilePanelStateEnum>(MobilePanelStateEnum.NONE)
 
 // 定义公共类型
 interface ClickState {
-  isClickedMore: boolean
-  isClickedEmoji: boolean
-  isClickedVoice: boolean
-  isFocus: boolean
+  panelState: MobilePanelStateEnum
 }
 
 interface AISendData {
@@ -462,58 +457,52 @@ const selfEmitter = defineEmits<{
 
 /** 设置聚焦状态 */
 const setIsFocus = (value: boolean) => {
-  iconClickedStates.value.isClickedMore = false
-  iconClickedStates.value.isClickedEmoji = false
-  iconClickedStates.value.isClickedVoice = false
-  iconClickedStates.value.isFocus = value
+  // 移动端：如果当前面板是打开状态（表情、语音、更多），不要因为聚焦而关闭面板
+  if (
+    isMobile() &&
+    !value &&
+    (mobilePanelState.value === MobilePanelStateEnum.EMOJI ||
+      mobilePanelState.value === MobilePanelStateEnum.VOICE ||
+      mobilePanelState.value === MobilePanelStateEnum.MORE)
+  ) {
+    // 保持当前面板状态，不关闭
+    return
+  }
+
+  mobilePanelState.value = value ? MobilePanelStateEnum.FOCUS : MobilePanelStateEnum.NONE
 
   selfEmitter('customFocus', {
-    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
-    isClickedMore: iconClickedStates.value.isClickedMore,
-    isClickedVoice: iconClickedStates.value.isClickedVoice,
-    isFocus: iconClickedStates.value.isFocus
+    panelState: mobilePanelState.value
   })
 }
 
 /** 点击更多按钮 */
 const handleMoreClick = () => {
-  iconClickedStates.value.isClickedMore = !iconClickedStates.value.isClickedMore
-  iconClickedStates.value.isClickedEmoji = false
-  iconClickedStates.value.isClickedVoice = false
-  iconClickedStates.value.isFocus = false
+  mobilePanelState.value =
+    mobilePanelState.value === MobilePanelStateEnum.MORE ? MobilePanelStateEnum.NONE : MobilePanelStateEnum.MORE
+
   selfEmitter('clickMore', {
-    isClickedMore: iconClickedStates.value.isClickedMore,
-    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
-    isClickedVoice: iconClickedStates.value.isClickedVoice,
-    isFocus: iconClickedStates.value.isFocus
+    panelState: mobilePanelState.value
   })
 }
 
 /** 点击表情按钮 */
 const handleEmojiClick = () => {
-  iconClickedStates.value.isClickedEmoji = !iconClickedStates.value.isClickedEmoji
-  iconClickedStates.value.isClickedVoice = false
-  iconClickedStates.value.isClickedMore = false
-  iconClickedStates.value.isFocus = false
+  mobilePanelState.value =
+    mobilePanelState.value === MobilePanelStateEnum.EMOJI ? MobilePanelStateEnum.NONE : MobilePanelStateEnum.EMOJI
+
   selfEmitter('clickEmoji', {
-    isClickedMore: iconClickedStates.value.isClickedMore,
-    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
-    isClickedVoice: iconClickedStates.value.isClickedVoice,
-    isFocus: iconClickedStates.value.isFocus
+    panelState: mobilePanelState.value
   })
 }
 
 /** 点击语音按钮 */
 const handleVoiceClick = () => {
-  iconClickedStates.value.isClickedVoice = !iconClickedStates.value.isClickedVoice
-  iconClickedStates.value.isClickedEmoji = false
-  iconClickedStates.value.isClickedMore = false
-  iconClickedStates.value.isFocus = false
+  mobilePanelState.value =
+    mobilePanelState.value === MobilePanelStateEnum.VOICE ? MobilePanelStateEnum.NONE : MobilePanelStateEnum.VOICE
+
   selfEmitter('clickVoice', {
-    isClickedMore: iconClickedStates.value.isClickedMore,
-    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
-    isClickedVoice: iconClickedStates.value.isClickedVoice,
-    isFocus: iconClickedStates.value.isFocus
+    panelState: mobilePanelState.value
   })
 }
 
@@ -564,12 +553,9 @@ const handleMobileSend = async () => {
     await send()
   }
 
-  // 这个事件也需要正确的类型
+  // 发送后不关闭面板，保持当前状态
   selfEmitter('send', {
-    isClickedMore: iconClickedStates.value.isClickedMore,
-    isClickedEmoji: iconClickedStates.value.isClickedEmoji,
-    isClickedVoice: iconClickedStates.value.isClickedVoice,
-    isFocus: iconClickedStates.value.isFocus
+    panelState: mobilePanelState.value
   })
 
   // 移动端发送消息后重新聚焦输入框
@@ -629,12 +615,7 @@ const handleEnterKey = (e: KeyboardEvent) => {
 
 /** 监听移动端关闭面板 */
 const listenMobilePanelHandler = () => {
-  iconClickedStates.value = {
-    isClickedMore: false,
-    isClickedEmoji: false,
-    isClickedVoice: false,
-    isFocus: false
-  }
+  mobilePanelState.value = MobilePanelStateEnum.NONE
 }
 
 /** 监听移动端关闭面板 */
@@ -658,6 +639,7 @@ defineExpose({
   handleVoiceCancel,
   sendVoiceDirect,
   sendFilesDirect,
+  sendEmojiDirect,
   handleLocationSelected
 })
 
@@ -715,14 +697,12 @@ onMounted(async () => {
   // 监听录音模式切换事件
   useMitt.on(MittEnum.VOICE_RECORD_TOGGLE, () => {
     isVoiceMode.value = !isVoiceMode.value
-    console.log('语音模式切换:', isVoiceMode.value ? '语音模式' : '文本模式')
   })
 
   // 添加ESC键退出语音模式
   onKeyStroke('Escape', () => {
     if (isVoiceMode.value) {
       isVoiceMode.value = false
-      console.log('ESC键退出语音模式')
     }
   })
   appWindow.listen('screenshot', async (e: any) => {
@@ -757,7 +737,6 @@ onUnmounted(() => {
 watch(
   () => props.isAIMode,
   (newValue) => {
-    console.log('AI模式状态变化:', newValue)
     if (!newValue) {
       selectedAIKey.value = null
     }
