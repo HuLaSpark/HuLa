@@ -80,7 +80,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import type { FeedItem } from '@/stores/feed'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group'

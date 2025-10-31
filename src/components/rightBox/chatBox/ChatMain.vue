@@ -196,8 +196,7 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { useDebounceFn } from '@vueuse/core'
-import { delay } from 'lodash-es'
+import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -624,7 +623,7 @@ const handleChatAreaClick = (event: Event): void => {
       const activeReplyElement = document.querySelector('.active-reply') as HTMLElement
       if (activeReplyElement) {
         activeReplyElement.classList.add('reply-exit')
-        delay(() => {
+        useTimeoutFn(() => {
           activeReplyElement.classList.remove('reply-exit')
           activeReply.value = ''
         }, 300)

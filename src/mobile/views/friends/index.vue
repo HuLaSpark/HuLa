@@ -160,7 +160,6 @@
 </style>
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
 import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'

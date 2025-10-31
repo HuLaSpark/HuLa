@@ -18,7 +18,6 @@
 <script setup lang="ts">
 import { listen } from '@tauri-apps/api/event'
 import { cancel, Format, scan } from '@tauri-apps/plugin-barcode-scanner'
-import { onMounted, onUnmounted, ref } from 'vue'
 import { MittEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt'
 import router from '@/router'

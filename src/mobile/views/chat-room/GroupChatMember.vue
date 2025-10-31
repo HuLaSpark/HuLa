@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { debounce } from 'lodash-es'
+import { useDebounceFn } from '@vueuse/core'
 import type { UserItem } from '@/services/types'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -99,7 +99,7 @@ onMounted(() => {
 
 const toFriendInfo = (uid: string) => toFriendInfoPage(uid)
 
-const search = debounce(() => {
+const search = useDebounceFn(() => {
   const kw = formData.value.keyword.trim().toLowerCase()
 
   if (!kw) {

@@ -41,7 +41,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
 import { useMitt } from '@/hooks/useMitt'

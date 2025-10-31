@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { debounce, throttle } from 'lodash-es'
+import { useDebounceFn, useThrottleFn } from '@vueuse/core'
 import NavBar from '#/layout/navBar/index.vue'
 import addFriendIcon from '@/assets/mobile/chat-home/add-friend.webp'
 import groupChatIcon from '@/assets/mobile/chat-home/group-chat.webp'
@@ -221,11 +221,11 @@ const scrollContainer = ref(null) // 消息滚动容器
 
 let scrollTop = 0 // 记住当前滑动到哪了
 
-const enablePullRefresh = debounce((top: number) => {
+const enablePullRefresh = useDebounceFn((top: number) => {
   isEnablePullRefresh.value = top === 0
 }, 100)
 
-const disablePullRefresh = throttle(() => {
+const disablePullRefresh = useThrottleFn(() => {
   isEnablePullRefresh.value = false
 }, 80)
 

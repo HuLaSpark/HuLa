@@ -18,7 +18,6 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { join, resourceDir } from '@tauri-apps/api/path'
 import {

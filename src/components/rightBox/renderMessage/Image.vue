@@ -11,8 +11,6 @@
       object-fit="cover"
       show-toolbar-tooltip
       preview-disabled
-      lazy
-      :intersection-observer-options="{ rootMargin: '256px' }"
       style="border-radius: 8px; cursor: pointer !important"
       :src="displayImageSrc"
       @dblclick="handleOpenImageViewer"

@@ -264,7 +264,7 @@
 </template>
 
 <script setup lang="ts">
-import { debounce } from 'lodash-es'
+import { useDebounceFn } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
 import Validation from '@/components/common/Validation.vue'
 import router from '@/router'
@@ -668,7 +668,7 @@ const toPrivacyAgreement = () => {
   })
 }
 
-const refreshAvatar = debounce((newAccount: string) => {
+const refreshAvatar = useDebounceFn((newAccount: string) => {
   const matchedAccount = loginHistories.find(
     (history) => history.account === newAccount || history.email === newAccount
   )

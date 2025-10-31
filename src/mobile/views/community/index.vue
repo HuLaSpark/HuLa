@@ -11,10 +11,7 @@
         <!-- 图片区 -->
         <div class="w-full h-30vh relative">
           <div class="flex h-95% w-full relative">
-            <img
-              class="w-full h-full object-cover"
-              src="https://ts3.tc.mm.bing.net/th/id/OIP-C.ynSetSr3z884UC6sEp4yiwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
-              alt="" />
+            <img class="w-full h-full object-contain bg-#90909048 dark:bg-#111" src="/hula.png" alt="" />
           </div>
           <div class="flex absolute right-20px bottom-0 gap-15px">
             <div class="text-white items-center flex">
@@ -41,20 +38,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useFeedStore } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { useMessage } from 'naive-ui'
-import { debounce, throttle } from 'lodash-es'
+import { useDebounceFn, useThrottleFn } from '@vueuse/core'
 import DynamicList from '@/components/common/DynamicList.vue'
 
 const router = useRouter()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
-const message = useMessage()
 
 const { feedOptions } = storeToRefs(feedStore)
 
@@ -64,11 +58,11 @@ const isEnablePullRefresh = ref(true) // 是否启用下拉刷新，现在设置
 
 let scrollTop = 0 // 记住当前滑动到哪了
 
-const enablePullRefresh = debounce((top: number) => {
+const enablePullRefresh = useDebounceFn((top: number) => {
   isEnablePullRefresh.value = top === 0
 }, 100)
 
-const disablePullRefresh = throttle(() => {
+const disablePullRefresh = useThrottleFn(() => {
   isEnablePullRefresh.value = false
 }, 80)
 
@@ -99,7 +93,7 @@ const onRefresh = () => {
     .catch((error) => {
       loading.value = false
       console.log('刷新动态列表失败：', error)
-      message.error('刷新失败，请重试')
+      window.$message.error('刷新失败，请重试')
     })
 }
 
