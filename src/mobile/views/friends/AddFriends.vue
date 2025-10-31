@@ -143,7 +143,7 @@
 <script setup lang="ts">
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { debounce } from 'lodash-es'
+import { useDebounceFn } from '@vueuse/core'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
@@ -238,7 +238,7 @@ const handleClear = () => {
 }
 
 // 处理搜索
-const handleSearch = debounce(async () => {
+const handleSearch = useDebounceFn(async () => {
   if (!searchValue.value.trim()) {
     // 如果搜索框为空且是推荐标签，显示所有推荐用户
     if (searchType.value === 'recommend') {

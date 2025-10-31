@@ -79,7 +79,6 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { onMounted, ref, computed } from 'vue'
 import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'

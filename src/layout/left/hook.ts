@@ -1,5 +1,5 @@
 import { info } from '@tauri-apps/plugin-log'
-import { delay } from 'lodash-es'
+import { useTimeoutFn } from '@vueuse/core'
 import { IsYesEnum, MittEnum, ThemeEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -143,7 +143,7 @@ export const leftHook = () => {
     window?: { resizable: boolean }
   ) => {
     if (window) {
-      delay(async () => {
+      useTimeoutFn(async () => {
         info(`打开窗口: ${title}`)
         const webview = await createWebviewWindow(
           title!,
@@ -175,7 +175,7 @@ export const leftHook = () => {
    * @param h 窗口的高度
    * */
   const openContent = (title: string, label: string, w = 840, h = 600) => {
-    delay(async () => {
+    useTimeoutFn(async () => {
       await createWebviewWindow(title, label, w, h)
     }, 300)
     infoShow.value = false

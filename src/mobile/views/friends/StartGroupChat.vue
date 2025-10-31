@@ -92,7 +92,6 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
 import { OnlineEnum } from '@/enums'
 import { useContactStore } from '@/stores/contacts'
 import { useGroupStore } from '@/stores/group'

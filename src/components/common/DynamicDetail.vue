@@ -189,8 +189,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useMessage } from 'naive-ui'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'
@@ -213,7 +211,6 @@ const emit = defineEmits<{
   videoPlay: [url: string]
 }>()
 
-const message = useMessage()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
@@ -263,20 +260,20 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
     case 'delete':
       try {
         await feedStore.deleteFeed(feed.id)
-        message.success('删除成功')
+        window.$message.success('删除成功')
         // 删除后返回上一页
         window.history.back()
       } catch (error) {
         console.error('删除动态失败:', error)
-        message.error('删除失败，请重试')
+        window.$message.error('删除失败，请重试')
       }
       break
     case 'copy':
       navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
-      message.success('链接已复制')
+      window.$message.success('链接已复制')
       break
     case 'report':
-      message.info('举报功能开发中')
+      window.$message.info('举报功能开发中')
       break
   }
 }
@@ -306,7 +303,7 @@ const fetchFeedDetail = async () => {
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
-    message.error('获取动态详情失败')
+    window.$message.error('获取动态详情失败')
   } finally {
     loading.value = false
   }

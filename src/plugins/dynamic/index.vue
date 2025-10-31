@@ -1,5 +1,5 @@
 <template>
-  <main class="size-full rounded-8px bg-white">
+  <main class="size-full rounded-8px bg-#fff dark:bg-#303030">
     <!-- 头像栏 -->
     <div class="flex flex-col h-32vh relative">
       <div class="flex h-95% w-full relative">
@@ -40,14 +40,13 @@
             </div>
           </div>
         </ActionBar>
-        <img
-          data-tauri-drag-region
-          class="w-full h-full object-cover"
-          src="https://ts3.tc.mm.bing.net/th/id/OIP-C.ynSetSr3z884UC6sEp4yiwAAAA?rs=1&pid=ImgDetMain&o=7&rm=3"
-          alt="" />
+        <div class="size-full flex-center bg-#90909048 dark:bg-[#202020]">
+          <!-- TODO: 默认的图片是这个格式，如果动态替换需要更改对应其他的格式 -->
+          <img data-tauri-drag-region class="size-76% object-contain" src="/hula.png" alt="" />
+        </div>
       </div>
       <div class="flex absolute right-20px bottom-0 gap-15px">
-        <div class="text-white items-center flex">
+        <div class="text-#fff items-center flex">
           {{ userStore.userInfo?.name }}
         </div>
         <div>
@@ -262,7 +261,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -270,7 +268,6 @@ import { useFeedStore } from '@/stores/feed.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime'
-import { useMessage } from 'naive-ui'
 import type { FriendItem } from '@/services/types'
 import { storeToRefs } from 'pinia'
 import DynamicList from '@/components/common/DynamicList.vue'
@@ -281,7 +278,6 @@ const userStore = useUserStore()
 const contactStore = useContactStore()
 const feedStore = useFeedStore()
 const groupStore = useGroupStore()
-const message = useMessage()
 
 // 从store中获取响应式数据
 const {
@@ -443,10 +439,10 @@ const handleInfoTip = () => {
 const handleRefresh = async () => {
   try {
     await feedStore.refresh()
-    message.success('刷新成功')
+    window.$message.success('刷新成功')
   } catch (error) {
     console.error('刷新动态失败:', error)
-    message.error('刷新失败，请重试')
+    window.$message.error('刷新失败，请重试')
   }
 }
 
@@ -528,13 +524,13 @@ const resetAddFeedForm = () => {
 const handlePublishFeed = async () => {
   // 验证内容
   if (!newFeedContent.value.trim()) {
-    message.warning('请输入动态内容')
+    window.$message.warning('请输入动态内容')
     return
   }
 
   // 验证权限设置
   if ((permission.value === 'partVisible' || permission.value === 'notAnyone') && selectedUsers.value.length === 0) {
-    message.warning(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
+    window.$message.warning(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
     return
   }
 
@@ -559,7 +555,7 @@ const handlePublishFeed = async () => {
     // 后端会返回生成的朋友圈ID
     console.log('发布成功，返回数据:', response)
 
-    message.success('发布成功！')
+    window.$message.success('发布成功！')
 
     // 关闭弹窗
     showAddFeedModal.value = false
@@ -568,7 +564,7 @@ const handlePublishFeed = async () => {
     resetAddFeedForm()
   } catch (error) {
     console.error('发布动态失败:', error)
-    message.error('发布失败，请稍后重试')
+    window.$message.error('发布失败，请稍后重试')
   } finally {
     isPublishing.value = false
   }
