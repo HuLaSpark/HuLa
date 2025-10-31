@@ -821,6 +821,12 @@ impl WebSocketClient {
                 let _ = app_handle.emit("ws-delete-friend", data);
             }
 
+            // 朋友圈相关
+            "feedSendMsg" => {
+                info!("🎉 Feed message received");
+                let _ = app_handle.emit_to("home", "ws-feed-send-msg", data);
+            }
+
             // 未知消息类型
             _ => {
                 warn!("❓ Received unhandled message type: {}", message_type);

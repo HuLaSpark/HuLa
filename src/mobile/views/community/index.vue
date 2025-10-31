@@ -45,6 +45,8 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useDebounceFn, useThrottleFn } from '@vueuse/core'
 import DynamicList from '@/components/common/DynamicList.vue'
+import { useMitt } from '@/hooks/useMitt'
+import { WsResponseMessageType } from '@/services/wsType'
 
 const router = useRouter()
 const feedStore = useFeedStore()
@@ -88,6 +90,8 @@ const onRefresh = () => {
   Promise.all([apiPromise, delayPromise])
     .then(() => {
       loading.value = false
+      // 刷新后清空未读数量
+      feedStore.clearUnreadCount()
       console.log('刷新完成')
     })
     .catch((error) => {
@@ -133,14 +137,26 @@ const handleItemClick = (feedId: string) => {
   })
 }
 
+// 监听朋友圈消息推送
+const handleFeedSendMsg = (_payload: any) => {
+  feedStore.increaseUnreadCount()
+}
+
 // 初始化数据
 onMounted(async () => {
   // 初始加载动态列表
   await feedStore.getFeedList(true)
+
+  // 打开朋友圈时清空未读数量
+  feedStore.clearUnreadCount()
+
+  // 注册朋友圈消息监听
+  useMitt.on(WsResponseMessageType.FEED_SEND_MSG, handleFeedSendMsg)
 })
 
 onUnmounted(() => {
-  // 清理工作
+  // 清理事件监听
+  useMitt.off(WsResponseMessageType.FEED_SEND_MSG, handleFeedSendMsg)
 })
 </script>
 

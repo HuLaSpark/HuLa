@@ -302,6 +302,11 @@ const options = ref<Array<{ name: string; src: string }>>([])
 const { currentSession: activeItem } = storeToRefs(globalStore)
 const friend = contactStore.contactsList.find((item) => item.uid === globalStore.currentSession.detailId)
 
+// 保存初始值，用于判断是否真正修改了内容
+const initialRemarkValue = ref('')
+const initialNicknameValue = ref('')
+const initialNameValue = ref('')
+
 const {
   fileInput,
   localImageUrl,
@@ -467,31 +472,59 @@ const handleTop = (value: boolean) => {
 
 // 处理群备注更新
 const handleInfoUpdate = async () => {
+  // 检查是否真正修改了内容
+  const remarkChanged = remarkValue.value !== initialRemarkValue.value
+  const nicknameChanged = nicknameValue.value !== initialNicknameValue.value
+
+  // 如果群聊和单聊的备注、昵称都没有改变，则不调用接口
+  if (!remarkChanged && !nicknameChanged) {
+    return
+  }
+
   if (isGroup.value) {
     await persistMyRoomInfo({
       roomId: globalStore.currentSession.roomId,
       remark: remarkValue.value,
       myName: nicknameValue.value
     })
+    // 更新初始值
+    initialRemarkValue.value = remarkValue.value
+    initialNicknameValue.value = nicknameValue.value
   } else {
+    // 单聊只检查备注是否修改
+    if (!remarkChanged) {
+      return
+    }
+
     await modifyFriendRemark({
       targetUid: globalStore.currentSession.detailId,
       remark: remarkValue.value
     })
 
     friend!.remark = remarkValue.value
+    // 更新初始值
+    initialRemarkValue.value = remarkValue.value
   }
   window.$message.success(title.value + '备注更新成功')
 }
 
 // 处理群名称更新
 const handleGroupInfoUpdate = async () => {
+  // 检查群名称是否真正修改了
+  if (nameValue.value === initialNameValue.value) {
+    return
+  }
+
   await updateRoomInfo({
     id: activeItem.value.roomId,
     name: nameValue.value,
     avatar: avatarValue.value
   })
   activeItem.value.avatar = avatarValue.value
+
+  // 更新初始值
+  initialNameValue.value = nameValue.value
+  window.$message.success('群名称更新成功')
 }
 
 // 获取群组详情和成员信息
@@ -610,6 +643,11 @@ onMounted(async () => {
         avatarValue.value = response.avatar
         nicknameValue.value = response.myName || ''
         remarkValue.value = response.remark || ''
+
+        // 保存初始值
+        initialNameValue.value = nameValue.value
+        initialNicknameValue.value = nicknameValue.value
+        initialRemarkValue.value = remarkValue.value
         if (item.value && item.value.roomId) {
           fetchGroupMembers(item.value.roomId)
         }
@@ -620,6 +658,8 @@ onMounted(async () => {
   } else {
     // 这里需要拿到好友的信息
     remarkValue.value = friend?.remark || ''
+    // 保存初始值
+    initialRemarkValue.value = remarkValue.value
   }
 })
 </script>

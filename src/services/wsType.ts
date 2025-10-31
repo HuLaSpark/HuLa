@@ -74,7 +74,9 @@ export enum WsResponseMessageType {
   WEBRTC_SIGNAL = 'WEBRTC_SIGNAL',
   /** 全局静音 */
   AllMuted = 'AllMuted',
-  CANCEL = 'CANCEL'
+  CANCEL = 'CANCEL',
+  /** 朋友圈消息推送 */
+  FEED_SEND_MSG = 'feedSendMsg'
 }
 
 export enum NoticeTypeEnum {

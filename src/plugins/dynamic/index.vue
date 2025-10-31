@@ -261,7 +261,6 @@
 </template>
 
 <script setup lang="ts">
-import { sumBy } from 'es-toolkit'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -280,11 +279,7 @@ const contactStore = useContactStore()
 const feedStore = useFeedStore()
 const groupStore = useGroupStore()
 
-// 从store中获取响应式数据
-const {
-  feedList: dynamicList
-  //  feedStats
-} = storeToRefs(feedStore)
+const { feedList: dynamicList, unreadCount } = storeToRefs(feedStore)
 
 const showCommentModal = ref(false)
 const newComment = ref('')
@@ -335,9 +330,6 @@ interface CommentItem {
   userName: string
   userAvatar: string
 }
-
-// 计算属性
-const unreadCount = computed(() => sumBy(dynamicList.value, (feed) => feed.commentCount || 0))
 
 // 验证发布内容是否有效（只验证文本内容）
 const isPublishValid = computed(() => {
@@ -436,6 +428,8 @@ const handleInfoTip = () => {
 const handleRefresh = async () => {
   try {
     await feedStore.refresh()
+    // 刷新后清空未读数量
+    feedStore.clearUnreadCount()
     window.$message.success('刷新成功')
   } catch (error) {
     console.error('刷新动态失败:', error)
@@ -571,6 +565,9 @@ const handlePublishFeed = async () => {
 onMounted(async () => {
   // 初始加载朋友圈列表
   await feedStore.getFeedList(true)
+
+  // 打开朋友圈时清空未读数量
+  feedStore.clearUnreadCount()
 
   // 加载联系人列表
   try {

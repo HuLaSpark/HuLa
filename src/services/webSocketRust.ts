@@ -459,6 +459,14 @@ class RustWebSocketClient {
         contactStore.deleteContact(event.payload)
       })
     )
+
+    // 朋友圈相关事件
+    this.listenerController.add(
+      await listen('ws-feed-send-msg', (event: any) => {
+        info(`收到朋友圈消息: ${JSON.stringify(event.payload)}`)
+        useMitt.emit(WsResponseMessageType.FEED_SEND_MSG, event.payload)
+      })
+    )
   }
 }
 info('创建RustWebSocketClient')
