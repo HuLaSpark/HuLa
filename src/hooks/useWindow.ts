@@ -178,9 +178,17 @@ export const useWindow = () => {
    * @param width 窗口宽度
    * @param height 窗口高度
    * @param parent 父窗口
+   * @param payload 传递给子窗口的数据
    * @returns 创建的窗口实例或已存在的窗口实例
    */
-  const createModalWindow = async (title: string, label: string, width: number, height: number, parent: string) => {
+  const createModalWindow = async (
+    title: string,
+    label: string,
+    width: number,
+    height: number,
+    parent: string,
+    payload?: Record<string, any>
+  ) => {
     // 移动端不支持窗口管理
     if (!isDesktop()) {
       return null
@@ -220,6 +228,11 @@ export const useWindow = () => {
       if (isWindows()) {
         // 禁用父窗口，模拟模态窗口效果
         await parentWindow?.setEnabled(false)
+      }
+
+      // 如果有 payload，发送到子窗口
+      if (payload) {
+        await sendWindowPayload(label, payload)
       }
 
       // 设置窗口为焦点

@@ -719,8 +719,11 @@ const handleCreateGroup = () => {
 
 /** 处理邀请进群 */
 const handleInvite = async () => {
-  // 使用封装后的createModalWindow方法创建模态窗口
-  await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home')
+  // 使用封装后的createModalWindow方法创建模态窗口，并传递当前会话的 roomId
+  await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home', {
+    roomId: activeItem.value.roomId,
+    type: activeItem.value.type
+  })
 }
 
 /** 处理管理群成员 */
