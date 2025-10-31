@@ -65,6 +65,9 @@ export const useFeedStore = defineStore(
       fansCount: 0
     })
 
+    // 未读消息数量
+    const unreadCount = ref(0)
+
     /**
      * 获取动态列表
      * @param isFresh 是否刷新列表，true则重新加载，false则加载更多
@@ -193,10 +196,32 @@ export const useFeedStore = defineStore(
       Object.assign(feedStats, stats)
     }
 
+    /**
+     * 增加未读消息数量
+     */
+    const increaseUnreadCount = (count = 1) => {
+      unreadCount.value += count
+    }
+
+    /**
+     * 清空未读消息数量
+     */
+    const clearUnreadCount = () => {
+      unreadCount.value = 0
+    }
+
+    /**
+     * 设置未读消息数量
+     */
+    const setUnreadCount = (count: number) => {
+      unreadCount.value = count
+    }
+
     return {
       feedList,
       feedOptions,
       feedStats,
+      unreadCount,
       getFeedList,
       publishFeed,
       deleteFeed,
@@ -204,7 +229,10 @@ export const useFeedStore = defineStore(
       loadMore,
       refresh,
       clearFeedList,
-      updateStats
+      updateStats,
+      increaseUnreadCount,
+      clearUnreadCount,
+      setUnreadCount
     }
   },
   {

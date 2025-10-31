@@ -107,7 +107,7 @@
           </n-flex>
         </n-popover>
         <!-- 该选项无提示时展示 -->
-        <n-badge v-else :max="99" :value="item.badge">
+        <n-badge v-else :max="99" :value="item.badge" :show="(item.badge ?? 0) > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
@@ -260,6 +260,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useFeedStore } from '@/stores/feed.ts'
 import { itemsBottom, moreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
@@ -268,9 +269,11 @@ const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
 const globalStore = useGlobalStore()
 const pluginsStore = usePluginsStore()
+const feedStore = useFeedStore()
 const { showMode } = storeToRefs(useSettingStore())
 const { menuTop } = useMenuTopStore()
 const { plugins } = storeToRefs(pluginsStore)
+const { unreadCount: feedUnreadCount } = storeToRefs(feedStore)
 const unReadMark = computed(() => globalStore.unReadMark)
 // const headerRef = useTemplateRef('header')
 // const actionListRef = useTemplateRef('actionList')
@@ -340,6 +343,18 @@ const handleResize = async (e: Event) => {
 const setHomeHeight = () => {
   invoke('set_height', { height: showMode.value === ShowModeEnum.TEXT ? 505 : 423 })
 }
+
+// 监听朋友圈未读数量变化，同步到 dynamic 插件的 badge
+watch(
+  feedUnreadCount,
+  (newCount) => {
+    const dynamicPlugin = plugins.value.find((p) => p.url === 'dynamic')
+    if (dynamicPlugin) {
+      pluginsStore.updatePlugin({ ...dynamicPlugin, badge: newCount })
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   // 初始化窗口高度

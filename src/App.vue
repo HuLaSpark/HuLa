@@ -46,6 +46,7 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { useChatStore } from '@/stores/chat'
 import { useAnnouncementStore } from '@/stores/announcement'
+import { useFeedStore } from '@/stores/feed'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 
 const mobileRtcCallFloatCell = isMobile()
@@ -55,6 +56,7 @@ const mobileRtcCallFloatCell = isMobile()
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const announcementStore = useAnnouncementStore()
+const feedStore = useFeedStore()
 const userUid = computed(() => userStore.userInfo!.uid)
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
@@ -369,6 +371,16 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
   groupStore.updateUserItem(data.uid, {
     userStateId: data.userStateId
   })
+})
+
+useMitt.on(WsResponseMessageType.FEED_SEND_MSG, (data: { uid: string }) => {
+  if (data.uid !== userStore.userInfo!.uid) {
+    feedStore.increaseUnreadCount()
+    // 同步更新角标
+    unreadCountManager.refreshBadge(globalStore.unReadMark)
+  } else {
+    console.log('🔔 [App.vue] 是自己发布的，不增加未读数')
+  }
 })
 
 useMitt.on(WsResponseMessageType.GROUP_SET_ADMIN_SUCCESS, (event) => {

@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-// import { useGlobalStore } from '@/stores/global'
+import { useFeedStore } from '@/stores/feed'
+import { storeToRefs } from 'pinia'
 
 type NavItem = {
   label: string
@@ -32,21 +33,20 @@ type NavItem = {
 }
 
 const route = useRoute()
-// const globalStore = useGlobalStore()
-
-// const unReadMark = computed(() => globalStore.unReadMark)
+const feedStore = useFeedStore()
+const { unreadCount: feedUnreadCount } = storeToRefs(feedStore)
 
 const getUnReadCount = (label: string) => {
-  label // 避免报错，临时引用
-  return 0 // 在移动端message页面中，未读计数有问题，所以先不展示
+  if (label === '社区') {
+    return feedUnreadCount.value
+  }
+  return 0
+
+  // 其他未读计数暂时关闭（message页面有问题）
   // if (label === '消息') {
   //   return unReadMark.value.newMsgUnreadCount
   // } else if (label === '联系人') {
   //   return unReadMark.value.newFriendUnreadCount
-  // } else if (label === '社区') {
-  //   return unReadMark.value.newGroupUnreadCount
-  // } else {
-  //   return 0
   // }
 }
 
