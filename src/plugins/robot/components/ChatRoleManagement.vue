@@ -153,8 +153,8 @@
             v-model:value="formData.category"
             :options="categoryOptions"
             placeholder="请选择角色类别"
-            tag
-            filterable />
+            filterable
+            tag />
         </n-form-item>
 
         <n-form-item label="模型" path="modelId">
@@ -252,7 +252,7 @@ const formData = ref({
   modelId: '',
   name: '',
   avatar: '',
-  category: '',
+  category: 'AI助手',
   sort: 0,
   description: '',
   systemMessage: '',
@@ -336,15 +336,11 @@ const {
   handleCrop: onCrop
 } = useAvatarUpload({
   onSuccess: async (downloadUrl) => {
-    console.log('✅ 头像上传成功，URL:', downloadUrl)
-
-    // 先清空，再设置新值，强制触发响应式更新
     formData.value.avatar = ''
     await nextTick()
     formData.value.avatar = downloadUrl
 
     await nextTick()
-    console.log('✅ formData.avatar 已更新:', formData.value.avatar)
 
     window.$message.success('头像上传成功')
   }
@@ -358,10 +354,9 @@ const handleCrop = async (cropBlob: Blob) => {
 const loadCategoryList = async () => {
   try {
     const data = await chatRoleCategoryList()
-    categoryOptions.value = (data || []).map((item: string) => ({
-      label: item,
-      value: item
-    }))
+    if (data && data.length > 0) {
+      categoryOptions.value = data
+    }
   } catch (error) {
     console.error('加载角色类别列表失败:', error)
   }
@@ -531,9 +526,12 @@ watch(showModal, (val) => {
   }
 })
 
-// 监听编辑弹窗关闭，重置表单
+// 监听编辑弹窗打开/关闭
 watch(showEditModal, (val) => {
-  if (!val) {
+  if (val) {
+    loadCategoryList()
+    loadModelList()
+  } else {
     // 延迟重置，避免关闭动画时看到数据清空
     setTimeout(() => {
       resetForm()

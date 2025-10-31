@@ -212,6 +212,8 @@ const originalTitle = ref('')
 const showDeleteConfirm = ref(false)
 /** 是否有可用角色 */
 const hasRoles = ref(false)
+/** 第一个可用角色的ID */
+const firstAvailableRoleId = ref<string | null>(null)
 
 // 分页参数
 const pageNo = ref(1)
@@ -390,13 +392,16 @@ const handleActive = (item: ChatItem) => {
 // 检查是否有可用角色
 const checkHasRoles = async () => {
   try {
-    const data = await chatRolePage({ pageNo: 1, pageSize: 1 })
+    const data = await chatRolePage({ pageNo: 1, pageSize: 100 })
     // 检查是否有可用的角色（status === 0）
     const availableRoles = (data.list || []).filter((item: any) => item.status === 0)
     hasRoles.value = availableRoles.length > 0
+    // 保存第一个可用角色的ID
+    firstAvailableRoleId.value = availableRoles.length > 0 ? availableRoles[0].id : null
   } catch (error) {
     console.error('检查角色失败:', error)
     hasRoles.value = false
+    firstAvailableRoleId.value = null
   }
 }
 
@@ -413,7 +418,7 @@ const openModelManagement = () => {
 /** 添加会话 */
 const add = async () => {
   // 检查是否有可用角色
-  if (!hasRoles.value) {
+  if (!hasRoles.value || !firstAvailableRoleId.value) {
     window.$message.warning('请先创建角色')
     openRoleManagement()
     return
@@ -421,7 +426,7 @@ const add = async () => {
 
   try {
     const data = await conversationCreateMy({
-      roleId: '1',
+      roleId: firstAvailableRoleId.value,
       knowledgeId: undefined,
       title: '新的会话'
     })
