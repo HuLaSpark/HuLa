@@ -43,8 +43,7 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
-import { useMitt } from '@/hooks/useMitt'
-import { MittEnum, UserType } from '@/enums'
+import { UserType } from '@/enums'
 import { open } from '@tauri-apps/plugin-dialog'
 import HuLaAssistant from '@/components/rightBox/chatBox/HuLaAssistant.vue'
 import { useAssistantModelPresets, type AssistantModelPreset } from '@/hooks/useAssistantModelPresets'
@@ -61,10 +60,6 @@ const headerBar = ref<any>()
 const props = defineProps<{
   uid?: ''
 }>()
-
-const emitClosePanel = () => {
-  useMitt.emit(MittEnum.MOBILE_CLOSE_PANEL)
-}
 
 const isBotSession = computed(() => globalStore.currentSession?.account === UserType.BOT)
 const selectedModelKey = ref<string | null>(null)
@@ -106,15 +101,13 @@ const selectedModelLabel = computed(() => {
 })
 
 const handleChatMainClick = () => {
-  if (!isBotSession.value) {
-    emitClosePanel()
-  }
+  // 移动端点击聊天区域不再自动关闭面板
+  // 用户需要手动点击按钮来关闭面板
 }
 
 const handleScroll = () => {
-  if (!isBotSession.value) {
-    emitClosePanel()
-  }
+  // 移动端滚动聊天区域不再自动关闭面板
+  // 用户需要手动点击按钮来关闭面板
 }
 
 const handleRoomNameClick = () => {

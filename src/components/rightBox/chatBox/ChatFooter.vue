@@ -193,13 +193,13 @@
     <Transition v-if="isMobile()" name="panel-slide">
       <div v-show="isPanelVisible" class="panel-container panel-container--fixed">
         <Transition name="panel-content" mode="out-in">
-          <div v-if="inputState.isClickedEmoji" key="emoji" class="panel-content">
+          <div v-if="mobilePanelState === MobilePanelStateEnum.EMOJI" key="emoji" class="panel-content">
             <Emoticon @emojiHandle="emojiHandle" :all="false" />
           </div>
-          <div v-else-if="inputState.isClickedVoice" key="voice" class="panel-content">
+          <div v-else-if="mobilePanelState === MobilePanelStateEnum.VOICE" key="voice" class="panel-content">
             <VoicePanel @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" />
           </div>
-          <div v-else-if="inputState.isClickedMore" key="more" class="panel-content">
+          <div v-else-if="mobilePanelState === MobilePanelStateEnum.MORE" key="more" class="panel-content">
             <More @sendFiles="handleMoreSendFiles" />
           </div>
         </Transition>
@@ -213,7 +213,7 @@ import { open } from '@tauri-apps/plugin-dialog'
 import { readFile } from '@tauri-apps/plugin-fs'
 import { FOOTER_HEIGHT, MAX_FOOTER_HEIGHT, MIN_FOOTER_HEIGHT } from '@/common/constants'
 import LocationModal from '@/components/rightBox/location/LocationModal.vue'
-import { MittEnum, MsgEnum, RoomTypeEnum } from '@/enums'
+import { MittEnum, MobilePanelStateEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
@@ -228,6 +228,7 @@ import { useSettingStore } from '@/stores/setting'
 import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
+import { useDebounceFn } from '@vueuse/core'
 
 // 移动端组件条件导入
 const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
@@ -384,19 +385,35 @@ const handleImageOpen = async () => {
   }
 }
 
+// 使用 VueUse 的防抖函数处理表情包发送（300ms 防抖）
+const sendEmojiWithDebounce = useDebounceFn((item: string) => {
+  try {
+    // 不等待发送完成，立即返回（避免卡顿）
+    MsgInputRef.value?.sendEmojiDirect(item).catch((error: unknown) => {
+      console.error('[ChatFooter] 发送表情包失败:', error)
+      window.$message?.error?.('发送表情包失败')
+    })
+
+    // 添加到最近使用表情列表
+    updateRecentEmojis(item)
+  } catch (error) {
+    console.error('[ChatFooter] 发送表情包失败:', error)
+    window.$message?.error?.('发送表情包失败')
+  }
+}, 200)
+
 /**
  * 选择表情，并把表情插入输入框
  * @param item 选择的表情
  * @param type 表情类型，'emoji' 为普通表情，'emoji-url' 为表情包URL
  */
-const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
+const emojiHandle = async (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
   emojiShow.value = false
 
   const inp = msgInputDom.value
-  if (!inp) return
-
-  // 确保输入框有焦点
-  MsgInputRef.value?.focus()
+  if (!inp) {
+    return
+  }
 
   // 检查是否为 URL
   const isUrl = (str: string) => {
@@ -407,6 +424,18 @@ const emojiHandle = (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
       return false
     }
   }
+
+  const urlCheck = isUrl(item)
+
+  // 移动端且是表情包URL时，使用防抖发送
+  if (isMobile() && type === 'emoji-url' && urlCheck) {
+    sendEmojiWithDebounce(item)
+    return
+  }
+
+  // 桌面端或普通emoji，插入到输入框
+  // 确保输入框有焦点
+  MsgInputRef.value?.focus()
 
   // 尝试获取最后的编辑范围
   let lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
@@ -527,6 +556,7 @@ const handleLocationSelected = async (locationData: any) => {
 // 打开聊天记录窗口
 const openChatHistory = async () => {
   const currentRoomId = globalStore.currentSession?.roomId
+  if (!currentRoomId) return
 
   // 创建聊天记录窗口
   await createWebviewWindow('聊天记录', 'chat-history', 800, 600, undefined, true, 600, 400, false, false, {
@@ -541,45 +571,48 @@ const openChatHistory = async () => {
  *
  */
 
-const isPanelVisible = ref(false) // 面板是否可见
+// 移动端面板状态 - 从 MsgInput 同步过来
+const mobilePanelState = ref<MobilePanelStateEnum>(MobilePanelStateEnum.NONE)
 
-// 输入框状态
-const inputState = ref({
-  isClickedMore: false,
-  isClickedEmoji: false,
-  isClickedVoice: false,
-  isFocus: false
+// 计算面板是否可见
+const isPanelVisible = computed(() => {
+  return (
+    mobilePanelState.value === MobilePanelStateEnum.EMOJI ||
+    mobilePanelState.value === MobilePanelStateEnum.VOICE ||
+    mobilePanelState.value === MobilePanelStateEnum.MORE
+  )
 })
 
 /** 点击更多按钮 */
-const handleMoreClick = (value: any) => {
-  inputState.value = value
-  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
+const handleMoreClick = (value: { panelState: MobilePanelStateEnum }) => {
+  mobilePanelState.value = value.panelState
 }
 
 /** 点击表情按钮 */
-const handleEmojiClick = (value: any) => {
-  inputState.value = value
-  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
+const handleEmojiClick = (value: { panelState: MobilePanelStateEnum }) => {
+  mobilePanelState.value = value.panelState
 }
 
 /** 点击语音按钮 */
-const handleVoiceClick = (value: any) => {
-  inputState.value = value
-  isPanelVisible.value = value.isClickedMore || value.isClickedEmoji || value.isClickedVoice
+const handleVoiceClick = (value: { panelState: MobilePanelStateEnum }) => {
+  mobilePanelState.value = value.panelState
+}
+
+/** 自定义聚焦事件 */
+const handleCustomFocus = (value: { panelState: MobilePanelStateEnum }) => {
+  // 如果是聚焦状态，关闭面板
+  if (value.panelState === MobilePanelStateEnum.FOCUS) {
+    mobilePanelState.value = MobilePanelStateEnum.NONE
+  } else {
+    mobilePanelState.value = value.panelState
+  }
 }
 
 /** 取消语音录制 */
 const handleMobileVoiceCancel = () => {
   useMitt.emit(MittEnum.MOBILE_CLOSE_PANEL)
   // 重置状态
-  inputState.value = {
-    isClickedMore: false,
-    isClickedEmoji: false,
-    isClickedVoice: false,
-    isFocus: false
-  }
-  isPanelVisible.value = false
+  mobilePanelState.value = MobilePanelStateEnum.NONE
 }
 
 /** 发送语音消息 */
@@ -591,17 +624,6 @@ const handleMobileVoiceSend = async (voiceData: any) => {
   }
   // 发送后关闭面板
   handleMobileVoiceCancel()
-}
-
-/** 处理自定义聚焦事件 */
-const handleCustomFocus = (value: any) => {
-  inputState.value = value
-
-  // 判断是否聚焦
-  if (value.isFocus) {
-    // 聚焦，然后关闭面板
-    isPanelVisible.value = false
-  }
 }
 
 const handleMoreSendFiles = async (files: File[]) => {
@@ -616,20 +638,15 @@ const handleMoreSendFiles = async (files: File[]) => {
 
 /** 处理发送事件 */
 const handleSend = () => {
-  isPanelVisible.value = false
+  // 发送后不关闭面板，保持当前状态
+  // mobilePanelState.value = MobilePanelStateEnum.NONE
 }
 
 /**
  * 监听移动端关闭面板事件
  */
 const listenMobilePanelHandler = () => {
-  inputState.value = {
-    isClickedMore: false,
-    isClickedEmoji: false,
-    isClickedVoice: false,
-    isFocus: false
-  }
-  isPanelVisible.value = false
+  mobilePanelState.value = MobilePanelStateEnum.NONE
 }
 
 /**

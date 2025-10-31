@@ -433,7 +433,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     tempMsg.message.status = MessageStatusEnum.SENDING
     // 先添加到消息列表
     chatStore.pushMsg(tempMsg)
-    console.log('👾临时消息:', tempMsg)
 
     // 设置发送状态的定时器
     chatStore.updateMsg({
@@ -451,7 +450,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     try {
       // 如果是图片或表情消息,需要先上传文件
       if (msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) {
-        console.log(`开始处理${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}消息上传`)
         // TODO: 如果使用的是默认上传方式,则uploadFile方法就会返回上传和下载链接了，但是使用七牛云上传方式则需要调用doUpload方法后才会返回对应的下载链接
         const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
           provider: UploadProviderEnum.QINIU
@@ -470,10 +468,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
           },
           status: MessageStatusEnum.SENDING
         })
-        console.log(`${msg.type === MsgEnum.EMOJI ? '表情包' : '图片'}上传完成,更新为服务器URL:`, messageBody.url)
       } else if (msg.type === MsgEnum.VIDEO) {
-        console.log('开始处理视频消息上传')
-
         // 先上传缩略图（使用去重功能）
         let uploadResult: string
         if (messageStrategy.uploadThumbnail && messageStrategy.doUploadThumbnail) {
@@ -521,7 +516,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
           },
           status: MessageStatusEnum.SENDING
         })
-        console.log('视频上传完成,更新为服务器URL:', messageBody.url)
       }
       // 发送消息到服务器 - 使用 channel 方式
       const successChannel = new Channel<any>()
@@ -529,7 +523,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       // 监听成功响应
       successChannel.onmessage = (message) => {
-        console.log('[跟踪] 收到 send_msg_success 响应:', message)
         chatStore.updateMsg({
           msgId: message.oldMsgId,
           status: MessageStatusEnum.SUCCESS,
@@ -542,7 +535,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
       // 监听错误响应
       errorChannel.onmessage = (msgId) => {
-        console.log('[跟踪] 收到 send_msg_error 响应:', msgId)
         chatStore.updateMsg({
           msgId: msgId,
           status: MessageStatusEnum.FAILED
@@ -746,7 +738,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
   }
 
   /** 处理点击 / 提及框事件 */
-  const handleAI = (item: any) => {
+  const handleAI = (_item: any) => {
     // 如果正在输入拼音，不发送消息
     if (isChinese.value) {
       return
@@ -754,7 +746,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
     // TODO: (临时展示) 显示AI对接中的提示
     window.$message.info('当前ai正在对接，敬请期待')
-    console.log(item)
     // 关闭AI选择弹窗
     aiDialogVisible.value = false
 
@@ -1085,7 +1076,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
     /** 监听回复信息的传递 */
     useMitt.on(MittEnum.REPLY_MEG, (event: any) => {
-      console.log('🐝正在回复消息:', event)
       // 如果输入框不存在，直接返回
       if (!messageInputDom.value) return
 
@@ -1328,7 +1318,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           // 监听成功响应
           voiceSuccessChannel.onmessage = (message) => {
-            console.log('[语音] 收到 send_msg_success 响应:', message)
             chatStore.updateMsg({
               msgId: message.oldMsgId,
               status: MessageStatusEnum.SUCCESS,
@@ -1341,7 +1330,6 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
           // 监听错误响应
           voiceErrorChannel.onmessage = (msgId) => {
-            console.log('[语音] 收到 send_msg_error 响应:', msgId)
             chatStore.updateMsg({
               msgId: msgId,
               status: MessageStatusEnum.FAILED
@@ -1454,6 +1442,79 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
+  /**
+   * 直接发送表情包的函数（移动端专用）
+   * @param emojiUrl 表情包URL
+   */
+  const sendEmojiDirect = async (emojiUrl: string) => {
+    const targetRoomId = globalStore.currentSession!.roomId
+
+    try {
+      const tempMsgId = 'T' + Date.now().toString()
+
+      const messageStrategy = messageStrategyMap[MsgEnum.EMOJI]
+
+      // 构建表情包消息
+      const msg = messageStrategy.getMsg(emojiUrl, reply.value)
+      const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+      // 创建临时消息对象
+      const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
+      tempMsg.message.status = MessageStatusEnum.SENDING
+
+      // 添加到消息列表
+      chatStore.pushMsg(tempMsg)
+
+      // 设置发送状态
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        status: MessageStatusEnum.SENDING
+      })
+
+      // 发送消息到服务器 - 使用 channel 方式
+      const successChannel = new Channel<any>()
+      const errorChannel = new Channel<string>()
+
+      // 监听成功响应
+      successChannel.onmessage = (message) => {
+        chatStore.updateMsg({
+          msgId: message.oldMsgId,
+          status: MessageStatusEnum.SUCCESS,
+          newMsgId: message.message.id,
+          body: message.message.body,
+          timeBlock: message.timeBlock
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      // 监听错误响应
+      errorChannel.onmessage = (msgId) => {
+        chatStore.updateMsg({
+          msgId: msgId,
+          status: MessageStatusEnum.FAILED
+        })
+        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+      }
+
+      await invoke(TauriCommand.SEND_MSG, {
+        data: {
+          id: tempMsgId,
+          roomId: targetRoomId,
+          msgType: MsgEnum.EMOJI,
+          body: messageBody
+        },
+        successChannel,
+        errorChannel
+      })
+
+      // 更新会话最后活动时间
+      chatStore.updateSessionLastActiveTime(targetRoomId)
+    } catch (error) {
+      console.error('[useMsgInput] 表情包消息发送失败:', error)
+      throw error
+    }
+  }
+
   return {
     imgPaste,
     inputKeyDown,
@@ -1465,6 +1526,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     sendLocationDirect,
     sendFilesDirect,
     sendVoiceDirect,
+    sendEmojiDirect,
     personList,
     ait,
     aitKey,
