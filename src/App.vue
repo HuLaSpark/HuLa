@@ -272,18 +272,52 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
 
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
-    console.log('收到用户token过期通知', wsTokenExpire)
-    // 聚焦主窗口
-    if (!isMobile()) {
+    if (isMobile()) {
+      // 移动端处理：立即清空登录数据并跳转到登录页，然后显示弹窗
+      const { useLogin } = await import('@/hooks/useLogin')
+      const { resetLoginState, logout } = useLogin()
+
+      try {
+        // 1. 先重置登录状态（不请求接口，只清理本地）
+        await resetLoginState()
+        // 2. 调用登出方法
+        await logout()
+
+        settingStore.toggleLogin(false, false)
+        info('账号在其他设备登录')
+
+        // 3. 立即跳转到登录页，使用 replace 替换当前路由
+        const router = await import('@/router')
+        await router.default.replace('/mobile/login')
+
+        // 4. 跳转后再显示弹窗提示
+        const { showDialog } = await import('vant')
+        await import('vant/es/dialog/style')
+
+        showDialog({
+          title: '登录失效',
+          message: '您的账号已在其他设备登录，请重新登录',
+          confirmButtonText: '我知道了',
+          showCancelButton: false,
+          closeOnClickOverlay: false,
+          closeOnPopstate: false,
+          allowHtml: false
+        })
+      } catch (error) {
+        console.error('处理token过期失败：', error)
+      }
+    } else {
+      // 桌面端处理：聚焦主窗口并显示远程登录弹窗
       const home = await WebviewWindow.getByLabel('home')
       await home?.setFocus()
+
+      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+        type: ModalEnum.REMOTE_LOGIN,
+        props: {
+          ip: wsTokenExpire.ip
+        }
+      })
     }
-    useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
-      type: ModalEnum.REMOTE_LOGIN,
-      props: {
-        ip: wsTokenExpire.ip
-      }
-    })
   }
 })
 
