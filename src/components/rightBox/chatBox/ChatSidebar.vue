@@ -232,7 +232,7 @@ const { handlePopoverUpdate, enableScroll } = usePopover(selectKey, 'image-chat-
 provide('popoverControls', { enableScroll })
 
 // 用于稳定展示的用户列表
-const displayedUserList = ref<any[]>([])
+const displayedUserList = ref<UserItem[]>([])
 /** 用户信息加载状态 */
 const userLoadedMap = ref<Record<string, boolean>>({})
 

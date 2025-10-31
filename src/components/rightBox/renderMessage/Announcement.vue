@@ -69,7 +69,7 @@ const showDetailButton = computed(() => {
 })
 
 const openAnnouncementDetail = async () => {
-  const roomId = globalStore.currentSession?.roomId
+  const roomId = globalStore.currentSessionRoomId
   if (!roomId) {
     return
   }

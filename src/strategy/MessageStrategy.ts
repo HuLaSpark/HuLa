@@ -53,7 +53,7 @@ abstract class AbstractMessageStrategy implements MessageStrategy {
       },
       message: {
         id: messageId,
-        roomId: globalStore.currentSession.roomId,
+        roomId: globalStore.currentSessionRoomId,
         sendTime: currentTime,
         status: MessageStatusEnum.PENDING,
         type: this.msgType,
@@ -548,7 +548,7 @@ class LocationMessageStrategyImpl extends AbstractMessageStrategy {
       },
       message: {
         id: messageId,
-        roomId: globalStore.currentSession.roomId,
+        roomId: globalStore.currentSessionRoomId,
         sendTime: Date.now(),
         status: MessageStatusEnum.PENDING,
         type: this.msgType,

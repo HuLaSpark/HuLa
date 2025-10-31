@@ -36,7 +36,7 @@ export const useMockMessage = () => {
       },
       message: {
         id: uniqueId,
-        roomId: globalStore.currentSession!.roomId,
+        roomId: globalStore.currentSessionRoomId,
         sendTime: Number(currentTimeStamp),
         type: type,
         body,

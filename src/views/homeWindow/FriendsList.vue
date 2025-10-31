@@ -249,25 +249,21 @@ const getUserState = (uid: string) => {
   return null
 }
 
-/** 组件挂载时获取数据 */
-onMounted(async () => {
-  await fetchContactData()
-})
-
-/** 监听路由变化，当路由变化到当前组件时重新获取数据 */
+/** 监听路由变化，当切换到消息页面时重置选中状态 */
 watch(
   () => route.path,
-  async (newPath) => {
-    // 当路由变化且包含 FriendsList 相关路径时，重新获取数据
-    if (newPath.includes('friendsList')) {
-      await fetchContactData()
-    }
+  (newPath) => {
     if (newPath.includes('/message')) {
       resetSelection()
     }
   },
   { immediate: false }
 )
+
+/** 组件挂载时获取数据 */
+onMounted(async () => {
+  await fetchContactData()
+})
 
 onUnmounted(() => {
   resetSelection()

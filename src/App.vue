@@ -164,7 +164,7 @@ const handleSelfRemove = async (roomId: string) => {
   groupStore.removeAllUsers(roomId)
 
   // 如果当前会话就是被移除的群聊，切换到其他会话
-  if (globalStore.currentSession?.roomId === roomId) {
+  if (globalStore.currentSessionRoomId === roomId) {
     globalStore.updateCurrentSessionRoomId(chatStore.sessionList[0].roomId)
   }
 }
@@ -361,7 +361,7 @@ useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
   // 移除群聊的详情
   groupStore.removeGroupDetail(roomId)
   // 如果当前会话为解散的群聊，切换到第一个会话
-  if (globalStore.currentSession?.roomId === roomId) {
+  if (globalStore.currentSessionRoomId === roomId) {
     globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
   }
 })
@@ -417,14 +417,14 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
       path: '/mobile/rtcCall',
       query: {
         remoteUserId: globalStore.currentSession.detailId,
-        roomId: globalStore.currentSession.roomId,
+        roomId: globalStore.currentSessionRoomId,
         callType: callType,
         // 接受方
         isIncoming: 'true'
       }
     })
   } else {
-    await createRtcCallWindow(true, remotedUid, globalStore.currentSession.roomId, callType)
+    await createRtcCallWindow(true, remotedUid, globalStore.currentSessionRoomId, callType)
   }
 }
 

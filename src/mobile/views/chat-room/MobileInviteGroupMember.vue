@@ -151,7 +151,7 @@ const handleInvite = async () => {
   isLoading.value = true
   try {
     await inviteGroupMember({
-      roomId: globalStore.currentSession!.roomId,
+      roomId: globalStore.currentSessionRoomId,
       uidList: selectedList.value
     })
 
@@ -182,14 +182,14 @@ onMounted(async () => {
     const groupSessions = chatStore.getGroupSessions()
 
     // 加载当前群的成员列表
-    if (globalStore.currentSession?.roomId) {
-      await groupStore.getGroupUserList(globalStore.currentSession.roomId)
+    if (globalStore.currentSessionRoomId) {
+      await groupStore.getGroupUserList(globalStore.currentSessionRoomId)
     }
 
     // 加载其他群的成员列表以获取所有用户信息
     await Promise.all(
       groupSessions
-        .filter((session: any) => session.roomId !== globalStore.currentSession?.roomId)
+        .filter((session: any) => session.roomId !== globalStore.currentSessionRoomId)
         .map((session: any) => groupStore.getGroupUserList(session.roomId))
     )
   } catch (error) {

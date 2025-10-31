@@ -94,7 +94,7 @@
                 <!-- 用户徽章 -->
                 <n-popover
                   v-if="
-                    globalStore.currentSession?.roomId === '1' &&
+                    globalStore.currentSessionRoomId === '1' &&
                     cachedStore.badgeById(groupStore.getUserInfo(fromUser.uid)?.wearingItemId)?.img
                   "
                   trigger="hover">

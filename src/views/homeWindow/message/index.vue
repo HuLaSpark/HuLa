@@ -6,13 +6,13 @@
         v-for="item in sessionList"
         :key="item.roomId"
         :class="[
-          { active: globalStore.currentSession?.roomId === item.roomId },
-          { 'active-bot': globalStore.currentSession?.roomId === item.roomId && item.account === UserType.BOT },
+          { active: globalStore.currentSessionRoomId === item.roomId },
+          { 'active-bot': globalStore.currentSessionRoomId === item.roomId && item.account === UserType.BOT },
           { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
           { 'context-menu-active': activeContextMenuRoomId === item.roomId },
           {
             'active-context-menu':
-              activeContextMenuRoomId === item.roomId && globalStore.currentSession?.roomId === item.roomId
+              activeContextMenuRoomId === item.roomId && globalStore.currentSessionRoomId === item.roomId
           }
         ]"
         :data-key="item.roomId"
@@ -40,7 +40,7 @@
                 <n-popover trigger="hover" v-if="item.hotFlag === IsAllUserEnum.Yes">
                   <template #trigger>
                     <svg
-                      :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
+                      :class="[globalStore.currentSessionRoomId === item.roomId ? 'color-#33ceab' : 'color-#13987f']"
                       class="size-20px select-none outline-none cursor-pointer">
                       <use href="#auth"></use>
                     </svg>
@@ -84,7 +84,7 @@
               <!-- 消息提示 -->
               <template v-if="item.muteNotification === 1 && !item.unreadCount">
                 <svg
-                  :class="[globalStore.currentSession?.roomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
+                  :class="[globalStore.currentSessionRoomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
                   class="size-14px">
                   <use href="#close-remind"></use>
                 </svg>
@@ -199,13 +199,7 @@ const sessionList = computed(() => {
 
         // 如果有消息且缓存不存在或已过期，重新计算
         if (lastMsg && (!cached || cached.time < (lastMsg.message.sendTime || 0))) {
-          isAtMe = checkRoomAtMe(
-            item.roomId,
-            item.type,
-            globalStore.currentSession?.roomId!,
-            messages,
-            item.unreadCount
-          )
+          isAtMe = checkRoomAtMe(item.roomId, item.type, globalStore.currentSessionRoomId!, messages, item.unreadCount)
 
           const senderName = getMessageSenderName(lastMsg, '', item.roomId)
           // 获取纯文本消息内容（不包含 @我 标记）
@@ -253,7 +247,7 @@ watch(
   async (newVal) => {
     if (newVal) {
       // 避免重复调用：如果新会话与当前会话相同，跳过处理，不然会触发两次
-      if (newVal.roomId === globalStore.currentSession?.roomId) {
+      if (newVal.roomId === globalStore.currentSessionRoomId) {
         return
       }
 
@@ -283,7 +277,7 @@ const handleMenuShow = (roomId: string, isShow: boolean) => {
 
 onBeforeMount(async () => {
   // 从联系人页面切换回消息页面的时候自动定位到选中的会话
-  useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: globalStore.currentSession?.roomId })
+  useMitt.emit(MittEnum.LOCATE_SESSION, { roomId: globalStore.currentSessionRoomId })
 })
 
 onMounted(async () => {
