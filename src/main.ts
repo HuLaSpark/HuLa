@@ -10,10 +10,12 @@ import { initializePlatform } from '@/utils/PlatformConstants'
 import { startWebVitalObserver } from '@/utils/WebVitalsObserver'
 import { invoke } from '@tauri-apps/api/core'
 import { isMobile } from '@/utils/PlatformConstants'
+import { initMarkdownRenderer } from '@/plugins/robot/utils/markdown'
 import App from '@/App.vue'
 
 initializePlatform()
 startWebVitalObserver()
+initMarkdownRenderer()
 import('@/services/webSocketAdapter')
 
 if (process.env.NODE_ENV === 'development') {

@@ -99,7 +99,7 @@
             </template>
             <n-flex vertical :size="12">
               <p class="text-(14px [--chat-text-color]) font-500">确定要删除当前会话吗？</p>
-              <p class="text-(12px red-500)">删除后将无法恢复！</p>
+              <p class="text-(12px #d5304f)">删除后将无法恢复！</p>
 
               <!-- 是否同时删除消息选项 -->
               <n-checkbox v-model:checked="deleteWithMessages" size="small">
@@ -127,112 +127,111 @@
       <div class="h-1px bg-[--line-color]"></div>
 
       <!-- 聊天信息框 -->
-      <div
-        ref="chatContainerRef"
-        :class="{ 'shadow-inner': page.shadow }"
-        class="chat-messages-container w-full p-[16px_16px] box-border overflow-y-auto">
-        <!-- 欢迎消息 -->
-        <n-flex :size="6" class="mb-12px">
-          <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
-          <n-flex vertical justify="space-between">
-            <p class="text-(12px [--chat-text-color])">
-              {{ selectedModel ? selectedModel.name : 'GPT-4' }}
-              <n-tag
-                v-if="selectedModel"
-                :type="selectedModel.status === 0 ? 'success' : 'error'"
-                size="tiny"
-                class="ml-8px">
-                {{ selectedModel.status === 0 ? '可用' : '不可用' }}
-              </n-tag>
-            </p>
-
-            <!--  气泡样式  -->
-            <ContextMenu>
-              <div style="white-space: pre-wrap" class="bubble select-text">
-                <span v-html="'你好，我是' + selectedModel?.name + '，很高兴为您服务。'"></span>
-              </div>
-            </ContextMenu>
-          </n-flex>
-        </n-flex>
-
-        <!-- 加载状态 -->
-        <div v-if="loadingMessages" class="flex justify-center items-center py-20px">
-          <n-spin size="small" />
-          <span class="ml-10px text-(12px #909090)">加载消息中...</span>
-        </div>
-
-        <!-- 消息列表 -->
-        <n-flex vertical :size="12">
-          <template v-for="(message, index) in messageList" :key="index">
-            <!-- 用户消息 -->
-            <n-flex v-if="message.type === 'user'" :size="6" justify="end" class="message-item group">
-              <n-flex vertical align="end" class="max-w-70%">
-                <n-flex align="center" :size="8">
-                  <p class="text-(12px #909090)">我</p>
-                  <!-- 删除按钮 -->
-                  <n-popconfirm
-                    v-if="message.id"
-                    @positive-click="() => handleDeleteMessage(message.id!, index)"
-                    positive-text="删除"
-                    negative-text="取消">
-                    <template #trigger>
-                      <div
-                        class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
-                        title="删除消息">
-                        <svg class="w-14px h-14px"><use href="#delete"></use></svg>
-                      </div>
-                    </template>
-                    <p>确定要删除这条消息吗？</p>
-                  </n-popconfirm>
-                </n-flex>
-                <ContextMenu>
-                  <div style="white-space: pre-wrap" class="bubble bubble-user select-text">
-                    {{ message.content }}
-                  </div>
-                </ContextMenu>
-              </n-flex>
+      <div :class="{ 'shadow-inner': page.shadow }" class="chat-messages-container w-full box-border flex flex-col">
+        <n-scrollbar ref="scrollbarRef" class="chat-scrollbar flex-1 min-h-0" trigger="none">
+          <div class="p-[16px_16px] box-border">
+            <!-- 欢迎消息 -->
+            <div class="flex gap-12px mb-12px">
               <n-avatar
-                class="rounded-8px"
-                :src="userStore.userInfo?.avatar ? AvatarUtils.getAvatarUrl(userStore.userInfo.avatar) : ''"
+                class="rounded-8px flex-shrink-0"
+                :src="getModelAvatar(selectedModel)"
                 :fallback-src="getDefaultAvatar()" />
-            </n-flex>
-
-            <!-- AI消息 -->
-            <n-flex v-else :size="6" class="message-item group">
-              <n-avatar class="rounded-8px" :src="getModelAvatar(selectedModel)" :fallback-src="getDefaultAvatar()" />
-              <n-flex vertical class="max-w-70%">
-                <n-flex align="center" :size="8">
-                  <p class="text-(12px [--chat-text-color])">
-                    {{ selectedModel ? selectedModel.name : 'AI' }}
-                  </p>
-                  <!-- 删除按钮 -->
-                  <n-popconfirm
-                    v-if="message.id"
-                    @positive-click="() => handleDeleteMessage(message.id!, index)"
-                    positive-text="删除"
-                    negative-text="取消">
-                    <template #trigger>
-                      <div
-                        class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-red-500 transition-all"
-                        title="删除消息">
-                        <svg class="w-14px h-14px"><use href="#delete"></use></svg>
-                      </div>
-                    </template>
-                    <p>确定要删除这条消息吗？</p>
-                  </n-popconfirm>
-                </n-flex>
+              <n-flex vertical justify="space-between">
+                <p class="text-(12px [--chat-text-color])">
+                  {{ selectedModel ? selectedModel.name : 'GPT-4' }}
+                  <n-tag
+                    v-if="selectedModel"
+                    :type="selectedModel.status === 0 ? 'success' : 'error'"
+                    size="tiny"
+                    class="ml-8px">
+                    {{ selectedModel.status === 0 ? '可用' : '不可用' }}
+                  </n-tag>
+                </p>
                 <ContextMenu>
-                  <div style="white-space: pre-wrap" class="bubble select-text">
-                    <span v-if="message.streaming" class="streaming-cursor">{{ message.content }}</span>
-                    <span v-else>{{ message.content }}</span>
+                  <div class="bubble select-text">
+                    <MarkdownRender
+                      :content="`你好，我是${selectedModel?.name}，很高兴为您服务。`"
+                      class="markdown-content" />
                   </div>
                 </ContextMenu>
               </n-flex>
-            </n-flex>
-          </template>
-        </n-flex>
-      </div>
+            </div>
 
+            <!-- 加载状态 -->
+            <div v-if="loadingMessages" class="flex justify-center items-center py-20px text-(12px #909090)">
+              <n-spin size="small" />
+              <span class="ml-10px">加载消息中...</span>
+            </div>
+
+            <!-- 消息列表 -->
+            <div
+              v-for="(message, index) in messageList"
+              :key="message.id ?? `message-${index}`"
+              class="message-row group flex flex-col mb-12px"
+              :data-message-index="index"
+              :data-message-id="message.id">
+              <div class="flex items-start gap-10px" :class="message.type === 'user' ? 'flex-row-reverse' : ''">
+                <n-avatar
+                  v-if="message.type === 'user'"
+                  :size="34"
+                  class="select-none rounded-8px flex-shrink-0"
+                  :class="message.type === 'user' ? 'ml-2px' : 'mr-2px'"
+                  :src="userStore.userInfo?.avatar ? AvatarUtils.getAvatarUrl(userStore.userInfo.avatar) : ''"
+                  :fallback-src="getDefaultAvatar()" />
+                <n-avatar
+                  v-else
+                  :size="34"
+                  class="select-none rounded-8px flex-shrink-0"
+                  :class="message.type === 'assistant' ? 'mr-2px' : 'ml-2px'"
+                  :src="getModelAvatar(selectedModel)"
+                  :fallback-src="getDefaultAvatar()" />
+                <n-flex
+                  vertical
+                  :size="6"
+                  class="flex-1"
+                  :class="message.type === 'user' ? 'items-end' : 'items-start'">
+                  <n-flex
+                    align="center"
+                    :size="8"
+                    class="select-none text-(12px #909090)"
+                    :class="message.type === 'user' ? 'flex-row-reverse' : ''">
+                    <p>
+                      {{ message.type === 'user' ? '我' : selectedModel ? selectedModel.name : 'AI' }}
+                    </p>
+                    <n-popconfirm
+                      v-if="message.id"
+                      @positive-click="() => handleDeleteMessage(message.id!, index)"
+                      positive-text="删除"
+                      negative-text="取消">
+                      <template #trigger>
+                        <div
+                          class="delete-btn opacity-0 group-hover:opacity-100 cursor-pointer text-#909090 hover:text-#d5304f transition-all"
+                          title="删除消息">
+                          <svg class="w-14px h-14px"><use href="#delete"></use></svg>
+                        </div>
+                      </template>
+                      <p>确定要删除这条消息吗？</p>
+                    </n-popconfirm>
+                  </n-flex>
+                  <ContextMenu>
+                    <div
+                      class="bubble select-text"
+                      :class="message.type === 'user' ? 'bubble-user' : 'bubble-ai'"
+                      style="white-space: pre-wrap">
+                      <template v-if="message.type === 'user'">
+                        {{ message.content }}
+                      </template>
+                      <template v-else>
+                        <MarkdownRender :content="message.content" class="markdown-content" />
+                      </template>
+                    </div>
+                  </ContextMenu>
+                </n-flex>
+              </div>
+            </div>
+          </div>
+        </n-scrollbar>
+      </div>
       <div class="h-1px bg-[--line-color]"></div>
       <!-- 下半部分输入框以及功能栏 -->
       <div class="chat-input-container min-h-180px">
@@ -432,12 +431,14 @@
   </main>
 </template>
 <script setup lang="ts">
-import { type InputInst, NIcon, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
+import { type InputInst, type ScrollbarInst, NIcon, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
+import MarkdownRender from 'vue-renderer-markdown'
+import 'vue-renderer-markdown/index.css'
 import {
   modelPage,
   conversationCreateMy,
@@ -479,8 +480,9 @@ interface Message {
 }
 
 const messageList = ref<Message[]>([])
-const chatContainerRef = ref<HTMLElement | null>(null)
+const scrollbarRef = ref<ScrollbarInst | null>(null)
 const loadingMessages = ref(false) // 消息加载状态
+
 const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
 const deleteWithMessages = ref(false) // 是否同时删除消息
 const showRolePopover = ref(false) // 角色选择弹窗显示状态
@@ -496,9 +498,9 @@ const hasAvailableRoles = computed(() => {
 // 滚动到底部
 const scrollToBottom = () => {
   nextTick(() => {
-    if (chatContainerRef.value) {
-      chatContainerRef.value.scrollTop = chatContainerRef.value.scrollHeight
-    }
+    const scrollbar = scrollbarRef.value
+    if (!scrollbar) return
+    scrollbar.scrollTo({ top: Number.MAX_SAFE_INTEGER })
   })
 }
 
@@ -571,7 +573,6 @@ const sendAIMessage = async (content: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       content: '',
-      streaming: true,
       timestamp: Date.now()
     })
 
@@ -602,13 +603,11 @@ const sendAIMessage = async (content: string, model: any) => {
           }
         },
         onDone: () => {
-          messageList.value[aiMessageIndex].streaming = false
           scrollToBottom()
         },
         onError: (error: string) => {
           console.error('❌ AI流式响应错误:', error)
           messageList.value[aiMessageIndex].content = '抱歉，发生了错误：' + error
-          messageList.value[aiMessageIndex].streaming = false
         }
       }
     )
@@ -834,7 +833,6 @@ const loadMessages = async (conversationId: string) => {
         messageList.value.push({
           type: msg.type,
           content: msg.content || '',
-          streaming: false,
           timestamp: msg.createTime,
           id: msg.id,
           replyId: msg.replyId,
@@ -1071,8 +1069,10 @@ onMounted(() => {
 /* 聊天消息区域 */
 .chat-messages-container {
   flex: 1;
-  overflow-y: auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 输入框容器固定在底部 */
@@ -1088,16 +1088,9 @@ onMounted(() => {
     @apply size-18px;
   }
 
-  &:hover {
-    @apply bg-[--chat-hover-color];
-  }
-
-  &.right-btn-danger:hover {
-    @apply border-red-500 bg-red-50;
-    svg {
-      @apply color-red-500;
-    }
-  }
+  // &:hover {
+  //   @apply bg-[--chat-hover-color];
+  // }
 
   &.right-btn-disabled {
     @apply opacity-50 cursor-not-allowed;
@@ -1116,29 +1109,204 @@ onMounted(() => {
 
 /* 消息气泡样式 */
 .bubble-user {
-  background: var(--primary-color, #18a058);
+  background: var(--primary-color, #13987f);
   color: white;
   padding: 10px 14px;
   border-radius: 12px;
   max-width: 100%;
   word-wrap: break-word;
 }
-
-/* 流式光标效果 */
-.streaming-cursor::after {
-  content: '▋';
-  animation: blink 1s infinite;
-  margin-left: 2px;
+/* AI 消息气泡样式 */
+.bubble-ai {
+  display: inline-flex;
+  flex-direction: column;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 88%;
+  word-wrap: break-word;
 }
 
-@keyframes blink {
-  0%,
-  50% {
-    opacity: 1;
+.bubble-ai .markdown-content {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-break: strict;
+}
+
+.bubble-ai .markdown-content :deep(*) {
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-break: strict;
+}
+
+.bubble-ai .markdown-content :deep(img) {
+  height: auto;
+  object-fit: contain;
+}
+
+.bubble-ai .markdown-content :deep(table) {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.bubble-ai .markdown-content :deep(th),
+.bubble-ai .markdown-content :deep(td) {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Markdown 内容容器 - 移除继承的气泡背景 */
+.bubble {
+  .markdown-content {
+    background: transparent !important;
   }
-  51%,
-  100% {
-    opacity: 0;
+}
+
+/* Markdown 内容样式 */
+.markdown-content {
+  background: transparent !important;
+
+  // 移除库默认的背景色
+  :deep(.markdown-render) {
+    background: transparent !important;
+  }
+
+  // 代码块容器样式
+  :deep(.markdown-code-block-node) {
+    margin: 8px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #303030 !important;
+  }
+
+  // 代码块内容区域
+  :deep(.code-block-content) {
+    border-radius: 8px;
+    background: transparent !important;
+    display: inline-block;
+    width: -moz-fit-content;
+    width: fit-content;
+    max-width: 100%;
+    overflow: visible;
+    line-break: strict;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  // 代码块包装器
+  :deep(.shiki-wrapper),
+  :deep(.shiki-container),
+  :deep(.shiki) {
+    background: transparent !important;
+  }
+
+  // 代码行容器
+  :deep(.line) {
+    background: transparent !important;
+  }
+
+  // pre 标签样式
+  :deep(pre) {
+    background: var(--code-bg-color, #1e1e1e) !important;
+    border-radius: 8px;
+    padding: 16px !important;
+    margin: 8px 0;
+    width: -moz-fit-content;
+    width: fit-content;
+    max-width: 100%;
+    overflow: visible;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-break: strict;
+
+    code {
+      background: transparent !important;
+      padding: 0 !important;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #d4d4d4;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      line-break: strict;
+    }
+  }
+
+  // 行内代码样式（需要保留背景）
+  :deep(p code),
+  :deep(li code) {
+    background: rgba(110, 118, 129, 0.2) !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--chat-text-color);
+  }
+
+  // 移除其他元素的白色背景
+  :deep(div),
+  :deep(span) {
+    &:not(.inline-code-wrapper) {
+      background: transparent !important;
+    }
+  }
+
+  :deep(p) {
+    margin: 4px 0;
+    line-height: 1.6;
+  }
+
+  :deep(a) {
+    color: var(--primary-color, #13987f);
+    text-decoration: underline;
+  }
+
+  :deep(ul),
+  :deep(ol) {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+
+  :deep(li) {
+    margin: 4px 0;
+  }
+
+  :deep(blockquote) {
+    border-left: 4px solid var(--primary-color, #13987f);
+    padding-left: 12px;
+    margin: 8px 0;
+    color: var(--chat-text-color);
+    opacity: 0.8;
+  }
+
+  :deep(h1),
+  :deep(h2),
+  :deep(h3),
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    margin: 12px 0 8px 0;
+    font-weight: 600;
+  }
+
+  :deep(table) {
+    border-collapse: collapse;
+    margin: 8px 0;
+    width: 100%;
+  }
+
+  :deep(th),
+  :deep(td) {
+    border: 1px solid var(--line-color);
+    padding: 6px 12px;
+  }
+
+  :deep(th) {
+    background: var(--chat-hover-color);
+    font-weight: 600;
   }
 }
 

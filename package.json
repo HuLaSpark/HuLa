@@ -123,6 +123,9 @@
     "pinia-plugin-persistedstate": "^4.5.0",
     "pinia-shared-state": "^1.0.1",
     "seemly": "^0.3.10",
+    "shiki": "^3.14.0",
+    "stream-markdown": "^0.0.8",
+    "stream-monaco": "^0.0.2",
     "tauri-plugin-mic-recorder-api": "^2.0.0",
     "tauri-plugin-safe-area-insets": "^0.1.0",
     "three": "^0.180.0",
@@ -131,6 +134,7 @@
     "vue": "^3.5.22",
     "vue-cropper": "1.1.4",
     "vue-demi": "0.14.10",
+    "vue-renderer-markdown": "0.0.61-beta.5",
     "vue-router": "^4.6.3",
     "vue-virtual-scroller": "2.0.0-beta.8"
   },

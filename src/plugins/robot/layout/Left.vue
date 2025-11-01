@@ -38,7 +38,7 @@
       <!-- 会话列表 -->
       <n-scrollbar
         ref="scrollbar"
-        style="max-height: calc(100vh / var(--page-scale, 1) - 266px); padding-right: 8px"
+        style="max-height: calc(100vh / var(--page-scale, 1) - 286px); padding-right: 8px"
         @scroll="handleScroll">
         <!-- 加载状态 -->
         <div v-if="loading && pageNo === 1" class="flex justify-center items-center py-20px">
@@ -123,7 +123,7 @@
     </n-flex>
 
     <!-- 底部选项栏 -->
-    <n-flex data-tauri-drag-region vertical :size="8" class="m-[auto_0_10px_0]">
+    <n-flex data-tauri-drag-region vertical :size="8" class="m-[auto_0_0_0]">
       <!-- 管理按钮行 -->
       <n-flex :size="4" align="center" justify="space-between">
         <n-flex :size="4" align="center">
@@ -160,7 +160,7 @@
       <!-- 操作按钮行 -->
       <n-flex :size="4" align="center" justify="space-between">
         <!-- 提示信息或新建按钮 -->
-        <div v-if="!hasRoles" class="flex-1 text-(11px #ff6b6b) text-center">请先创建角色</div>
+        <div v-if="!hasRoles" class="flex-1 text-(11px #d5304f) text-center">请先创建角色</div>
         <div
           v-else
           @click="add"
