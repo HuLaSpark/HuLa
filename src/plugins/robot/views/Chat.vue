@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <!-- 主体内容 -->
   <main class="chat-main-container">
     <div class="chat-content-area">
@@ -149,9 +149,7 @@
                 </p>
                 <ContextMenu>
                   <div class="bubble select-text">
-                    <MarkdownRender
-                      :content="`你好，我是${selectedModel?.name}，很高兴为您服务。`"
-                      class="markdown-content" />
+                    <p>{{ `你好，我是${selectedModel?.name}，很高兴为您服务。` }}</p>
                   </div>
                 </ContextMenu>
               </n-flex>
@@ -166,7 +164,6 @@
             <!-- 消息列表 -->
             <div
               v-for="(message, index) in messageList"
-              :key="message.id ?? `message-${index}`"
               class="message-row group flex flex-col mb-12px"
               :data-message-index="index"
               :data-message-id="message.id">
@@ -216,13 +213,13 @@
                   <ContextMenu>
                     <div
                       class="bubble select-text"
-                      :class="message.type === 'user' ? 'bubble-user' : 'bubble-ai'"
+                      :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai'"
                       style="white-space: pre-wrap">
                       <template v-if="message.type === 'user'">
                         {{ message.content }}
                       </template>
                       <template v-else>
-                        <MarkdownRender :content="message.content" class="markdown-content" />
+                        <MarkdownRender :content="message.content" :is-dark="true" />
                       </template>
                     </div>
                   </ContextMenu>
@@ -446,7 +443,8 @@ import {
   conversationDeleteMy,
   messageListByConversationId,
   messageDelete,
-  messageDeleteByConversationId
+  messageDeleteByConversationId,
+  chatRolePage
 } from '@/utils/ImRequestUtils'
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -747,7 +745,6 @@ const handleOpenModelManagement = () => {
 const loadRoleList = async () => {
   roleLoading.value = true
   try {
-    const { chatRolePage } = await import('@/utils/ImRequestUtils')
     const data = await chatRolePage({ pageNo: 1, pageSize: 100 })
     roleList.value = (data.list || []).filter((item: any) => item.status === 0) // 只显示可用的角色
 
@@ -1013,10 +1010,6 @@ onMounted(() => {
     await loadMessages(id)
   })
 })
-
-// 注意: useMitt.on 已经在内部自动处理了 onUnmounted 清理
-// 参考 src/hooks/useMitt.ts 第 11-14 行
-// 所以不需要手动调用 useMitt.off
 </script>
 
 <style scoped lang="scss">
@@ -1107,207 +1100,14 @@ onMounted(() => {
   }
 }
 
-/* 消息气泡样式 */
-.bubble-user {
-  background: var(--primary-color, #13987f);
-  color: white;
-  padding: 10px 14px;
-  border-radius: 12px;
-  max-width: 100%;
-  word-wrap: break-word;
-}
 /* AI 消息气泡样式 */
 .bubble-ai {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   width: -moz-fit-content;
   width: fit-content;
   max-width: 88%;
   word-wrap: break-word;
-}
-
-.bubble-ai .markdown-content {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-break: strict;
-}
-
-.bubble-ai .markdown-content :deep(*) {
-  max-width: 100%;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  line-break: strict;
-}
-
-.bubble-ai .markdown-content :deep(img) {
-  height: auto;
-  object-fit: contain;
-}
-
-.bubble-ai .markdown-content :deep(table) {
-  width: 100%;
-  table-layout: fixed;
-}
-
-.bubble-ai .markdown-content :deep(th),
-.bubble-ai .markdown-content :deep(td) {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-/* Markdown 内容容器 - 移除继承的气泡背景 */
-.bubble {
-  .markdown-content {
-    background: transparent !important;
-  }
-}
-
-/* Markdown 内容样式 */
-.markdown-content {
-  background: transparent !important;
-
-  // 移除库默认的背景色
-  :deep(.markdown-render) {
-    background: transparent !important;
-  }
-
-  // 代码块容器样式
-  :deep(.markdown-code-block-node) {
-    margin: 8px 0;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #303030 !important;
-  }
-
-  // 代码块内容区域
-  :deep(.code-block-content) {
-    border-radius: 8px;
-    background: transparent !important;
-    display: inline-block;
-    width: -moz-fit-content;
-    width: fit-content;
-    max-width: 100%;
-    overflow: visible;
-    line-break: strict;
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  // 代码块包装器
-  :deep(.shiki-wrapper),
-  :deep(.shiki-container),
-  :deep(.shiki) {
-    background: transparent !important;
-  }
-
-  // 代码行容器
-  :deep(.line) {
-    background: transparent !important;
-  }
-
-  // pre 标签样式
-  :deep(pre) {
-    background: var(--code-bg-color, #1e1e1e) !important;
-    border-radius: 8px;
-    padding: 16px !important;
-    margin: 8px 0;
-    width: -moz-fit-content;
-    width: fit-content;
-    max-width: 100%;
-    overflow: visible;
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    line-break: strict;
-
-    code {
-      background: transparent !important;
-      padding: 0 !important;
-      font-size: 14px;
-      line-height: 1.6;
-      color: #d4d4d4;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      line-break: strict;
-    }
-  }
-
-  // 行内代码样式（需要保留背景）
-  :deep(p code),
-  :deep(li code) {
-    background: rgba(110, 118, 129, 0.2) !important;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 13px;
-    color: var(--chat-text-color);
-  }
-
-  // 移除其他元素的白色背景
-  :deep(div),
-  :deep(span) {
-    &:not(.inline-code-wrapper) {
-      background: transparent !important;
-    }
-  }
-
-  :deep(p) {
-    margin: 4px 0;
-    line-height: 1.6;
-  }
-
-  :deep(a) {
-    color: var(--primary-color, #13987f);
-    text-decoration: underline;
-  }
-
-  :deep(ul),
-  :deep(ol) {
-    margin: 8px 0;
-    padding-left: 20px;
-  }
-
-  :deep(li) {
-    margin: 4px 0;
-  }
-
-  :deep(blockquote) {
-    border-left: 4px solid var(--primary-color, #13987f);
-    padding-left: 12px;
-    margin: 8px 0;
-    color: var(--chat-text-color);
-    opacity: 0.8;
-  }
-
-  :deep(h1),
-  :deep(h2),
-  :deep(h3),
-  :deep(h4),
-  :deep(h5),
-  :deep(h6) {
-    margin: 12px 0 8px 0;
-    font-weight: 600;
-  }
-
-  :deep(table) {
-    border-collapse: collapse;
-    margin: 8px 0;
-    width: 100%;
-  }
-
-  :deep(th),
-  :deep(td) {
-    border: 1px solid var(--line-color);
-    padding: 6px 12px;
-  }
-
-  :deep(th) {
-    background: var(--chat-hover-color);
-    font-weight: 600;
-  }
 }
 
 /* 模型选择器样式 */
