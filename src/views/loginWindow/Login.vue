@@ -117,11 +117,11 @@
             :size="110"
             color="#fff"
             class="border-(2px solid #fff)"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar)" />
+            :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ?? '')" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo!.name }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo?.name || '' }}</n-ellipsis>
         </n-flex>
       </n-flex>
 

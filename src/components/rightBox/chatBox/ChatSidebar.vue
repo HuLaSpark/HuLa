@@ -237,7 +237,7 @@ const displayedUserList = ref<UserItem[]>([])
 const userLoadedMap = ref<Record<string, boolean>>({})
 
 watch(
-  () => [globalStore.currentSession?.roomId, isGroup.value] as const,
+  () => [globalStore.currentSessionRoomId, isGroup.value] as const,
   async ([roomId, isGroupChat], prevValue) => {
     const [prevRoomId, prevIsGroup] = prevValue ?? [undefined, undefined]
     if (!roomId || !isGroupChat) {
@@ -353,7 +353,7 @@ const handleSelect = () => {
  */
 const handleOpenAnnoun = (isAdd: boolean) => {
   nextTick(async () => {
-    const roomId = globalStore.currentSession?.roomId
+    const roomId = globalStore.currentSessionRoomId
     await createWebviewWindow(isAdd ? '新增群公告' : '查看群公告', `announList/${roomId}/${isAdd ? 0 : 1}`, 420, 620)
   })
 }
@@ -394,7 +394,7 @@ onMounted(async () => {
   if (groupStore.userList.length > 0) {
     // 初始展示当前列表
     displayedUserList.value = [...groupStore.userList]
-    const currentRoom = globalStore.currentSession?.roomId
+    const currentRoom = globalStore.currentSessionRoomId
     if (currentRoom) {
       groupStore.updateMemberCache(currentRoom, displayedUserList.value)
     }

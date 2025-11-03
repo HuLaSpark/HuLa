@@ -36,6 +36,8 @@ export const options = computed(() => {
 export const getDisabledOptions = () => {
   // 当前选中的房间id
   const currentRoomId = globalStore.currentSessionRoomId
+  console.log(currentRoomId)
+  console.log(groupStore.userList)
 
   if (!currentRoomId || !groupStore.userList.length) return []
 

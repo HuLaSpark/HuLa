@@ -1447,7 +1447,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param emojiUrl 表情包URL
    */
   const sendEmojiDirect = async (emojiUrl: string) => {
-    const targetRoomId = globalStore.currentSession!.roomId
+    const targetRoomId = globalStore.currentSessionRoomId
 
     try {
       const tempMsgId = 'T' + Date.now().toString()
