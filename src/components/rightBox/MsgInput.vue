@@ -259,7 +259,7 @@ const arrow = ref(false)
 /** 输入框dom元素 */
 const messageInputDom = ref<HTMLElement>()
 const gloabalStore = useGlobalStore()
-const activeItem = gloabalStore.currentSession!
+const { currentSession: activeItem } = storeToRefs(gloabalStore)
 /** ait 虚拟列表 */
 const virtualListInstAit = useTemplateRef<VirtualListInst>('virtualListInst-ait')
 /** AI 虚拟列表 */

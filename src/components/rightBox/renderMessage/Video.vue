@@ -215,18 +215,22 @@ const checkDownloadStatusLazy = async () => {
   isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
 }
 
+let intersectionObserver: IntersectionObserver | null = null
+
 // 使用 IntersectionObserver 在视频进入视口时检查下载状态
 const setupIntersectionObserver = () => {
   if (!videoContainerRef.value || hasCheckedDownloadStatus.value) return
 
-  const observer = new IntersectionObserver(
+  intersectionObserver?.disconnect()
+
+  intersectionObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           // 视频进入视口，检查下载状态
           checkDownloadStatusLazy()
           // 检查后断开观察
-          observer.disconnect()
+          intersectionObserver?.disconnect()
         }
       })
     },
@@ -236,12 +240,7 @@ const setupIntersectionObserver = () => {
     }
   )
 
-  observer.observe(videoContainerRef.value)
-
-  // 组件卸载时清理
-  onUnmounted(() => {
-    observer.disconnect()
-  })
+  intersectionObserver.observe(videoContainerRef.value)
 }
 
 // 处理图片加载错误
@@ -352,6 +351,9 @@ onMounted(() => {
 onUnmounted(() => {
   // 清理事件监听
   useMitt.off(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, handleVideoDownloadStatusUpdate)
+
+  intersectionObserver?.disconnect()
+  intersectionObserver = null
 })
 </script>
 

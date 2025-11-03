@@ -134,6 +134,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         }
       })
     ],
+    worker: {
+      format: 'es'
+    },
     build: {
       // 设置兼容低版本浏览器的目标
       target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
@@ -171,10 +174,13 @@ export default defineConfig(({ mode }: ConfigEnv) => {
 
     // 优化依赖配置
     optimizeDeps: {
-      include: ['vue-renderer-markdown', 'shiki', 'shiki/themes/vitesse-dark.mjs']
-    },
-    worker: {
-      format: 'es'
+      include: [
+        'vue-renderer-markdown',
+        'shiki',
+        'shiki/themes/vitesse-dark.mjs',
+        'shiki/themes/vitesse-light.mjs',
+        'vue-renderer-markdown/index.css'
+      ]
     },
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

@@ -1,0 +1,71 @@
+.code-block-wrapper {
+  width: 100%;
+  max-width: 100%;
+
+  :deep(.code-block-container) {
+    background: var(--code-block-bg);
+    border-radius: 10px;
+    border: 1px solid var(--code-block-border-color);
+  }
+
+  :deep(.code-block-header) {
+    background: var(--code-block-header-bg);
+    border-bottom: 1px solid var(--code-block-border-color);
+    padding: 10px 14px;
+  }
+
+  :deep(.code-action-btn) {
+    background: transparent;
+    color: var(--code-block-toolbar-color);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--code-block-toolbar-hover-bg);
+      border-color: var(--code-block-toolbar-border-color);
+    }
+  }
+
+  :deep(.code-action-btn svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  :deep(.code-action-btn[aria-pressed='true']) {
+    background: var(--code-block-toolbar-active-bg);
+    border-color: var(--code-block-toolbar-border-color);
+  }
+
+  :deep(.loading-skeleton .skeleton-line) {
+    background: var(--code-block-skeleton-line);
+  }
+}
+
+.code-block-dark {
+  --code-block-bg: #101010;
+  --code-block-header-bg: rgba(44, 55, 66, 0.95);
+  --code-block-border-color: rgba(255, 255, 255, 0.08);
+  --code-block-toolbar-color: #f1f5f9;
+  --code-block-toolbar-hover-bg: rgba(148, 163, 184, 0.15);
+  --code-block-toolbar-active-bg: rgba(148, 163, 184, 0.25);
+  --code-block-toolbar-border-color: rgba(148, 163, 184, 0.35);
+  --code-block-skeleton-line: linear-gradient(90deg, rgba(148, 163, 184, 0.08) 25%, rgba(148, 163, 184, 0.16) 37%, rgba(148, 163, 184, 0.08) 63%);
+}
+
+.code-block-light {
+  --code-block-bg: #f5f7fa;
+  --code-block-header-bg: rgba(255, 255, 255, 0.95);
+  --code-block-border-color: rgba(15, 23, 42, 0.08);
+  --code-block-toolbar-color: #1f2937;
+  --code-block-toolbar-hover-bg: rgba(19, 152, 127, 0.08);
+  --code-block-toolbar-active-bg: rgba(19, 152, 127, 0.14);
+  --code-block-toolbar-border-color: rgba(19, 152, 127, 0.25);
+  --code-block-skeleton-line: linear-gradient(90deg, rgba(148, 163, 184, 0.12) 25%, rgba(148, 163, 184, 0.22) 37%, rgba(148, 163, 184, 0.12) 63%);
+}

@@ -1,5 +1,7 @@
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentInstance } from 'vue'
+import { useRouter } from 'vue-router'
 import { EventEnum, MittEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useChatStore } from '@/stores/chat'
@@ -37,7 +39,12 @@ export const useLogin = () => {
   const userStore = useUserStore()
   const loginHistoriesStore = useLoginHistoriesStore()
   const { createWebviewWindow } = useWindow()
-  const router = useRouter()
+
+  const getRouter = () => {
+    const instance = getCurrentInstance()
+    if (!instance) return null
+    return useRouter()
+  }
   /** 网络连接是否正常 */
   const { isOnline } = useNetwork()
   const loading = ref(false)
@@ -194,7 +201,8 @@ export const useLogin = () => {
       // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
       globalStore.isTrayMenuShow = true
     } else {
-      router.push('/mobile/home')
+      const router = getRouter()
+      router?.push('/mobile/home')
     }
   }
 
@@ -267,7 +275,8 @@ export const useLogin = () => {
             info.value.uid = userStore.userInfo.uid
           }
           if (isMobile()) {
-            router.replace('/mobile/login')
+            const router = getRouter()
+            router?.replace('/mobile/login')
           }
         }
       })

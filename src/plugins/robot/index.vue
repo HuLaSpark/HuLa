@@ -21,6 +21,7 @@ import Left from './layout/Left.vue'
 import Right from './layout/Right.vue'
 import ChatRoleManagement from './components/ChatRoleManagement.vue'
 import ModelManagement from './components/ModelManagement.vue'
+import { getUseMonaco } from 'vue-renderer-markdown'
 
 const showRoleManagement = ref(false)
 const showModelManagement = ref(false)
@@ -53,5 +54,6 @@ const handleModelManagementRefresh = () => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
+  await getUseMonaco()
 })
 </script>

@@ -219,7 +219,22 @@
                         {{ message.content }}
                       </template>
                       <template v-else>
-                        <MarkdownRender :content="message.content" :is-dark="true" />
+                        <div
+                          class="code-block-wrapper"
+                          :class="themes.content === 'dark' ? 'code-block-dark' : 'code-block-light'">
+                          <MarkdownRender
+                            :content="message.content"
+                            :is-dark="themes.content === 'dark'"
+                            :code-block-light-theme="'vitesse-light'"
+                            :code-block-dark-theme="'vitesse-dark'"
+                            :themes="['vitesse-light', 'vitesse-dark']"
+                            :code-block-props="{
+                              showPreviewButton: false,
+                              showFontSizeButtons: false,
+                              enableFontSizeControl: false,
+                              showExpandButton: false
+                            }" />
+                        </div>
                       </template>
                     </div>
                   </ContextMenu>
@@ -452,7 +467,7 @@ import router from '@/router'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
-const { page } = storeToRefs(settingStore)
+const { page, themes } = storeToRefs(settingStore)
 const MsgInputRef = ref()
 /** 是否是编辑模式 */
 const isEdit = ref(false)
@@ -1014,6 +1029,7 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/render-message';
+@use '@/styles/scss/chatBot/code-block';
 
 /* 主容器布局 */
 .chat-main-container {
