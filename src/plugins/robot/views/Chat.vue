@@ -147,11 +147,9 @@
                     {{ selectedModel.status === 0 ? '可用' : '不可用' }}
                   </n-tag>
                 </p>
-                <ContextMenu>
-                  <div class="bubble select-text">
-                    <p>{{ `你好，我是${selectedModel?.name}，很高兴为您服务。` }}</p>
-                  </div>
-                </ContextMenu>
+                <div class="bubble select-text text-14px">
+                  <p>{{ `你好，我是${selectedModel?.name}，很高兴为您服务。` }}</p>
+                </div>
               </n-flex>
             </div>
 
@@ -210,34 +208,32 @@
                       <p>确定要删除这条消息吗？</p>
                     </n-popconfirm>
                   </n-flex>
-                  <ContextMenu>
-                    <div
-                      class="bubble select-text"
-                      :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai'"
-                      style="white-space: pre-wrap">
-                      <template v-if="message.type === 'user'">
-                        {{ message.content }}
-                      </template>
-                      <template v-else>
-                        <div
-                          class="code-block-wrapper"
-                          :class="themes.content === 'dark' ? 'code-block-dark' : 'code-block-light'">
-                          <MarkdownRender
-                            :content="message.content"
-                            :is-dark="themes.content === 'dark'"
-                            :code-block-light-theme="'vitesse-light'"
-                            :code-block-dark-theme="'vitesse-dark'"
-                            :themes="['vitesse-light', 'vitesse-dark']"
-                            :code-block-props="{
-                              showPreviewButton: false,
-                              showFontSizeButtons: false,
-                              enableFontSizeControl: false,
-                              showExpandButton: false
-                            }" />
-                        </div>
-                      </template>
-                    </div>
-                  </ContextMenu>
+                  <div
+                    class="bubble select-text text-14px"
+                    :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai py-0!'"
+                    style="white-space: pre-wrap">
+                    <template v-if="message.type === 'user'">
+                      {{ message.content }}
+                    </template>
+                    <template v-else>
+                      <div
+                        class="code-block-wrapper"
+                        :class="themes.content === 'dark' ? 'code-block-dark' : 'code-block-light'">
+                        <MarkdownRender
+                          :content="message.content"
+                          :is-dark="themes.content === 'dark'"
+                          :code-block-light-theme="'vitesse-light'"
+                          :code-block-dark-theme="'vitesse-dark'"
+                          :themes="['vitesse-light', 'vitesse-dark']"
+                          :code-block-props="{
+                            showPreviewButton: false,
+                            showFontSizeButtons: false,
+                            enableFontSizeControl: false,
+                            showExpandButton: false
+                          }" />
+                      </div>
+                    </template>
+                  </div>
                 </n-flex>
               </div>
             </div>
@@ -1120,10 +1116,9 @@ onMounted(() => {
 .bubble-ai {
   display: flex;
   flex-direction: column;
-  width: -moz-fit-content;
   width: fit-content;
-  max-width: 88%;
-  word-wrap: break-word;
+  max-width: 80%;
+  line-height: 2;
 }
 
 /* 模型选择器样式 */

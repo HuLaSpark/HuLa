@@ -213,10 +213,10 @@
                     </div>
                     <div
                       v-else
-                      class="text-(14px --text-color) cursor-default h-22px flex-center"
+                      class="text-(14px --text-color) leading-loose cursor-default h-22px flex-center"
                       :class="{ 'cursor-pointer': isGroupOwner }"
                       @click="isGroupOwner && startEditGroupName()">
-                      <p class="max-w-100px truncate">{{ activeItem.name }}</p>
+                      <p :title="activeItem.name" class="max-w-100px truncate">{{ activeItem.name }}</p>
                       <!-- 显示编辑图标 -->
                       <svg v-if="isGroupOwner" class="size-14px ml-1 inline-block color-[--icon-color]">
                         <use href="#edit"></use>

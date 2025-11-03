@@ -5,16 +5,7 @@
       <ContextMenu
         v-for="item in sessionList"
         :key="item.roomId"
-        :class="[
-          { active: globalStore.currentSessionRoomId === item.roomId },
-          { 'active-bot': globalStore.currentSessionRoomId === item.roomId && item.account === UserType.BOT },
-          { 'bg-[--bg-msg-first-child] rounded-12px relative': item.top },
-          { 'context-menu-active': activeContextMenuRoomId === item.roomId },
-          {
-            'active-context-menu':
-              activeContextMenuRoomId === item.roomId && globalStore.currentSessionRoomId === item.roomId
-          }
-        ]"
+        :class="getItemClasses(item)"
         :data-key="item.roomId"
         :menu="visibleMenu(item)"
         :special-menu="visibleSpecialMenu(item)"
@@ -58,7 +49,10 @@
                 </n-popover>
               </n-flex>
               <span
-                :class="{ 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }"
+                :class="[
+                  { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT },
+                  { 'color-#d5304f90!': item.shield && globalStore.currentSessionRoomId === item.roomId }
+                ]"
                 class="text text-10px w-fit truncate text-right">
                 {{ item.lastMsgTime }}
               </span>
@@ -69,6 +63,13 @@
                 <span class="text flex-1 leading-tight text-12px truncate">
                   <span class="text-#d5304f mr-4px">[有人@我]</span>
                   <span>{{ String(item.lastMsg || '').replace(':', '：') }}</span>
+                </span>
+              </template>
+              <template v-else-if="item.shield">
+                <span class="text flex-1 leading-tight text-12px truncate">
+                  <span :class="globalStore.currentSessionRoomId === item.roomId ? 'color-#d5304f90' : 'color-#909090'">
+                    {{ item.type === RoomTypeEnum.GROUP ? '您已屏蔽群聊' : '您已屏蔽此人' }}
+                  </span>
                 </span>
               </template>
               <template v-else>
@@ -82,7 +83,14 @@
               </template>
 
               <!-- 消息提示 -->
-              <template v-if="item.muteNotification === 1 && !item.unreadCount">
+              <template v-if="item.shield">
+                <svg
+                  :class="[globalStore.currentSessionRoomId === item.roomId ? 'color-#d5304f90' : 'color-#909090']"
+                  class="size-14px">
+                  <use href="#forbid"></use>
+                </svg>
+              </template>
+              <template v-else-if="item.muteNotification === 1 && !item.unreadCount">
                 <svg
                   :class="[globalStore.currentSessionRoomId === item.roomId ? 'color-#fefefe' : 'color-#909090']"
                   class="size-14px">
@@ -273,6 +281,22 @@ watch(
 // 处理右键菜单显示状态变化
 const handleMenuShow = (roomId: string, isShow: boolean) => {
   activeContextMenuRoomId.value = isShow ? roomId : null
+}
+
+// 判断对应样式
+const getItemClasses = (item: SessionItem) => {
+  const isCurrentSession = globalStore.currentSessionRoomId === item.roomId
+  const isContextMenuActive = activeContextMenuRoomId.value === item.roomId
+
+  return {
+    active: isCurrentSession,
+    'active-bot': isCurrentSession && item.account === UserType.BOT,
+    'active-shield': isCurrentSession && item.shield,
+    'bg-[--bg-msg-first-child] rounded-12px relative': item.top,
+    'context-menu-active': isContextMenuActive,
+    'context-menu-active-shield': item.shield && isContextMenuActive,
+    'active-context-menu': isContextMenuActive && isCurrentSession
+  }
 }
 
 onBeforeMount(async () => {

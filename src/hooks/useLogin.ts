@@ -23,6 +23,7 @@ import { UserInfoType } from '../services/types'
 import { getEnhancedFingerprint } from '../services/fingerprint'
 import { invoke } from '@tauri-apps/api/core'
 import { useMitt } from './useMitt'
+import { info as logInfo } from '@tauri-apps/plugin-log'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -66,7 +67,7 @@ export const useLogin = () => {
     name: '',
     uid: ''
   })
-  const uiState = ref<'manual' | 'auto'>()
+  const uiState = ref<'manual' | 'auto'>('manual')
   /**
    * 设置登录状态(系统托盘图标，系统托盘菜单选项)
    */
@@ -226,9 +227,32 @@ export const useLogin = () => {
     loading.value = true
     loginText.value = '登录中...'
     loginDisabled.value = true
+    const hasStoredUserInfo = !!userStore.userInfo && !!userStore.userInfo.account
+    if (auto && !hasStoredUserInfo) {
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = isOnline.value ? '登录' : '网络异常'
+      uiState.value = 'manual'
+      settingStore.setAutoLogin(false)
+      logInfo('自动登录信息已失效，请手动登录')
+      return
+    }
+
     // 根据auto参数决定从哪里获取登录信息
-    const loginInfo = auto ? (userStore.userInfo as UserInfoType) : info.value
-    const { account } = loginInfo
+    const loginInfo = auto && userStore.userInfo ? (userStore.userInfo as UserInfoType) : info.value
+    const account = loginInfo?.account
+    const password = loginInfo?.password ?? info.value.password
+    if (!account) {
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = isOnline.value ? '登录' : '网络异常'
+      if (auto) {
+        uiState.value = 'manual'
+        settingStore.setAutoLogin(false)
+      }
+      logInfo('账号信息缺失，请重新输入')
+      return
+    }
 
     // 存储此次登陆设备指纹
     const clientId = await getEnhancedFingerprint()
@@ -237,7 +261,7 @@ export const useLogin = () => {
     invoke('login_command', {
       data: {
         account: account,
-        password: info.value.password,
+        password: password,
         deviceType: deviceType,
         systemType: '2',
         clientId: clientId,
