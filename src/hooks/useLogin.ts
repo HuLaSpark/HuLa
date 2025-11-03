@@ -1,6 +1,5 @@
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { getCurrentInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import { EventEnum, MittEnum, TauriCommand } from '@/enums'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -40,11 +39,19 @@ export const useLogin = () => {
   const loginHistoriesStore = useLoginHistoriesStore()
   const { createWebviewWindow } = useWindow()
 
-  const getRouter = () => {
-    const instance = getCurrentInstance()
-    if (!instance) return null
-    return useRouter()
+  /**
+   * 在 composable 初始化时获取 router 实例
+   * 注意: useRouter() 必须在组件 setup 上下文中调用
+   * 不能在异步回调中调用 useRouter(),因为那时已经失去了 Vue 组件上下文
+   * 所以在这里提前获取并保存 router 实例,供后续异步操作使用
+   */
+  let router: ReturnType<typeof useRouter> | null = null
+  try {
+    router = useRouter()
+  } catch (e) {
+    console.warn('[useLogin] 无法获取 router 实例,可能不在组件上下文中:', e)
   }
+
   /** 网络连接是否正常 */
   const { isOnline } = useNetwork()
   const loading = ref(false)
@@ -189,6 +196,11 @@ export const useLogin = () => {
     await setLoginState()
   }
 
+  /**
+   * 根据平台类型执行不同的跳转逻辑
+   * 桌面端: 创建主窗口
+   * 移动端: 路由跳转到主页
+   */
   const routerOrOpenHomeWindow = async () => {
     if (isDesktop()) {
       const registerWindow = await WebviewWindow.getByLabel('register')
@@ -201,7 +213,7 @@ export const useLogin = () => {
       // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
       globalStore.isTrayMenuShow = true
     } else {
-      const router = getRouter()
+      // 移动端使用路由跳转
       router?.push('/mobile/home')
     }
   }
@@ -274,8 +286,8 @@ export const useLogin = () => {
             info.value.name = userStore.userInfo.name
             info.value.uid = userStore.userInfo.uid
           }
+          // Token 过期时,移动端跳转到登录页
           if (isMobile()) {
-            const router = getRouter()
             router?.replace('/mobile/login')
           }
         }
