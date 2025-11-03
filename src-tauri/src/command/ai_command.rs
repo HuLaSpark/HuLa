@@ -1,7 +1,8 @@
+use crate::im_request_client::ImUrl;
 use crate::AppData;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{ipc::Channel, State};
 use tracing::{error, info};
 
 /// SSE 流式数据事件
@@ -33,73 +34,36 @@ pub async fn ai_message_send_stream(
     state: State<'_, AppData>,
     body: AiMessageRequest,
     request_id: String,
-    app_handle: AppHandle,
+    on_event: Channel<SseStreamEvent>,
 ) -> Result<(), String> {
     info!(
         "🤖 开始发送 AI 流式消息请求, conversation_id: {}, request_id: {}",
         body.conversation_id, request_id
     );
 
-    // 获取配置和token
-    let (base_url, token) = {
-        let config = state.config.lock().await;
-        let rc = state.rc.lock().await;
-        (config.backend.base_url.clone(), rc.token.clone())
-    };
+    // 使用 ImRequestClient 发送流式请求
+    let response = {
+        let mut rc = state.rc.lock().await;
+        let (method, path) = ImUrl::MessageSendStream.get_url();
 
-    // 构建完整 URL - 使用硬编码的路径，因为 get_url 是私有的
-    let url = format!("{}/ai/chat/message/send-stream", base_url);
-    info!("📡 SSE Request URL: {}", url);
-
-    // 创建 HTTP 客户端
-    let client = reqwest::Client::new();
-
-    // 构建请求
-    let mut request = client.post(&url).json(&body);
-
-    // 添加 token
-    if let Some(token) = token {
-        request = request.header("token", token);
-    }
-
-    // 添加 Accept 头以接收 SSE
-    request = request.header("Accept", "text/event-stream");
-
-    // 发送请求
-    let response = match request.send().await {
-        Ok(resp) => resp,
-        Err(e) => {
-            error!("❌ 发送请求失败: {}", e);
-            let error_event = SseStreamEvent {
-                event_type: "error".to_string(),
-                data: None,
-                error: Some(format!("发送请求失败: {}", e)),
-                request_id: request_id.clone(),
-            };
-            let _ = app_handle.emit("ai-stream-event", error_event);
-            return Err(format!("发送请求失败: {}", e));
-        }
-    };
-
-    // 检查响应状态
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_msg = format!("请求失败，状态码: {}", status);
-        error!("❌ {}", error_msg);
-        let error_event = SseStreamEvent {
-            event_type: "error".to_string(),
-            data: None,
-            error: Some(error_msg.clone()),
-            request_id: request_id.clone(),
-        };
-        let _ = app_handle.emit("ai-stream-event", error_event);
-        return Err(error_msg);
-    }
+        rc.request_stream(method, path, Some(body), None::<serde_json::Value>)
+            .await
+            .map_err(|e| {
+                error!("❌ 发送流式请求失败: {}", e);
+                let error_event = SseStreamEvent {
+                    event_type: "error".to_string(),
+                    data: None,
+                    error: Some(e.to_string()),
+                    request_id: request_id.clone(),
+                };
+                let _ = on_event.send(error_event);
+                e.to_string()
+            })?
+    }; // 锁在这里释放
 
     info!("✅ SSE 连接已建立，开始监听流式数据...");
 
     // 在后台任务中处理 SSE 事件流
-    let app_handle_clone = app_handle.clone();
     let request_id_clone = request_id.clone();
 
     tokio::spawn(async move {
@@ -141,9 +105,7 @@ pub async fn ai_message_send_stream(
                                         request_id: request_id_clone.clone(),
                                     };
 
-                                    if let Err(e) =
-                                        app_handle_clone.emit("ai-stream-event", chunk_event)
-                                    {
+                                    if let Err(e) = on_event.send(chunk_event) {
                                         error!("❌ 发送 chunk 事件失败: {}", e);
                                     }
                                 } else if line.starts_with("data:") {
@@ -162,9 +124,7 @@ pub async fn ai_message_send_stream(
                                         request_id: request_id_clone.clone(),
                                     };
 
-                                    if let Err(e) =
-                                        app_handle_clone.emit("ai-stream-event", chunk_event)
-                                    {
+                                    if let Err(e) = on_event.send(chunk_event) {
                                         error!("❌ 发送 chunk 事件失败: {}", e);
                                     }
                                 }
@@ -183,7 +143,7 @@ pub async fn ai_message_send_stream(
                         request_id: request_id_clone.clone(),
                     };
 
-                    if let Err(e) = app_handle_clone.emit("ai-stream-event", error_event) {
+                    if let Err(e) = on_event.send(error_event) {
                         error!("❌ 发送 error 事件失败: {}", e);
                     }
                     break;
@@ -200,7 +160,7 @@ pub async fn ai_message_send_stream(
             request_id: request_id_clone.clone(),
         };
 
-        if let Err(e) = app_handle_clone.emit("ai-stream-event", done_event) {
+        if let Err(e) = on_event.send(done_event) {
             error!("❌ 发送 done 事件失败: {}", e);
         }
 
