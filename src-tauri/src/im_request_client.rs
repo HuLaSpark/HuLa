@@ -48,6 +48,56 @@ impl ImRequestClient {
         self.base_url = base_url;
     }
 
+    /// 构建请求的公共方法（不发送请求）
+    ///
+    /// 提取了 URL 构建、token 添加、body/params 处理等公共逻辑
+    ///
+    /// # 参数
+    /// - `method`: HTTP 方法
+    /// - `path`: API 路径
+    /// - `body`: 请求体（可选）
+    /// - `params`: 查询参数（可选）
+    /// - `extra_headers`: 额外的请求头（可选）
+    fn build_request<B: serde::Serialize, C: serde::Serialize>(
+        &self,
+        method: http::Method,
+        path: &str,
+        body: &Option<B>,
+        params: &Option<C>,
+        extra_headers: Option<Vec<(&str, &str)>>,
+    ) -> reqwest::RequestBuilder {
+        let url = format!("{}/{}", self.base_url, path);
+        info!("📡 Request URL: {}, Method: {}", &url, method);
+
+        let mut request_builder = self.client.request(method, &url);
+
+        // 设置 token 请求头
+        if let Some(token) = &self.token {
+            request_builder = request_builder.header("token", token);
+        }
+
+        // 添加额外的请求头
+        if let Some(headers) = extra_headers {
+            for (key, value) in headers {
+                request_builder = request_builder.header(key, value);
+            }
+        }
+
+        // 设置请求体
+        if let Some(body) = body {
+            request_builder = request_builder.json(body);
+        } else {
+            request_builder = request_builder.json(&serde_json::json!({}));
+        }
+
+        // 设置查询参数
+        if let Some(params) = params {
+            request_builder = request_builder.query(params);
+        }
+
+        request_builder
+    }
+
     pub async fn request<
         T: serde::de::DeserializeOwned,
         B: serde::Serialize,
@@ -63,30 +113,14 @@ impl ImRequestClient {
         const MAX_RETRY_COUNT: u8 = 2;
 
         loop {
-            let url = format!("{}/{}", self.base_url, path);
-            info!("📡 Request URL: {}, Method: {}", &url, method.clone());
-
-            let mut request_builder = self.client.request(method.clone(), &url);
-
-            // 设置请求头
-            if let Some(token) = self.token.clone() {
-                request_builder = request_builder.header("token", token);
-            }
-
-            // 设置请求体
-            if let Some(body) = &body {
-                request_builder = request_builder.json(body);
-            } else {
-                request_builder = request_builder.json(&serde_json::json!({}));
-            }
-
-            if let Some(params) = &params {
-                request_builder = request_builder.query(params);
-            }
+            // 使用 build_request 构建请求
+            let request_builder = self.build_request(method.clone(), path, &body, &params, None);
 
             // 发送请求
             let response = request_builder.send().await?;
             let result: ApiResult<T> = response.json().await?;
+
+            let url = format!("{}/{}", self.base_url, path);
 
             match result.code {
                 Some(406) => {
@@ -130,6 +164,64 @@ impl ImRequestClient {
                 }
             }
         }
+    }
+
+    /// 流式请求方法（用于 SSE 等流式响应）
+    ///
+    /// 与 `request` 方法的区别：
+    /// 1. 添加 `Accept: text/event-stream` 请求头
+    /// 2. 返回 `reqwest::Response` 而不是解析 JSON
+    /// 3. 不支持自动 token 刷新重试（因为流式响应无法中断重试）
+    ///
+    /// # 参数
+    /// - `method`: HTTP 方法
+    /// - `path`: API 路径
+    /// - `body`: 请求体（可选）
+    /// - `params`: 查询参数（可选）
+    ///
+    /// # 返回
+    /// - `Ok(Response)`: 成功返回响应对象，可用于读取流式数据
+    /// - `Err`: 请求失败或状态码非 2xx
+    pub async fn request_stream<B: serde::Serialize, C: serde::Serialize>(
+        &mut self,
+        method: http::Method,
+        path: &str,
+        body: Option<B>,
+        params: Option<C>,
+    ) -> Result<reqwest::Response, anyhow::Error> {
+        // 添加流式请求头
+        let extra_headers = Some(vec![("Accept", "text/event-stream")]);
+
+        // 使用 build_request 构建请求
+        let request_builder = self.build_request(method.clone(), path, &body, &params, extra_headers);
+
+        // 发送请求
+        let response = request_builder.send().await?;
+
+        // 检查响应状态（但不解析 JSON）
+        let status = response.status();
+        if !status.is_success() {
+            let url = format!("{}/{}", self.base_url, path);
+            error!("❌ 流式请求失败，URL: {}, 状态码: {}", url, status);
+
+            // 根据状态码返回不同的错误信息
+            match status.as_u16() {
+                406 => {
+                    error!("🔄 Token expired in stream request");
+                    return Err(anyhow::anyhow!("token过期，请刷新后重试"));
+                }
+                401 => {
+                    error!("🔐 Unauthorized in stream request");
+                    return Err(anyhow::anyhow!("请重新登录"));
+                }
+                _ => {
+                    return Err(anyhow::anyhow!("请求失败，状态码: {}", status));
+                }
+            }
+        }
+
+        info!("✅ 流式请求成功，开始接收流式数据");
+        Ok(response)
     }
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
@@ -422,7 +514,7 @@ pub enum ImUrl {
 }
 
 impl ImUrl {
-    fn get_url(&self) -> (http::Method, &str) {
+    pub fn get_url(&self) -> (http::Method, &str) {
         match self {
             // Token 相关
             ImUrl::Login => (http::Method::POST, "oauth/anyTenant/login"),
