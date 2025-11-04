@@ -826,6 +826,10 @@ impl WebSocketClient {
                 info!("🎉 Feed message received");
                 let _ = app_handle.emit_to("home", "ws-feed-send-msg", data);
             }
+            "feedNotify" => {
+                info!("📢 Feed notification received (like/comment)");
+                let _ = app_handle.emit_to("home", "ws-feed-notify", data);
+            }
 
             // 未知消息类型
             _ => {

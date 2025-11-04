@@ -137,12 +137,12 @@ export const useWindow = () => {
    *
    * const payload = await getWindowPayload<MyPayload>('my-window')
    */
-  const getWindowPayload = async <T>(windowLabel: string) => {
+  const getWindowPayload = async <T>(windowLabel: string, once: boolean = true) => {
     // 移动端不支持窗口管理
     if (!isDesktop()) {
       return Promise.resolve({} as T)
     }
-    return await invoke<T>('get_window_payload', { label: windowLabel })
+    return await invoke<T>('get_window_payload', { label: windowLabel, once })
   }
 
   /**

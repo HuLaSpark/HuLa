@@ -49,6 +49,17 @@
               </div>
             </n-flex>
             <n-flex :size="8">
+              <!-- 查询余额按钮 -->
+              <n-button
+                size="small"
+                type="info"
+                :loading="balanceLoadingMap[apiKey.id]"
+                @click="handleQueryBalance(apiKey.id)">
+                <template #icon>
+                  <Icon icon="mdi:cash-multiple" />
+                </template>
+                查询余额
+              </n-button>
               <!-- 只有私有密钥才显示编辑按钮 -->
               <n-button v-if="!apiKey.publicStatus" size="small" @click="handleEdit(apiKey)">
                 <template #icon>
@@ -76,10 +87,18 @@
             </n-flex>
           </div>
 
-          <div v-if="apiKey.url" class="api-key-card-body">
+          <div v-if="apiKey.url || balanceMap[apiKey.id]" class="api-key-card-body">
             <n-descriptions :column="1" size="small" bordered>
-              <n-descriptions-item label="API 地址">
+              <n-descriptions-item v-if="apiKey.url" label="API 地址">
                 {{ apiKey.url }}
+              </n-descriptions-item>
+              <n-descriptions-item v-if="balanceMap[apiKey.id]" label="账户余额">
+                <n-flex align="center" :size="8">
+                  <span class="text-primary font-600 text-16px">
+                    {{ balanceMap[apiKey.id].balance || '0' }}
+                  </span>
+                  <span class="text-gray-500">{{ balanceMap[apiKey.id].currency || 'USD' }}</span>
+                </n-flex>
               </n-descriptions-item>
             </n-descriptions>
           </div>
@@ -145,7 +164,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import type { FormRules, FormInst } from 'naive-ui'
-import { apiKeyPage, apiKeyCreate, apiKeyUpdate, apiKeyDelete } from '@/utils/ImRequestUtils'
+import { apiKeyPage, apiKeyCreate, apiKeyUpdate, apiKeyDelete, apiKeyBalance } from '@/utils/ImRequestUtils'
 
 const showModal = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
@@ -160,6 +179,10 @@ const pagination = ref({
   pageSize: 10,
   total: 0
 })
+
+// 余额相关
+const balanceMap = ref<Record<string, any>>({}) // 存储每个密钥的余额信息
+const balanceLoadingMap = ref<Record<string, boolean>>({}) // 存储每个密钥的余额加载状态
 
 // 编辑相关
 const showEditModal = ref(false)
@@ -322,6 +345,21 @@ const handleDelete = async (id: string) => {
   } catch (error) {
     console.error('删除密钥失败:', error)
     window.$message.error('删除密钥失败')
+  }
+}
+
+// 查询余额
+const handleQueryBalance = async (id: string) => {
+  try {
+    balanceLoadingMap.value[id] = true
+    const data = await apiKeyBalance({ id })
+    balanceMap.value[id] = data
+    window.$message.success('余额查询成功')
+  } catch (error) {
+    console.error('查询余额失败:', error)
+    window.$message.error('查询余额失败')
+  } finally {
+    balanceLoadingMap.value[id] = false
   }
 }
 

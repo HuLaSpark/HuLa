@@ -705,6 +705,78 @@ export async function getFeedPermission(params: { feedId: string }) {
   })
 }
 
+// ==================== 朋友圈点赞相关 ====================
+
+export async function feedLikeToggle(data: { feedId: string; actType: number }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_LIKE_TOGGLE,
+    body: data
+  })
+}
+
+export async function feedLikeList(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_LIKE_LIST,
+    params
+  })
+}
+
+export async function feedLikeCount(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_LIKE_COUNT,
+    params
+  })
+}
+
+export async function feedLikeHasLiked(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_LIKE_HAS_LIKED,
+    params
+  })
+}
+
+// ==================== 朋友圈评论相关 ====================
+
+export async function feedCommentAdd(data: {
+  feedId: string
+  content: string
+  replyCommentId?: string
+  replyUid?: string
+}) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_COMMENT_ADD,
+    body: data
+  })
+}
+
+export async function feedCommentDelete(data: { commentId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_COMMENT_DELETE,
+    body: data
+  })
+}
+
+export async function feedCommentList(data: { feedId: string; pageSize?: number; cursor?: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_COMMENT_LIST,
+    body: data
+  })
+}
+
+export async function feedCommentCount(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_COMMENT_COUNT,
+    params
+  })
+}
+
+export async function feedCommentAll(params: { feedId: string }) {
+  return await imRequest({
+    url: ImUrlEnum.FEED_COMMENT_ALL,
+    params
+  })
+}
+
 /**
  * SSE 流式数据事件类型
  */
@@ -974,6 +1046,14 @@ export async function apiKeyUpdate(body: {
 export async function apiKeyDelete(params: { id: string }) {
   return await imRequest({
     url: ImUrlEnum.API_KEY_DELETE,
+    params
+  })
+}
+
+// 查询 API 密钥余额
+export async function apiKeyBalance(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.API_KEY_BALANCE,
     params
   })
 }

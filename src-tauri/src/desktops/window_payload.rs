@@ -18,7 +18,13 @@ pub async fn push_window_payload(
 }
 
 #[tauri::command]
-pub async fn get_window_payload(label: String) -> Option<serde_json::Value> {
+pub async fn get_window_payload(label: String, once: bool) -> Option<serde_json::Value> {
     let mut payload_cache = PAYLOAD_CACHE.lock().await;
-    payload_cache.remove(&label)
+
+    if once {
+        payload_cache.remove(&label)
+    } else {
+        let cache = payload_cache.get(&label);
+        cache.cloned()
+    }
 }

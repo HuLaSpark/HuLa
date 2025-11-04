@@ -738,6 +738,28 @@ export enum ImUrlEnum {
   /** 获取朋友圈权限 */
   GET_FEED_PERMISSION = 'getFeedPermission',
 
+  // 朋友圈点赞相关
+  /** 点赞或取消点赞 */
+  FEED_LIKE_TOGGLE = 'feedLikeToggle',
+  /** 获取点赞列表 */
+  FEED_LIKE_LIST = 'feedLikeList',
+  /** 获取点赞数量 */
+  FEED_LIKE_COUNT = 'feedLikeCount',
+  /** 判断是否已点赞 */
+  FEED_LIKE_HAS_LIKED = 'feedLikeHasLiked',
+
+  // 朋友圈评论相关
+  /** 发表评论 */
+  FEED_COMMENT_ADD = 'feedCommentAdd',
+  /** 删除评论 */
+  FEED_COMMENT_DELETE = 'feedCommentDelete',
+  /** 获取评论列表 */
+  FEED_COMMENT_LIST = 'feedCommentList',
+  /** 获取所有评论列表（不分页） */
+  FEED_COMMENT_ALL = 'feedCommentAll',
+  /** 获取评论数量 */
+  FEED_COMMENT_COUNT = 'feedCommentCount',
+
   // 群成员信息
   /** 获取所有用户基础信息 */
   GET_ALL_USER_BASE_INFO = 'getAllUserBaseInfo',
@@ -790,6 +812,8 @@ export enum ImUrlEnum {
   API_KEY_UPDATE = 'apiKeyUpdate',
   /** 删除 API 密钥 */
   API_KEY_DELETE = 'apiKeyDelete',
+  /** 查询 API 密钥余额 */
+  API_KEY_BALANCE = 'apiKeyBalance',
   /** 聊天角色分页 */
   CHAT_ROLE_PAGE = 'chatRolePage',
   /** 聊天角色类别列表 */

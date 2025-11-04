@@ -19,8 +19,8 @@
         v-for="item in feedList"
         :key="item.id"
         :class="itemClass"
-        class="bg-white rounded-12px p-16px shadow hover:shadow-md transition-shadow"
-        @click="handleItemClick(item)">
+        class="bg-white rounded-12px p-16px shadow hover:shadow-md transition-shadow cursor-pointer"
+        @click="handleItemClick($event, item)">
         <!-- 用户信息 -->
         <div class="flex items-center gap-12px mb-12px">
           <n-avatar :size="avatarSize" round :src="getUserAvatar(item)" />
@@ -90,17 +90,67 @@
           </div>
         </div>
 
-        <!-- 底部操作栏 - 统一样式：左边时间，右边操作 -->
-        <div class="flex items-center justify-between mt-12px pt-8px border-t border-#f0f0f0">
-          <span class="text-13px text-#999">{{ formatTimestamp(item.createTime!) }}</span>
-          <!-- 更多操作 -->
-          <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
-            <div class="cursor-pointer p-4px text-#999 hover:text-#576b95 transition-colors" @click.stop>
-              <svg class="w-16px h-16px">
-                <use href="#more"></use>
-              </svg>
+        <!-- 底部操作栏 -->
+        <div class="mt-12px pt-8px border-t border-#f0f0f0">
+          <!-- 操作按钮 -->
+          <div class="flex items-center justify-between gap-8px mb-8px">
+            <span class="text-12px text-#999">{{ formatTimestamp(item.createTime!) }}</span>
+            <div class="flex items-center justify-end gap-8px">
+              <!-- 点赞按钮 -->
+              <div
+                class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer transition-colors"
+                :class="item.hasLiked ? 'bg-#f0f0f0 text-#ff6b6b' : 'hover:bg-#f5f5f5 text-#999'"
+                @click.stop="handleToggleLike(item)">
+                <svg class="w-16px h-16px">
+                  <use :href="item.hasLiked ? '#heart-fill' : '#heart'"></use>
+                </svg>
+                <span class="text-13px">{{ item.hasLiked ? '已赞' : '赞' }}</span>
+              </div>
+              <!-- 评论按钮 -->
+              <div
+                class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer hover:bg-#f5f5f5 transition-colors text-#999"
+                @click.stop="handleShowCommentInput(item)">
+                <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="text-13px">{{ item.commentCount ? `评论 ${item.commentCount}` : '评论' }}</span>
+              </div>
+              <!-- 更多操作 -->
+              <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
+                <div
+                  class="flex items-center justify-center py-6px px-12px rounded-6px cursor-pointer hover:bg-#f5f5f5 transition-colors text-#999"
+                  @click.stop>
+                  <svg class="w-16px h-16px">
+                    <use href="#more"></use>
+                  </svg>
+                </div>
+              </n-dropdown>
             </div>
-          </n-dropdown>
+          </div>
+          <!-- 点赞人名称显示 -->
+          <div v-if="(item.likeList || []).length > 0" class="text-12px text-#999 mb-8px">
+            <span>👍</span>
+            <span>{{ (item.likeList || []).map((like) => like.userName).join('、') }}</span>
+          </div>
+
+          <!-- 评论列表显示 -->
+          <div v-if="item.commentList && item.commentList.length > 0" class="bg-#f9f9f9 rounded-8px p-12px">
+            <div v-for="comment in item.commentList.slice(0, 3)" :key="comment.id" class="mb-8px last:mb-0">
+              <div class="text-12px text-#666">
+                <span class="font-600">{{ comment.userName }}</span>
+                <!-- 如果是回复评论，显示被回复人信息 -->
+                <span v-if="comment.replyUserName" class="text-#999">
+                  回复
+                  <span class="font-600">{{ comment.replyUserName }}</span>
+                </span>
+                <span>：</span>
+                <span>{{ comment.content }}</span>
+              </div>
+            </div>
+            <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
+              还有 {{ item.commentList.length - 3 }} 条评论，点击查看全部
+            </div>
+          </div>
         </div>
       </div>
 
@@ -114,10 +164,47 @@
       <!-- 已加载全部 -->
       <div v-else-if="showLoadedAll" class="flex justify-center py-20px text-13px text-gray-400">已加载全部动态</div>
     </div>
+
+    <!-- 评论输入框 Modal -->
+    <n-modal
+      v-model:show="showCommentInput"
+      :show-icon="false"
+      preset="dialog"
+      class="comment-modal"
+      style="
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 12px 12px 0 0;
+      "
+      :mask-closable="true"
+      :segmented="false">
+      <template #header>
+        <div class="text-16px font-600">发表评论</div>
+      </template>
+      <div class="flex flex-col gap-12px">
+        <n-input
+          v-model:value="commentContent"
+          type="textarea"
+          placeholder="说点什么..."
+          :rows="3"
+          :maxlength="500"
+          show-count />
+        <div class="flex gap-8px justify-end">
+          <n-button @click="showCommentInput = false">取消</n-button>
+          <n-button type="primary" :loading="commentLoading" @click="handleSubmitComment">发送</n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
@@ -125,20 +212,16 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime'
 
-// Props定义
 interface Props {
-  // 样式相关
-  mode?: 'pc' | 'mobile' // 显示模式
-  avatarSize?: number // 头像大小
-  itemClass?: string // 动态项额外类名
-  emptyText?: string // 空状态文本
-  showLoadedAll?: boolean // 是否显示"已加载全部"提示
-  // 图片尺寸配置
+  mode?: 'pc' | 'mobile'
+  avatarSize?: number
+  itemClass?: string
+  emptyText?: string
+  showLoadedAll?: boolean
   singleImageSize?: { width?: string; height?: string }
   gridImageSize?: { width?: string; height?: string }
   videoSize?: { width?: string; height?: string }
   gridMaxWidth?: string
-  // 样式类配置
   singleImageClass?: string
   gridImageClass?: string
   videoClass?: string
@@ -163,7 +246,6 @@ withDefaults(defineProps<Props>(), {
   playIconInnerSize: 'w-28px h-28px'
 })
 
-// Emits定义
 const emit = defineEmits<{
   previewImage: [images: string[], index: number]
   videoPlay: [url: string]
@@ -171,14 +253,17 @@ const emit = defineEmits<{
   itemClick: [feedId: string]
 }>()
 
-// Store
 const feedStore = useFeedStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 
 const { feedList, feedOptions } = storeToRefs(feedStore)
 
-// 获取用户头像
+const showCommentInput = ref(false)
+const commentContent = ref('')
+const commentLoading = ref(false)
+const currentCommentFeed = ref<FeedItem | null>(null)
+
 const getUserAvatar = (item: FeedItem) => {
   if (item.uid) {
     const userInfo = groupStore.getUserInfo(item.uid)
@@ -189,7 +274,6 @@ const getUserAvatar = (item: FeedItem) => {
   return AvatarUtils.getAvatarUrl('')
 }
 
-// 获取用户名称
 const getUserName = (item: FeedItem) => {
   if (item.uid) {
     const userInfo = groupStore.getUserInfo(item.uid)
@@ -200,7 +284,6 @@ const getUserName = (item: FeedItem) => {
   return '未知用户'
 }
 
-// 更多操作选项
 const getMoreOptions = (feed: FeedItem) => {
   const options = [
     {
@@ -213,7 +296,6 @@ const getMoreOptions = (feed: FeedItem) => {
     }
   ]
 
-  // 如果是自己的动态，添加删除选项
   if (feed.uid === userStore.userInfo?.uid) {
     options.unshift({
       label: '删除动态',
@@ -224,7 +306,6 @@ const getMoreOptions = (feed: FeedItem) => {
   return options
 }
 
-// 处理更多操作
 const handleMoreAction = async (feed: FeedItem, action: string) => {
   switch (action) {
     case 'delete':
@@ -246,24 +327,100 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
   }
 }
 
-// 图片预览
 const handlePreviewImage = (images: string[], index: number) => {
   emit('previewImage', images, index)
 }
 
-// 视频播放
 const handleVideoPlay = (url: string) => {
   emit('videoPlay', url)
 }
 
-// 加载更多
 const handleLoadMore = () => {
   emit('loadMore')
 }
 
-// 处理动态项点击
-const handleItemClick = (feed: FeedItem) => {
-  emit('itemClick', feed.id)
+const handleItemClick = (event: MouseEvent, feed: FeedItem) => {
+  const target = event.target as HTMLElement
+  const isActionButton =
+    target.closest('.action-button') ||
+    target.closest('[class*="flex items-center justify-end"]') ||
+    (target.closest('svg') && target.closest('[class*="flex items-center justify-center"]'))
+
+  if (!isActionButton) {
+    emit('itemClick', feed.id)
+  }
+}
+
+const handleToggleLike = async (feed: FeedItem) => {
+  try {
+    const wasLiked = feed.hasLiked
+    const actType = wasLiked ? 2 : 1
+
+    feed.hasLiked = !wasLiked
+    if (actType === 1) {
+      feed.likeCount = (feed.likeCount || 0) + 1
+    } else {
+      feed.likeCount = Math.max(0, (feed.likeCount || 1) - 1)
+    }
+
+    await feedStore.toggleLike(feed.id, actType)
+
+    try {
+      const likeListResult = await feedStore.getLikeList(feed.id)
+      if (likeListResult && Array.isArray(likeListResult)) {
+        const feedIndex = feedList.value.findIndex((f) => f.id === feed.id)
+        if (feedIndex !== -1) {
+          feedList.value[feedIndex].likeList = likeListResult
+        }
+      }
+    } catch (error) {
+      console.error('获取点赞列表失败:', error)
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    feed.hasLiked = !feed.hasLiked
+    feed.likeCount = (feed.likeCount || 0) + (feed.hasLiked ? 1 : -1)
+    window.$message.error('操作失败，请重试')
+  }
+}
+
+const handleShowCommentInput = (feed: FeedItem) => {
+  currentCommentFeed.value = feed
+  showCommentInput.value = true
+}
+
+const handleSubmitComment = async () => {
+  if (!currentCommentFeed.value || !commentContent.value.trim()) {
+    window.$message.warning('请输入评论内容')
+    return
+  }
+
+  commentLoading.value = true
+  try {
+    const feed = currentCommentFeed.value
+    const content = commentContent.value.trim()
+
+    await feedStore.addComment(feed.id, content)
+
+    try {
+      const commentListResult = await feedStore.getCommentList(feed.id)
+      if (Array.isArray(commentListResult)) {
+        feed.commentList = commentListResult
+        feed.commentCount = commentListResult.length
+      }
+    } catch (error) {
+      console.error('获取评论列表失败:', error)
+    }
+
+    commentContent.value = ''
+    showCommentInput.value = false
+    currentCommentFeed.value = null
+  } catch (error) {
+    console.error('发表评论失败:', error)
+    window.$message.error('评论失败，请重试')
+  } finally {
+    commentLoading.value = false
+  }
 }
 </script>
 
