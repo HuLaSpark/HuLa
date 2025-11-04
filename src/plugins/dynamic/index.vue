@@ -208,11 +208,11 @@
       </div>
     </n-modal>
 
-    <!-- 评论弹出框 -->
+    <!-- 评论通知弹出框 - 只显示远程推送过来的评论记录 -->
     <n-modal v-model:show="showCommentModal" class="w-75vw border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
         <div class="flex justify-between items-center mb-15px">
-          <h3 class="text-16px font-bold">评论列表</h3>
+          <h3 class="text-16px font-bold">评论通知</h3>
           <n-button text @click="showCommentModal = false">
             <template #icon>
               <n-icon>
@@ -223,38 +223,28 @@
         </div>
 
         <!-- 评论列表 -->
-        <n-scrollbar style="max-height: 400px">
-          <div v-if="currentComments.length === 0" class="text-center text-gray-500 py-20px">暂无评论</div>
+        <n-scrollbar style="max-height: 500px">
+          <div v-if="currentComments.length === 0" class="text-center text-gray-500 py-40px">
+            <div class="text-16px mb-10px">暂无评论通知</div>
+            <div class="text-12px">暂无评论记录呢</div>
+          </div>
           <div v-else>
             <n-flex
               vertical
               v-for="comment in currentComments"
               :key="comment.id"
-              class="p-10px border-b border-[--line-color]">
+              class="p-12px border-b border-[--line-color] hover:bg-[--hover-color] transition-colors">
               <n-flex align="center">
-                <n-avatar :size="32" round :src="AvatarUtils.getAvatarUrl(comment.userAvatar)" />
-                <div class="ml-10px">
+                <n-avatar :size="36" round :src="AvatarUtils.getAvatarUrl(comment.userAvatar)" />
+                <div class="ml-10px flex-1">
                   <p class="text-14px font-medium">{{ comment.userName }}</p>
                   <p class="text-12px text-gray-500">{{ formatTime(comment.createTime) }}</p>
                 </div>
               </n-flex>
-              <p class="text-14px mt-5px">{{ comment.content }}</p>
+              <p class="text-14px mt-8px text-[--text-color] break-words">{{ comment.content }}</p>
             </n-flex>
           </div>
         </n-scrollbar>
-
-        <!-- 发表评论 -->
-        <div class="mt-15px p-10px border-t border-[--line-color]">
-          <n-input
-            v-model:value="newComment"
-            placeholder="请输入评论内容..."
-            type="textarea"
-            :rows="2"
-            @keydown.enter="submitComment" />
-          <n-button type="primary" class="mt-10px" @click="submitComment" :disabled="!newComment.trim()">
-            发表评论
-          </n-button>
-        </div>
       </div>
     </n-modal>
   </main>
@@ -279,11 +269,9 @@ const contactStore = useContactStore()
 const feedStore = useFeedStore()
 const groupStore = useGroupStore()
 
-const { feedList: dynamicList, unreadCount } = storeToRefs(feedStore)
+const { unreadCount } = storeToRefs(feedStore)
 
 const showCommentModal = ref(false)
-const newComment = ref('')
-const currentFeedId = ref<string>('')
 const currentComments = ref<CommentItem[]>([])
 
 // 添加动态相关状态
@@ -373,38 +361,6 @@ const formatTime = (timestamp: number) => {
  */
 const loadMore = async () => {
   await feedStore.loadMore()
-}
-
-// 获取动态评论
-const fetchComments = async (_feedId: string) => {
-  try {
-    // 这里应该调用评论接口，但当前接口不存在
-    currentComments.value = []
-  } catch (error) {
-    console.error('获取评论失败:', error)
-  }
-}
-
-// 提交评论（由于接口不存在，暂时为空实现）
-const submitComment = async () => {
-  if (!newComment.value.trim()) return
-
-  try {
-    // 这里应该调用发表评论接口，但当前接口不存在
-    console.log('发表评论:', newComment.value)
-
-    // 模拟评论成功
-    await fetchComments(currentFeedId.value)
-    newComment.value = ''
-
-    // 更新动态的评论数量
-    const feed = dynamicList.value.find((item) => item.id === currentFeedId.value)
-    if (feed) {
-      feed.commentCount = (feed.commentCount || 0) + 1
-    }
-  } catch (error) {
-    console.error('发表评论失败:', error)
-  }
 }
 
 // 图片预览

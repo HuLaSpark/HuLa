@@ -41,7 +41,7 @@ export interface CommentItem {
   replyUserName?: string // 被回复人的名称
 }
 
-// 朋友圈项类型定义（与后端返回的数据结构对齐）
+// 朋友圈项类型定义
 export interface FeedItem {
   id: string
   content: string
@@ -56,6 +56,8 @@ export interface FeedItem {
   commentList?: CommentItem[] // 评论列表
   hasLiked?: boolean // 是否已点赞
   mediaType?: 0 | 1 | 2 // 0-纯文本, 1-图片, 2-视频
+  userName?: string
+  userAvatar?: string
   permission?: 'privacy' | 'open' | 'partVisible' | 'notAnyone'
 }
 
@@ -258,6 +260,8 @@ export const useFeedStore = defineStore(
      */
     const clearUnreadCount = () => {
       unreadCount.value = 0
+      feedUnreadStatus.unreadCount = 0
+      feedUnreadStatus.hasUnread = false
     }
 
     /**

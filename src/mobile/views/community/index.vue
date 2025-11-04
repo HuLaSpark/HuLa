@@ -13,6 +13,29 @@
           <div class="flex h-95% w-full relative">
             <img class="w-full h-full object-contain bg-#90909048 dark:bg-#111" src="/hula.png" alt="" />
           </div>
+          <!-- 左上角通知按钮 -->
+          <div class="absolute left-20px top-20px">
+            <n-button text type="primary" @click="openNotificationPopup" class="relative">
+              <template #icon>
+                <div class="relative">
+                  <svg class="w-24px h-24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  <span
+                    v-if="feedNotificationStore.notificationStats.unreadCount > 0"
+                    class="absolute -top-8px -right-8px w-20px h-20px rounded-full bg-#ff6b6b text-white text-10px flex items-center justify-center font-600">
+                    {{
+                      feedNotificationStore.notificationStats.unreadCount > 99
+                        ? '99+'
+                        : feedNotificationStore.notificationStats.unreadCount
+                    }}
+                  </span>
+                </div>
+              </template>
+            </n-button>
+          </div>
+
           <div class="flex absolute right-20px bottom-0 gap-15px">
             <div class="text-white items-center flex">
               {{ userStore.userInfo?.name }}
@@ -34,25 +57,33 @@
         </div>
       </n-scrollbar>
     </van-pull-refresh>
+
+    <!-- 通知弹窗 -->
+    <FeedNotificationPopup ref="notificationPopupRef" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useFeedStore } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
+import { useFeedNotificationStore } from '@/stores/feedNotification'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useDebounceFn, useThrottleFn } from '@vueuse/core'
 import DynamicList from '@/components/common/DynamicList.vue'
+import FeedNotificationPopup from '@/components/common/FeedNotificationPopup.vue'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
 
 const router = useRouter()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
+const feedNotificationStore = useFeedNotificationStore()
 
 const { feedOptions } = storeToRefs(feedStore)
+const notificationPopupRef = ref()
 
 const scrollbarRef = ref()
 const loading = ref(false)
@@ -135,6 +166,11 @@ const handleItemClick = (feedId: string) => {
     name: 'mobileDynamicDetail',
     params: { id: feedId }
   })
+}
+
+// 打开通知弹窗
+const openNotificationPopup = () => {
+  notificationPopupRef.value?.openPopup()
 }
 
 // 监听朋友圈消息推送
