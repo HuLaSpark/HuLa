@@ -128,8 +128,14 @@
 
       <!-- 聊天信息框 -->
       <div :class="{ 'shadow-inner': page.shadow }" class="chat-messages-container w-full box-border flex flex-col">
-        <n-scrollbar ref="scrollbarRef" class="chat-scrollbar flex-1 min-h-0" trigger="none">
-          <div class="p-[16px_16px] box-border">
+        <div
+          ref="scrollContainerRef"
+          class="chat-scrollbar flex-1 min-h-0 scrollbar-container"
+          :class="{ 'hide-scrollbar': !showScrollbar }"
+          @scroll="handleScroll"
+          @mouseenter="showScrollbar = true"
+          @mouseleave="showScrollbar = false">
+          <div ref="messageContentRef" class="p-[16px_16px] box-border">
             <!-- 欢迎消息 -->
             <div class="flex gap-12px mb-12px">
               <n-avatar
@@ -216,12 +222,11 @@
                       {{ message.content }}
                     </template>
                     <template v-else>
-                      <div
-                        class="code-block-wrapper"
-                        :class="themes.content === 'dark' ? 'code-block-dark' : 'code-block-light'">
+                      <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                         <MarkdownRender
                           :content="message.content"
-                          :is-dark="themes.content === 'dark'"
+                          :is-dark="isDarkTheme"
+                          :viewportPriority="false"
                           :code-block-light-theme="'vitesse-light'"
                           :code-block-dark-theme="'vitesse-dark'"
                           :themes="['vitesse-light', 'vitesse-dark']"
@@ -229,7 +234,10 @@
                             showPreviewButton: false,
                             showFontSizeButtons: false,
                             enableFontSizeControl: false,
-                            showExpandButton: false
+                            showExpandButton: false,
+                            monacoOptions: {
+                              MAX_HEIGHT: Number.MAX_SAFE_INTEGER
+                            }
                           }" />
                       </div>
                     </template>
@@ -238,7 +246,7 @@
               </div>
             </div>
           </div>
-        </n-scrollbar>
+        </div>
       </div>
       <div class="h-1px bg-[--line-color]"></div>
       <!-- 下半部分输入框以及功能栏 -->
@@ -439,13 +447,15 @@
   </main>
 </template>
 <script setup lang="ts">
-import { type InputInst, type ScrollbarInst, NIcon, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
+import { type InputInst, NIcon, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import MarkdownRender from 'vue-renderer-markdown'
+import { useResizeObserver } from '@vueuse/core'
+import { ThemeEnum } from '@/enums'
 import 'vue-renderer-markdown/index.css'
 import {
   modelPage,
@@ -464,6 +474,7 @@ import router from '@/router'
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const { page, themes } = storeToRefs(settingStore)
+
 const MsgInputRef = ref()
 /** 是否是编辑模式 */
 const isEdit = ref(false)
@@ -477,6 +488,34 @@ const currentChat = ref({
   messageCount: 0
 })
 
+// 计算是否是暗色主题，处理空值和未初始化的情况
+const isDarkTheme = computed(() => {
+  const content = themes.value.content
+  // 如果 content 为空，尝试从 document.documentElement.dataset.theme 获取
+  if (!content) {
+    const datasetTheme = document.documentElement.dataset.theme
+    return datasetTheme === ThemeEnum.DARK
+  }
+  return content === ThemeEnum.DARK
+})
+
+// 同时监听 isDarkTheme 的变化，确保在主题切换时组件能正确更新
+watch(
+  isDarkTheme,
+  (newVal) => {
+    // 主题切换时，确保 CSS 类正确应用
+    nextTick(() => {
+      // 查找所有 code-block-wrapper 元素，确保它们有正确的类
+      const wrappers = document.querySelectorAll('.code-block-wrapper')
+      wrappers.forEach((wrapper) => {
+        wrapper.classList.remove('code-block-dark', 'code-block-light')
+        wrapper.classList.add(newVal ? 'code-block-dark' : 'code-block-light')
+      })
+    })
+  },
+  { immediate: true }
+)
+
 // 消息列表
 interface Message {
   type: 'user' | 'assistant'
@@ -489,7 +528,10 @@ interface Message {
 }
 
 const messageList = ref<Message[]>([])
-const scrollbarRef = ref<ScrollbarInst | null>(null)
+const scrollContainerRef = ref<HTMLElement | null>(null)
+const messageContentRef = ref<HTMLElement | null>(null)
+const shouldAutoStickBottom = ref(true)
+const showScrollbar = ref(true)
 const loadingMessages = ref(false) // 消息加载状态
 
 const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
@@ -505,13 +547,55 @@ const hasAvailableRoles = computed(() => {
 })
 
 // 滚动到底部
-const scrollToBottom = () => {
+const getScrollContainer = () => scrollContainerRef.value
+
+const isNearBottom = () => {
+  const container = getScrollContainer()
+  if (!container) return true
+  const offset = container.scrollHeight - (container.scrollTop + container.clientHeight)
+  return offset <= 80
+}
+
+const scrollToBottom = (retryCount = 2) => {
+  shouldAutoStickBottom.value = true
+  const raf =
+    typeof window === 'undefined'
+      ? (cb: FrameRequestCallback) => setTimeout(() => cb(0), 16)
+      : window.requestAnimationFrame
+
+  const scroll = () => {
+    const container = getScrollContainer()
+    if (!container) return
+    container.scrollTo({ top: container.scrollHeight, behavior: 'auto' })
+  }
+
+  const runWithRetry = (remaining: number) => {
+    raf(() => {
+      scroll()
+      if (remaining > 0) {
+        runWithRetry(remaining - 1)
+      }
+    })
+  }
+
   nextTick(() => {
-    const scrollbar = scrollbarRef.value
-    if (!scrollbar) return
-    scrollbar.scrollTo({ top: Number.MAX_SAFE_INTEGER })
+    runWithRetry(retryCount)
   })
 }
+
+const handleScroll = () => {
+  shouldAutoStickBottom.value = isNearBottom()
+}
+
+watch(scrollContainerRef, () => {
+  handleScroll()
+})
+
+useResizeObserver(messageContentRef, () => {
+  if (shouldAutoStickBottom.value) {
+    scrollToBottom()
+  }
+})
 
 // 模型选择相关状态
 const showModelPopover = ref(false)
@@ -1078,6 +1162,47 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* 原生滚动条样式与交互 */
+.scrollbar-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+  transform: translateZ(0);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    transition: opacity 0.3s ease;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(144, 144, 144, 0.3);
+    border-radius: 3px;
+    transition:
+      opacity 0.3s ease,
+      background-color 0.3s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(144, 144, 144, 0.5);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &.hide-scrollbar {
+    &::-webkit-scrollbar,
+    &::-webkit-scrollbar-thumb,
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    padding-right: 0.01px;
+  }
 }
 
 /* 输入框容器固定在底部 */

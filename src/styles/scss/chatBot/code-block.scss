@@ -56,7 +56,12 @@
   --code-block-toolbar-hover-bg: rgba(148, 163, 184, 0.15);
   --code-block-toolbar-active-bg: rgba(148, 163, 184, 0.25);
   --code-block-toolbar-border-color: rgba(148, 163, 184, 0.35);
-  --code-block-skeleton-line: linear-gradient(90deg, rgba(148, 163, 184, 0.08) 25%, rgba(148, 163, 184, 0.16) 37%, rgba(148, 163, 184, 0.08) 63%);
+  --code-block-skeleton-line: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.08) 25%,
+    rgba(148, 163, 184, 0.16) 37%,
+    rgba(148, 163, 184, 0.08) 63%
+  );
 }
 
 .code-block-light {
@@ -67,5 +72,10 @@
   --code-block-toolbar-hover-bg: rgba(19, 152, 127, 0.08);
   --code-block-toolbar-active-bg: rgba(19, 152, 127, 0.14);
   --code-block-toolbar-border-color: rgba(19, 152, 127, 0.25);
-  --code-block-skeleton-line: linear-gradient(90deg, rgba(148, 163, 184, 0.12) 25%, rgba(148, 163, 184, 0.22) 37%, rgba(148, 163, 184, 0.12) 63%);
+  --code-block-skeleton-line: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0.12) 25%,
+    rgba(148, 163, 184, 0.22) 37%,
+    rgba(148, 163, 184, 0.12) 63%
+  );
 }

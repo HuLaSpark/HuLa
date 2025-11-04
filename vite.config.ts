@@ -171,18 +171,6 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         }
       }
     },
-
-    // 优化依赖配置
-    optimizeDeps: {
-      include: [
-        'vue-renderer-markdown',
-        'shiki',
-        'shiki/themes/vitesse-dark.mjs',
-        'shiki/themes/vitesse-light.mjs',
-        'vue-renderer-markdown/index.css'
-      ]
-    },
-
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
     //
     // 1. prevent vite from obscuring rust errors

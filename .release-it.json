@@ -28,7 +28,7 @@
     }
   },
   "git": {
-    "commitMessage": "chore: 发布 v${version}"
+    "commitMessage": "chore: release v${version}"
   },
   "npm": {
     "publish": false
