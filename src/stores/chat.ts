@@ -336,6 +336,9 @@ export const useChatStore = defineStore(
         }
 
         sortAndUniqueSessionList()
+
+        // 获取会话列表后，更新全局未读计数以确保同步
+        updateTotalUnreadCount()
       } catch (e) {
         console.error('获取会话列表失败11:', e)
         sessionOptions.isLoading = false
