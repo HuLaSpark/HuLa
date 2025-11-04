@@ -76,7 +76,9 @@ export enum WsResponseMessageType {
   AllMuted = 'AllMuted',
   CANCEL = 'CANCEL',
   /** 朋友圈消息推送 */
-  FEED_SEND_MSG = 'feedSendMsg'
+  FEED_SEND_MSG = 'feedSendMsg',
+  /** 朋友圈通知（点赞/评论，通过 comment 字段判断） */
+  FEED_NOTIFY = 'feedNotify'
 }
 
 export enum NoticeTypeEnum {

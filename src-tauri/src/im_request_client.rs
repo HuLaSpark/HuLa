@@ -390,6 +390,17 @@ pub enum ImUrl {
     DelFeed,
     EditFeed,
     GetFeedPermission,
+    // 朋友圈点赞相关
+    FeedLikeToggle,
+    FeedLikeList,
+    FeedLikeCount,
+    FeedLikeHasLiked,
+    // 朋友圈评论相关
+    FeedCommentAdd,
+    FeedCommentDelete,
+    FeedCommentList,
+    FeedCommentAll,
+    FeedCommentCount,
     SendMsg,
     SetHide,
     GetFriendPage,
@@ -443,6 +454,7 @@ pub enum ImUrl {
     ApiKeyGet,
     ApiKeyPage,
     ApiKeySimpleList,
+    ApiKeyBalance,
 
     ToolCreate,
     ToolUpdate,
@@ -627,6 +639,17 @@ impl ImUrl {
             ImUrl::EditFeed => (http::Method::POST, "im/feed/edit"),
             ImUrl::DelFeed => (http::Method::POST, "im/feed/del"),
             ImUrl::FeedDetail => (http::Method::GET, "im/feed/detail"),
+            // 朋友圈点赞相关
+            ImUrl::FeedLikeToggle => (http::Method::POST, "im/feed/like/toggle"),
+            ImUrl::FeedLikeList => (http::Method::GET, "im/feed/like/list"),
+            ImUrl::FeedLikeCount => (http::Method::GET, "im/feed/like/count"),
+            ImUrl::FeedLikeHasLiked => (http::Method::GET, "im/feed/like/hasLiked"),
+            // 朋友圈评论相关
+            ImUrl::FeedCommentAdd => (http::Method::POST, "im/feed/comment/add"),
+            ImUrl::FeedCommentDelete => (http::Method::POST, "im/feed/comment/delete"),
+            ImUrl::FeedCommentList => (http::Method::POST, "im/feed/comment/list"),
+            ImUrl::FeedCommentAll => (http::Method::GET, "im/feed/comment/all"),
+            ImUrl::FeedCommentCount => (http::Method::GET, "im/feed/comment/count"),
 
             // ai相关 - 聊天消息
             ImUrl::MessageSend => (http::Method::POST, "ai/chat/message/send"),
@@ -687,6 +710,7 @@ impl ImUrl {
             ImUrl::ApiKeyGet => (http::Method::GET, "ai/api-key/get"),
             ImUrl::ApiKeyPage => (http::Method::GET, "ai/api-key/page"),
             ImUrl::ApiKeySimpleList => (http::Method::GET, "ai/api-key/simple-list"),
+            ImUrl::ApiKeyBalance => (http::Method::GET, "ai/api-key/balance"),
 
             // AI 工具相关接口
             ImUrl::ToolCreate => (http::Method::POST, "ai/tool/create"),
@@ -886,6 +910,17 @@ impl ImUrl {
             "delFeed" => Ok(ImUrl::DelFeed),
             "editFeed" => Ok(ImUrl::EditFeed),
             "getFeedPermission" => Ok(ImUrl::GetFeedPermission),
+            // 朋友圈点赞相关
+            "feedLikeToggle" => Ok(ImUrl::FeedLikeToggle),
+            "feedLikeList" => Ok(ImUrl::FeedLikeList),
+            "feedLikeCount" => Ok(ImUrl::FeedLikeCount),
+            "feedLikeHasLiked" => Ok(ImUrl::FeedLikeHasLiked),
+            // 朋友圈评论相关
+            "feedCommentAdd" => Ok(ImUrl::FeedCommentAdd),
+            "feedCommentDelete" => Ok(ImUrl::FeedCommentDelete),
+            "feedCommentList" => Ok(ImUrl::FeedCommentList),
+            "feedCommentAll" => Ok(ImUrl::FeedCommentAll),
+            "feedCommentCount" => Ok(ImUrl::FeedCommentCount),
 
             // 群成员信息
             "getAllUserBaseInfo" => Ok(ImUrl::GetAllUserBaseInfo),
@@ -949,6 +984,7 @@ impl ImUrl {
             "apiKeyGet" => Ok(ImUrl::ApiKeyGet),
             "apiKeyPage" => Ok(ImUrl::ApiKeyPage),
             "apiKeySimpleList" => Ok(ImUrl::ApiKeySimpleList),
+            "apiKeyBalance" => Ok(ImUrl::ApiKeyBalance),
 
             // ================ AI 工具 ================
             "toolCreate" => Ok(ImUrl::ToolCreate),

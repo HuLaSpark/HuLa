@@ -383,6 +383,52 @@ useMitt.on(WsResponseMessageType.FEED_SEND_MSG, (data: { uid: string }) => {
   }
 })
 
+// 朋友圈通知监听（全局）- 处理点赞和评论通知
+useMitt.on(WsResponseMessageType.FEED_NOTIFY, async (data: any) => {
+  try {
+    if (data.isUnlike) {
+      // 取消点赞时减少未读数
+      feedStore.decreaseUnreadCount(1)
+      const likeListResult = await feedStore.getLikeList(data.feedId)
+      if (likeListResult) {
+        const feed = feedStore.feedList.find((f) => f.id === data.feedId)
+        if (feed) {
+          feed.likeList = likeListResult
+          feed.likeCount = likeListResult.length
+        }
+      }
+    }
+    // 如果是点赞通知
+    else if (!data.comment) {
+      feedStore.increaseUnreadCount(1)
+      const likeListResult = await feedStore.getLikeList(data.feedId)
+      if (likeListResult) {
+        const feed = feedStore.feedList.find((f) => f.id === data.feedId)
+        if (feed) {
+          feed.likeList = likeListResult
+          feed.likeCount = likeListResult.length
+        }
+      }
+    } else {
+      feedStore.increaseUnreadCount(1)
+      try {
+        const commentListResult = await feedStore.getCommentList(data.feedId)
+        if (Array.isArray(commentListResult)) {
+          const feed = feedStore.feedList.find((f) => f.id === data.feedId)
+          if (feed) {
+            feed.commentList = commentListResult
+            feed.commentCount = commentListResult.length
+          }
+        }
+      } catch (error) {
+        console.error('获取评论列表失败:', error)
+      }
+    }
+  } catch (error) {
+    console.error('处理朋友圈通知失败:', error)
+  }
+})
+
 useMitt.on(WsResponseMessageType.GROUP_SET_ADMIN_SUCCESS, (event) => {
   console.log('设置群管理员---> ', event)
   groupStore.updateAdminStatus(event.roomId, event.uids, event.status)

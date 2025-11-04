@@ -467,6 +467,13 @@ class RustWebSocketClient {
         useMitt.emit(WsResponseMessageType.FEED_SEND_MSG, event.payload)
       })
     )
+
+    this.listenerController.add(
+      await listen('ws-feed-notify', (event: any) => {
+        info(`收到朋友圈通知: ${JSON.stringify(event.payload)}`)
+        useMitt.emit(WsResponseMessageType.FEED_NOTIFY, event.payload)
+      })
+    )
   }
 }
 info('创建RustWebSocketClient')

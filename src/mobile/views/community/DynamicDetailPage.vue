@@ -18,13 +18,14 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DynamicDetail from '@/components/common/DynamicDetail.vue'
 
 const route = useRoute()
 
-// 获取动态ID
-const feedId = route.params.id as string
+// 获取动态ID（使用 computed 使其响应式）
+const feedId = computed(() => route.params.id as string)
 
 // 图片预览
 const previewImage = (images: string[], index: number) => {

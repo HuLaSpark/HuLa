@@ -59,14 +59,16 @@ let unlisten: UnlistenFn | null = null
 onMounted(async () => {
   const currentWindow = WebviewWindow.getCurrent()
 
-  // 先尝试从路由参数获取 feedId
   if (route.params.id) {
     feedId.value = route.params.id as string
   } else {
-    // 如果路由参数没有，从 payload 获取
-    const payload = (await getWindowPayload(currentWindow.label)) as any
+    const payload = (await getWindowPayload(currentWindow.label, false)) as any
     if (payload && payload.feedId) {
       feedId.value = payload.feedId
+    } else {
+      setTimeout(async () => {
+        await currentWindow.emit('window-payload-updated', { feedId: feedId.value })
+      }, 1000)
     }
   }
 
