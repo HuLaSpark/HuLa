@@ -144,21 +144,23 @@
 
       <!-- 底部操作栏 -->
       <div class="pt-20px mt-20px border-t-2 border-#f0f0f0">
-        <!-- 点赞用户头像显示 -->
-        <div v-if="(feedDetail.likeList || []).length > 0" class="mb-16px flex items-center gap-8px">
-          <span class="text-13px text-#999 font-500">赞过的人：</span>
-          <div class="flex items-center -space-x-12px flex-wrap">
+        <!-- 点赞用户头像显示 - 固定高度防止闪烁 -->
+        <div class="mb-16px min-h-48px flex items-center gap-8px">
+          <span v-if="(feedDetail.likeList || []).length > 0" class="text-13px text-#999 font-500 flex-shrink-0">
+            赞过的人：
+          </span>
+          <div v-if="(feedDetail.likeList || []).length > 0" class="flex items-center -space-x-12px flex-wrap">
             <n-avatar
               v-for="(like, idx) in feedDetail.likeList || []"
               :key="idx"
               :size="32"
               round
-              :src="like.userAvatar"
+              :src="AvatarUtils.getAvatarUrl(like.userAvatar || '')"
               :title="like.userName" />
           </div>
         </div>
-        <!-- 动态统计信息 -->
-        <div class="flex items-center justify-between mb-16px text-13px text-#999">
+        <!-- 动态统计信息 - 固定高度防止闪烁 -->
+        <div class="flex items-center justify-between mb-16px text-13px text-#999 min-h-24px">
           <div class="flex items-center gap-16px">
             <div class="flex items-center gap-6px">
               <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -175,15 +177,15 @@
             </div>
           </div>
         </div>
-        <!-- 操作按钮 - 靠右对齐 -->
-        <div class="flex items-center justify-end gap-8px">
+        <!-- 操作按钮 - 靠右对齐 - 固定高度防止闪烁 -->
+        <div class="flex items-center justify-end gap-8px h-40px">
           <!-- 点赞按钮 -->
           <div
             class="flex items-center justify-center gap-6px py-10px px-16px rounded-8px cursor-pointer transition-all duration-200"
             :class="feedDetail.hasLiked ? 'bg-#ff6b6b/10 text-#ff6b6b' : 'hover:bg-#f5f5f5 text-#666'"
             @click.stop="handleToggleLike">
-            <svg class="w-18px h-18px">
-              <use :href="feedDetail.hasLiked ? '#heart-fill' : '#heart'"></use>
+            <svg class="w-18px h-18px" :class="{ 'heart-filled': feedDetail.hasLiked }">
+              <use href="#heart"></use>
             </svg>
             <span class="text-14px font-500">{{ feedDetail.hasLiked ? '已赞' : '赞' }}</span>
           </div>
@@ -317,13 +319,11 @@ const commentList = ref<any[]>([])
 const replyingComment = ref<any | null>(null)
 
 const getUserAvatar = (feed: FeedItem) => {
-  const userInfo = groupStore.getUserInfo(feed.uid)
-  return AvatarUtils.getAvatarUrl(userInfo?.avatar || '')
+  return AvatarUtils.getAvatarUrl(feed.userAvatar || '')
 }
 
 const getUserName = (feed: FeedItem) => {
-  const userInfo = groupStore.getUserInfo(feed.uid)
-  return userInfo?.name || feed.uid || '未知用户'
+  return feed.userName || '未知用户'
 }
 
 const getMoreOptions = (feed: FeedItem) => {
@@ -555,5 +555,10 @@ watch(
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 心形图标填充效果 */
+.heart-filled {
+  fill: currentColor;
 }
 </style>

@@ -182,6 +182,8 @@ export enum StoresEnum {
   GUIDE = 'guide',
   /** 动态/朋友圈 */
   FEED = 'feed',
+  /** 朋友圈通知 */
+  FEED_NOTIFICATION = 'feedNotification',
   /** Bot 视图状态 */
   BOT = 'bot',
   /** 文件管理 */

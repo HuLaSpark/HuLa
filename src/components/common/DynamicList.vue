@@ -92,8 +92,8 @@
 
         <!-- 底部操作栏 -->
         <div class="mt-12px pt-8px border-t border-#f0f0f0">
-          <!-- 操作按钮 -->
-          <div class="flex items-center justify-between gap-8px mb-8px">
+          <!-- 操作按钮 - 固定高度防止闪烁 -->
+          <div class="flex items-center justify-between gap-8px mb-8px h-28px">
             <span class="text-12px text-#999">{{ formatTimestamp(item.createTime!) }}</span>
             <div class="flex items-center justify-end gap-8px">
               <!-- 点赞按钮 -->
@@ -101,8 +101,8 @@
                 class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer transition-colors"
                 :class="item.hasLiked ? 'bg-#f0f0f0 text-#ff6b6b' : 'hover:bg-#f5f5f5 text-#999'"
                 @click.stop="handleToggleLike(item)">
-                <svg class="w-16px h-16px">
-                  <use :href="item.hasLiked ? '#heart-fill' : '#heart'"></use>
+                <svg class="w-16px h-16px" :class="{ 'heart-filled': item.hasLiked }">
+                  <use href="#heart"></use>
                 </svg>
                 <span class="text-13px">{{ item.hasLiked ? '已赞' : '赞' }}</span>
               </div>
@@ -127,28 +127,32 @@
               </n-dropdown>
             </div>
           </div>
-          <!-- 点赞人名称显示 -->
-          <div v-if="(item.likeList || []).length > 0" class="text-12px text-#999 mb-8px">
-            <span>👍</span>
-            <span>{{ (item.likeList || []).map((like) => like.userName).join('、') }}</span>
+          <!-- 点赞人名称显示 - 固定高度防止闪烁 -->
+          <div class="min-h-20px mb-8px">
+            <div v-if="(item.likeList || []).length > 0" class="text-12px text-#999">
+              <span>👍</span>
+              <span>{{ (item.likeList || []).map((like) => like.userName).join('、') }}</span>
+            </div>
           </div>
 
-          <!-- 评论列表显示 -->
-          <div v-if="item.commentList && item.commentList.length > 0" class="bg-#f9f9f9 rounded-8px p-12px">
-            <div v-for="comment in item.commentList.slice(0, 3)" :key="comment.id" class="mb-8px last:mb-0">
-              <div class="text-12px text-#666">
-                <span class="font-600">{{ comment.userName }}</span>
-                <!-- 如果是回复评论，显示被回复人信息 -->
-                <span v-if="comment.replyUserName" class="text-#999">
-                  回复
-                  <span class="font-600">{{ comment.replyUserName }}</span>
-                </span>
-                <span>：</span>
-                <span>{{ comment.content }}</span>
+          <!-- 评论列表显示 - 固定最小高度防止闪烁 -->
+          <div class="min-h-20px">
+            <div v-if="item.commentList && item.commentList.length > 0" class="bg-#f9f9f9 rounded-8px p-12px">
+              <div v-for="comment in item.commentList.slice(0, 3)" :key="comment.id" class="mb-8px last:mb-0">
+                <div class="text-12px text-#666">
+                  <span class="font-600">{{ comment.userName }}</span>
+                  <!-- 如果是回复评论，显示被回复人信息 -->
+                  <span v-if="comment.replyUserName" class="text-#999">
+                    回复
+                    <span class="font-600">{{ comment.replyUserName }}</span>
+                  </span>
+                  <span>：</span>
+                  <span>{{ comment.content }}</span>
+                </div>
               </div>
-            </div>
-            <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
-              还有 {{ item.commentList.length - 3 }} 条评论，点击查看全部
+              <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
+                还有 {{ item.commentList.length - 3 }} 条评论，点击查看全部
+              </div>
             </div>
           </div>
         </div>
@@ -427,5 +431,16 @@ const handleSubmitComment = async () => {
 <style scoped lang="scss">
 .dynamic-list-container {
   width: 100%;
+  /* 隐藏滚动条 */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 心形图标填充效果 */
+.heart-filled {
+  fill: currentColor;
 }
 </style>
