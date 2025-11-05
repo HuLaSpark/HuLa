@@ -64,7 +64,7 @@
             v-for="(item, index) in chatList"
             :key="item.id"
             @click="handleActive(item)"
-            :class="['chat-item', activeItem === item.id ? 'chat-item-active' : '']">
+            :class="['chat-item', activeItem?.id === item.id ? 'chat-item-active' : '']">
             <ContextMenu
               :menu="menuList"
               :special-menu="specialMenuList"
@@ -199,9 +199,10 @@ import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { conversationPage, conversationCreateMy, conversationDeleteMy, chatRolePage } from '@/utils/ImRequestUtils'
+import { ref, nextTick } from 'vue'
 
 const userStore = useUserStore()
-const activeItem = ref<string>('')
+const activeItem = ref<ChatItem | null>(null)
 const scrollbar = ref<VirtualListInst>()
 const inputInstRef = ref<InputInst | null>(null)
 const editingItemId = ref<string | null>()
@@ -228,6 +229,8 @@ interface ChatItem {
   createTime: string
   messageCount?: number
   isPinned?: boolean
+  roleId?: string | number
+  modelId?: string | number
 }
 
 const chatList = ref<ChatItem[]>([])
@@ -254,7 +257,9 @@ const fetchConversationList = async (isLoadMore = false) => {
         title: item.title || `会话 ${item.id}`,
         createTime: item.createTime,
         messageCount: item.messageCount || 0,
-        isPinned: item.isPinned || false
+        isPinned: item.isPinned || false,
+        roleId: item.roleId,
+        modelId: item.modelId
       }))
 
       if (isLoadMore) {
@@ -263,6 +268,14 @@ const fetchConversationList = async (isLoadMore = false) => {
       } else {
         // 首次加载时替换数据
         chatList.value = newChats
+
+        // 首次加载且有会话时，自动选择第一个会话
+        if (newChats.length > 0) {
+          // 延迟发送事件，确保 Chat.vue 的列表已加载
+          setTimeout(() => {
+            handleActive(newChats[0])
+          }, 500)
+        }
       }
 
       // 更新分页信息
@@ -367,14 +380,13 @@ const specialMenuList = ref<OPT.RightMenu[]>([
 /** 跳转到设置 */
 const jump = () => {
   router.push('/chatSettings')
-  activeItem.value = ''
+  activeItem.value = null
 }
 
 /** 选中会话 */
 const handleActive = (item: ChatItem) => {
-  activeItem.value = item.id
+  activeItem.value = item
 
-  // ✅ 只有当前路由不是 /chat 时才跳转，避免重复挂载
   if (router.currentRoute.value.path !== '/chat') {
     router.push('/chat').then(() => {
       nextTick(() => {
@@ -443,19 +455,15 @@ const add = async () => {
 
       // 新会话添加到列表顶部
       chatList.value.unshift(newChat)
-      activeItem.value = newChat.id
+      activeItem.value = newChat
 
       // 滚动到顶部
       nextTick(() => {
         scrollbar.value?.scrollTo({ position: 'top' })
       })
 
-      // 跳转到聊天页面并触发激活事件
-      router.push('/chat').then(() => {
-        nextTick(() => {
-          useMitt.emit('chat-active', newChat)
-        })
-      })
+      // 跳转到聊天页面
+      router.push('/chat')
 
       window.$message.success('会话创建成功')
     }
@@ -468,31 +476,24 @@ const add = async () => {
 /** 删除单个会话 */
 const deleteChat = async (item: ChatItem) => {
   try {
-    console.log('🗑️ 删除会话:', item.id)
-    const data = await conversationDeleteMy({ conversationIdList: [item.id] })
-
-    console.log('✅ 删除会话成功:', data)
+    await conversationDeleteMy({ conversationIdList: [item.id] })
 
     const index = chatList.value.findIndex((chat) => chat.id === item.id)
     if (index !== -1) {
       chatList.value.splice(index, 1)
 
       // 如果删除的是当前选中的会话，需要重新选择
-      if (activeItem.value === item.id) {
+      if (activeItem.value?.id === item.id) {
         if (chatList.value.length > 0) {
           // 选中第一个会话
           const firstChat = chatList.value[0]
-          activeItem.value = firstChat.id
+          activeItem.value = firstChat
 
-          // 跳转到聊天页面并触发激活事件
-          router.push('/chat').then(() => {
-            nextTick(() => {
-              useMitt.emit('chat-active', firstChat)
-            })
-          })
+          // 跳转到聊天页面
+          router.push('/chat')
         } else {
           // 如果没有会话了，跳转到欢迎页
-          activeItem.value = ''
+          activeItem.value = null
           router.push('/welcome')
         }
       }
@@ -508,25 +509,18 @@ const deleteChat = async (item: ChatItem) => {
 /** 删除全部会话 */
 const deleteAllChats = async () => {
   try {
-    console.log('🗑️ 删除全部会话，共', chatList.value.length, '个')
-
     if (chatList.value.length === 0) {
       window.$message.warning('没有会话可删除')
       showDeleteConfirm.value = false
       return
     }
 
-    // 保存所有会话ID
     const allChatIds = chatList.value.map((chat) => chat.id)
-
-    // ✅ 使用批量删除接口
-    const data = await conversationDeleteMy({ conversationIdList: allChatIds })
-
-    console.log('✅ 全部会话删除成功:', data)
+    await conversationDeleteMy({ conversationIdList: allChatIds })
 
     // 清空本地列表
     chatList.value = []
-    activeItem.value = ''
+    activeItem.value = null
     showDeleteConfirm.value = false
 
     // 跳转到欢迎页
@@ -564,15 +558,17 @@ const handleBlur = async (item: ChatItem, index: number) => {
   useMitt.emit('left-chat-title', { id: item.id, title: item.title })
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 加载会话列表
-  fetchConversationList()
+  await fetchConversationList()
 
   // 检查是否有可用角色
   checkHasRoles()
 
-  /** 刚加载的时候默认跳转到欢迎页面 */
-  router.push('/welcome')
+  // 如果没有会话，跳转到欢迎页面
+  if (chatList.value.length === 0) {
+    router.push('/welcome')
+  }
 
   useMitt.on('update-chat-title', (e: any) => {
     chatList.value.filter((item) => {
@@ -598,30 +594,21 @@ onMounted(() => {
     checkHasRoles()
   })
 
-  // ✅ 监听添加会话事件（直接添加到列表，避免刷新闪烁）
+  // ✅ 监听添加会话事件
   useMitt.on('add-conversation', (newChat: any) => {
-    console.log('📥 收到添加会话事件:', newChat)
     if (newChat && newChat.id) {
       // 检查是否已存在
       const exists = chatList.value.some((chat) => chat.id === newChat.id)
       if (!exists) {
         // 添加到列表顶部
         chatList.value.unshift(newChat)
-        activeItem.value = newChat.id
+        activeItem.value = newChat
 
         // 滚动到顶部
         nextTick(() => {
           scrollbar.value?.scrollTo({ position: 'top' })
         })
       }
-    }
-  })
-
-  // 监听会话激活事件（从其他组件触发）
-  useMitt.on('chat-active', (e: any) => {
-    // 更新左侧列表的选中状态
-    if (e && e.id) {
-      activeItem.value = e.id
     }
   })
 })

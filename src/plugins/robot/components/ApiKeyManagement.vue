@@ -201,14 +201,24 @@ const formData = ref({
 
 // 平台选项
 const platformOptions = [
+  // ========== 国内平台 ==========
+  { label: 'Moonshot (KIMI)', value: 'Moonshot' },
+  { label: 'DeepSeek', value: 'DeepSeek' },
+  { label: 'Baidu (文心一言)', value: 'YiYan' },
+  { label: 'Alibaba (通义千问)', value: 'TongYi' },
+  { label: 'Tencent (混元)', value: 'HunYuan' },
+  { label: 'Zhipu (智谱)', value: 'ZhiPu' },
+  { label: 'XingHuo (星火)', value: 'XingHuo' },
+  { label: 'DouBao (豆包)', value: 'DouBao' },
+  { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
+  { label: 'MiniMax', value: 'MiniMax' },
+  { label: 'BaiChuan (百川)', value: 'BaiChuan' },
+  // ========== 国外平台 ==========
   { label: 'OpenAI', value: 'OpenAI' },
-  { label: 'Moonshot', value: 'Moonshot' },
+  { label: 'Azure OpenAI', value: 'AzureOpenAI' },
   { label: 'Anthropic', value: 'Anthropic' },
   { label: 'Google', value: 'Google' },
-  { label: 'Baidu', value: 'Baidu' },
-  { label: 'Alibaba', value: 'Alibaba' },
-  { label: 'Tencent', value: 'Tencent' },
-  { label: '其他', value: 'Other' }
+  { label: 'Ollama', value: 'Ollama' }
 ]
 
 // 状态选项

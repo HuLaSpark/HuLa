@@ -55,24 +55,14 @@
         </n-flex>
 
         <n-flex class="min-w-fit">
-          <!-- 新增会话按钮 - 只有在有可用角色时才显示 -->
-          <n-popover v-if="hasAvailableRoles" trigger="hover" :show-arrow="false" placement="bottom">
+          <!-- 新增会话按钮 -->
+          <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
               <div class="right-btn" @click="handleCreateNewChat">
                 <svg><use href="#plus"></use></svg>
               </div>
             </template>
             <p>新建会话</p>
-          </n-popover>
-
-          <!-- 没有角色时的提示 -->
-          <n-popover v-else trigger="hover" :show-arrow="false" placement="bottom">
-            <template #trigger>
-              <div class="right-btn right-btn-disabled" @click="handleNoRoleWarning">
-                <svg><use href="#plus"></use></svg>
-              </div>
-            </template>
-            <p>请先创建角色</p>
           </n-popover>
 
           <!-- 编辑标题按钮 -->
@@ -154,7 +144,7 @@
                   </n-tag>
                 </p>
                 <div class="bubble select-text text-14px">
-                  <p>{{ `你好，我是${selectedModel?.name}，很高兴为您服务。` }}</p>
+                  <p>{{ `你好，我是${selectedModel?.name || ''}，很高兴为您服务。` }}</p>
                 </div>
               </n-flex>
             </div>
@@ -235,8 +225,13 @@
                             showFontSizeButtons: false,
                             enableFontSizeControl: false,
                             showExpandButton: false,
+                            showLanguageSelect: false,
+                            showCopyButton: true,
+                            showLineNumber: false,
                             monacoOptions: {
-                              MAX_HEIGHT: Number.MAX_SAFE_INTEGER
+                              MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
+                              readOnly: true,
+                              minimap: { enabled: false }
                             }
                           }" />
                       </div>
@@ -447,7 +442,7 @@
   </main>
 </template>
 <script setup lang="ts">
-import { type InputInst, NIcon, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
+import { type InputInst, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -470,6 +465,8 @@ import {
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import router from '@/router'
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -540,11 +537,6 @@ const showRolePopover = ref(false) // 角色选择弹窗显示状态
 const selectedRole = ref<any>(null) // 当前选中的角色
 const roleList = ref<any[]>([]) // 角色列表
 const roleLoading = ref(false) // 角色加载状态
-
-// 计算属性：是否有可用角色
-const hasAvailableRoles = computed(() => {
-  return roleList.value.length > 0
-})
 
 // 滚动到底部
 const getScrollContainer = () => scrollContainerRef.value
@@ -785,17 +777,6 @@ const fetchModelList = async () => {
 
     modelList.value = data.list || []
     modelPagination.value.total = data.total || 0
-
-    // 如果模型列表不为空且当前没有选择模型，自动选择第一个
-    if (modelList.value.length > 0 && !selectedModel.value) {
-      // 优先选择可用的模型，否则选择第一个
-      const firstAvailableModel = modelList.value.find((model) => model.status === 0) || modelList.value[0]
-      if (firstAvailableModel) {
-        nextTick(() => {
-          selectModel(firstAvailableModel)
-        })
-      }
-    }
   } catch (error) {
     console.error('获取模型列表失败:', error)
     window.$message.error('获取模型列表失败')
@@ -813,12 +794,25 @@ const handleModelClick = () => {
 }
 
 // 选择模型
-const selectModel = (model: any) => {
+const selectModel = async (model: any) => {
   selectedModel.value = model
-
-  // 这里可以添加选择模型后的逻辑，比如更新当前会话的模型
-  window.$message.success(`已选择模型: ${selectedModel.value.name}`)
   showModelPopover.value = false
+
+  // 如果当前有会话，则调用后端API更新会话的模型
+  if (currentChat.value.id && currentChat.value.id !== '0') {
+    try {
+      await conversationUpdateMy({
+        id: currentChat.value.id,
+        modelId: String(model.id)
+      })
+    } catch (error) {
+      console.error('切换模型失败:', error)
+      window.$message.destroyAll()
+      window.$message.error('切换模型失败')
+    }
+  } else {
+    window.$message.success(`已选择模型: ${model.name}`)
+  }
 
   // 可以通过mitt通知其他组件模型已选择
   useMitt.emit('model-selected', model)
@@ -856,9 +850,28 @@ const loadRoleList = async () => {
 }
 
 // 选择角色
-const handleSelectRole = (role: any) => {
+const handleSelectRole = async (role: any) => {
   selectedRole.value = role
   showRolePopover.value = false
+
+  try {
+    // 如果当前有会话，则调用后端API更新会话的角色
+    if (currentChat.value.id && currentChat.value.id !== '0') {
+      await conversationUpdateMy({
+        id: currentChat.value.id,
+        roleId: String(role.id)
+      })
+      // 更新当前会话的标题为角色名称
+      currentChat.value.title = role.name
+    } else {
+      // 如果没有会话，只选择角色，不创建会话
+      window.$message.success(`已选择角色: ${role.name}`)
+    }
+  } catch (error) {
+    console.error('切换角色失败:', error)
+    window.$message.destroyAll()
+    window.$message.error('切换角色失败')
+  }
 }
 
 // 打开角色管理
@@ -880,10 +893,6 @@ const handleBlur = async () => {
     await conversationUpdateMy({
       id: currentChat.value.id,
       title: currentChat.value.title
-    })
-
-    window.$message.success(`已重命名为 ${currentChat.value.title}`, {
-      icon: () => h(NIcon, null, { default: () => h('svg', null, [h('use', { href: '#face' })]) })
     })
 
     useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
@@ -947,32 +956,13 @@ const loadMessages = async (conversationId: string) => {
   }
 }
 
-// 没有角色时的警告
-const handleNoRoleWarning = () => {
-  window.$message.warning('请先创建角色')
-  // 自动打开角色管理
-  useMitt.emit('open-role-management')
-}
-
 // 新增会话
 const handleCreateNewChat = async () => {
   try {
-    // 检查是否有可用角色
-    if (!hasAvailableRoles.value) {
-      handleNoRoleWarning()
-      return
-    }
-
-    // 检查是否选择了角色
-    if (!selectedRole.value) {
-      window.$message.warning('请先选择一个角色')
-      return
-    }
-
     const data = await conversationCreateMy({
-      roleId: selectedRole.value.id,
+      roleId: selectedRole.value?.id,
       knowledgeId: undefined,
-      title: '新的会话'
+      title: selectedRole.value?.name || '新的会话'
     })
 
     if (data) {
@@ -981,7 +971,7 @@ const handleCreateNewChat = async () => {
       // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
       const newChat = {
         id: data.id || data,
-        title: data.title || '新的会话',
+        title: data.title || selectedRole.value?.name || '新的会话',
         createTime: data.createTime || new Date().toISOString(),
         messageCount: data.messageCount || 0,
         isPinned: data.pinned || false
@@ -1068,13 +1058,48 @@ const handleDeleteChat = async () => {
   }
 }
 
-onMounted(() => {
+// 提前监听会话切换事件
+useMitt.on('chat-active', async (e) => {
+  const { title, id, messageCount, roleId, modelId } = e
+
+  currentChat.value.title = title || `新的聊天${currentChat.value.id}`
+  currentChat.value.id = id
+  currentChat.value.messageCount = messageCount
+
   if (modelList.value.length === 0) {
-    fetchModelList()
+    await fetchModelList()
   }
 
-  // 加载角色列表
-  loadRoleList()
+  // 确保角色列表已加载
+  if (roleList.value.length === 0) {
+    await loadRoleList()
+  }
+
+  if (roleId) {
+    const role = roleList.value.find((r: any) => String(r.id) === String(roleId))
+    if (role) {
+      selectedRole.value = role
+    }
+  }
+
+  if (modelId) {
+    const model = modelList.value.find((m: any) => String(m.id) === String(modelId))
+    if (model) {
+      selectedModel.value = model
+    }
+  }
+
+  await loadMessages(id)
+})
+
+onMounted(async () => {
+  // 等待模型列表加载完成
+  if (modelList.value.length === 0) {
+    await fetchModelList()
+  }
+
+  // 等待角色列表加载完成
+  await loadRoleList()
 
   // 监听角色列表刷新事件
   useMitt.on('refresh-role-list', () => {
@@ -1094,15 +1119,6 @@ onMounted(() => {
       currentChat.value.title = title
       currentChat.value.messageCount = e.messageCount
     }
-  })
-  useMitt.on('chat-active', async (e) => {
-    const { title, id, messageCount } = e
-
-    currentChat.value.title = title || `新的聊天${currentChat.value.id}`
-    currentChat.value.id = id
-    currentChat.value.messageCount = messageCount
-
-    await loadMessages(id)
   })
 })
 </script>

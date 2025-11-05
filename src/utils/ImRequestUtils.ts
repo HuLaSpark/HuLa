@@ -938,6 +938,7 @@ export async function conversationUpdateMy(body: {
   id: string
   title?: string
   pinned?: boolean
+  roleId?: string
   modelId?: string
   knowledgeId?: string
   systemMessage?: string

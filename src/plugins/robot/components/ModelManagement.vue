@@ -156,9 +156,9 @@
           </n-flex>
         </n-form-item>
 
-        <n-form-item label="模型类型" path="type">
+        <!-- <n-form-item label="模型类型" path="type">
           <n-select v-model:value="formData.type" :options="typeOptions" placeholder="请选择模型类型" />
-        </n-form-item>
+        </n-form-item> -->
 
         <n-form-item label="状态" path="status">
           <n-select v-model:value="formData.status" :options="statusOptions" placeholder="请选择状态" />
@@ -240,6 +240,7 @@ const pagination = ref({
 // API 密钥管理
 const showApiKeyManagement = ref(false)
 const apiKeyOptions = ref<any[]>([])
+const apiKeyMap = ref<Map<string, any>>(new Map())
 
 // 编辑相关
 const showEditModal = ref(false)
@@ -264,29 +265,40 @@ const formData = ref({
 
 // 平台选项
 const platformOptions = [
+  // ========== 国外平台 ==========
   { label: 'OpenAI', value: 'OpenAI' },
-  { label: 'Moonshot', value: 'Moonshot' },
+  { label: 'Azure OpenAI', value: 'AzureOpenAI' },
   { label: 'Anthropic', value: 'Anthropic' },
   { label: 'Google', value: 'Google' },
-  { label: 'Baidu', value: 'Baidu' },
-  { label: 'Alibaba', value: 'Alibaba' },
-  { label: 'Tencent', value: 'Tencent' },
+  { label: 'Ollama', value: 'Ollama' },
+  // ========== 国内平台 ==========
+  { label: 'Moonshot (KIMI)', value: 'Moonshot' },
   { label: 'DeepSeek', value: 'DeepSeek' },
-  { label: 'Zhipu', value: 'Zhipu' },
+  { label: 'Baidu (文心一言)', value: 'YiYan' },
+  { label: 'Alibaba (通义千问)', value: 'TongYi' },
+  { label: 'Tencent (混元)', value: 'HunYuan' },
+  { label: 'Zhipu (智谱)', value: 'ZhiPu' },
+  { label: 'XingHuo (星火)', value: 'XingHuo' },
+  { label: 'DouBao (豆包)', value: 'DouBao' },
+  { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
+  { label: 'MiniMax', value: 'MiniMax' },
+  { label: 'BaiChuan (百川)', value: 'BaiChuan' },
+  // ========== 其他 ==========
   { label: '其他', value: 'Other' }
 ]
 
 // 平台对应的模型示例和官网链接
 const platformModelInfo: Record<string, { examples: string; docs: string; hint: string }> = {
+  // ========== 国外平台 ==========
   OpenAI: {
     examples: 'gpt-4, gpt-4-turbo, gpt-3.5-turbo',
     docs: 'https://platform.openai.com/docs/models',
     hint: '请前往 OpenAI 官网查看可用模型列表'
   },
-  Moonshot: {
-    examples: 'moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k',
-    docs: 'https://platform.moonshot.cn/docs',
-    hint: '请前往 Moonshot 官网查看可用模型列表'
+  AzureOpenAI: {
+    examples: 'gpt-4, gpt-35-turbo, gpt-4-turbo',
+    docs: 'https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models',
+    hint: '请前往 Azure OpenAI 官网查看可用模型列表'
   },
   Anthropic: {
     examples: 'claude-3-opus, claude-3-sonnet, claude-3-haiku',
@@ -294,35 +306,72 @@ const platformModelInfo: Record<string, { examples: string; docs: string; hint: 
     hint: '请前往 Anthropic 官网查看可用模型列表'
   },
   Google: {
-    examples: 'gemini-pro, gemini-pro-vision',
+    examples: 'gemini-pro, gemini-pro-vision, gemini-1.5-pro',
     docs: 'https://ai.google.dev/models',
     hint: '请前往 Google AI 官网查看可用模型列表'
+  },
+  Ollama: {
+    examples: 'llama2, mistral, neural-chat, dolphin-mixtral',
+    docs: 'https://ollama.ai/library',
+    hint: '请前往 Ollama 官网查看可用模型列表'
+  },
+  // ========== 国内平台 ==========
+  Moonshot: {
+    examples: 'moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k',
+    docs: 'https://platform.moonshot.cn/docs',
+    hint: '请前往 Moonshot 官网查看可用模型列表'
   },
   DeepSeek: {
     examples: 'deepseek-chat, deepseek-coder',
     docs: 'https://platform.deepseek.com/api-docs',
     hint: '请前往 DeepSeek 官网查看可用模型列表'
   },
-  Zhipu: {
-    examples: 'glm-4, glm-3-turbo',
-    docs: 'https://open.bigmodel.cn/dev/api',
-    hint: '请前往智谱 AI 官网查看可用模型列表'
-  },
-  Baidu: {
-    examples: 'ernie-bot-4, ernie-bot-turbo',
+  YiYan: {
+    examples: 'ernie-bot-4, ernie-bot-turbo, ernie-bot',
     docs: 'https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html',
     hint: '请前往百度智能云官网查看可用模型列表'
   },
-  Alibaba: {
-    examples: 'qwen-turbo, qwen-plus, qwen-max',
+  TongYi: {
+    examples: 'qwen-turbo, qwen-plus, qwen-max, qwen-long',
     docs: 'https://help.aliyun.com/zh/dashscope/developer-reference/model-square',
     hint: '请前往阿里云官网查看可用模型列表'
   },
-  Tencent: {
+  HunYuan: {
     examples: 'hunyuan-lite, hunyuan-standard, hunyuan-pro',
     docs: 'https://cloud.tencent.com/document/product/1729',
     hint: '请前往腾讯云官网查看可用模型列表'
   },
+  ZhiPu: {
+    examples: 'glm-4, glm-3-turbo, glm-4v',
+    docs: 'https://open.bigmodel.cn/dev/api',
+    hint: '请前往智谱 AI 官网查看可用模型列表'
+  },
+  XingHuo: {
+    examples: 'generalv3.5, generalv3, generalv2.1',
+    docs: 'https://www.xfyun.cn/doc/spark/Web.html',
+    hint: '请前往讯飞星火官网查看可用模型列表'
+  },
+  DouBao: {
+    examples: 'doubao-lite-4k, doubao-lite-32k, doubao-pro-4k',
+    docs: 'https://www.volcengine.com/docs/82379',
+    hint: '请前往字节豆包官网查看可用模型列表'
+  },
+  SiliconFlow: {
+    examples: 'Qwen/Qwen2-7B-Instruct, meta-llama/Llama-2-7b-chat-hf',
+    docs: 'https://docs.siliconflow.cn/zh/api-reference/chat-completions',
+    hint: '请前往硅基流动官网查看可用模型列表'
+  },
+  MiniMax: {
+    examples: 'abab6.5-chat, abab5.5-chat, abab5-chat',
+    docs: 'https://www.minimaxi.com/document/guides/chat',
+    hint: '请前往 MiniMax 官网查看可用模型列表'
+  },
+  BaiChuan: {
+    examples: 'Baichuan2-Turbo, Baichuan2-Turbo-192k, Baichuan2-53B',
+    docs: 'https://platform.baichuan-ai.com/docs/api',
+    hint: '请前往百川智能官网查看可用模型列表'
+  },
+  // ========== 其他 ==========
   Other: {
     examples: '请输入自定义模型标志',
     docs: '',
@@ -352,14 +401,6 @@ const modelHint = computed(() => {
 const statusOptions = [
   { label: '可用', value: 0 },
   { label: '不可用', value: 1 }
-]
-
-// 模型类型选项
-const typeOptions = [
-  { label: '文本', value: 1 },
-  { label: '图片', value: 2 },
-  { label: '音频', value: 3 },
-  { label: '视频', value: 4 }
 ]
 
 // 表单验证规则
@@ -423,6 +464,7 @@ const loadApiKeyOptions = async () => {
       label: item.platform ? `${item.name} (${item.platform})` : item.name,
       value: item.id
     }))
+    apiKeyMap.value = new Map((data || []).map((item: any) => [item.id, item]))
   } catch (error) {
     console.error('加载 API 密钥列表失败:', error)
   }
@@ -453,10 +495,9 @@ const handlePageChange = (page: number) => {
 }
 
 // 平台切换处理
-const handlePlatformChange = (value: string) => {
+const handlePlatformChange = (_value: string) => {
   // 清空模型标志，让用户重新输入
   formData.value.model = ''
-  console.log('✅ 平台已切换为:', value)
 }
 
 // 新增模型
@@ -517,8 +558,6 @@ const handleSubmit = async () => {
       publicStatus: formData.value.publicStatus
     }
 
-    console.log('submitData', submitData)
-
     if (editingModel.value) {
       submitData.id = editingModel.value.id
       await modelUpdate(submitData)
@@ -567,6 +606,21 @@ const handleOpenApiKeyManagement = () => {
 const handleApiKeyManagementRefresh = () => {
   loadApiKeyOptions()
 }
+
+// 监听 keyId 变化，自动填充平台
+watch(
+  () => formData.value.keyId,
+  (newKeyId) => {
+    if (newKeyId) {
+      const apiKeyInfo = apiKeyMap.value.get(newKeyId)
+
+      if (apiKeyInfo && apiKeyInfo.platform) {
+        // 自动填充平台
+        formData.value.platform = apiKeyInfo.platform
+      }
+    }
+  }
+)
 
 // 监听弹窗显示状态
 watch(showModal, (val) => {
