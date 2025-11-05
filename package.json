@@ -20,7 +20,7 @@
     "========= 启动vue(tauri项目会连带执行不需要单独执行) =========": "",
     "dev": "vite",
     "========= 打包vue(tauri项目会连带执行不需要单独执行) =========": "",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 vue-tsc --noEmit && NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "build": "vue-tsc --noEmit && vite build",
     "========= 启动HuLa桌面应用程序 =========": "",
     "tauri:dev": "tauri dev",
     "========= 启动HuLa桌面应用程序(简化命令) =========": "",

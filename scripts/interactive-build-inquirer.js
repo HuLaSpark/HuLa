@@ -123,12 +123,6 @@ function getBundleOptions(platform) {
           command: 'tauri build --bundles msi'
         },
         {
-          name: '📁  exe 可执行文件',
-          value: 'exe',
-          description: '生成 .exe 可执行文件',
-          command: 'tauri build --bundles exe'
-        },
-        {
           name: '📦  nsis 安装程序',
           value: 'nsis',
           description: '生成 NSIS 安装程序',
@@ -138,7 +132,7 @@ function getBundleOptions(platform) {
           name: '📦  全部格式',
           value: 'all',
           description: '生成所有支持的格式',
-          command: 'tauri build --target x86_64-pc-windows-msvc'
+          command: 'tauri build'
         },
         {
           name: '🔙  返回上一步',
@@ -172,7 +166,7 @@ function getBundleOptions(platform) {
           name: '📦  全部格式',
           value: 'all',
           description: '生成所有支持的格式',
-          command: 'tauri build --target x86_64-unknown-linux-gnu'
+          command: 'tauri build'
         },
         {
           name: '🔙  返回上一步',
@@ -189,12 +183,6 @@ function getBundleOptions(platform) {
           value: 'apk',
           description: '生成 Android APK 安装包',
           command: 'tauri android build'
-        },
-        {
-          name: '📱  aab 应用包',
-          value: 'aab',
-          description: '生成 Android App Bundle (Google Play)',
-          command: 'tauri android build --aab'
         },
         {
           name: '🔙  返回上一步',
