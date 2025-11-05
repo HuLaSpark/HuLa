@@ -90,11 +90,10 @@ const handleCreateNewChat = async () => {
 
     if (data) {
       window.$message.success('会话创建成功')
-
       const newChat = {
         id: data.id || data,
         title: data.title || '新的会话',
-        createTime: data.createTime || new Date().toISOString(),
+        createTime: data.createTime ?? Date.now(),
         messageCount: data.messageCount || 0,
         isPinned: data.pinned || false,
         roleId: firstAvailableRole.value.id,

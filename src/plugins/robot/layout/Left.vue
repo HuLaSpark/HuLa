@@ -101,7 +101,7 @@
                 </n-flex>
                 <n-flex justify="space-between" align="center" :size="0" class="text-(12px #909090)">
                   <p>{{ item.messageCount || 0 }}条对话</p>
-                  <p>{{ formatTime(item.createTime) }}</p>
+                  <p>{{ formatTimestamp(item.createTime) }}</p>
                 </n-flex>
               </div>
             </ContextMenu>
@@ -192,14 +192,20 @@
 </template>
 
 <script setup lang="ts">
-import { type InputInst, type VirtualListInst, NSpin, NButton } from 'naive-ui'
+import { type InputInst, type VirtualListInst } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { conversationPage, conversationCreateMy, conversationDeleteMy, chatRolePage } from '@/utils/ImRequestUtils'
-import { ref, nextTick } from 'vue'
+import {
+  conversationPage,
+  conversationCreateMy,
+  conversationDeleteMy,
+  conversationUpdateMy,
+  chatRolePage
+} from '@/utils/ImRequestUtils'
+import { formatTimestamp } from '@/utils/ComputedTime'
 
 const userStore = useUserStore()
 const activeItem = ref<ChatItem | null>(null)
@@ -226,7 +232,7 @@ const total = ref(0)
 interface ChatItem {
   id: string
   title?: string
-  createTime: string
+  createTime: number
   messageCount?: number
   isPinned?: boolean
   roleId?: string | number
@@ -252,15 +258,18 @@ const fetchConversationList = async (isLoadMore = false) => {
     })
 
     if (data && data.list) {
-      const newChats = data.list.map((item: any) => ({
-        id: item.id,
-        title: item.title || `会话 ${item.id}`,
-        createTime: item.createTime,
-        messageCount: item.messageCount || 0,
-        isPinned: item.isPinned || false,
-        roleId: item.roleId,
-        modelId: item.modelId
-      }))
+      const newChats = data.list.map((item: any) => {
+        const parsedCreateTime = Number(item.createTime)
+        return {
+          id: item.id,
+          title: item.title || `会话 ${item.id}`,
+          createTime: Number.isFinite(parsedCreateTime) ? parsedCreateTime : Date.now(),
+          messageCount: item.messageCount || 0,
+          isPinned: item.isPinned || false,
+          roleId: item.roleId,
+          modelId: item.modelId
+        }
+      })
 
       if (isLoadMore) {
         // 加载更多时追加数据
@@ -317,25 +326,6 @@ const handleScroll = (e: Event) => {
 const refreshConversationList = async () => {
   pageNo.value = 1
   await fetchConversationList(false)
-}
-
-// 格式化时间显示
-const formatTime = (timeStr: string) => {
-  if (!timeStr) return ''
-  const date = new Date(timeStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) {
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-  } else if (days === 1) {
-    return '昨天'
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
-  }
 }
 
 const menuList = ref<OPT.RightMenu[]>([
@@ -445,25 +435,25 @@ const add = async () => {
 
     if (data) {
       // ✅ 直接使用后端返回的会话对象，避免刷新闪烁
+      const rawCreateTime = Number(data.createTime)
       const newChat: ChatItem = {
         id: data.id || data, // 兼容后端返回整个对象或只返回ID
         title: data.title || '新的会话',
-        createTime: data.createTime || new Date().toISOString(),
+        createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
         messageCount: data.messageCount || 0,
         isPinned: data.pinned || false
       }
 
       // 新会话添加到列表顶部
       chatList.value.unshift(newChat)
-      activeItem.value = newChat
 
       // 滚动到顶部
       nextTick(() => {
         scrollbar.value?.scrollTo({ position: 'top' })
       })
 
-      // 跳转到聊天页面
-      router.push('/chat')
+      // 激活新会话
+      handleActive(newChat)
 
       window.$message.success('会话创建成功')
     }
@@ -545,17 +535,41 @@ const renameChat = (item: ChatItem) => {
 const handleBlur = async (item: ChatItem, index: number) => {
   editingItemId.value = null
 
-  if (originalTitle.value === item.title) {
+  const trimmedTitle = item.title?.trim() || ''
+  const fallbackTitle = `会话 ${item.id}`
+  const nextTitle = trimmedTitle !== '' ? trimmedTitle : fallbackTitle
+
+  if (originalTitle.value === nextTitle) {
+    chatList.value[index].title = nextTitle
     return
   }
 
-  if (!item.title || item.title.trim() === '') {
-    chatList.value[index].title = `会话 ${item.id}`
-    return
+  const previousTitle = originalTitle.value
+  item.title = nextTitle
+  chatList.value[index].title = nextTitle
+  if (activeItem.value?.id === item.id) {
+    activeItem.value.title = nextTitle
   }
 
-  window.$message.success(`已重命名为 ${item.title}`)
-  useMitt.emit('left-chat-title', { id: item.id, title: item.title })
+  try {
+    await conversationUpdateMy({
+      id: item.id,
+      title: nextTitle
+    })
+
+    originalTitle.value = nextTitle
+    window.$message.success(`已重命名为 ${nextTitle}`)
+    useMitt.emit('left-chat-title', { id: item.id, title: nextTitle })
+    useMitt.emit('update-chat-title', { id: item.id, title: nextTitle })
+  } catch (error) {
+    console.error('❌ 重命名会话失败:', error)
+    item.title = previousTitle
+    chatList.value[index].title = previousTitle
+    originalTitle.value = previousTitle
+    if (activeItem.value?.id === item.id) {
+      activeItem.value.title = previousTitle
+    }
+  }
 }
 
 onMounted(async () => {
@@ -600,14 +614,55 @@ onMounted(async () => {
       // 检查是否已存在
       const exists = chatList.value.some((chat) => chat.id === newChat.id)
       if (!exists) {
+        const rawCreateTime = Number(newChat.createTime)
+        const normalizedChat: ChatItem = {
+          id: newChat.id,
+          title: newChat.title,
+          createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
+          messageCount: newChat.messageCount || 0,
+          isPinned: newChat.isPinned || false,
+          roleId: newChat.roleId,
+          modelId: newChat.modelId
+        }
+
         // 添加到列表顶部
-        chatList.value.unshift(newChat)
-        activeItem.value = newChat
+        chatList.value.unshift(normalizedChat)
 
         // 滚动到顶部
         nextTick(() => {
           scrollbar.value?.scrollTo({ position: 'top' })
         })
+
+        handleActive(normalizedChat)
+      }
+    }
+  })
+
+  useMitt.on('update-chat-meta', (payload: any) => {
+    if (!payload?.id) return
+    const target = chatList.value.find((chat) => chat.id === payload.id)
+    if (target) {
+      if (typeof payload.messageCount === 'number') {
+        target.messageCount = payload.messageCount
+      }
+      if (payload.createTime !== undefined && payload.createTime !== null) {
+        const parsed = Number(payload.createTime)
+        if (Number.isFinite(parsed)) {
+          target.createTime = parsed
+        }
+      }
+    }
+
+    const active = activeItem.value
+    if (active && active.id === payload.id) {
+      if (typeof payload.messageCount === 'number') {
+        active.messageCount = payload.messageCount
+      }
+      if (payload.createTime !== undefined && payload.createTime !== null) {
+        const parsed = Number(payload.createTime)
+        if (Number.isFinite(parsed)) {
+          active.createTime = parsed
+        }
       }
     }
   })

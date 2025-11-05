@@ -119,7 +119,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 

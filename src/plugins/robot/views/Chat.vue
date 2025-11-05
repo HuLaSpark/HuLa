@@ -206,7 +206,7 @@
                   </n-flex>
                   <div
                     class="bubble select-text text-14px"
-                    :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai py-0!'"
+                    :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai'"
                     style="white-space: pre-wrap">
                     <template v-if="message.type === 'user'">
                       {{ message.content }}
@@ -465,7 +465,6 @@ import {
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import router from '@/router'
-import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 const settingStore = useSettingStore()
@@ -478,11 +477,12 @@ const isEdit = ref(false)
 const inputInstRef = ref<InputInst | null>(null)
 /** 原始标题 */
 const originalTitle = ref('')
-/** 当前聊天的标题和id */
+/** 当前聊天的标题、id 以及元信息 */
 const currentChat = ref({
   id: '0',
   title: '',
-  messageCount: 0
+  messageCount: 0,
+  createTime: 0
 })
 
 // 计算是否是暗色主题，处理空值和未初始化的情况
@@ -518,7 +518,7 @@ interface Message {
   type: 'user' | 'assistant'
   content: string
   streaming?: boolean
-  timestamp?: number
+  createTime?: number
   id?: string // 消息ID，用于删除
   replyId?: string | null // 回复的消息ID
   model?: string // 使用的模型
@@ -589,6 +589,29 @@ useResizeObserver(messageContentRef, () => {
   }
 })
 
+/** 通知会话元信息变化 */
+const notifyConversationMetaChange = (payload: { messageCount?: number; createTime: number }) => {
+  if (!currentChat.value.id || currentChat.value.id === '0') {
+    return
+  }
+
+  if (payload.messageCount !== undefined) {
+    currentChat.value.messageCount = payload.messageCount
+  }
+
+  const resolvedCreateTime =
+    typeof payload.createTime === 'number' && Number.isFinite(payload.createTime)
+      ? payload.createTime
+      : currentChat.value.createTime || Date.now()
+  currentChat.value.createTime = resolvedCreateTime
+
+  useMitt.emit('update-chat-meta', {
+    id: currentChat.value.id,
+    messageCount: currentChat.value.messageCount,
+    createTime: resolvedCreateTime
+  })
+}
+
 // 模型选择相关状态
 const showModelPopover = ref(false)
 const modelLoading = ref(false)
@@ -650,7 +673,7 @@ const sendAIMessage = async (content: string, model: any) => {
     messageList.value.push({
       type: 'user',
       content: content,
-      timestamp: Date.now()
+      createTime: Date.now()
     })
 
     // 添加AI消息占位符（用于流式更新）
@@ -658,12 +681,21 @@ const sendAIMessage = async (content: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       content: '',
-      timestamp: Date.now()
+      createTime: Date.now()
     })
 
     // 滚动到底部、用于累积AI回复内容
     scrollToBottom()
     let accumulatedContent = ''
+
+    if (!currentChat.value.messageCount) {
+      currentChat.value.messageCount = 0
+    }
+    currentChat.value.messageCount += 2 // 用户消息 + AI消息
+    notifyConversationMetaChange({
+      messageCount: currentChat.value.messageCount,
+      createTime: Date.now()
+    })
 
     await messageSendStream(
       {
@@ -689,6 +721,11 @@ const sendAIMessage = async (content: string, model: any) => {
         },
         onDone: () => {
           scrollToBottom()
+          const latestEntry = messageList.value[messageList.value.length - 1]
+          const latestTimestamp = latestEntry?.createTime ?? currentChat.value.createTime ?? Date.now()
+          notifyConversationMetaChange({
+            createTime: latestTimestamp
+          })
         },
         onError: (error: string) => {
           console.error('❌ AI流式响应错误:', error)
@@ -703,7 +740,6 @@ const sendAIMessage = async (content: string, model: any) => {
     }
 
     // 更新消息计数
-    currentChat.value.messageCount += 2 // 用户消息 + AI消息
   } catch (error) {
     console.error('❌ AI消息发送失败:', error)
     window.$message.error('发送失败，请检查网络连接')
@@ -795,7 +831,7 @@ const handleModelClick = () => {
 
 // 选择模型
 const selectModel = async (model: any) => {
-  selectedModel.value = model
+  selectedModel.value = model ? { ...model } : null
   showModelPopover.value = false
 
   // 如果当前有会话，则调用后端API更新会话的模型
@@ -851,7 +887,7 @@ const loadRoleList = async () => {
 
 // 选择角色
 const handleSelectRole = async (role: any) => {
-  selectedRole.value = role
+  selectedRole.value = role ? { ...role } : null
   showRolePopover.value = false
 
   try {
@@ -861,8 +897,6 @@ const handleSelectRole = async (role: any) => {
         id: currentChat.value.id,
         roleId: String(role.id)
       })
-      // 更新当前会话的标题为角色名称
-      currentChat.value.title = role.name
     } else {
       // 如果没有会话，只选择角色，不创建会话
       window.$message.success(`已选择角色: ${role.name}`)
@@ -934,7 +968,7 @@ const loadMessages = async (conversationId: string) => {
         messageList.value.push({
           type: msg.type,
           content: msg.content || '',
-          timestamp: msg.createTime,
+          createTime: msg.createTime ?? Date.now(),
           id: msg.id,
           replyId: msg.replyId,
           model: msg.model
@@ -969,18 +1003,16 @@ const handleCreateNewChat = async () => {
       window.$message.success('会话创建成功')
 
       // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
+      const rawCreateTime = Number(data.createTime)
       const newChat = {
         id: data.id || data,
         title: data.title || selectedRole.value?.name || '新的会话',
-        createTime: data.createTime || new Date().toISOString(),
+        createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
         messageCount: data.messageCount || 0,
         isPinned: data.pinned || false
       }
 
       useMitt.emit('add-conversation', newChat)
-
-      // 立即切换到新会话
-      useMitt.emit('chat-active', newChat)
 
       // 跳转到聊天页面
       router.push('/chat')
@@ -1006,9 +1038,13 @@ const handleDeleteMessage = async (messageId: string, index: number) => {
     window.$message.success('消息已删除')
 
     // 更新会话的消息数量
-    if (currentChat.value.messageCount && currentChat.value.messageCount > 0) {
-      currentChat.value.messageCount--
-    }
+    currentChat.value.messageCount = Math.max((currentChat.value.messageCount || 0) - 1, 0)
+    const latestEntry = messageList.value[messageList.value.length - 1]
+    const latestTimestamp = latestEntry?.createTime ?? currentChat.value.createTime ?? Date.now()
+    notifyConversationMetaChange({
+      messageCount: currentChat.value.messageCount,
+      createTime: latestTimestamp
+    })
   } catch (error) {
     console.error('❌ 删除消息失败:', error)
     window.$message.error('删除消息失败')
@@ -1044,7 +1080,8 @@ const handleDeleteChat = async () => {
     currentChat.value = {
       id: '0',
       title: '',
-      messageCount: 0
+      messageCount: 0,
+      createTime: 0
     }
     messageList.value = []
 
@@ -1060,11 +1097,12 @@ const handleDeleteChat = async () => {
 
 // 提前监听会话切换事件
 useMitt.on('chat-active', async (e) => {
-  const { title, id, messageCount, roleId, modelId } = e
+  const { title, id, messageCount, roleId, modelId, createTime } = e
 
   currentChat.value.title = title || `新的聊天${currentChat.value.id}`
   currentChat.value.id = id
-  currentChat.value.messageCount = messageCount
+  currentChat.value.messageCount = messageCount ?? 0
+  currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
 
   if (modelList.value.length === 0) {
     await fetchModelList()
@@ -1114,10 +1152,11 @@ onMounted(async () => {
   })
 
   useMitt.on('left-chat-title', (e) => {
-    const { title, id } = e
+    const { title, id, messageCount, createTime } = e
     if (id === currentChat.value.id) {
-      currentChat.value.title = title
-      currentChat.value.messageCount = e.messageCount
+      currentChat.value.title = title ?? ''
+      currentChat.value.messageCount = messageCount ?? 0
+      currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
     }
   })
 })
@@ -1260,6 +1299,16 @@ onMounted(async () => {
   width: fit-content;
   max-width: 80%;
   line-height: 2;
+
+  :deep(h1),
+  :deep(h2),
+  :deep(h3),
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    font-size: 18px;
+    line-height: 1.6;
+  }
 }
 
 /* 模型选择器样式 */
