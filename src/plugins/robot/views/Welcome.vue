@@ -96,7 +96,9 @@ const handleCreateNewChat = async () => {
         title: data.title || '新的会话',
         createTime: data.createTime || new Date().toISOString(),
         messageCount: data.messageCount || 0,
-        isPinned: data.pinned || false
+        isPinned: data.pinned || false,
+        roleId: firstAvailableRole.value.id,
+        modelId: data.modelId
       }
 
       useMitt.emit('add-conversation', newChat)
