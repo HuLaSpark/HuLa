@@ -372,6 +372,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 | 2025-04-01 | **墨** | `¥88.88` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-8 | **邓伟** | `¥88` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-7 | **dennis** | `¥80` | ![Gitee赞赏](https://img.shields.io/badge/Gitee赞赏-C71D23?style=flat&logo=gitee&logoColor=white) |
+| 2025-11-5 | **欢迎仪式** | `¥66` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-6 | **小二** | `¥62` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-15 | **孤鸿影** | `¥56` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 
