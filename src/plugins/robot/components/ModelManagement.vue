@@ -49,16 +49,16 @@
               </div>
             </n-flex>
             <n-flex :size="8">
-              <!-- 只有私有模型才显示编辑按钮 -->
-              <n-button v-if="!model.publicStatus" size="small" @click="handleEdit(model)">
+              <!-- 只有创建人才显示编辑按钮（公开和私有模型都可以编辑） -->
+              <n-button v-if="isModelCreator(model)" size="small" @click="handleEdit(model)">
                 <template #icon>
                   <Icon icon="mdi:pencil" />
                 </template>
                 编辑
               </n-button>
-              <!-- 只有私有模型才显示删除按钮 -->
+              <!-- 只有创建人才显示删除按钮（公开和私有模型都可以删除） -->
               <n-popconfirm
-                v-if="!model.publicStatus"
+                v-if="isModelCreator(model)"
                 @positive-click="handleDelete(model.id)"
                 positive-text="删除"
                 negative-text="取消">
@@ -220,6 +220,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import type { FormRules, FormInst } from 'naive-ui'
+import { useUserStore } from '@/stores/user'
 import { modelPage, modelUpdate, modelDelete, apiKeySimpleList } from '@/utils/ImRequestUtils'
 import ApiKeyManagement from './ApiKeyManagement.vue'
 
@@ -227,6 +228,13 @@ const showModal = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
   refresh: []
 }>()
+
+const userStore = useUserStore()
+
+// 检查当前用户是否是模型创建人
+const isModelCreator = (model: any) => {
+  return userStore.userInfo?.uid === model.userId
+}
 
 // 模型列表
 const loading = ref(false)

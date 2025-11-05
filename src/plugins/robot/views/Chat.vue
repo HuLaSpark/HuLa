@@ -1463,4 +1463,8 @@ onMounted(async () => {
     }
   }
 }
+
+:deep(.paragraph-node) {
+  margin: 0.5rem 0;
+}
 </style>
