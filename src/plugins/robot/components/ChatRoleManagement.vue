@@ -50,16 +50,16 @@
                 </div>
               </n-flex>
               <n-flex :size="8">
-                <!-- 只有私有角色才显示编辑按钮 -->
-                <n-button v-if="!role.publicStatus" size="small" @click="handleEdit(role)">
+                <!-- 只有创建人才显示编辑按钮 -->
+                <n-button v-if="isRoleCreator(role)" size="small" @click="handleEdit(role)">
                   <template #icon>
                     <Icon icon="mdi:pencil" />
                   </template>
                   编辑
                 </n-button>
-                <!-- 只有私有角色才显示删除按钮 -->
+                <!-- 只有创建人才显示删除按钮 -->
                 <n-popconfirm
-                  v-if="!role.publicStatus"
+                  v-if="isRoleCreator(role)"
                   @positive-click="handleDelete(role.id)"
                   positive-text="删除"
                   negative-text="取消">
@@ -218,6 +218,7 @@ import type { FormRules, FormInst } from 'naive-ui'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useMitt } from '@/hooks/useMitt'
+import { useUserStore } from '@/stores/user'
 import {
   chatRolePage,
   chatRoleCreate,
@@ -231,6 +232,13 @@ const showModal = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
   refresh: []
 }>()
+
+const userStore = useUserStore()
+
+// 检查当前用户是否是角色创建人
+const isRoleCreator = (role: any) => {
+  return userStore.userInfo?.uid === role.userId
+}
 
 // 角色列表
 const loading = ref(false)
@@ -453,8 +461,6 @@ const handleSubmit = async () => {
     if (formData.value.modelId) {
       submitData.modelId = formData.value.modelId
     }
-
-    console.log('submitData', submitData)
 
     if (editingRole.value) {
       // 更新
