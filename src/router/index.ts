@@ -588,6 +588,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     path: '/modal-privacyAgreement',
     name: 'modal-privacyAgreement',
     component: () => import('@/views/agreementWindow/Privacy.vue')
+  },
+  {
+    path: '/modal-remoteLogin',
+    name: 'modal-remoteLogin',
+    component: () => import('@/views/loginWindow/RemoteLoginModal.vue')
   }
 ]
 

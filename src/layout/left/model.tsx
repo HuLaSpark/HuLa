@@ -1,4 +1,3 @@
-import { emit } from '@tauri-apps/api/event'
 import {
   type FormInst,
   NAvatar,
@@ -15,6 +14,8 @@ import {
   NTimeline,
   NTimelineItem
 } from 'naive-ui'
+import type { PropType } from 'vue'
+import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import { handRelativeTime } from '@/utils/Day.ts'
 import './style.scss'
@@ -22,33 +23,17 @@ import { getVersion } from '@tauri-apps/api/app'
 import { confirm } from '@tauri-apps/plugin-dialog'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { useLogin } from '@/hooks/useLogin'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac } from '@/utils/PlatformConstants'
+import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
 
-const { logout: sysLogout, resetLoginState } = useLogin()
 const formRef = ref<FormInst | null>()
 const formValue = ref({
   lockPassword: ''
 })
 export const modalShow = ref(false)
-export const remotelogin = ref({
-  loading: false,
-  async logout() {
-    remotelogin.value.loading = true
-    const settingStore = useSettingStore()
-    const { login } = storeToRefs(settingStore)
-    // token已在后端清空，只需要返回登录页
-    await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
-    await resetLoginState()
-    await sysLogout()
-    modalShow.value = false
-    remotelogin.value.loading = false
-  }
-})
 export const lock = ref({
   loading: false,
   rules: {
@@ -432,26 +417,41 @@ export const RemoteLogin = defineComponent({
     ip: {
       type: String,
       default: '未知IP'
+    },
+    onConfirm: {
+      type: Function as PropType<() => void | Promise<void>>,
+      default: void 0
     }
   },
   setup(props) {
     const userStore = useUserStore()
+    const handleConfirm = async () => {
+      modalShow.value = false
+      if (props.onConfirm) {
+        // 关闭对应子窗口
+        await props.onConfirm()
+      }
+    }
+    setInterval(() => {
+      localStorage.removeItem(REMOTE_LOGIN_INFO_KEY)
+    }, 300)
+
     return () => (
       <NModal
         v-model:show={modalShow.value}
         maskClosable={false}
-        class="w-350px border-rd-8px select-none cursor-default">
-        <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+        class="w-350px h-310px border-rd-8px select-none cursor-default">
+        <div class="bg-[--bg-popover] size-full p-6px box-border flex flex-col">
           {isMac() ? (
             <div
-              onClick={remotelogin.value.logout}
+              onClick={handleConfirm}
               class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
               <svg class="hidden size-7px color-#000  select-none absolute top-3px left-3px">
                 <use href="#close"></use>
               </svg>
             </div>
           ) : (
-            <svg onClick={remotelogin.value.logout} class="w-12px h-12px ml-a cursor-pointer select-none">
+            <svg onClick={handleConfirm} class="w-12px h-12px ml-a cursor-pointer select-none text-[--text-color]">
               <use href="#close"></use>
             </svg>
           )}
@@ -460,7 +460,7 @@ export const RemoteLogin = defineComponent({
               <span class="text-(14px [--text-color])">下线通知</span>
 
               <div class="relative">
-                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)} />
+                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ?? '')} />
                 <div class="absolute inset-0 bg-[--avatar-hover-bg] backdrop-blur-[2px] rounded-full flex items-center justify-center">
                   <svg class="size-34px text-white animate-pulse">
                     <use href="#cloudError"></use>
@@ -473,14 +473,8 @@ export const RemoteLogin = defineComponent({
                 登录，如非本人登录，请尽快修改密码，建议联系管理员
               </div>
             </NFlex>
-            <NButton
-              disabled={remotelogin.value.loading}
-              loading={remotelogin.value.loading}
-              onClick={remotelogin.value.logout}
-              style={{ color: '#fff' }}
-              class="w-full"
-              color="#13987f">
-              重新登录
+            <NButton onClick={handleConfirm} style={{ color: '#fff' }} class="w-full" color="#13987f">
+              知道了
             </NButton>
           </div>
         </div>

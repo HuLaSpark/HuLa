@@ -82,6 +82,8 @@ export enum MittEnum {
   OPEN_GROUP_NICKNAME_MODAL = 'openGroupNicknameModal',
   /** 左边菜单弹窗 */
   LEFT_MODAL_SHOW = 'leftModalShow',
+  /** 登录窗口异地登录弹窗 */
+  LOGIN_REMOTE_MODAL = 'loginRemoteModal',
   /** 触发home窗口事件 */
   HOME_WINDOW_RESIZE = 'homeWindowResize',
   /** @ AT */

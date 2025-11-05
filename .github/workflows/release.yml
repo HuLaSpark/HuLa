@@ -38,6 +38,8 @@ jobs:
         run: pnpm install
 
       - name: Generate frontend build (typings & assets)
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm vite build --emptyOutDir
 
       - name: Upload generated component typings
@@ -109,6 +111,8 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm install
 
       # 安装 Rust
@@ -131,6 +135,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # 使用之前配置的私钥密码
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # 增加 Node.js 内存限制，避免构建时内存溢出
+          NODE_OPTIONS: --max-old-space-size=4096
         with:
           tagName: v__VERSION__ #这个动作会自动将\_\_VERSION\_\_替换为app version
           releaseName: 'v__VERSION__'

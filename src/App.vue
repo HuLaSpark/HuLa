@@ -21,7 +21,6 @@ import {
   ThemeEnum,
   ChangeTypeEnum,
   MittEnum,
-  ModalEnum,
   OnlineEnum,
   RoomTypeEnum
 } from '@/enums'
@@ -34,7 +33,6 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
-
 import {
   type LoginSuccessResType,
   type OnStatusChangeType,
@@ -49,6 +47,8 @@ import { useAnnouncementStore } from '@/stores/announcement'
 import { useFeedStore } from '@/stores/feed'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
+import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
 
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
@@ -69,7 +69,7 @@ const router = useRouter()
 // 只在桌面端初始化窗口管理功能
 const { createWebviewWindow } = isDesktop() ? useWindow() : { createWebviewWindow: () => {} }
 const settingStore = useSettingStore()
-const { themes, lockScreen, page } = storeToRefs(settingStore)
+const { themes, lockScreen, page, login } = storeToRefs(settingStore)
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 
@@ -276,11 +276,9 @@ useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string
 
 useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExpire) => {
   if (Number(userUid.value) === Number(wsTokenExpire.uid) && userStore.userInfo!.client === wsTokenExpire.client) {
+    const { useLogin } = await import('@/hooks/useLogin')
+    const { resetLoginState, logout } = useLogin()
     if (isMobile()) {
-      // 移动端处理：立即清空登录数据并跳转到登录页，然后显示弹窗
-      const { useLogin } = await import('@/hooks/useLogin')
-      const { resetLoginState, logout } = useLogin()
-
       try {
         // 1. 先重置登录状态（不请求接口，只清理本地）
         await resetLoginState()
@@ -314,13 +312,18 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
       // 桌面端处理：聚焦主窗口并显示远程登录弹窗
       const home = await WebviewWindow.getByLabel('home')
       await home?.setFocus()
-
-      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
-        type: ModalEnum.REMOTE_LOGIN,
-        props: {
-          ip: wsTokenExpire.ip
-        }
-      })
+      const remoteIp = wsTokenExpire.ip || '未知IP'
+      localStorage.setItem(
+        REMOTE_LOGIN_INFO_KEY,
+        JSON.stringify({
+          ip: remoteIp,
+          timestamp: Date.now()
+        })
+      )
+      await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
+      await resetLoginState()
+      await logout()
+      useMitt.emit(MittEnum.LOGIN_REMOTE_MODAL)
     }
   }
 })

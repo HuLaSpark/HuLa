@@ -187,7 +187,11 @@ export const useWindow = () => {
     width: number,
     height: number,
     parent: string,
-    payload?: Record<string, any>
+    payload?: Record<string, any>,
+    options?: {
+      minWidth?: number
+      minHeight?: number
+    }
   ) => {
     // 移动端不支持窗口管理
     if (!isDesktop()) {
@@ -211,8 +215,8 @@ export const useWindow = () => {
       height: height,
       resizable: false,
       center: true,
-      minWidth: 500,
-      minHeight: 500,
+      minWidth: options?.minWidth ?? 500,
+      minHeight: options?.minHeight ?? 500,
       focus: true,
       minimizable: false,
       parent: parentWindow ? parentWindow : parent,

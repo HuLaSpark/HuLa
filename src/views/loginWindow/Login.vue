@@ -192,8 +192,10 @@ import { useGuideStore } from '@/stores/guide'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { MittEnum } from '@/enums'
+import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { isCompatibility, isMac } from '@/utils/PlatformConstants'
+import { isCompatibility, isDesktop, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useLogin } from '@/hooks/useLogin'
 
@@ -311,6 +313,44 @@ watch(
   }
 )
 
+const openRemoteLoginModal = async (ip?: string) => {
+  if (!isDesktop()) {
+    return
+  }
+  const payloadIp = ip ?? '未知IP'
+  await createModalWindow(
+    '异地登录提醒',
+    'modal-remoteLogin',
+    350,
+    310,
+    'login',
+    {
+      ip: payloadIp
+    },
+    {
+      minWidth: 350,
+      minHeight: 310
+    }
+  )
+}
+
+const handleCachedRemoteLoginModal = () => {
+  const cached = localStorage.getItem(REMOTE_LOGIN_INFO_KEY)
+  if (!cached) {
+    return
+  }
+  try {
+    const parsed = JSON.parse(cached) as { ip?: string }
+    openRemoteLoginModal(parsed?.ip)
+  } catch (error) {
+    localStorage.removeItem(REMOTE_LOGIN_INFO_KEY)
+  }
+}
+
+useMitt.on(MittEnum.LOGIN_REMOTE_MODAL, (payload: { ip?: string }) => {
+  openRemoteLoginModal(payload?.ip)
+})
+
 /** 删除账号列表内容 */
 const delAccount = (item: UserInfoType) => {
   // 获取删除前账户列表的长度
@@ -373,6 +413,7 @@ const enterKey = (e: KeyboardEvent) => {
 }
 
 onBeforeMount(async () => {
+  handleCachedRemoteLoginModal()
   // 始终初始化托盘菜单状态为false
   isTrayMenuShow.value = false
 

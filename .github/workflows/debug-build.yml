@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ inputs.platform }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Ubuntu dependencies
         if: inputs.platform == 'ubuntu-22.04'
         run: |
@@ -32,7 +32,7 @@ jobs:
             pkg-config \
             libgtk-3-dev \
             libayatana-appindicator3-dev
-          
+
           # 验证安装的包
           dpkg -l | grep -E 'webkit|appindicator|rsvg|udev|asound|gtk'
 
@@ -55,9 +55,13 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm install
 
       - name: Generate component typings
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm vite build --emptyOutDir
 
       - name: Build Vite + Tauri
@@ -81,5 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # 增加 Node.js 内存限制，避免构建时内存溢出
+          NODE_OPTIONS: --max-old-space-size=4096
         with:
           releaseId: "debug-build"

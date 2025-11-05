@@ -1,6 +1,6 @@
 [package]
 name = "hula"
-version = "3.0.2"
+version = "3.0.3"
 description = "hula"
 authors = ["nongyehong"]
 license = ""
@@ -36,7 +36,7 @@ cc = "1.0"
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.9.1", features = [
+tauri = { version = "2.9.2", features = [
     "protocol-asset",
     "macos-private-api",
     "tray-icon",

@@ -7,6 +7,9 @@
     "tauri-apps.tauri-vscode",
     "1yib.rust-bundle",
     "ms-vscode.vscode-typescript-next",
-    "biomejs.biome"
+    "biomejs.biome",
+    "github.vscode-github-actions",
+    "fill-labs.dependi",
+    "usernamehw.errorlens"
   ]
 }
