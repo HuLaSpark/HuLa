@@ -208,7 +208,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'

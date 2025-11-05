@@ -285,7 +285,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'

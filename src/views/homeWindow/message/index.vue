@@ -184,8 +184,8 @@ const sessionList = computed(() => {
       .map((item) => {
         // 获取最新的头像
         let latestAvatar = item.avatar
-        if (item.type === RoomTypeEnum.SINGLE && item.id) {
-          latestAvatar = groupStore.getUserInfo(item.id)?.avatar || item.avatar
+        if (item.type === RoomTypeEnum.SINGLE && item.detailId) {
+          latestAvatar = groupStore.getUserInfo(item.detailId)?.avatar || item.avatar
         }
 
         // 获取群聊备注名称（如果有）
