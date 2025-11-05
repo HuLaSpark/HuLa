@@ -70,36 +70,9 @@ export const useGlobalStore = defineStore(
     /** 系统托盘菜单显示的状态 */
     const isTrayMenuShow = ref<boolean>(false)
 
-    // home窗口位置、宽高信息
-    const homeWindowState = ref<{ width?: number; height?: number }>({
-      width: 960,
-      height: 720
-    })
-
     // 设置提示框显示状态
     const setTipVisible = (visible: boolean) => {
       tipVisible.value = visible
-    }
-
-    // 设置home窗口位置、宽高信息
-    const setHomeWindowState = (newState: { width: number; height: number }) => {
-      // 验证窗口大小，如果小于最小限制，则使用默认值
-      const MIN_WIDTH = 330
-      const MIN_HEIGHT = 480
-      const DEFAULT_WIDTH = 960
-      const DEFAULT_HEIGHT = 720
-
-      if (newState.width < MIN_WIDTH || newState.height < MIN_HEIGHT) {
-        info(
-          `[global] 窗口大小异常 (${newState.width}x${newState.height})，强制设置为默认值 (${DEFAULT_WIDTH}x${DEFAULT_HEIGHT})`
-        )
-        homeWindowState.value = {
-          width: DEFAULT_WIDTH,
-          height: DEFAULT_HEIGHT
-        }
-      } else {
-        homeWindowState.value = { ...homeWindowState.value, ...newState }
-      }
     }
 
     // 更新全局未读消息计数
@@ -162,10 +135,8 @@ export const useGlobalStore = defineStore(
       createGroupModalInfo,
       tipVisible,
       isTrayMenuShow,
-      homeWindowState,
       setTipVisible,
       updateGlobalUnreadCount,
-      setHomeWindowState,
       updateCurrentSessionRoomId,
       currentSessionRoomId
     }

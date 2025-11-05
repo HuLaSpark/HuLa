@@ -25,10 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import { LogicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin'
@@ -348,30 +346,6 @@ onMounted(async () => {
           console.warn('[layout] 向其他窗口广播失焦事件失败:', error)
         }
       })
-    }
-
-    // 恢复大小（验证尺寸有效性）
-    if (globalStore.homeWindowState.width && globalStore.homeWindowState.height) {
-      const MIN_WIDTH = 330
-      const MIN_HEIGHT = 480
-      const DEFAULT_WIDTH = 960
-      const DEFAULT_HEIGHT = 720
-
-      let targetWidth = globalStore.homeWindowState.width
-      let targetHeight = globalStore.homeWindowState.height
-
-      // 如果窗口大小异常，使用默认值
-      if (targetWidth < MIN_WIDTH || targetHeight < MIN_HEIGHT) {
-        info(
-          `[layout] 检测到窗口大小异常 (${targetWidth}x${targetHeight})，使用默认值 (${DEFAULT_WIDTH}x${DEFAULT_HEIGHT})`
-        )
-        targetWidth = DEFAULT_WIDTH
-        targetHeight = DEFAULT_HEIGHT
-        // 同步更新到 store
-        globalStore.setHomeWindowState({ width: targetWidth, height: targetHeight })
-      }
-
-      await homeWindow.setSize(new LogicalSize(targetWidth, targetHeight))
     }
     // 居中
     await homeWindow.center()

@@ -160,7 +160,7 @@ const maxWidth = 300
 /** 初始化宽度 */
 const initWidth = ref(250)
 /**! 使用(vueUse函数获取)视口宽度 */
-const { width, height } = useWindowSize()
+const { width } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
 /** 搜索框文字 */
@@ -288,7 +288,6 @@ watchEffect(() => {
     center?.classList.remove('flex-1')
     isDrag.value = canDrag
   }
-  globalStore.setHomeWindowState({ width: width.value, height: height.value })
 })
 
 // 监听选中值的变化，确保必选项不会被清除
