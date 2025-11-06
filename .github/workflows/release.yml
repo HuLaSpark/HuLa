@@ -42,6 +42,13 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm vite build --emptyOutDir
 
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          if-no-files-found: error
+          path: dist
+
       - name: Upload generated component typings
         uses: actions/upload-artifact@v4
         with:
@@ -72,10 +79,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine build mode
+        id: build_mode
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF##*/}"
+          MODE="full"
+          if [[ "$TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            PATCH="${BASH_REMATCH[3]}"
+            if (( PATCH > 0 )); then
+              MODE="incremental"
+            fi
+          fi
+          echo "Detected tag: $TAG"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          if [[ "$MODE" == "incremental" ]]; then
+            echo "INCREMENTAL_BUILD=true" >> "$GITHUB_ENV"
+          else
+            echo "INCREMENTAL_BUILD=false" >> "$GITHUB_ENV"
+          fi
+          echo "Build mode: $MODE"
+
       - name: Download component typings
         uses: actions/download-artifact@v4
         with:
           name: components-typings
+          path: .
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
           path: .
 
       - name: install dependencies (ubuntu only)
@@ -115,6 +149,17 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm install
 
+      - name: Disable frontend rebuild for release build
+        shell: bash
+        run: |
+          cat <<'EOF' > release-tauri-config.json
+          {
+            "build": {
+              "beforeBuildCommand": ""
+            }
+          }
+          EOF
+
       # 安装 Rust
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
@@ -122,10 +167,16 @@ jobs:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
+      - name: Cache cargo target
+        uses: actions/cache@v4
         with:
-          workspaces: './src-tauri -> target'
+          path: |
+            ${{ runner.os == 'Windows' && env.USERPROFILE || env.HOME }}/.cargo/registry
+            ${{ runner.os == 'Windows' && env.USERPROFILE || env.HOME }}/.cargo/git
+            src-tauri/target
+          key: cargo-target-${{ matrix.platform }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            cargo-target-${{ matrix.platform }}-
 
       - name: Create release
         uses: tauri-apps/tauri-action@v0
@@ -143,4 +194,4 @@ jobs:
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: true
           prerelease: false
-          args: ${{ matrix.args }}
+          args: ${{ matrix.args }} --config release-tauri-config.json
