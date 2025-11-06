@@ -1,5 +1,76 @@
 
 
+## [3.0.3](https://github.com/HuLaSpark/HuLa/compare/v3.0.2...v3.0.3) (2025-11-06)
+
+
+### ✨ Features | 新功能
+
+* **common:** :sparkles: comments and likes in the WeChat Moments ([0d84851](https://github.com/HuLaSpark/HuLa/commit/0d84851414e7341dcdcd0fefd6887964909e1918))
+* **mobile:** :sparkles: added "Dynamic List" feature for mobile ([5a7068a](https://github.com/HuLaSpark/HuLa/commit/5a7068a3a557c101457c7bb0a638d13bc5270e02))
+* **mobile:** :sparkles: added "Post Dynamic" feature for desktop ([083d81d](https://github.com/HuLaSpark/HuLa/commit/083d81d0e43b12373318fa348356b7b0fce4ac48))
+* **mobile:** :sparkles: added "Post Dynamic" feature for mobile ([a588729](https://github.com/HuLaSpark/HuLa/commit/a5887299b2d0980ad45ca8d8955affa1e3fb954d))
+* **mobile:** :sparkles: added batch member removal, disabled for official groups ([f13c70b](https://github.com/HuLaSpark/HuLa/commit/f13c70b924e759842af5add7712d6280822e440d))
+* **mobile:** :sparkles: added forced re-login on token expiration ([ac0e55b](https://github.com/HuLaSpark/HuLa/commit/ac0e55bee95d17b9b5b62a87f06c93576e50bc44))
+* **mobile:** :sparkles: added photo album feature on mobile; added blank AI assistant page ([38eb9e5](https://github.com/HuLaSpark/HuLa/commit/38eb9e5d23d1cf9e45d7c8d872861ef07258fb86))
+* **mobile:** :sparkles: added the feature to invite friends to join the group ([e3df3e2](https://github.com/HuLaSpark/HuLa/commit/e3df3e2f302cbd0daad8e99f7ef9304c1010850c))
+* **mobile:** :sparkles: added the group member management page ([236c085](https://github.com/HuLaSpark/HuLa/commit/236c08599061548136d3a10ebf9b5f95b9740a48))
+* **mobile:** :sparkles: new "Add Announcement" feature added to the mobile app ([c7cce79](https://github.com/HuLaSpark/HuLa/commit/c7cce79d6b2044b46d4beb6ea3217af91f8fed99))
+* **mobile:** :sparkles: optimize dynamic page display performance on PC ([15defcb](https://github.com/HuLaSpark/HuLa/commit/15defcb5a5643ad4559956380d99f6e95f4d2b30))
+* **mobile:** :sparkles: optimize the layout and functionality of dynamic pages ([7a18971](https://github.com/HuLaSpark/HuLa/commit/7a18971c48bc744be90d1a4ee78c31c9ee8536d9))
+* **view:** :sparkles: abutment ai apiKey、model、role ([392c159](https://github.com/HuLaSpark/HuLa/commit/392c15900c5763ea069138e6585442e1df75929b))
+* **view:** :sparkles: add a new dynamic detail page ([32c5186](https://github.com/HuLaSpark/HuLa/commit/32c5186bc10dd68e57aac7f43719d184a0953632))
+* **view:** :sparkles: added AI message reply feature, integrated with server-side SSE ([03329fe](https://github.com/HuLaSpark/HuLa/commit/03329febe240001217e51a727c309a6f617b281f))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **android:** :bug: fix error caused by Chromium 91 version not importing 4k wasm in Android ([6d0d95e](https://github.com/HuLaSpark/HuLa/commit/6d0d95e0b149ce206855396fdf8672bc60265412))
+* **announcement:** :bug: fix bulletin does not display issue ([6c52904](https://github.com/HuLaSpark/HuLa/commit/6c529047f217364cfd6bcae42f1abe42ca16ffab))
+* **badge:** :bug: fix issues caused by missing badge fields ([9deb0fc](https://github.com/HuLaSpark/HuLa/commit/9deb0fc4f96caa9aa900e3aaf5badda58a56b310))
+* **build:** :bug: fix packaging error due to parameter problem ([dbf504b](https://github.com/HuLaSpark/HuLa/commit/dbf504b591abb1fe9f7234fc23e9360ffdcd2890))
+* **chat:** :bug: fix unread count not initialized ([c7d73bf](https://github.com/HuLaSpark/HuLa/commit/c7d73bf1f4eb0d2fa956fd67dc4427f085c1485e))
+* **chatBot:** :bug: fix package startup error due to md stream rendering component ([712c1df](https://github.com/HuLaSpark/HuLa/commit/712c1df912f9288594b1949353dc6d81a352da4e))
+* **chatBot:** :bug: fix some model synchronization issues with chatBot ([8b664b1](https://github.com/HuLaSpark/HuLa/commit/8b664b16263fb74a28454ce9f231e4f14337e1d7))
+* **common:** :bug: add AI interface ([c65c3e7](https://github.com/HuLaSpark/HuLa/commit/c65c3e7840f3b979ad71b5360f14590049729f5f))
+* **common:** :bug: add group info method ([f763517](https://github.com/HuLaSpark/HuLa/commit/f7635175a3c203da18de57a1fb4d0a27aa8a4f5a))
+* **common:** :bug: adjust login parameters ([fd85394](https://github.com/HuLaSpark/HuLa/commit/fd85394e43ec0a56fe645fb2e3437ad1a5f725fa))
+* **common:** :bug: allow modification of public roles and models ([ec6a28e](https://github.com/HuLaSpark/HuLa/commit/ec6a28edc1c6499b7c17915117020712d81f91b8))
+* **common:** :bug: default values for homeWindowState ([d838709](https://github.com/HuLaSpark/HuLa/commit/d838709b9f9f80143439635bbbcbafcda92b6723))
+* **common:** :bug: fix group chats invitation approval ([687a907](https://github.com/HuLaSpark/HuLa/commit/687a907f933d097b4e1358f08bdf907f0adb5ee5))
+* **common:** :bug: fix some issues with tray reminders ([24ba1e6](https://github.com/HuLaSpark/HuLa/commit/24ba1e6618c05de3456bb64714c1fd97c7d0f2e3))
+* **common:** :bug: modify the location of the remote login window ([c01304f](https://github.com/HuLaSpark/HuLa/commit/c01304fb356bc67d1081a8c4663efe7d3473feb7))
+* **common:** :bug: optimize apikeyapikey ([5de0982](https://github.com/HuLaSpark/HuLa/commit/5de0982357e892dc3ae1bd38fa45d3caf6f76029))
+* **common:** :bug: optimize comment rendering in MomentsOptimize comment rendering in Moments ([c04adb1](https://github.com/HuLaSpark/HuLa/commit/c04adb1bae4fc7baae207ad3d20368a18a9a0504))
+* **currentSession:** :bug: modify the way roomId gets and administrator settings issues ([91436c6](https://github.com/HuLaSpark/HuLa/commit/91436c690f9e2360009ae74b13de1bcfcbe995f8))
+* **invite:** :bug: fix failure to invite people into groups ([3e64d8a](https://github.com/HuLaSpark/HuLa/commit/3e64d8ad7531ff5f1149d857f7d686bd63ad17b6))
+* **mobile:** :bug: distinguish between friends and groups when refreshing notifications ([5c9f230](https://github.com/HuLaSpark/HuLa/commit/5c9f230a4d57cdd794d13de42067814f7ccd40f5))
+* **mobile:** :bug: fix issues with the emoji sticker panel and click interactions ([e7db486](https://github.com/HuLaSpark/HuLa/commit/e7db486b3a6b92719329b43de85c28be6ec6a0a1))
+* **mobile:** :bug: fix mobile frontend login issue ([d8ebde5](https://github.com/HuLaSpark/HuLa/commit/d8ebde5b8c7a3b6db936e29a19adfb5bc04612ad))
+* **mobile:** :bug: fix mobile tab bar safe area bug during navigation ([de35722](https://github.com/HuLaSpark/HuLa/commit/de35722f18e3cccfb45c9a4330534ac2332163dd))
+* **mobile:** :bug: fix the issue where automatic login fails on mobile devices ([faa8a09](https://github.com/HuLaSpark/HuLa/commit/faa8a09b866fe604511b231263f38b553c653204))
+* **mobile:** :bug: reposted in Moments, unread notification in Moments ([08a3abc](https://github.com/HuLaSpark/HuLa/commit/08a3abc6cc8591bf7b55e5c0dca797fe221b0ba3))
+* **mobile:** :bug: reuse the "Group Chat Member Management" page ([f8c22e6](https://github.com/HuLaSpark/HuLa/commit/f8c22e6648f9e140cfcc292ac972c4d0e7d921b5))
+* **renderMessage:** :bug: fix problems with clicking @ in history window causing jump ([79016f6](https://github.com/HuLaSpark/HuLa/commit/79016f65e95d3688b021e5027d280ad3b65d72f8))
+* **session:** :bug: fix duplicate session creation issue ([2ed17d5](https://github.com/HuLaSpark/HuLa/commit/2ed17d5d72de0a0b5d3e2ce5a66546ca5950386a))
+* **view:** :bug: 修复注册窗口打开的情况下登录后注册窗口不会被自动关闭 ([eaea8f8](https://github.com/HuLaSpark/HuLa/commit/eaea8f87456fc5189a9b858e9d12ebf38dea9ef0))
+* **view:** :bug: aI interface for CRUD operations ([68826f5](https://github.com/HuLaSpark/HuLa/commit/68826f5ade35ce11cbcc865d02623f2845b8c5d8))
+* **view:** :bug: aI Module ([80466f9](https://github.com/HuLaSpark/HuLa/commit/80466f995e764a2bc6b625a4bdf04dfa8468e8a6))
+* **view:** :bug: reuse the IM client to handle AI data streams ([bb244fd](https://github.com/HuLaSpark/HuLa/commit/bb244fd1e97b4bebc55fa580e7555972f8a9f28e))
+* **view:** :bug: type cannot be selected when repairing AI-generated characters ([04030fc](https://github.com/HuLaSpark/HuLa/commit/04030fc4aee382695c2930f88bec1b70f1463f0d))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **chatBot:** :zap: optimize chatBot rendering code block issues ([7e21a12](https://github.com/HuLaSpark/HuLa/commit/7e21a123b4a77ccb772364a0d3cec2b5f4d9b1ee))
+* **common:** :zap: add performance monitoring to optimize some performance issues ([0c6c438](https://github.com/HuLaSpark/HuLa/commit/0c6c438f44d06ae6fdce8b936609feb515ac4df0))
+* **common:** :zap: optimize session handover stagnation ([6607283](https://github.com/HuLaSpark/HuLa/commit/660728333c98da9f79dfec43397222c9846bf093))
+* **common:** :zap: optimize session lists and chat stores ([1fb6c77](https://github.com/HuLaSpark/HuLa/commit/1fb6c77f34a091dc57b9934537bda72e23ba73b5))
+* **common:** :zap: optimize session presentation ([67e9f1d](https://github.com/HuLaSpark/HuLa/commit/67e9f1d8a106f1be768f4969f6a860a5cefe97e6))
+* **common:** :zap: optimizing Channel Switching Session Stagnation ([966abeb](https://github.com/HuLaSpark/HuLa/commit/966abeb2bfdd645a6587e4e9471570ba96305613))
+* **common:** :zap: replace lodash-es with es-toolkit ([6ed3052](https://github.com/HuLaSpark/HuLa/commit/6ed3052a378aa9dc651fb6c48f6c53dfc5aa62ba))
+* **notifications:** :zap: optimize unread counts for friend and group chat notifications ([c96f13e](https://github.com/HuLaSpark/HuLa/commit/c96f13e1490473672758c27f3e15d35a932172d4))
+* **style:** :zap: optimize the format display of ai output ([e449118](https://github.com/HuLaSpark/HuLa/commit/e449118268027a8244e1c4ba16e4469f5b6239df))
+
 ## [3.0.2](https://github.com/HuLaSpark/HuLa/compare/v3.0.1...v3.0.2) (2025-10-24)
 
 
