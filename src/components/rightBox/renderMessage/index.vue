@@ -11,7 +11,8 @@
     :is-group="isGroup"
     :on-image-click="onImageClick"
     :on-video-click="onVideoClick"
-    :search-keyword="searchKeyword" />
+    :search-keyword="searchKeyword"
+    :history-mode="historyMode" />
 
   <!-- 好友或者群聊的信息 -->
   <div v-else class="flex flex-col w-full" :class="{ 'justify-end': isMe }">
@@ -179,7 +180,8 @@
               :is-group="isGroup"
               :on-image-click="onImageClick"
               :on-video-click="onVideoClick"
-              :search-keyword="searchKeyword" />
+              :search-keyword="searchKeyword"
+              :history-mode="historyMode" />
 
             <!-- 显示翻译文本 -->
             <Transition name="fade-translate" appear mode="out-in">

@@ -32,11 +32,11 @@
       <div class="pt-8px flex flex-col select-none">
         <div class="flex flex-row">
           <!-- 搜索会话 -->
-          <div class="flex-1 h-64vh bg-#e3e3e360 dark:bg-#222 rounded-8px px-12px pt-12px flex flex-col">
+          <div class="flex-1 h-64vh bg-#e3e3e360 dark:bg-#222 rounded-8px px-12px mt-6px flex flex-col">
             <n-input
               id="search"
               v-model:value="searchText"
-              class="rounded-6px border-(solid 1px [--line-color]) w-full relative text-12px"
+              class="rounded-6px mt-8px border-(solid 1px [--line-color]) w-full relative text-12px"
               :maxlength="20"
               clearable
               size="small">
@@ -61,7 +61,7 @@
             </n-scrollbar>
           </div>
           <!-- 已选择会话 -->
-          <div class="flex-1 min-w-0 h-64vh px-12px flex flex-col">
+          <div class="flex-1 min-w-0 h-64vh px-12px pt-4px flex flex-col">
             <p class="text-(12px #909090) pb-10px">分别发送给</p>
             <n-scrollbar class="flex-1">
               <template v-for="session in selectedSessions" :key="session.roomId">

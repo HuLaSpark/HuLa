@@ -6,7 +6,7 @@
         placement="left"
         :show-arrow="false"
         style="padding: 0; background: var(--bg-info)"
-        v-if="mentionTokenSet.has(item)">
+        v-if="mentionTokenSet.has(item) && !props.historyMode">
         <template #trigger>
           <span
             :key="item"
@@ -17,6 +17,13 @@
         </template>
         <InfoPopover v-if="mentionTokenToUid.get(item)" :uid="mentionTokenToUid.get(item)!" />
       </n-popover>
+      <span
+        v-else-if="mentionTokenSet.has(item)"
+        :key="item"
+        style="-webkit-user-select: text !important; user-select: text !important"
+        class="text-#fbb990 cursor-text">
+        {{ item }}
+      </span>
       <template v-else-if="item.startsWith('http')">
         <n-flex align="center" :wrap="false">
           <n-tooltip trigger="hover" style="flex-shrink: 0">
@@ -90,6 +97,7 @@ type ContentMarker = {
 const props = defineProps<{
   body: TextBody
   searchKeyword?: string
+  historyMode?: boolean
 }>()
 // 获取所有匹配的字符串
 const urlMap = props.body.urlContentMap || {}
