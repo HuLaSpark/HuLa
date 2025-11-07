@@ -192,8 +192,6 @@ import { useGuideStore } from '@/stores/guide'
 import { useLoginHistoriesStore } from '@/stores/loginHistory.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import { MittEnum } from '@/enums'
-import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isCompatibility, isDesktop, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
@@ -257,7 +255,7 @@ const { login } = storeToRefs(settingStore)
 const protocol = ref(true)
 const arrowStatus = ref(false)
 const moreShow = ref(false)
-const { createWebviewWindow, createModalWindow } = useWindow()
+const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
@@ -334,22 +332,19 @@ const openRemoteLoginModal = async (ip?: string) => {
   )
 }
 
-const handleCachedRemoteLoginModal = () => {
-  const cached = localStorage.getItem(REMOTE_LOGIN_INFO_KEY)
-  if (!cached) {
+const handlePendingRemoteLoginPayload = async () => {
+  if (!isDesktop()) {
     return
   }
   try {
-    const parsed = JSON.parse(cached) as { ip?: string }
-    openRemoteLoginModal(parsed?.ip)
+    const payload = await getWindowPayload<{ remoteLogin?: { ip?: string } }>('login')
+    if (payload?.remoteLogin) {
+      openRemoteLoginModal(payload.remoteLogin.ip)
+    }
   } catch (error) {
-    localStorage.removeItem(REMOTE_LOGIN_INFO_KEY)
+    console.error('处理异地登录载荷失败:', error)
   }
 }
-
-useMitt.on(MittEnum.LOGIN_REMOTE_MODAL, (payload: { ip?: string }) => {
-  openRemoteLoginModal(payload?.ip)
-})
 
 /** 删除账号列表内容 */
 const delAccount = (item: UserInfoType) => {
@@ -413,7 +408,7 @@ const enterKey = (e: KeyboardEvent) => {
 }
 
 onBeforeMount(async () => {
-  handleCachedRemoteLoginModal()
+  await handlePendingRemoteLoginPayload()
   // 始终初始化托盘菜单状态为false
   isTrayMenuShow.value = false
 

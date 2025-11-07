@@ -48,8 +48,6 @@ import { useFeedStore } from '@/stores/feed'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
-import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
-
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
   : null
@@ -63,7 +61,7 @@ const userUid = computed(() => userStore.userInfo!.uid)
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const appWindow = WebviewWindow.getCurrent()
-const { createRtcCallWindow } = useWindow()
+const { createRtcCallWindow, sendWindowPayload } = useWindow()
 const globalStore = useGlobalStore()
 const router = useRouter()
 // 只在桌面端初始化窗口管理功能
@@ -313,17 +311,15 @@ useMitt.on(WsResponseMessageType.TOKEN_EXPIRED, async (wsTokenExpire: WsTokenExp
       const home = await WebviewWindow.getByLabel('home')
       await home?.setFocus()
       const remoteIp = wsTokenExpire.ip || '未知IP'
-      localStorage.setItem(
-        REMOTE_LOGIN_INFO_KEY,
-        JSON.stringify({
+      await sendWindowPayload('login', {
+        remoteLogin: {
           ip: remoteIp,
           timestamp: Date.now()
-        })
-      )
+        }
+      })
       await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
       await resetLoginState()
       await logout()
-      useMitt.emit(MittEnum.LOGIN_REMOTE_MODAL)
     }
   }
 })
