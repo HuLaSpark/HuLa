@@ -14,7 +14,6 @@ import {
   NTimeline,
   NTimelineItem
 } from 'naive-ui'
-import type { PropType } from 'vue'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
 import { handRelativeTime } from '@/utils/Day.ts'
@@ -27,7 +26,6 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac } from '@/utils/PlatformConstants'
-import { REMOTE_LOGIN_INFO_KEY } from '@/common/constants'
 
 const formRef = ref<FormInst | null>()
 const formValue = ref({
@@ -407,78 +405,4 @@ export const CheckUpdate = defineComponent(() => {
       </div>
     </NModal>
   )
-})
-
-/**
- * 异地登录弹窗
- */
-export const RemoteLogin = defineComponent({
-  props: {
-    ip: {
-      type: String,
-      default: '未知IP'
-    },
-    onConfirm: {
-      type: Function as PropType<() => void | Promise<void>>,
-      default: void 0
-    }
-  },
-  setup(props) {
-    const userStore = useUserStore()
-    const handleConfirm = async () => {
-      modalShow.value = false
-      if (props.onConfirm) {
-        // 关闭对应子窗口
-        await props.onConfirm()
-      }
-    }
-    setInterval(() => {
-      localStorage.removeItem(REMOTE_LOGIN_INFO_KEY)
-    }, 300)
-
-    return () => (
-      <NModal
-        v-model:show={modalShow.value}
-        maskClosable={false}
-        class="w-350px h-310px border-rd-8px select-none cursor-default">
-        <div class="bg-[--bg-popover] size-full p-6px box-border flex flex-col">
-          {isMac() ? (
-            <div
-              onClick={handleConfirm}
-              class="mac-close relative size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none">
-              <svg class="hidden size-7px color-#000  select-none absolute top-3px left-3px">
-                <use href="#close"></use>
-              </svg>
-            </div>
-          ) : (
-            <svg onClick={handleConfirm} class="w-12px h-12px ml-a cursor-pointer select-none text-[--text-color]">
-              <use href="#close"></use>
-            </svg>
-          )}
-          <div class="flex flex-col gap-10px p-10px select-none">
-            <NFlex vertical align="center" size={30}>
-              <span class="text-(14px [--text-color])">下线通知</span>
-
-              <div class="relative">
-                <img class="rounded-full size-72px" src={AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ?? '')} />
-                <div class="absolute inset-0 bg-[--avatar-hover-bg] backdrop-blur-[2px] rounded-full flex items-center justify-center">
-                  <svg class="size-34px text-white animate-pulse">
-                    <use href="#cloudError"></use>
-                  </svg>
-                </div>
-              </div>
-
-              <div class="text-(13px centent [--text-color]) px-12px leading-loose mb-20px">
-                您的账号在其他设备 <span class="text-#13987f">{props.ip}</span>{' '}
-                登录，如非本人登录，请尽快修改密码，建议联系管理员
-              </div>
-            </NFlex>
-            <NButton onClick={handleConfirm} style={{ color: '#fff' }} class="w-full" color="#13987f">
-              知道了
-            </NButton>
-          </div>
-        </div>
-      </NModal>
-    )
-  }
 })

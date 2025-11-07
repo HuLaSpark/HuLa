@@ -169,6 +169,12 @@ fn set_traffic_lights_hidden(
     }
 }
 
+#[cfg(target_os = "macos")]
+fn set_window_movable_state(ns_window: &NSWindow, movable: bool) {
+    ns_window.setMovable(movable);
+    ns_window.setMovableByWindowBackground(movable);
+}
+
 /// 隐藏Mac窗口的标题栏按钮（红绿灯按钮）和标题
 ///
 /// # 参数
@@ -199,7 +205,7 @@ pub fn hide_title_bar_buttons(
     }
 
     // 设置窗口不可拖动
-    ns_window.setMovable(false);
+    set_window_movable_state(&ns_window, false);
     Ok(())
 }
 
@@ -224,7 +230,21 @@ pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     set_traffic_lights_hidden(&ns_window, false, NSWindowButton::MiniaturizeButton);
     set_traffic_lights_hidden(&ns_window, false, NSWindowButton::ZoomButton);
     // 恢复窗口可拖动
-    ns_window.setMovable(false);
+    set_window_movable_state(&ns_window, true);
+    Ok(())
+}
+
+/// 设置 macOS 窗口是否可拖动
+#[tauri::command]
+#[cfg(target_os = "macos")]
+pub fn set_window_movable(
+    window_label: &str,
+    movable: bool,
+    handle: AppHandle,
+) -> Result<(), String> {
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
+    set_window_movable_state(&ns_window, movable);
     Ok(())
 }
 

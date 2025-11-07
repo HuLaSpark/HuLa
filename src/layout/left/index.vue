@@ -22,7 +22,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import ActionList from './components/ActionList.vue'
 import InfoEdit from './components/InfoEdit.vue'
 import LeftAvatar from './components/LeftAvatar.vue'
-import { CheckUpdate, LockScreen, modalShow, RemoteLogin } from './model.tsx'
+import { CheckUpdate, LockScreen, modalShow } from './model.tsx'
 
 const componentMap = shallowRef<Component>()
 // 存储要传递给组件的props
@@ -30,8 +30,7 @@ const componentProps = shallowRef<Record<string, any>>({})
 /** 弹窗组件内容映射 */
 const componentMapping: Record<number, Component> = {
   [ModalEnum.LOCK_SCREEN]: LockScreen,
-  [ModalEnum.CHECK_UPDATE]: CheckUpdate,
-  [ModalEnum.REMOTE_LOGIN]: RemoteLogin
+  [ModalEnum.CHECK_UPDATE]: CheckUpdate
 }
 
 onMounted(() => {

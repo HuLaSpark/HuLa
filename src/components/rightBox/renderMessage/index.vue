@@ -113,12 +113,10 @@
                 </n-popover>
                 <!-- 用户名 -->
                 <span class="text-12px select-none color-#909090 inline-block align-top">
-                  {{ groupStore.getUserDisplayName(fromUser.uid) }}
+                  {{ senderDisplayName }}
                 </span>
                 <!-- 消息归属地 -->
-                <span v-if="groupStore.getUserInfo(fromUser.uid)?.locPlace" class="text-(12px #909090)">
-                  ({{ groupStore.getUserInfo(fromUser.uid)?.locPlace }})
-                </span>
+                <span v-if="senderLocPlace" class="text-(12px #909090)">({{ senderLocPlace }})</span>
               </n-flex>
             </ContextMenu>
             <!-- 群主 -->
@@ -372,8 +370,35 @@ const handleAvatarClick = (uid: string, msgId: string) => {
 
 // 获取用户头像
 const getAvatarSrc = computed(() => (uid: string) => {
-  const avatar = isMe.value ? userStore.userInfo!.avatar : groupStore.getUserInfo(uid)?.avatar
-  return AvatarUtils.getAvatarUrl(avatar as string)
+  const isCurrentUser = uid === userStore.userInfo?.uid
+  const storeUser = groupStore.getUserInfo(uid)
+  if (isMe.value && isCurrentUser) {
+    return AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar as string)
+  }
+  const resolvedAvatar = storeUser?.avatar || (uid === props.fromUser.uid ? props.message.fromUser.avatar : '')
+  return AvatarUtils.getAvatarUrl(resolvedAvatar as string)
+})
+
+const senderDisplayName = computed(() => {
+  const displayName = groupStore.getUserDisplayName(props.fromUser.uid)
+  if (displayName) {
+    return displayName
+  }
+
+  const storeUser = groupStore.getUserInfo(props.fromUser.uid)
+  if (storeUser?.myName || storeUser?.name) {
+    return storeUser.myName || storeUser.name || ''
+  }
+
+  return props.message.fromUser.username || '未知用户'
+})
+
+const senderLocPlace = computed(() => {
+  const storeLocPlace = groupStore.getUserInfo(props.fromUser.uid)?.locPlace
+  if (storeLocPlace) {
+    return storeLocPlace
+  }
+  return props.message.fromUser.locPlace || ''
 })
 
 const componentMap: Partial<Record<MsgEnum, Component>> = {

@@ -3,12 +3,62 @@ import { LogicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
+import { assign } from 'es-toolkit/compat'
 import { CallTypeEnum, EventEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
-import { isCompatibility, isDesktop, isWindows } from '@/utils/PlatformConstants'
+import { isCompatibility, isDesktop, isMac, isWindows } from '@/utils/PlatformConstants'
 
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
+
+// Mac 端用于模拟父窗口禁用态的透明蒙层
+const MAC_MODAL_OVERLAY_ID = 'mac-modal-overlay'
+// 记录当前已经打开模态窗口的 label，方便在最后一个关闭时移除蒙层
+const activeMacModalLabels = new Set<string>()
+
+// 创建或复用蒙层 DOM
+const ensureMacOverlayElement = () => {
+  if (typeof document === 'undefined') return
+  if (document.getElementById(MAC_MODAL_OVERLAY_ID)) return
+  const overlay = document.createElement('div')
+  overlay.id = MAC_MODAL_OVERLAY_ID
+  assign(overlay.style, {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '9999',
+    backgroundColor: 'transparent',
+    pointerEvents: 'auto',
+    width: '100vw',
+    height: '100vh',
+    userSelect: 'none',
+    cursor: 'not-allowed'
+  })
+  const mountPoint = document.body ?? document.documentElement
+  mountPoint?.appendChild(overlay)
+}
+
+// 移除蒙层
+const removeMacOverlayElement = () => {
+  if (typeof document === 'undefined') return
+  document.getElementById(MAC_MODAL_OVERLAY_ID)?.remove()
+}
+
+// 记录当前窗口并展示蒙层
+const attachMacModalOverlay = (label: string) => {
+  if (!isMac()) return
+  activeMacModalLabels.add(label)
+  ensureMacOverlayElement()
+}
+
+// 解除当前窗口的蒙层记录，如果没有其他窗口则移除蒙层
+const detachMacModalOverlay = (label: string) => {
+  if (!isMac()) return
+  activeMacModalLabels.delete(label)
+  if (activeMacModalLabels.size === 0) {
+    removeMacOverlayElement()
+  }
+}
+
 export const useWindow = () => {
   const globalStore = useGlobalStore()
   /**
@@ -202,6 +252,9 @@ export const useWindow = () => {
     const parentWindow = parent ? await WebviewWindow.getByLabel(parent) : null
 
     if (existingWindow) {
+      if (isMac()) {
+        attachMacModalOverlay(label)
+      }
       // 如果窗口已存在，则聚焦到现有窗口并使其闪烁
       existingWindow.requestUserAttention(UserAttentionType.Critical)
       return existingWindow
@@ -241,6 +294,18 @@ export const useWindow = () => {
 
       // 设置窗口为焦点
       await modalWindow.setFocus()
+
+      if (isMac()) {
+        try {
+          await invoke('set_window_movable', {
+            windowLabel: label,
+            movable: false
+          })
+        } catch (error) {
+          console.error('设置子窗口不可拖动失败:', error)
+        }
+        attachMacModalOverlay(label)
+      }
     })
 
     // 监听错误事件
@@ -248,6 +313,19 @@ export const useWindow = () => {
       console.error(`${title}窗口创建失败:`, e)
       window.$message?.error(`创建${title}窗口失败`)
       await parentWindow?.setEnabled(true)
+    })
+
+    void modalWindow.once('tauri://destroyed', async () => {
+      if (isMac()) {
+        detachMacModalOverlay(label)
+      }
+      if (isWindows()) {
+        try {
+          await parentWindow?.setEnabled(true)
+        } catch (error) {
+          console.error('重新启用父窗口失败:', error)
+        }
+      }
     })
 
     return modalWindow
