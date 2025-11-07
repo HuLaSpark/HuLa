@@ -43,7 +43,18 @@
                   <Icon icon="mdi:robot" class="text-14px" />
                 </template>
               </n-tag>
-              <n-tag v-else size="small" type="warning" class="cursor-pointer" @click="handleModelClick">
+              <n-tag v-if="selectedModel && selectedModel.type === 1" size="small" type="info">文字</n-tag>
+              <n-tag v-if="selectedModel && selectedModel.type === 2" size="small" type="success">图片</n-tag>
+              <n-tag v-if="selectedModel && selectedModel.type === 3" size="small" type="info">音频</n-tag>
+              <n-tag v-if="selectedModel && selectedModel.type === 4" size="small" type="warning">视频</n-tag>
+              <n-tag v-if="selectedModel && selectedModel.type === 7" size="small" type="warning">文生视频</n-tag>
+              <n-tag v-if="selectedModel && selectedModel.type === 8" size="small" type="success">图生视频</n-tag>
+              <n-tag
+                v-else-if="!selectedModel"
+                size="small"
+                type="warning"
+                class="cursor-pointer"
+                @click="handleModelClick">
                 未选择模型
                 <template #icon>
                   <Icon icon="mdi:robot-off" class="text-14px" />
@@ -378,7 +389,6 @@
                       :key="model.id"
                       :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
                       @click="selectModel(model)">
-                      <!-- 模型头像 -->
                       <n-avatar
                         round
                         :size="40"
@@ -387,7 +397,17 @@
                         class="mr-12px flex-shrink-0" />
 
                       <div class="model-info">
-                        <div class="model-name">{{ model.name }}</div>
+                        <div class="model-name">
+                          {{ model.name }}
+                          <n-tag v-if="model.type === 1" size="tiny" type="info" class="ml-4px">文字</n-tag>
+                          <n-tag v-else-if="model.type === 2" size="tiny" type="success" class="ml-4px">图片</n-tag>
+                          <n-tag v-else-if="model.type === 3" size="tiny" type="primary" class="ml-4px">音频</n-tag>
+                          <n-tag v-else-if="model.type === 4" size="tiny" type="warning" class="ml-4px">视频</n-tag>
+                          <n-tag v-else-if="model.type === 5" size="tiny" type="default" class="ml-4px">向量</n-tag>
+                          <n-tag v-else-if="model.type === 6" size="tiny" type="default" class="ml-4px">重排序</n-tag>
+                          <n-tag v-else-if="model.type === 7" size="tiny" type="warning" class="ml-4px">文生视频</n-tag>
+                          <n-tag v-else-if="model.type === 8" size="tiny" type="error" class="ml-4px">图生视频</n-tag>
+                        </div>
                         <div class="model-description">{{ model.description || '暂无描述' }}</div>
                         <div class="model-meta">
                           <span class="model-provider">{{ model.platform }}</span>
@@ -402,7 +422,6 @@
                   </div>
                 </div>
 
-                <!-- 分页控件 -->
                 <div v-if="modelPagination.total > modelPagination.pageSize" class="model-pagination">
                   <n-pagination
                     v-model:page="modelPagination.pageNo"
@@ -410,6 +429,139 @@
                     :page-count="Math.ceil(modelPagination.total / modelPagination.pageSize)"
                     size="small"
                     @update:page="handleModelPageChange" />
+                </div>
+              </div>
+            </n-popover>
+
+            <!-- 图片/视频尺寸选择 -->
+            <n-select
+              v-if="selectedModel && selectedModel.type === 2"
+              v-model:value="imageParams.size"
+              :options="imageSizeOptions"
+              size="small"
+              placeholder="图片尺寸"
+              style="width: 150px" />
+            <n-select
+              v-if="selectedModel && (selectedModel.type === 4 || selectedModel.type === 7 || selectedModel.type === 8)"
+              v-model:value="videoParams.size"
+              :options="videoSizeOptions"
+              size="small"
+              placeholder="视频尺寸"
+              style="width: 150px" />
+            <n-select
+              v-if="selectedModel && (selectedModel.type === 4 || selectedModel.type === 7 || selectedModel.type === 8)"
+              v-model:value="videoParams.duration"
+              :options="videoDurationOptions"
+              size="small"
+              placeholder="视频时长"
+              style="width: 100px" />
+
+            <!-- 音频语音选择 -->
+            <n-select
+              v-if="selectedModel && selectedModel.type === 3"
+              v-model:value="audioParams.voice"
+              :options="audioVoiceOptions"
+              size="small"
+              placeholder="选择语音"
+              style="width: 150px" />
+
+            <!-- 音频速度选择 -->
+            <n-select
+              v-if="selectedModel && selectedModel.type === 3"
+              v-model:value="audioParams.speed"
+              :options="audioSpeedOptions"
+              size="small"
+              placeholder="播放速度"
+              style="width: 120px" />
+
+            <!-- 视频参考图片上传 (仅type=8图生视频模型显示) -->
+            <n-popover
+              v-if="selectedModel && selectedModel.type === 8"
+              trigger="hover"
+              :show-arrow="false"
+              placement="top">
+              <template #trigger>
+                <div style="position: relative; display: inline-block">
+                  <n-upload
+                    ref="videoImageFileRef"
+                    :show-file-list="false"
+                    :custom-request="handleVideoImageUpload"
+                    :disabled="isUploadingVideoImage"
+                    accept="image/jpeg,image/jpg,image/png,image/webp">
+                    <n-button
+                      size="small"
+                      :type="videoImagePreview ? 'success' : 'default'"
+                      :loading="isUploadingVideoImage"
+                      :disabled="isUploadingVideoImage"
+                      style="margin-left: 8px">
+                      <template #icon v-if="!isUploadingVideoImage">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                      </template>
+                      {{ isUploadingVideoImage ? '上传中...' : videoImagePreview ? '已上传' : '参考图' }}
+                    </n-button>
+                  </n-upload>
+                  <!-- 清除按钮 -->
+                  <n-button
+                    v-if="videoImagePreview"
+                    size="tiny"
+                    circle
+                    type="error"
+                    @click="clearVideoImage"
+                    style="
+                      position: absolute;
+                      top: -6px;
+                      right: -6px;
+                      width: 18px;
+                      height: 18px;
+                      padding: 0;
+                      min-width: 18px;
+                    ">
+                    <template #icon>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </template>
+                  </n-button>
+                </div>
+              </template>
+              <div style="max-width: 300px">
+                <div v-if="videoImagePreview" style="margin-bottom: 8px">
+                  <img :src="videoImagePreview" style="max-width: 100%; border-radius: 4px" />
+                </div>
+                <div style="font-size: 12px; color: #666">
+                  <div v-if="isUploadingVideoImage" style="color: #18a058">⏳ 正在上传到七牛云...</div>
+                  <div v-else>
+                    {{ videoImagePreview ? '✅ 已上传到七牛云，点击按钮可重新上传' : '上传参考图片用于图生视频' }}
+                    <br />
+                    支持格式: JPG、PNG、WEBP
+                    <br />
+                    最大大小: 10MB
+                    <br />
+                    <span style="color: #999; font-size: 11px">图片将上传到七牛云存储</span>
+                  </div>
                 </div>
               </div>
             </n-popover>
@@ -440,9 +592,162 @@
       </div>
     </div>
   </main>
+
+  <!-- 历史记录弹窗 -->
+  <n-modal
+    v-model:show="showHistoryModal"
+    preset="card"
+    title="生成历史"
+    style="width: 90%; max-width: 1200px"
+    :bordered="false">
+    <!-- 类型切换按钮 -->
+    <template #header-extra>
+      <n-button-group size="small">
+        <n-button :type="historyType === 'image' ? 'primary' : 'default'" @click="switchHistoryType('image')">
+          <template #icon>
+            <Icon icon="mdi:image" />
+          </template>
+          图片
+        </n-button>
+        <n-button :type="historyType === 'audio' ? 'primary' : 'default'" @click="switchHistoryType('audio')">
+          <template #icon>
+            <Icon icon="mdi:music" />
+          </template>
+          音频
+        </n-button>
+        <n-button :type="historyType === 'video' ? 'primary' : 'default'" @click="switchHistoryType('video')">
+          <template #icon>
+            <Icon icon="mdi:video" />
+          </template>
+          视频
+        </n-button>
+      </n-button-group>
+    </template>
+
+    <n-spin :show="historyLoading">
+      <div v-if="historyList.length > 0" class="history-grid">
+        <div v-for="item in historyList" :key="item.id" class="history-item">
+          <div class="history-wrapper">
+            <!-- 图片预览 -->
+            <div v-if="historyType === 'image'" class="media-preview">
+              <img
+                v-if="item.status === 20 && item.picUrl"
+                :src="item.picUrl"
+                :alt="item.prompt"
+                class="preview-img"
+                @click="handlePreviewImage(item)" />
+              <div v-else-if="item.status === 10" class="preview-placeholder">
+                <n-spin size="large" />
+                <p class="text-12px text-#909090 mt-8px">生成中...</p>
+              </div>
+              <div v-else class="preview-placeholder error">
+                <Icon icon="mdi:alert-circle-outline" class="text-48px text-#d5304f" />
+                <p class="text-12px text-#d5304f mt-8px">生成失败</p>
+              </div>
+            </div>
+
+            <!-- 音频预览 -->
+            <div v-else-if="historyType === 'audio'" class="media-preview">
+              <div v-if="item.status === 20 && item.audioUrl" class="audio-preview">
+                <Icon icon="mdi:music-circle" class="text-64px text-#1890ff" />
+                <p class="text-12px text-#1890ff mt-8px">点击播放</p>
+              </div>
+              <div v-else-if="item.status === 10" class="preview-placeholder">
+                <n-spin size="large" />
+                <p class="text-12px text-#909090 mt-8px">生成中...</p>
+              </div>
+              <div v-else class="preview-placeholder error">
+                <Icon icon="mdi:alert-circle-outline" class="text-48px text-#d5304f" />
+                <p class="text-12px text-#d5304f mt-8px">生成失败</p>
+              </div>
+            </div>
+
+            <!-- 视频预览 -->
+            <div v-else class="media-preview">
+              <div v-if="item.status === 20 && item.videoUrl" class="video-preview" @click="handlePreviewVideo(item)">
+                <Icon icon="mdi:play-circle" class="text-64px text-white" />
+                <p class="text-12px text-white mt-8px">点击播放</p>
+              </div>
+              <div v-else-if="item.status === 10" class="preview-placeholder">
+                <n-spin size="large" />
+                <p class="text-12px text-#909090 mt-8px">生成中...</p>
+              </div>
+              <div v-else class="preview-placeholder error">
+                <Icon icon="mdi:alert-circle-outline" class="text-48px text-#d5304f" />
+                <p class="text-12px text-#d5304f mt-8px">生成失败</p>
+              </div>
+            </div>
+
+            <!-- 信息 -->
+            <div class="history-info">
+              <p class="prompt" :title="item.prompt">{{ item.prompt }}</p>
+              <p class="text-11px text-#909090 mt-4px">{{ item.width }} × {{ item.height }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <n-empty v-else description="暂无生成记录" class="py-40px" />
+    </n-spin>
+
+    <!-- 分页 -->
+    <n-flex v-if="historyPagination.total > historyPagination.pageSize" justify="center" class="mt-16px">
+      <n-pagination
+        v-model:page="historyPagination.pageNo"
+        :page-size="historyPagination.pageSize"
+        :page-count="Math.ceil(historyPagination.total / historyPagination.pageSize)"
+        @update:page="handleHistoryPageChange" />
+    </n-flex>
+  </n-modal>
+
+  <!-- 图片预览弹窗 -->
+  <n-modal v-model:show="showImagePreview" preset="card" title="图片预览" style="width: 90%; max-width: 1000px">
+    <div v-if="previewItem" class="preview-container">
+      <img :src="previewItem.picUrl" :alt="previewItem.prompt" class="preview-image" />
+      <div class="preview-info mt-16px">
+        <p class="text-14px">
+          <strong>提示词：</strong>
+          {{ previewItem.prompt }}
+        </p>
+        <p class="text-12px text-#909090 mt-8px">
+          <strong>尺寸：</strong>
+          {{ previewItem.width }} × {{ previewItem.height }}
+        </p>
+      </div>
+    </div>
+  </n-modal>
+
+  <!-- 视频预览弹窗 -->
+  <n-modal v-model:show="showVideoPreview" preset="card" title="视频预览" style="width: 90%; max-width: 1000px">
+    <div v-if="previewItem" class="preview-container">
+      <video :src="previewItem.videoUrl" controls class="preview-video" />
+      <div class="preview-info mt-16px">
+        <p class="text-14px">
+          <strong>提示词：</strong>
+          {{ previewItem.prompt }}
+        </p>
+        <p class="text-12px text-#909090 mt-8px">
+          <strong>尺寸：</strong>
+          {{ previewItem.width }} × {{ previewItem.height }}
+        </p>
+      </div>
+    </div>
+  </n-modal>
 </template>
 <script setup lang="ts">
-import { type InputInst, NPagination, NTag, NEmpty, NSpin, NAvatar } from 'naive-ui'
+import {
+  type InputInst,
+  NPagination,
+  NTag,
+  NEmpty,
+  NSpin,
+  NAvatar,
+  NSelect,
+  NButtonGroup,
+  NButton,
+  NUpload,
+  NPopover,
+  UploadFileInfo
+} from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -460,12 +765,24 @@ import {
   messageListByConversationId,
   messageDelete,
   messageDeleteByConversationId,
-  chatRolePage
+  chatRolePage,
+  imageDraw,
+  videoGenerate,
+  audioGenerate,
+  imageMyPage,
+  videoMyPage,
+  audioMyPage,
+  imageMyListByIds,
+  videoMyListByIds,
+  audioMyListByIds,
+  audioGetVoices
 } from '@/utils/ImRequestUtils'
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import router from '@/router'
 import { storeToRefs } from 'pinia'
+import { useUpload, UploadProviderEnum } from '@/hooks/useUpload'
+import { UploadSceneEnum } from '@/enums'
 
 const settingStore = useSettingStore()
 const userStore = useUserStore()
@@ -522,6 +839,31 @@ interface Message {
   id?: string // 消息ID，用于删除
   replyId?: string | null // 回复的消息ID
   model?: string // 使用的模型
+  isGenerating?: boolean // 是否正在生成中(用于图片/视频/音频生成)
+  imageUrl?: string // 图片URL
+  imageInfo?: {
+    // 图片信息
+    prompt: string
+    width: number
+    height: number
+    model: string
+  }
+  videoUrl?: string // 视频URL
+  videoInfo?: {
+    // 视频信息
+    prompt: string
+    width: number
+    height: number
+    model: string
+  }
+  audioUrl?: string // 音频URL
+  audioInfo?: {
+    // 音频信息
+    prompt: string
+    voice: string
+    model: string
+    speed: number
+  }
 }
 
 const messageList = ref<Message[]>([])
@@ -642,6 +984,209 @@ const filteredModels = computed(() => {
   )
 })
 
+// 图片生成参数
+const imageParams = ref({
+  size: '1024x1024'
+})
+
+// 图片尺寸选项
+const imageSizeOptions = [
+  { label: '1024x1024 (正方形)', value: '1024x1024' },
+  { label: '1024x1792 (竖屏)', value: '1024x1792' },
+  { label: '1792x1024 (横屏)', value: '1792x1024' }
+]
+
+// 视频生成参数
+const videoParams = ref({
+  size: '1280x720',
+  duration: 5, // 视频时长(秒)
+  image: null as string | null // 用于I2V模型的参考图片 (七牛云URL)
+})
+
+// 视频尺寸选项
+const videoSizeOptions = [
+  { label: '1280x720 (横屏)', value: '1280x720' },
+  { label: '720x1280 (竖屏)', value: '720x1280' },
+  { label: '960x960 (正方形)', value: '960x960' }
+]
+
+// 视频时长选项
+const videoDurationOptions = [
+  { label: '5秒', value: 5 },
+  { label: '10秒', value: 10 }
+]
+
+// 音频生成参数
+const audioParams = ref({
+  voice: 'alloy',
+  speed: 1.0
+})
+
+// 音频语音选项 (动态加载)
+const audioVoiceOptions = ref([
+  { label: 'Alloy (中性)', value: 'alloy' },
+  { label: 'Echo (男性)', value: 'echo' },
+  { label: 'Fable (男性)', value: 'fable' },
+  { label: 'Onyx (男性)', value: 'onyx' },
+  { label: 'Nova (女性)', value: 'nova' },
+  { label: 'Shimmer (女性)', value: 'shimmer' }
+])
+
+// 加载指定模型支持的声音列表
+const loadAudioVoices = async (model: any) => {
+  try {
+    if (!model || !model.model) {
+      return
+    }
+
+    const voices = await audioGetVoices({ model: model.model })
+
+    if (voices && voices.length > 0) {
+      // 将声音列表转换为选项格式
+      audioVoiceOptions.value = voices.map((voice: string) => {
+        // 提取声音名称 (例如: "fnlp/MOSS-TTSD-v0.5:anna" -> "anna")
+        const voiceName = voice.includes(':') ? voice.split(':')[1] : voice
+        return {
+          label: voiceName.charAt(0).toUpperCase() + voiceName.slice(1),
+          value: voice
+        }
+      })
+
+      // 设置默认值为第一个选项
+      if (audioVoiceOptions.value.length > 0) {
+        audioParams.value.voice = audioVoiceOptions.value[0].value
+      }
+    } else {
+      // 如果返回空列表,表示支持动态音色,使用默认选项
+      audioVoiceOptions.value = [{ label: 'Default', value: 'default' }]
+      audioParams.value.voice = 'default'
+    }
+  } catch (error) {
+    console.error('加载声音列表失败:', error)
+    // 保持默认选项
+  }
+}
+
+// 音频速度选项
+const audioSpeedOptions = [
+  { label: '0.5x (慢速)', value: 0.5 },
+  { label: '0.75x', value: 0.75 },
+  { label: '1.0x (正常)', value: 1.0 },
+  { label: '1.25x', value: 1.25 },
+  { label: '1.5x (快速)', value: 1.5 },
+  { label: '2.0x (极快)', value: 2.0 }
+]
+
+// 视频参考图片上传
+const videoImageFileRef = ref<any>(null)
+const videoImagePreview = ref<string | null>(null)
+const isUploadingVideoImage = ref(false)
+
+// 初始化上传hook
+const { uploadFile: uploadToQiniu, fileInfo } = useUpload()
+
+// 处理视频参考图片上传
+const handleVideoImageUpload = async (options: { file: UploadFileInfo; onFinish: () => void; onError: () => void }) => {
+  const file = options.file.file as File
+  if (!file) {
+    options.onError()
+    return
+  }
+
+  // 检查文件类型
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    window.$message.error('只支持 JPG、PNG、WEBP 格式的图片')
+    options.onError()
+    return
+  }
+
+  // 检查文件大小 (最大 10MB)
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    window.$message.error('图片大小不能超过 10MB')
+    options.onError()
+    return
+  }
+
+  try {
+    isUploadingVideoImage.value = true
+
+    // 上传到七牛云
+    await uploadToQiniu(file, {
+      provider: UploadProviderEnum.QINIU,
+      scene: UploadSceneEnum.CHAT,
+      enableDeduplication: true
+    })
+
+    // 获取七牛云URL
+    const qiniuUrl = fileInfo.value?.downloadUrl
+    if (qiniuUrl) {
+      videoParams.value.image = qiniuUrl
+      videoImagePreview.value = qiniuUrl
+      console.log('✅ 视频参考图片上传成功，七牛云URL:', qiniuUrl)
+      options.onFinish()
+    } else {
+      throw new Error('未获取到图片URL')
+    }
+  } catch (error) {
+    console.error('❌ 图片上传失败:', error)
+    options.onError()
+  } finally {
+    isUploadingVideoImage.value = false
+  }
+}
+
+// 清除视频参考图片
+const clearVideoImage = () => {
+  videoParams.value.image = null
+  videoImagePreview.value = null
+  if (videoImageFileRef.value) {
+    videoImageFileRef.value.clear()
+  }
+}
+
+// 轮询任务管理
+const pollingTasks = new Map<number, { timerId: number; conversationId: string }>()
+
+// 停止所有轮询任务
+const stopAllPolling = () => {
+  pollingTasks.forEach(({ timerId }) => window.clearInterval(timerId))
+  pollingTasks.clear()
+  console.log('🛑 已停止所有轮询任务')
+}
+
+// 停止特定会话的轮询任务
+const stopConversationPolling = (conversationId: string) => {
+  const tasksToStop: number[] = []
+  pollingTasks.forEach(({ timerId, conversationId: taskConvId }, imageId) => {
+    if (taskConvId === conversationId) {
+      window.clearInterval(timerId)
+      tasksToStop.push(imageId)
+    }
+  })
+  tasksToStop.forEach((id) => pollingTasks.delete(id))
+  if (tasksToStop.length > 0) {
+    console.log(`🛑 已停止会话 ${conversationId} 的 ${tasksToStop.length} 个轮询任务`)
+  }
+}
+
+// 历史记录相关
+const showHistoryModal = ref(false)
+const historyType = ref<'image' | 'video' | 'audio'>('image')
+const historyLoading = ref(false)
+const historyList = ref<any[]>([])
+const historyPagination = ref({
+  pageNo: 1,
+  pageSize: 12,
+  total: 0
+})
+
+// 预览相关
+const showImagePreview = ref(false)
+const showVideoPreview = ref(false)
+const previewItem = ref<any>(null)
+
 // AI消息发送处理
 const handleSendAI = (data: { content: string }) => {
   if (!selectedModel.value) {
@@ -654,8 +1199,24 @@ const handleSendAI = (data: { content: string }) => {
     return
   }
 
-  // 调用AI消息发送逻辑
-  sendAIMessage(data.content, selectedModel.value)
+  // 根据模型类型调用不同的处理逻辑
+  const modelType = selectedModel.value.type
+
+  if (modelType === 1) {
+    // 文字对话模型
+    sendAIMessage(data.content, selectedModel.value)
+  } else if (modelType === 2) {
+    // 图片生成模型
+    generateImage(data.content, selectedModel.value)
+  } else if (modelType === 3) {
+    // 音频生成模型
+    generateAudio(data.content, selectedModel.value)
+  } else if (modelType === 4 || modelType === 7 || modelType === 8) {
+    // 视频生成模型（包括旧的type=4、文生视频type=7、图生视频type=8）
+    generateVideo(data.content, selectedModel.value)
+  } else {
+    window.$message.warning('不支持的模型类型')
+  }
 }
 
 // AI消息发送实现
@@ -748,6 +1309,404 @@ const sendAIMessage = async (content: string, model: any) => {
   }
 }
 
+// 图片生成实现
+const generateImage = async (prompt: string, model: any) => {
+  try {
+    messageList.value.push({
+      type: 'user',
+      content: prompt,
+      createTime: Date.now()
+    })
+
+    // 添加AI消息占位符（用于显示进度）
+    const aiMessageIndex = messageList.value.length
+    messageList.value.push({
+      type: 'assistant',
+      content: '🎨 正在生成图片，请稍候...',
+      createTime: Date.now(),
+      isGenerating: true
+    })
+
+    scrollToBottom()
+
+    console.log('🎨 开始生成图片:', {
+      提示词: prompt,
+      模型: model.name,
+      尺寸: imageParams.value.size
+    })
+
+    // 解析尺寸
+    const [width, height] = imageParams.value.size.split('x').map(Number)
+
+    const imageId = await imageDraw({
+      modelId: String(model.id),
+      prompt: prompt,
+      width: width,
+      height: height,
+      conversationId: currentChat.value.id
+    })
+
+    // 开始轮询查询生成状态
+    pollImageStatus(imageId, aiMessageIndex, prompt, width, height, model.name)
+
+    // 清空输入框
+    if (MsgInputRef.value?.clearInput) {
+      MsgInputRef.value.clearInput()
+    }
+  } catch (error: any) {
+    console.error('❌ 图片生成失败:', error)
+    // 更新为错误消息
+    const lastMessage = messageList.value[messageList.value.length - 1]
+    if (lastMessage && lastMessage.isGenerating) {
+      lastMessage.content = `❌ 图片生成失败: ${error.message || '未知错误'}`
+      lastMessage.isGenerating = false
+    }
+    window.$message.error('图片生成失败，请检查网络连接')
+  }
+}
+
+// 轮询查询图片生成状态
+const pollImageStatus = async (
+  imageId: number,
+  messageIndex: number,
+  prompt: string,
+  width: number,
+  height: number,
+  modelName: string
+) => {
+  const interval = 3000 // 每3秒轮询一次
+  const conversationId = currentChat.value.id
+
+  const poll = async () => {
+    try {
+      if (!pollingTasks.has(imageId)) {
+        return
+      }
+
+      const imageList = await imageMyListByIds({ ids: imageId.toString() })
+
+      if (!imageList || !Array.isArray(imageList) || imageList.length === 0) {
+        messageList.value[messageIndex].content = '❌ 图片生成失败: 记录不存在'
+        messageList.value[messageIndex].isGenerating = false
+        pollingTasks.delete(imageId)
+        return
+      }
+
+      const image = imageList[0]
+
+      // 状态: 10=进行中, 20=成功, 30=失败
+      if (image.status === 20) {
+        const imageMarkdown = `![生成的图片](${image.picUrl})`
+        messageList.value[messageIndex] = {
+          type: 'assistant',
+          content: imageMarkdown,
+          createTime: Date.now(),
+          isGenerating: false,
+          imageUrl: image.picUrl,
+          imageInfo: {
+            prompt: prompt,
+            width: width,
+            height: height,
+            model: modelName
+          }
+        }
+
+        window.$message.success('图片生成成功')
+        scrollToBottom()
+        pollingTasks.delete(imageId)
+        return
+      } else if (image.status === 30) {
+        // 生成失败
+        messageList.value[messageIndex].content = `❌ 图片生成失败: ${image.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].isGenerating = false
+        window.$message.error('图片生成失败')
+        pollingTasks.delete(imageId)
+        return
+      }
+
+      // 状态=10 (进行中), 继续轮询
+      console.log('⏳ 图片生成中，继续轮询...')
+    } catch (error: any) {
+      console.error('❌ 轮询图片状态失败:', error)
+      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      messageList.value[messageIndex].isGenerating = false
+      pollingTasks.delete(imageId)
+    }
+  }
+
+  // 启动定时轮询
+  const timerId = window.setInterval(poll, interval)
+  pollingTasks.set(imageId, { timerId, conversationId })
+
+  // 立即执行第一次轮询
+  poll()
+}
+
+// 视频生成实现
+const generateVideo = async (prompt: string, model: any) => {
+  try {
+    messageList.value.push({
+      type: 'user',
+      content: prompt,
+      createTime: Date.now()
+    })
+
+    // 添加AI消息占位符
+    const aiMessageIndex = messageList.value.length
+    messageList.value.push({
+      type: 'assistant',
+      content: '🎬 正在生成视频，这可能需要几分钟时间，请耐心等待...',
+      createTime: Date.now(),
+      isGenerating: true
+    })
+
+    scrollToBottom()
+
+    console.log('🎬 开始生成视频:', {
+      提示词: prompt,
+      模型: model.name,
+      尺寸: videoParams.value.size,
+      参考图片: videoParams.value.image ? '已上传' : '未上传'
+    })
+
+    // 解析尺寸
+    const [width, height] = videoParams.value.size.split('x').map(Number)
+
+    // 构建请求参数
+    const requestBody: any = {
+      modelId: String(model.id),
+      prompt: prompt,
+      width: width,
+      height: height,
+      duration: videoParams.value.duration,
+      conversationId: currentChat.value.id
+    }
+
+    // 如果有参考图片，添加到 options 中
+    if (videoParams.value.image) {
+      requestBody.options = {
+        image: videoParams.value.image
+      }
+    }
+
+    // 调用视频生成API，返回视频ID
+    const videoId = await videoGenerate(requestBody)
+
+    // 开始轮询查询生成状态
+    pollVideoStatus(videoId, aiMessageIndex, prompt, width, height, model.name)
+
+    // 清空输入框和参考图片
+    if (MsgInputRef.value?.clearInput) {
+      MsgInputRef.value.clearInput()
+    }
+    clearVideoImage()
+  } catch (error: any) {
+    console.error('❌ 视频生成失败:', error)
+    // 更新为错误消息
+    const lastMessage = messageList.value[messageList.value.length - 1]
+    if (lastMessage && lastMessage.isGenerating) {
+      lastMessage.content = `❌ 视频生成失败: ${error.message || '未知错误'}`
+      lastMessage.isGenerating = false
+    }
+    window.$message.error('视频生成失败，请检查网络连接')
+  }
+}
+
+// 轮询查询视频生成状态
+const pollVideoStatus = async (
+  videoId: number,
+  messageIndex: number,
+  prompt: string,
+  width: number,
+  height: number,
+  modelName: string
+) => {
+  const interval = 5000 // 每5秒轮询一次
+  const conversationId = currentChat.value.id
+
+  const poll = async () => {
+    try {
+      // 检查任务是否已被停止
+      if (!pollingTasks.has(videoId)) {
+        return
+      }
+
+      // 后端返回的是数组 List<AiVideoRespVO>
+      const videoList = await videoMyListByIds({ ids: videoId.toString() })
+
+      if (!videoList || !Array.isArray(videoList) || videoList.length === 0) {
+        messageList.value[messageIndex].content = '❌ 视频生成失败: 记录不存在'
+        messageList.value[messageIndex].isGenerating = false
+        pollingTasks.delete(videoId)
+        return
+      }
+
+      const video = videoList[0]
+
+      // 状态: 10=进行中, 20=成功, 30=失败
+      if (video.status === 20) {
+        const videoMarkdown = `🎬 视频生成成功！\n\n[点击查看视频](${video.videoUrl})`
+        messageList.value[messageIndex] = {
+          type: 'assistant',
+          content: videoMarkdown,
+          createTime: Date.now(),
+          isGenerating: false,
+          videoUrl: video.videoUrl,
+          videoInfo: {
+            prompt: prompt,
+            width: width,
+            height: height,
+            model: modelName
+          }
+        }
+
+        window.$message.success('视频生成成功')
+        scrollToBottom()
+        pollingTasks.delete(videoId)
+        return
+      } else if (video.status === 30) {
+        // 生成失败
+        messageList.value[messageIndex].content = `❌ 视频生成失败: ${video.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].isGenerating = false
+        window.$message.error('视频生成失败')
+        pollingTasks.delete(videoId)
+        return
+      }
+
+      // 状态=10 (进行中), 继续轮询
+    } catch (error: any) {
+      console.error('❌ 轮询视频状态失败:', error)
+      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      messageList.value[messageIndex].isGenerating = false
+      pollingTasks.delete(videoId)
+    }
+  }
+
+  // 启动定时轮询
+  const timerId = window.setInterval(poll, interval)
+  pollingTasks.set(videoId, { timerId, conversationId })
+
+  // 立即执行第一次轮询
+  poll()
+}
+
+// 音频生成实现：添加用户消息
+const generateAudio = async (prompt: string, model: any) => {
+  try {
+    messageList.value.push({
+      type: 'user',
+      content: prompt,
+      createTime: Date.now()
+    })
+
+    // 添加AI消息占位符（用于显示进度）
+    const aiMessageIndex = messageList.value.length
+    messageList.value.push({
+      type: 'assistant',
+      content: '🎵 正在生成音频，请稍候...',
+      createTime: Date.now(),
+      isGenerating: true
+    })
+
+    scrollToBottom()
+
+    console.log('🎵 开始生成音频:', {
+      提示词: prompt,
+      模型: model.name,
+      语音: audioParams.value.voice,
+      速度: audioParams.value.speed
+    })
+
+    const audioId = await audioGenerate({
+      modelId: model.id,
+      prompt: prompt,
+      conversationId: currentChat.value.id,
+      options: {
+        voice: audioParams.value.voice,
+        speed: String(audioParams.value.speed)
+      }
+    })
+
+    pollAudioStatus(audioId, aiMessageIndex, prompt, model.name)
+
+    if (MsgInputRef.value?.clearInput) {
+      MsgInputRef.value.clearInput()
+    }
+  } catch (error: any) {
+    console.error('❌ 音频生成失败:', error)
+    const lastMessage = messageList.value[messageList.value.length - 1]
+    if (lastMessage && lastMessage.isGenerating) {
+      lastMessage.content = `❌ 音频生成失败: ${error.message || '未知错误'}`
+      lastMessage.isGenerating = false
+    }
+    window.$message.error('音频生成失败，请检查网络连接')
+  }
+}
+
+// 轮询查询音频生成状态
+const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: string, modelName: string) => {
+  const interval = 3000
+  const conversationId = currentChat.value.id
+
+  const poll = async () => {
+    try {
+      if (!pollingTasks.has(audioId)) {
+        return
+      }
+
+      const audioList = await audioMyListByIds({ ids: audioId.toString() })
+
+      if (!audioList || !Array.isArray(audioList) || audioList.length === 0) {
+        messageList.value[messageIndex].content = '❌ 音频生成失败: 记录不存在'
+        messageList.value[messageIndex].isGenerating = false
+        pollingTasks.delete(audioId)
+        return
+      }
+
+      const audio = audioList[0]
+
+      // 20 代表成功
+      if (audio.status === 20) {
+        const audioMarkdown = `🎵 音频生成成功！\n\n[点击播放音频](${audio.audioUrl})`
+        messageList.value[messageIndex] = {
+          type: 'assistant',
+          content: audioMarkdown,
+          createTime: Date.now(),
+          isGenerating: false,
+          audioUrl: audio.audioUrl,
+          audioInfo: {
+            prompt: prompt,
+            model: modelName,
+            voice: audioParams.value.voice,
+            speed: audioParams.value.speed
+          }
+        }
+
+        window.$message.success('音频生成成功')
+        scrollToBottom()
+        pollingTasks.delete(audioId)
+        return
+      } else if (audio.status === 30) {
+        messageList.value[messageIndex].content = `❌ 音频生成失败: ${audio.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].isGenerating = false
+        window.$message.error('音频生成失败')
+        pollingTasks.delete(audioId)
+        return
+      }
+    } catch (error: any) {
+      // 轮询失败
+      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      messageList.value[messageIndex].isGenerating = false
+      pollingTasks.delete(audioId)
+    }
+  }
+
+  const timerId = window.setInterval(poll, interval)
+  pollingTasks.set(audioId, { timerId, conversationId })
+
+  poll()
+}
+
 // 功能列表
 const features = ref([
   {
@@ -833,6 +1792,16 @@ const handleModelClick = () => {
 const selectModel = async (model: any) => {
   selectedModel.value = model ? { ...model } : null
   showModelPopover.value = false
+
+  // 如果切换到非图生视频模型，清空参考图片
+  if (model && model.type !== 8) {
+    clearVideoImage()
+  }
+
+  // 如果是音频模型，加载支持的声音列表
+  if (model && model.type === 3) {
+    await loadAudioVoices(model)
+  }
 
   // 如果当前有会话，则调用后端API更新会话的模型
   if (currentChat.value.id && currentChat.value.id !== '0') {
@@ -1124,11 +2093,128 @@ useMitt.on('chat-active', async (e) => {
     const model = modelList.value.find((m: any) => String(m.id) === String(modelId))
     if (model) {
       selectedModel.value = model
+      // 如果是音频模型，加载支持的声音列表
+      if (model.type === 3) {
+        await loadAudioVoices(model)
+      }
     }
   }
 
   await loadMessages(id)
 })
+
+// 打开历史记录
+const handleOpenHistory = () => {
+  // 如果有选中的模型,根据模型类型显示对应历史
+  if (selectedModel.value) {
+    if (selectedModel.value.type === 2) {
+      historyType.value = 'image'
+    } else if (selectedModel.value.type === 3) {
+      historyType.value = 'audio'
+    } else if (selectedModel.value.type === 4 || selectedModel.value.type === 7 || selectedModel.value.type === 8) {
+      historyType.value = 'video'
+    } else {
+      // 其他类型默认显示图片历史
+      historyType.value = 'image'
+    }
+  } else {
+    // 如果没有选中模型,默认显示图片历史
+    historyType.value = 'image'
+  }
+
+  historyPagination.value.pageNo = 1
+  showHistoryModal.value = true
+  loadHistory()
+}
+
+// 加载历史记录
+const loadHistory = async () => {
+  historyLoading.value = true
+  try {
+    let apiFunc
+    if (historyType.value === 'image') {
+      apiFunc = imageMyPage
+    } else if (historyType.value === 'audio') {
+      apiFunc = audioMyPage
+    } else {
+      apiFunc = videoMyPage
+    }
+
+    const data = await apiFunc({
+      pageNo: historyPagination.value.pageNo,
+      pageSize: historyPagination.value.pageSize
+    })
+    historyList.value = data.list || []
+    historyPagination.value.total = data.total || 0
+  } catch (error) {
+    console.error('加载历史记录失败:', error)
+    window.$message.error('加载历史记录失败')
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+// 切换历史记录类型
+const switchHistoryType = (type: 'image' | 'video' | 'audio') => {
+  historyType.value = type
+  historyPagination.value.pageNo = 1
+  loadHistory()
+}
+
+// 历史记录分页变化
+const handleHistoryPageChange = (page: number) => {
+  historyPagination.value.pageNo = page
+  loadHistory()
+}
+
+// 预览图片
+const handlePreviewImage = (item: any) => {
+  previewItem.value = item
+  showImagePreview.value = true
+}
+
+// 预览视频
+const handlePreviewVideo = (item: any) => {
+  previewItem.value = item
+  showVideoPreview.value = true
+}
+
+// 事件处理函数(定义在顶层作用域,以便在 onUnmounted 中移除)
+const handleRefreshRoleList = () => {
+  console.log('🔄 收到角色列表刷新事件')
+  loadRoleList()
+}
+
+const handleRefreshModelList = async () => {
+  await fetchModelList()
+
+  // 如果当前有选中的模型，需要更新 selectedModel 对象
+  if (selectedModel.value && selectedModel.value.id) {
+    const updatedModel = modelList.value.find((m: any) => m.id === selectedModel.value.id)
+    if (updatedModel) {
+      // 记录旧的模型类型
+      const oldType = selectedModel.value.type
+      // 更新为新的模型对象
+      selectedModel.value = { ...updatedModel }
+      console.log('✅ 已更新 selectedModel:', selectedModel.value)
+
+      // 如果模型类型从 8 改为其他类型，清空参考图片
+      if (oldType === 8 && updatedModel.type !== 8) {
+        clearVideoImage()
+        console.log('🗑️ 模型类型已改变，已清空参考图片')
+      }
+    }
+  }
+}
+
+const handleLeftChatTitle = (e: any) => {
+  const { title, id, messageCount, createTime } = e
+  if (id === currentChat.value.id) {
+    currentChat.value.title = title ?? ''
+    currentChat.value.messageCount = messageCount ?? 0
+    currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
+  }
+}
 
 onMounted(async () => {
   // 等待模型列表加载完成
@@ -1140,26 +2226,37 @@ onMounted(async () => {
   await loadRoleList()
 
   // 监听角色列表刷新事件
-  useMitt.on('refresh-role-list', () => {
-    console.log('🔄 收到角色列表刷新事件')
-    loadRoleList()
-  })
+  useMitt.on('refresh-role-list', handleRefreshRoleList)
 
   // 监听模型列表刷新事件
-  useMitt.on('refresh-model-list', () => {
-    console.log('🔄 收到模型列表刷新事件')
-    fetchModelList()
-  })
+  useMitt.on('refresh-model-list', handleRefreshModelList)
 
-  useMitt.on('left-chat-title', (e) => {
-    const { title, id, messageCount, createTime } = e
-    if (id === currentChat.value.id) {
-      currentChat.value.title = title ?? ''
-      currentChat.value.messageCount = messageCount ?? 0
-      currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
-    }
-  })
+  // 监听打开生成历史事件
+  useMitt.on('open-generation-history', handleOpenHistory)
+
+  // 监听左侧聊天标题更新事件
+  useMitt.on('left-chat-title', handleLeftChatTitle)
 })
+
+onUnmounted(() => {
+  // 停止所有轮询任务
+  stopAllPolling()
+
+  useMitt.off('refresh-role-list', handleRefreshRoleList)
+  useMitt.off('refresh-model-list', handleRefreshModelList)
+  useMitt.off('open-generation-history', handleOpenHistory)
+  useMitt.off('left-chat-title', handleLeftChatTitle)
+})
+
+// 监听会话切换，停止旧会话的轮询任务
+watch(
+  () => currentChat.value.id,
+  (newId, oldId) => {
+    if (oldId && oldId !== newId) {
+      stopConversationPolling(oldId)
+    }
+  }
+)
 </script>
 
 <style scoped lang="scss">
@@ -1515,5 +2612,97 @@ onMounted(async () => {
 
 :deep(.paragraph-node) {
   margin: 0.5rem 0;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.history-item {
+  border: 1px solid var(--line-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.history-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.media-preview {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  cursor: pointer;
+  position: relative;
+
+  .preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-preview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .preview-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &.error {
+      background: #fff1f0;
+    }
+  }
+}
+
+.history-info {
+  padding: 12px;
+
+  .prompt {
+    font-size: 13px;
+    color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.preview-container {
+  .preview-image,
+  .preview-video {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .preview-info {
+    padding: 16px;
+    background: var(--bg-color);
+    border-radius: 8px;
+  }
 }
 </style>

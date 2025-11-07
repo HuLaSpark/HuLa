@@ -41,6 +41,14 @@
                   </n-tag>
                   <n-tag v-if="model.publicStatus" type="info" size="small">公开</n-tag>
                   <n-tag v-else type="warning" size="small">私有</n-tag>
+                  <n-tag v-if="model.type === 1" type="info" size="small">对话</n-tag>
+                  <n-tag v-else-if="model.type === 2" type="success" size="small">图片</n-tag>
+                  <n-tag v-else-if="model.type === 3" type="primary" size="small">音频</n-tag>
+                  <n-tag v-else-if="model.type === 4" type="warning" size="small">视频</n-tag>
+                  <n-tag v-else-if="model.type === 5" type="default" size="small">向量</n-tag>
+                  <n-tag v-else-if="model.type === 6" type="default" size="small">重排序</n-tag>
+                  <n-tag v-else-if="model.type === 7" type="warning" size="small">文生视频</n-tag>
+                  <n-tag v-else-if="model.type === 8" type="error" size="small">图生视频</n-tag>
                 </n-flex>
                 <div class="model-meta">
                   <span class="meta-item">平台: {{ model.platform }}</span>
@@ -108,7 +116,7 @@
     v-model:show="showEditModal"
     preset="card"
     :title="editingModel ? '编辑模型' : '新增模型'"
-    style="width: 600px"
+    style="width: 750px"
     :bordered="false"
     :segmented="{ content: 'soft', footer: 'soft' }">
     <n-scrollbar style="max-height: calc(80vh - 140px)">
@@ -125,7 +133,8 @@
               v-model:value="formData.keyId"
               :options="apiKeyOptions"
               placeholder="请选择 API 密钥"
-              style="flex: 1" />
+              style="flex: 1"
+              @update:value="handleKeyIdChange" />
             <n-button @click="handleOpenApiKeyManagement">
               <template #icon>
                 <Icon icon="mdi:cog" />
@@ -136,15 +145,49 @@
         </n-form-item>
 
         <n-form-item label="平台" path="platform">
-          <n-select
-            v-model:value="formData.platform"
-            :options="platformOptions"
-            placeholder="请选择平台"
-            @update:value="handlePlatformChange" />
+          <n-input v-model:value="formData.platform" placeholder="根据API密钥自动设置" disabled />
+        </n-form-item>
+
+        <n-form-item label="模型类型" path="type">
+          <n-flex :size="8" style="flex-wrap: wrap">
+            <n-button :type="formData.type === 1 ? 'primary' : 'default'" size="small" @click="formData.type = 1">
+              <template #icon>
+                <Icon icon="mdi:message-text" />
+              </template>
+              对话
+            </n-button>
+            <n-button :type="formData.type === 2 ? 'primary' : 'default'" size="small" @click="formData.type = 2">
+              <template #icon>
+                <Icon icon="mdi:image" />
+              </template>
+              图片
+            </n-button>
+            <n-button :type="formData.type === 3 ? 'primary' : 'default'" size="small" @click="formData.type = 3">
+              <template #icon>
+                <Icon icon="mdi:microphone" />
+              </template>
+              音频
+            </n-button>
+            <n-button :type="formData.type === 7 ? 'primary' : 'default'" size="small" @click="formData.type = 7">
+              <template #icon>
+                <Icon icon="mdi:video-outline" />
+              </template>
+              文生视频
+            </n-button>
+            <n-button :type="formData.type === 8 ? 'primary' : 'default'" size="small" @click="formData.type = 8">
+              <template #icon>
+                <Icon icon="mdi:video-image" />
+              </template>
+              图生视频
+            </n-button>
+          </n-flex>
         </n-form-item>
 
         <n-form-item label="模型名称" path="name">
-          <n-input v-model:value="formData.name" placeholder="请输入模型名称，例如: GPT-4" />
+          <n-input
+            v-model:value="formData.name"
+            placeholder="请输入模型名称，例如: GPT-4"
+            @update:value="handleNameChange" />
         </n-form-item>
 
         <n-form-item label="模型标志" path="model">
@@ -155,10 +198,6 @@
             </span>
           </n-flex>
         </n-form-item>
-
-        <!-- <n-form-item label="模型类型" path="type">
-          <n-select v-model:value="formData.type" :options="typeOptions" placeholder="请选择模型类型" />
-        </n-form-item> -->
 
         <n-form-item label="状态" path="status">
           <n-select v-model:value="formData.status" :options="statusOptions" placeholder="请选择状态" />
@@ -270,30 +309,6 @@ const formData = ref({
   maxContexts: 10,
   publicStatus: false
 })
-
-// 平台选项
-const platformOptions = [
-  // ========== 国外平台 ==========
-  { label: 'OpenAI', value: 'OpenAI' },
-  { label: 'Azure OpenAI', value: 'AzureOpenAI' },
-  { label: 'Anthropic', value: 'Anthropic' },
-  { label: 'Google', value: 'Google' },
-  { label: 'Ollama', value: 'Ollama' },
-  // ========== 国内平台 ==========
-  { label: 'Moonshot (KIMI)', value: 'Moonshot' },
-  { label: 'DeepSeek', value: 'DeepSeek' },
-  { label: 'Baidu (文心一言)', value: 'YiYan' },
-  { label: 'Alibaba (通义千问)', value: 'TongYi' },
-  { label: 'Tencent (混元)', value: 'HunYuan' },
-  { label: 'Zhipu (智谱)', value: 'ZhiPu' },
-  { label: 'XingHuo (星火)', value: 'XingHuo' },
-  { label: 'DouBao (豆包)', value: 'DouBao' },
-  { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
-  { label: 'MiniMax', value: 'MiniMax' },
-  { label: 'BaiChuan (百川)', value: 'BaiChuan' },
-  // ========== 其他 ==========
-  { label: '其他', value: 'Other' }
-]
 
 // 平台对应的模型示例和官网链接
 const platformModelInfo: Record<string, { examples: string; docs: string; hint: string }> = {
@@ -502,10 +517,25 @@ const handlePageChange = (page: number) => {
   loadModelList()
 }
 
-// 平台切换处理
-const handlePlatformChange = (_value: string) => {
-  // 清空模型标志，让用户重新输入
-  formData.value.model = ''
+// API密钥切换处理
+const handleKeyIdChange = (keyId: string) => {
+  if (keyId) {
+    const apiKeyInfo = apiKeyMap.value.get(keyId)
+    if (apiKeyInfo && apiKeyInfo.platform) {
+      // 自动填充平台
+      formData.value.platform = apiKeyInfo.platform
+      // 清空模型标志，让用户重新输入
+      formData.value.model = ''
+    }
+  }
+}
+
+// 模型名称变化处理 - 单向同步到模型标志
+const handleNameChange = (value: string) => {
+  // 将模型名称同步到模型标志（单向绑定）
+  if (value) {
+    formData.value.model = value
+  }
 }
 
 // 新增模型
@@ -614,21 +644,6 @@ const handleOpenApiKeyManagement = () => {
 const handleApiKeyManagementRefresh = () => {
   loadApiKeyOptions()
 }
-
-// 监听 keyId 变化，自动填充平台
-watch(
-  () => formData.value.keyId,
-  (newKeyId) => {
-    if (newKeyId) {
-      const apiKeyInfo = apiKeyMap.value.get(newKeyId)
-
-      if (apiKeyInfo && apiKeyInfo.platform) {
-        // 自动填充平台
-        formData.value.platform = apiKeyInfo.platform
-      }
-    }
-  }
-)
 
 // 监听弹窗显示状态
 watch(showModal, (val) => {

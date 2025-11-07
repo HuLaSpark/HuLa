@@ -30,10 +30,11 @@
           </n-flex>
         </n-flex>
 
-        <div class="plugins">
+        <!-- 插件按钮已隐藏 -->
+        <!-- <div class="plugins">
           <svg class="size-22px"><use href="#plugins"></use></svg>
           <p>插件</p>
-        </div>
+        </div> -->
       </n-flex>
       <!-- 会话列表 -->
       <n-scrollbar
@@ -142,6 +143,12 @@
         </n-flex>
 
         <n-flex :size="4" align="center">
+          <div
+            @click="openHistory"
+            class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer"
+            title="生成历史">
+            <Icon icon="mdi:history" class="text-18px" />
+          </div>
           <div
             @click="openModelManagement"
             class="bg-[--chat-bt-color] border-(1px solid [--line-color]) color-[--chat-text-color] size-fit p-[8px_9px] rounded-8px custom-shadow cursor-pointer"
@@ -415,6 +422,11 @@ const openRoleManagement = () => {
 // 打开模型管理
 const openModelManagement = () => {
   useMitt.emit('open-model-management')
+}
+
+// 打开生成历史
+const openHistory = () => {
+  useMitt.emit('open-generation-history')
 }
 
 /** 添加会话 */
