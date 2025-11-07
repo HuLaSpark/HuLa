@@ -782,6 +782,8 @@ export enum ImUrlEnum {
 
   /** 发送 AI 消息 */
   MESSAGE_SEND_STREAM = 'messageSendStream',
+  /** 保存生成内容消息（用于音频、图片、视频等生成功能） */
+  MESSAGE_SAVE_GENERATED_CONTENT = 'messageSaveGeneratedContent',
   /** 获取指定会话消息列表 */
   MESSAGE_LIST_BY_CONVERSATION_ID = 'messageListByConversationId',
   /** 删除单条消息 */
@@ -806,6 +808,45 @@ export enum ImUrlEnum {
   MODEL_UPDATE = 'modelUpdate',
   /** 删除模型 */
   MODEL_DELETE = 'modelDelete',
+
+  // ==================== AI 图片生成 ====================
+  /** 获取【我的】图片生成分页 */
+  IMAGE_MY_PAGE = 'imageMyPage',
+  /** 获取【我的】图片生成记录 */
+  IMAGE_GET = 'imageGet',
+  /** 根据ID列表获取【我的】图片记录 */
+  IMAGE_MY_LIST_BY_IDS = 'imageMyListByIds',
+  /** 生成图片 */
+  IMAGE_DRAW = 'imageDraw',
+  /** 删除【我的】图片记录 */
+  IMAGE_DELETE_MY = 'imageDeleteMy',
+
+  // ==================== AI 视频生成 ====================
+  /** 获取【我的】视频生成分页 */
+  VIDEO_MY_PAGE = 'videoMyPage',
+  /** 获取【我的】视频生成记录 */
+  VIDEO_GET = 'videoGet',
+  /** 根据ID列表获取【我的】视频记录 */
+  VIDEO_MY_LIST_BY_IDS = 'videoMyListByIds',
+  /** 生成视频 */
+  VIDEO_GENERATE = 'videoGenerate',
+  /** 删除【我的】视频记录 */
+  VIDEO_DELETE_MY = 'videoDeleteMy',
+
+  // ==================== AI 音频生成 ====================
+  /** 获取【我的】音频生成分页 */
+  AUDIO_MY_PAGE = 'audioMyPage',
+  /** 获取【我的】音频生成记录 */
+  AUDIO_GET_MY = 'audioGetMy',
+  /** 根据ID列表获取【我的】音频记录 */
+  AUDIO_MY_LIST_BY_IDS = 'audioMyListByIds',
+  /** 生成音频 */
+  AUDIO_GENERATE = 'audioGenerate',
+  /** 删除【我的】音频记录 */
+  AUDIO_DELETE_MY = 'audioDeleteMy',
+  /** 获取指定模型支持的声音列表 */
+  AUDIO_VOICES = 'audioVoices',
+
   /** API 密钥分页 */
   API_KEY_PAGE = 'apiKeyPage',
   /** API 密钥简单列表 */

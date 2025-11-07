@@ -476,6 +476,19 @@ pub enum ImUrl {
     ImageUpdate,
     ImageDelete,
 
+    VideoMyPage,
+    VideoGet,
+    VideoMyListByIds,
+    VideoGenerate,
+    VideoDeleteMy,
+
+    AudioMyPage,
+    AudioGetMy,
+    AudioMyListByIds,
+    AudioGenerate,
+    AudioDeleteMy,
+    AudioVoices,
+
     KnowledgePage,
     KnowledgeGet,
     KnowledgeCreate,
@@ -733,6 +746,21 @@ impl ImUrl {
             ImUrl::ImagePage => (http::Method::GET, "ai/image/page"),
             ImUrl::ImageUpdate => (http::Method::PUT, "ai/image/update"),
             ImUrl::ImageDelete => (http::Method::DELETE, "ai/image/delete"),
+
+            // AI 视频生成
+            ImUrl::VideoMyPage => (http::Method::GET, "ai/video/my-page"),
+            ImUrl::VideoGet => (http::Method::GET, "ai/video/get"),
+            ImUrl::VideoMyListByIds => (http::Method::GET, "ai/video/my-list-by-ids"),
+            ImUrl::VideoGenerate => (http::Method::POST, "ai/video/generate"),
+            ImUrl::VideoDeleteMy => (http::Method::DELETE, "ai/video/delete-my"),
+
+            // AI 音频生成
+            ImUrl::AudioMyPage => (http::Method::GET, "ai/audio/my-page"),
+            ImUrl::AudioGetMy => (http::Method::GET, "ai/audio/get-my"),
+            ImUrl::AudioMyListByIds => (http::Method::GET, "ai/audio/my-list-by-ids"),
+            ImUrl::AudioGenerate => (http::Method::POST, "ai/audio/generate"),
+            ImUrl::AudioDeleteMy => (http::Method::DELETE, "ai/audio/delete-my"),
+            ImUrl::AudioVoices => (http::Method::GET, "ai/audio/voices"),
 
             // 知识库相关接口
             ImUrl::KnowledgePage => (http::Method::GET, "ai/knowledge/page"),
@@ -1007,6 +1035,21 @@ impl ImUrl {
             "imagePage" => Ok(ImUrl::ImagePage),
             "imageUpdate" => Ok(ImUrl::ImageUpdate),
             "imageDelete" => Ok(ImUrl::ImageDelete),
+
+            // ================ AI 视频生成 ================
+            "videoMyPage" => Ok(ImUrl::VideoMyPage),
+            "videoGet" => Ok(ImUrl::VideoGet),
+            "videoMyListByIds" => Ok(ImUrl::VideoMyListByIds),
+            "videoGenerate" => Ok(ImUrl::VideoGenerate),
+            "videoDeleteMy" => Ok(ImUrl::VideoDeleteMy),
+
+            // ================ AI 音频生成 ================
+            "audioMyPage" => Ok(ImUrl::AudioMyPage),
+            "audioGetMy" => Ok(ImUrl::AudioGetMy),
+            "audioMyListByIds" => Ok(ImUrl::AudioMyListByIds),
+            "audioGenerate" => Ok(ImUrl::AudioGenerate),
+            "audioDeleteMy" => Ok(ImUrl::AudioDeleteMy),
+            "audioVoices" => Ok(ImUrl::AudioVoices),
 
             // ================ AI 知识库 ================
             "knowledgePage" => Ok(ImUrl::KnowledgePage),

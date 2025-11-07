@@ -374,6 +374,16 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
         path: '/chatSettings',
         name: 'chatSettings',
         component: () => import('@/plugins/robot/views/chatSettings/index.vue')
+      },
+      {
+        path: '/imageGeneration',
+        name: 'imageGeneration',
+        component: () => import('@/plugins/robot/views/ImageGeneration.vue')
+      },
+      {
+        path: '/videoGeneration',
+        name: 'videoGeneration',
+        component: () => import('@/plugins/robot/views/VideoGeneration.vue')
       }
     ]
   },

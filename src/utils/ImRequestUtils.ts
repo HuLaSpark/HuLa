@@ -997,6 +997,102 @@ export async function modelDelete(params: { id: string }) {
   })
 }
 
+// ==================== AI 图片生成 ====================
+
+export async function imageMyPage(params?: { pageNo?: number; pageSize?: number; prompt?: string; status?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.IMAGE_MY_PAGE,
+    params
+  })
+}
+
+export async function imageGet(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.IMAGE_GET,
+    params
+  })
+}
+
+// 生成图片
+export async function imageDraw(body: {
+  modelId: string
+  prompt: string
+  width?: number
+  height?: number
+  conversationId?: string
+  options?: Record<string, any>
+}) {
+  return await imRequest({
+    url: ImUrlEnum.IMAGE_DRAW,
+    body
+  })
+}
+
+// 根据ID列表获取【我的】图片记录
+export async function imageMyListByIds(params: { ids: string }) {
+  return await imRequest({
+    url: ImUrlEnum.IMAGE_MY_LIST_BY_IDS,
+    params
+  })
+}
+
+// 删除【我的】图片记录
+export async function imageDeleteMy(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.IMAGE_DELETE_MY,
+    params
+  })
+}
+
+// ==================== AI 视频生成 ====================
+
+// 获取【我的】视频生成分页
+export async function videoMyPage(params?: { pageNo?: number; pageSize?: number; prompt?: string; status?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.VIDEO_MY_PAGE,
+    params
+  })
+}
+
+// 获取【我的】视频生成记录
+export async function videoGet(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.VIDEO_GET,
+    params
+  })
+}
+
+// 根据ID列表获取【我的】视频记录
+export async function videoMyListByIds(params: { ids: string }) {
+  return await imRequest({
+    url: ImUrlEnum.VIDEO_MY_LIST_BY_IDS,
+    params
+  })
+}
+
+// 生成视频
+export async function videoGenerate(body: {
+  modelId: string
+  prompt: string
+  width?: number
+  height?: number
+  duration?: number
+  options?: Record<string, any>
+}) {
+  return await imRequest({
+    url: ImUrlEnum.VIDEO_GENERATE,
+    body
+  })
+}
+
+// 删除【我的】视频记录
+export async function videoDeleteMy(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.VIDEO_DELETE_MY,
+    params
+  })
+}
+
 // ==================== API 密钥管理 ====================
 
 // API 密钥分页列表
@@ -1121,6 +1217,73 @@ export async function chatRoleUpdate(body: {
 export async function chatRoleDelete(params: { id: string }) {
   return await imRequest({
     url: ImUrlEnum.CHAT_ROLE_DELETE,
+    params
+  })
+}
+
+// ==================== AI 音频生成 ====================
+
+// 生成音频
+export async function audioGenerate(body: {
+  modelId: number
+  prompt: string
+  conversationId?: string
+  options?: Record<string, string>
+}) {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_GENERATE,
+    body
+  })
+}
+
+// 获取我的音频列表（根据ID列表）
+export async function audioMyListByIds(params: { ids: string }) {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_MY_LIST_BY_IDS,
+    params
+  })
+}
+
+// 获取我的音频分页
+export async function audioMyPage(params?: { pageNo?: number; pageSize?: number }) {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_MY_PAGE,
+    params
+  })
+}
+
+// 获取我的单个音频
+export async function audioGetMy(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_GET_MY,
+    params
+  })
+}
+
+// 删除我的音频
+export async function audioDeleteMy(params: { id: string }) {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_DELETE_MY,
+    params
+  })
+}
+
+// 获取指定模型支持的声音列表
+export async function audioGetVoices(params: { model: string }): Promise<string[]> {
+  return await imRequest({
+    url: ImUrlEnum.AUDIO_VOICES,
+    params
+  })
+}
+
+// 保存生成内容消息（用于音频、图片、视频等生成功能）
+export async function messageSaveGeneratedContent(params: {
+  conversationId: string
+  prompt: string
+  generatedContent: string
+}) {
+  return await imRequest({
+    url: ImUrlEnum.MESSAGE_SAVE_GENERATED_CONTENT,
     params
   })
 }
