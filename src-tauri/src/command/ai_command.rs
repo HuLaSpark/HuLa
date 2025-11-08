@@ -1,8 +1,8 @@
-use crate::im_request_client::ImUrl;
 use crate::AppData;
+use crate::im_request_client::ImUrl;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
-use tauri::{ipc::Channel, State};
+use tauri::{State, ipc::Channel};
 use tracing::{error, info};
 
 /// SSE 流式数据事件

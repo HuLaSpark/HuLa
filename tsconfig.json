@@ -27,7 +27,7 @@
       "@/*": ["./src/*"],
       "#/*": ["./src/mobile/*"]
     },
-    "types": ["vitest/globals", "@vue/test-utils"],
+    "types": ["vitest/globals", "@vue/test-utils", "node"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },

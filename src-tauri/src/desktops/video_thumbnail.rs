@@ -236,7 +236,7 @@ unsafe fn convert_hbitmap_to_image_data(
         // 获取位图信息
         let mut bitmap = BITMAP::default();
         let result = GetObjectW(
-            hbitmap,
+            hbitmap.into(),
             std::mem::size_of::<BITMAP>() as i32,
             Some(&mut bitmap as *mut _ as *mut _),
         );
@@ -252,7 +252,7 @@ unsafe fn convert_hbitmap_to_image_data(
         let height = bitmap.bmHeight as u32;
 
         // 创建设备上下文
-        let hdc = GetDC(HWND::default());
+        let hdc = GetDC(Some(HWND::default()));
         if hdc.is_invalid() {
             return Err(tauri::Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -260,9 +260,9 @@ unsafe fn convert_hbitmap_to_image_data(
             )));
         }
 
-        let mem_dc = CreateCompatibleDC(hdc);
+        let mem_dc = CreateCompatibleDC(Some(hdc));
         if mem_dc.is_invalid() {
-            ReleaseDC(HWND::default(), hdc);
+            ReleaseDC(Some(HWND::default()), hdc);
             return Err(tauri::Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "创建兼容设备上下文失败",
@@ -270,7 +270,7 @@ unsafe fn convert_hbitmap_to_image_data(
         }
 
         // 选择位图到内存DC
-        let old_bitmap = SelectObject(mem_dc, hbitmap);
+        let old_bitmap = SelectObject(mem_dc, hbitmap.into());
 
         // 准备位图信息头
         let mut bmp_info = BITMAPINFO {
@@ -308,8 +308,8 @@ unsafe fn convert_hbitmap_to_image_data(
 
         // 清理资源
         SelectObject(mem_dc, old_bitmap);
-        DeleteDC(mem_dc);
-        ReleaseDC(HWND::default(), hdc);
+        let _ = DeleteDC(mem_dc);
+        ReleaseDC(Some(HWND::default()), hdc);
 
         if result == 0 {
             return Err(tauri::Error::Io(std::io::Error::new(
@@ -353,7 +353,7 @@ async fn generate_thumbnail_windows(
 
     // 初始化 COM
     unsafe {
-        CoInitializeEx(None, COINIT_APARTMENTTHREADED).map_err(|e| {
+        CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok().map_err(|e| {
             tauri::Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("初始化 COM 失败: {:?}", e),

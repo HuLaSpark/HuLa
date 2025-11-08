@@ -1400,10 +1400,10 @@
                         "markdownDescription": "This enables all index or metadata related commands without any pre-configured accessible paths."
                       },
                       {
-                        "description": "An empty permission you can use to modify the global scope.",
+                        "description": "An empty permission you can use to modify the global scope.\n\n## Example\n\n```json\n{\n  \"identifier\": \"read-documents\",\n  \"windows\": [\"main\"],\n  \"permissions\": [\n    \"fs:allow-read\",\n    {\n      \"identifier\": \"fs:scope\",\n      \"allow\": [\n        \"$APPDATA/documents/**/*\"\n      ],\n      \"deny\": [\n        \"$APPDATA/documents/secret.txt\"\n      ]\n    }\n  ]\n}\n```\n",
                         "type": "string",
                         "const": "fs:scope",
-                        "markdownDescription": "An empty permission you can use to modify the global scope."
+                        "markdownDescription": "An empty permission you can use to modify the global scope.\n\n## Example\n\n```json\n{\n  \"identifier\": \"read-documents\",\n  \"windows\": [\"main\"],\n  \"permissions\": [\n    \"fs:allow-read\",\n    {\n      \"identifier\": \"fs:scope\",\n      \"allow\": [\n        \"$APPDATA/documents/**/*\"\n      ],\n      \"deny\": [\n        \"$APPDATA/documents/secret.txt\"\n      ]\n    }\n  ]\n}\n```\n"
                       },
                       {
                         "description": "This scope permits access to all files and list content of top level directories in the application folders.",
@@ -5895,10 +5895,10 @@
           "markdownDescription": "This enables all index or metadata related commands without any pre-configured accessible paths."
         },
         {
-          "description": "An empty permission you can use to modify the global scope.",
+          "description": "An empty permission you can use to modify the global scope.\n\n## Example\n\n```json\n{\n  \"identifier\": \"read-documents\",\n  \"windows\": [\"main\"],\n  \"permissions\": [\n    \"fs:allow-read\",\n    {\n      \"identifier\": \"fs:scope\",\n      \"allow\": [\n        \"$APPDATA/documents/**/*\"\n      ],\n      \"deny\": [\n        \"$APPDATA/documents/secret.txt\"\n      ]\n    }\n  ]\n}\n```\n",
           "type": "string",
           "const": "fs:scope",
-          "markdownDescription": "An empty permission you can use to modify the global scope."
+          "markdownDescription": "An empty permission you can use to modify the global scope.\n\n## Example\n\n```json\n{\n  \"identifier\": \"read-documents\",\n  \"windows\": [\"main\"],\n  \"permissions\": [\n    \"fs:allow-read\",\n    {\n      \"identifier\": \"fs:scope\",\n      \"allow\": [\n        \"$APPDATA/documents/**/*\"\n      ],\n      \"deny\": [\n        \"$APPDATA/documents/secret.txt\"\n      ]\n    }\n  ]\n}\n```\n"
         },
         {
           "description": "This scope permits access to all files and list content of top level directories in the application folders.",

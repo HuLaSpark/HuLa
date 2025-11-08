@@ -108,7 +108,7 @@ pub fn audio(filename: &str, handle: AppHandle) -> Result<(), String> {
 }
 
 fn play_audio_internal(path: &str, handle: &AppHandle) -> Result<(), String> {
-    use rodio::{Decoder, Source};
+    use rodio::Decoder;
     use std::fs::File;
     use std::io::BufReader;
 
@@ -120,15 +120,11 @@ fn play_audio_internal(path: &str, handle: &AppHandle) -> Result<(), String> {
     let audio = File::open(audio_path).map_err(|e| format!("打开音频文件失败: {}", e))?;
 
     let file = BufReader::new(audio);
-    let (_stream, stream_handle) =
-        rodio::OutputStream::try_default().map_err(|e| format!("创建音频输出流失败: {}", e))?;
-
+    let stream = rodio::OutputStreamBuilder::open_default_stream()
+        .map_err(|e| format!("创建音频输出流失败: {}", e))?;
     let source = Decoder::new(file).map_err(|e| format!("解码音频文件失败: {}", e))?;
 
-    stream_handle
-        .play_raw(source.convert_samples())
-        .map_err(|e| format!("播放音频失败: {}", e))?;
-
+    stream.mixer().add(source);
     thread::sleep(Duration::from_millis(3000));
     Ok(())
 }
@@ -337,7 +333,8 @@ unsafe fn get_text_scale_from_registry() -> Result<f64, String> {
 
     for (i, &subkey) in registry_paths.iter().enumerate() {
         let mut hkey: HKEY = HKEY::default();
-        let result = unsafe { RegOpenKeyExW(HKEY_CURRENT_USER, subkey, 0, KEY_READ, &mut hkey) };
+        let result =
+            unsafe { RegOpenKeyExW(HKEY_CURRENT_USER, subkey, Some(0), KEY_READ, &mut hkey) };
 
         if result.is_ok() {
             let value_name = value_names[i];

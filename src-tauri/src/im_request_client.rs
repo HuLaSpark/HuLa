@@ -193,7 +193,8 @@ impl ImRequestClient {
         let extra_headers = Some(vec![("Accept", "text/event-stream")]);
 
         // 使用 build_request 构建请求
-        let request_builder = self.build_request(method.clone(), path, &body, &params, extra_headers);
+        let request_builder =
+            self.build_request(method.clone(), path, &body, &params, extra_headers);
 
         // 发送请求
         let response = request_builder.send().await?;

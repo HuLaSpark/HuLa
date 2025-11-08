@@ -181,7 +181,7 @@ impl WebSocketClient {
                 let sender = self.message_sender.read().await;
 
                 if let Some(sender) = sender.as_ref() {
-                    let message = Message::Text(data.to_string());
+                    let message = Message::Text(data.to_string().into());
                     sender.send(message.clone()).map_err(|e| {
                         anyhow::anyhow!("Failed to queue message for sending: {}", e)
                     })?;
@@ -459,7 +459,7 @@ impl WebSocketClient {
                     match msg {
                         Ok(Message::Text(text)) => {
                             Self::handle_message_static(
-                                text,
+                                text.to_string(),
                                 &app_handle,
                                 &last_pong_time,
                                 &consecutive_failures,
@@ -467,7 +467,7 @@ impl WebSocketClient {
                             .await;
                         }
                         Ok(Message::Binary(data)) => {
-                            if let Ok(text) = String::from_utf8(data) {
+                            if let Ok(text) = String::from_utf8(data.to_vec()) {
                                 Self::handle_message_static(
                                     text,
                                     &app_handle,
@@ -872,7 +872,7 @@ impl WebSocketClient {
                     if let Ok(json) = serde_json::to_value(&heartbeat_msg) {
                         let sender = message_sender.read().await;
                         if let Some(sender) = sender.as_ref() {
-                            let message = Message::Text(json.to_string());
+                            let message = Message::Text(json.to_string().into());
                             if let Err(e) = sender.send(message) {
                                 error!("❌ Failed to send heartbeat: {}", e);
                                 break;
@@ -959,7 +959,7 @@ impl WebSocketClient {
 
             // 尝试发送每条消息
             for message in messages_to_send {
-                let text_message = Message::Text(message.to_string());
+                let text_message = Message::Text(message.to_string().into());
                 if let Err(e) = sender.send(text_message) {
                     error!("❌ Failed to send pending message: {}", e);
                     failed_messages.push(message);
