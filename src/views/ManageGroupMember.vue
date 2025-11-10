@@ -27,9 +27,6 @@
             </template>
           </n-input>
         </div>
-        <div class="flex justify-end items-center">
-          <n-button class="py-5px" @click="doSearch">搜索</n-button>
-        </div>
       </div>
 
       <!-- 成员列表 -->
@@ -88,31 +85,27 @@
   <!-- PC端布局（作为弹窗内容或独立页面） -->
   <div v-else class="flex w-full flex-col h-full">
     <!-- PC端头部 -->
-    <div class="pc-header">
+    <div class="flex-shrink-0">
       <div class="flex items-center justify-between px-20px py-16px border-b border-[--line-color]">
         <h2 class="text-16px font-medium text-[--text-color]">管理群成员</h2>
       </div>
     </div>
 
     <!-- 顶部搜索框 -->
-    <div class="px-20px mt-16px flex gap-3">
+    <div class="px-20px flex gap-3">
       <div class="flex-1 py-5px shrink-0">
         <n-input
           v-model:value="keyword"
-          class="rounded-8px w-full search-input relative text-14px"
-          placeholder="搜索成员~"
-          clearable
           spellCheck="false"
           autoComplete="off"
           autoCorrect="off"
-          autoCapitalize="off">
+          autoCapitalize="off"
+          class="border-(solid 1px [--line-color]) rounded-8px"
+          placeholder="搜索群成员">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
         </n-input>
-      </div>
-      <div class="flex justify-end items-center">
-        <n-button class="py-5px" @click="doSearch">搜索</n-button>
       </div>
     </div>
 
@@ -127,10 +120,10 @@
             <n-checkbox
               :value="item.uid"
               size="large"
-              class="w-full flex items-center px-5px"
+              class="w-full flex items-center px-12px"
               :class="[
                 'cursor-pointer select-none transition-colors duration-150',
-                selectedList.includes(item.uid) ? 'bg-blue-50 border-blue-300' : 'hover:bg-[--hover-color]'
+                selectedList.includes(item.uid) ? 'bg-#13987f18' : ''
               ]">
               <template #default>
                 <div class="flex items-center gap-10px px-8px py-10px">
@@ -170,6 +163,8 @@
 </template>
 
 <script setup lang="ts">
+import MobileLayout from '#/components/MobileLayout.vue'
+import HeaderBar from '#/components/chat-room/HeaderBar.vue'
 import { type } from '@tauri-apps/plugin-os'
 import { OnlineEnum, RoleEnum } from '@/enums'
 import { useGroupStore } from '@/stores/group'
@@ -221,11 +216,6 @@ const filteredMembers = computed(() => {
     return userInfo.name.toLowerCase().includes(searchKeyword) || userInfo.account.toLowerCase().includes(searchKeyword)
   })
 })
-
-// 搜索功能
-const doSearch = () => {
-  // 搜索逻辑已在 filteredMembers 中实现
-}
 
 // 处理关闭
 const handleClose = () => {
@@ -316,38 +306,4 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped lang="scss">
-.pc-header {
-  flex-shrink: 0;
-}
-
-/* 搜索框灰色背景（PC端） */
-.search-input {
-  :deep(.n-input__input-el) {
-    background-color: #f5f5f5;
-  }
-
-  :deep(.n-input-wrapper) {
-    background-color: #f5f5f5;
-  }
-
-  :deep(.n-input__prefix) {
-    background-color: #f5f5f5;
-  }
-
-  :deep(.n-input__border),
-  :deep(.n-input__state-border) {
-    border: none;
-  }
-}
-
-/* 通用样式 */
-:deep(.n-checkbox) {
-  width: 100%;
-}
-
-:deep(.n-checkbox__label) {
-  width: 100%;
-  padding: 0;
-}
-</style>
+<style scoped lang="scss"></style>
