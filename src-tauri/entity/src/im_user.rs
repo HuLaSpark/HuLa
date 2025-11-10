@@ -24,7 +24,6 @@ pub struct Model {
     pub update_time: Option<i64>,
     pub password: Option<String>,
     pub avatar_update_time: Option<i64>,
-    pub num: Option<i32>,
     pub context: Option<bool>,
     pub user_type: Option<i32>,
     pub is_init: bool,
