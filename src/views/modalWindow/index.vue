@@ -73,6 +73,9 @@ const handleInvite = async () => {
     })
 
     window.$message.success('邀请成功')
+    setTimeout(() => {
+      handleClose()
+    }, 1000)
   } catch (error) {
     console.error('邀请失败:', error)
     window.$message.error('邀请失败，请重试')
