@@ -39,7 +39,7 @@
                   <n-tag :type="model.status === 0 ? 'success' : 'error'" size="small">
                     {{ model.status === 0 ? '可用' : '不可用' }}
                   </n-tag>
-                  <n-tag v-if="model.publicStatus" type="info" size="small">公开</n-tag>
+                  <n-tag v-if="model.publicStatus === 0" type="info" size="small">公开</n-tag>
                   <n-tag v-else type="warning" size="small">私有</n-tag>
                   <n-tag v-if="model.type === 1" type="info" size="small">对话</n-tag>
                   <n-tag v-else-if="model.type === 2" type="success" size="small">图片</n-tag>
@@ -234,7 +234,7 @@
         </n-form-item>
 
         <n-form-item label="是否公开" path="publicStatus">
-          <n-switch v-model:value="formData.publicStatus">
+          <n-switch :value="formData.publicStatus === 0" @update:value="handlePublicStatusChange">
             <template #checked>公开</template>
             <template #unchecked>私有</template>
           </n-switch>
@@ -307,7 +307,7 @@ const formData = ref({
   temperature: 0.8,
   maxTokens: 4096,
   maxContexts: 10,
-  publicStatus: false
+  publicStatus: 0 // 0=公开，1=私有
 })
 
 // 平台对应的模型示例和官网链接
@@ -393,6 +393,11 @@ const platformModelInfo: Record<string, { examples: string; docs: string; hint: 
     examples: 'Baichuan2-Turbo, Baichuan2-Turbo-192k, Baichuan2-53B',
     docs: 'https://platform.baichuan-ai.com/docs/api',
     hint: '请前往百川智能官网查看可用模型列表'
+  },
+  GiteeAI: {
+    examples: 'tts-1, tts-1-hd, gpt-4o, gpt-4o-mini',
+    docs: 'https://ai.gitee.com/docs',
+    hint: '请前往 Gitee AI 魔力方舟官网查看可用模型列表'
   },
   // ========== 其他 ==========
   Other: {
@@ -538,6 +543,12 @@ const handleNameChange = (value: string) => {
   }
 }
 
+// 公开状态变化处理
+const handlePublicStatusChange = (checked: boolean) => {
+  formData.value.publicStatus = checked ? 0 : 1
+  console.log('publicStatus changed to:', formData.value.publicStatus)
+}
+
 // 新增模型
 const handleAdd = () => {
   editingModel.value = null
@@ -552,7 +563,7 @@ const handleAdd = () => {
     temperature: 0.8,
     maxTokens: 4096,
     maxContexts: 10,
-    publicStatus: false
+    publicStatus: 0 // 0=公开，1=私有
   }
   showEditModal.value = true
 }
@@ -571,7 +582,7 @@ const handleEdit = (model: any) => {
     temperature: model.temperature ?? 0.8,
     maxTokens: model.maxTokens ?? 4096,
     maxContexts: model.maxContexts ?? 10,
-    publicStatus: model.publicStatus ?? false
+    publicStatus: model.publicStatus ?? 0 // 0=公开，1=私有
   }
   showEditModal.value = true
 }
@@ -595,6 +606,8 @@ const handleSubmit = async () => {
       maxContexts: formData.value.maxContexts,
       publicStatus: formData.value.publicStatus
     }
+
+    console.log('提交数据:', submitData)
 
     if (editingModel.value) {
       submitData.id = editingModel.value.id

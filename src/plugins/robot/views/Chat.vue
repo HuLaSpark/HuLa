@@ -223,29 +223,95 @@
                       {{ message.content }}
                     </template>
                     <template v-else>
-                      <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
-                        <MarkdownRender
-                          :content="message.content"
-                          :is-dark="isDarkTheme"
-                          :viewportPriority="false"
-                          :code-block-light-theme="'vitesse-light'"
-                          :code-block-dark-theme="'vitesse-dark'"
-                          :themes="['vitesse-light', 'vitesse-dark']"
-                          :code-block-props="{
-                            showPreviewButton: false,
-                            showFontSizeButtons: false,
-                            enableFontSizeControl: false,
-                            showExpandButton: false,
-                            showLanguageSelect: false,
-                            showCopyButton: true,
-                            showLineNumber: false,
-                            monacoOptions: {
-                              MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
-                              readOnly: true,
-                              minimap: { enabled: false }
-                            }
-                          }" />
-                      </div>
+                      <!-- msgType: 使用枚举 AiMsgContentTypeEnum -->
+                      <template v-if="message.msgType === AiMsgContentTypeEnum.IMAGE">
+                        <!-- 图片消息 -->
+                        <img
+                          :src="message.content"
+                          alt="生成的图片"
+                          class="max-w-400px max-h-400px rounded-8px cursor-pointer"
+                          @click="handleImagePreview(message.content)" />
+                      </template>
+                      <template v-else-if="message.msgType === AiMsgContentTypeEnum.VIDEO">
+                        <!-- 视频消息 -->
+                        <video
+                          :src="message.content"
+                          controls
+                          class="max-w-600px max-h-400px rounded-8px"
+                          preload="metadata">
+                          您的浏览器不支持视频播放
+                        </video>
+                      </template>
+                      <template v-else-if="message.msgType === AiMsgContentTypeEnum.AUDIO">
+                        <!-- 音频消息 -->
+                        <audio :src="message.content" controls class="w-300px" preload="metadata">
+                          您的浏览器不支持音频播放
+                        </audio>
+                      </template>
+                      <template v-else>
+                        <!-- 文本消息（msgType === 1 或未设置） -->
+                        <div class="flex flex-col gap-8px">
+                          <!-- 推理过程（如果存在） -->
+                          <div
+                            v-if="message.reasoningContent"
+                            class="reasoning-content p-12px rounded-8px bg-[#f5f5f5] dark:bg-[#2a2a2a] border-(1px solid #e0e0e0) dark:border-(1px solid #404040)">
+                            <div class="flex items-center gap-6px mb-8px">
+                              <Icon icon="mdi:brain" class="text-16px text-[#1890ff]" />
+                              <span class="text-12px text-[#666] dark:text-[#aaa] font-500">思考过程</span>
+                            </div>
+                            <div
+                              class="code-block-wrapper"
+                              :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
+                              <MarkdownRender
+                                :content="message.reasoningContent"
+                                :is-dark="isDarkTheme"
+                                :viewportPriority="false"
+                                :code-block-light-theme="'vitesse-light'"
+                                :code-block-dark-theme="'vitesse-dark'"
+                                :themes="['vitesse-light', 'vitesse-dark']"
+                                :code-block-props="{
+                                  showPreviewButton: false,
+                                  showFontSizeButtons: false,
+                                  enableFontSizeControl: false,
+                                  showExpandButton: false,
+                                  showLanguageSelect: false,
+                                  showCopyButton: true,
+                                  showLineNumber: false,
+                                  monacoOptions: {
+                                    MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
+                                    readOnly: true,
+                                    minimap: { enabled: false }
+                                  }
+                                }" />
+                            </div>
+                          </div>
+
+                          <!-- 最终答案 -->
+                          <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
+                            <MarkdownRender
+                              :content="message.content"
+                              :is-dark="isDarkTheme"
+                              :viewportPriority="false"
+                              :code-block-light-theme="'vitesse-light'"
+                              :code-block-dark-theme="'vitesse-dark'"
+                              :themes="['vitesse-light', 'vitesse-dark']"
+                              :code-block-props="{
+                                showPreviewButton: false,
+                                showFontSizeButtons: false,
+                                enableFontSizeControl: false,
+                                showExpandButton: false,
+                                showLanguageSelect: false,
+                                showCopyButton: true,
+                                showLineNumber: false,
+                                monacoOptions: {
+                                  MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
+                                  readOnly: true,
+                                  minimap: { enabled: false }
+                                }
+                              }" />
+                          </div>
+                        </div>
+                      </template>
                     </template>
                   </div>
                 </n-flex>
@@ -755,7 +821,7 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import MarkdownRender from 'vue-renderer-markdown'
 import { useResizeObserver } from '@vueuse/core'
-import { ThemeEnum } from '@/enums'
+import { ThemeEnum, AiMsgContentTypeEnum } from '@/enums'
 import 'vue-renderer-markdown/index.css'
 import {
   modelPage,
@@ -834,12 +900,14 @@ watch(
 interface Message {
   type: 'user' | 'assistant'
   content: string
+  reasoningContent?: string // 推理思考内容（用于支持思考模型，如 DeepSeek R1）
   streaming?: boolean
   createTime?: number
   id?: string // 消息ID，用于删除
   replyId?: string | null // 回复的消息ID
   model?: string // 使用的模型
   isGenerating?: boolean // 是否正在生成中(用于图片/视频/音频生成)
+  msgType?: AiMsgContentTypeEnum // 消息内容类型枚举
   imageUrl?: string // 图片URL
   imageInfo?: {
     // 图片信息
@@ -1233,6 +1301,7 @@ const sendAIMessage = async (content: string, model: any) => {
     // 添加用户消息到列表
     messageList.value.push({
       type: 'user',
+      msgType: 1, // 1=TEXT
       content: content,
       createTime: Date.now()
     })
@@ -1241,6 +1310,7 @@ const sendAIMessage = async (content: string, model: any) => {
     const aiMessageIndex = messageList.value.length
     messageList.value.push({
       type: 'assistant',
+      msgType: 1, // 1=TEXT
       content: '',
       createTime: Date.now()
     })
@@ -1248,6 +1318,7 @@ const sendAIMessage = async (content: string, model: any) => {
     // 滚动到底部、用于累积AI回复内容
     scrollToBottom()
     let accumulatedContent = ''
+    let accumulatedReasoningContent = '' // 用于累积推理内容
 
     if (!currentChat.value.messageCount) {
       currentChat.value.messageCount = 0
@@ -1268,11 +1339,26 @@ const sendAIMessage = async (content: string, model: any) => {
         onChunk: (chunk: string) => {
           try {
             const data = JSON.parse(chunk)
-            if (data.success && data.data?.receive?.content) {
-              const incrementalContent = data.data.receive.content
-              // 手动累加内容、更新AI消息内容
-              accumulatedContent += incrementalContent
-              messageList.value[aiMessageIndex].content = accumulatedContent
+            if (data.success && data.data?.receive) {
+              // 处理正常内容
+              if (data.data.receive.content) {
+                const incrementalContent = data.data.receive.content
+                // 手动累加内容、更新AI消息内容
+                accumulatedContent += incrementalContent
+                messageList.value[aiMessageIndex].content = accumulatedContent
+              }
+
+              // 处理推理思考内容
+              if (data.data.receive.reasoningContent) {
+                const incrementalReasoningContent = data.data.receive.reasoningContent
+                accumulatedReasoningContent += incrementalReasoningContent
+                messageList.value[aiMessageIndex].reasoningContent = accumulatedReasoningContent
+              }
+
+              // 设置 msgType（如果后端返回了）
+              if (data.data.receive.msgType !== undefined) {
+                messageList.value[aiMessageIndex].msgType = data.data.receive.msgType
+              }
 
               scrollToBottom()
             }
@@ -1315,6 +1401,7 @@ const generateImage = async (prompt: string, model: any) => {
     messageList.value.push({
       type: 'user',
       content: prompt,
+      msgType: 2,
       createTime: Date.now()
     })
 
@@ -1322,6 +1409,7 @@ const generateImage = async (prompt: string, model: any) => {
     const aiMessageIndex = messageList.value.length
     messageList.value.push({
       type: 'assistant',
+      msgType: 2,
       content: '🎨 正在生成图片，请稍候...',
       createTime: Date.now(),
       isGenerating: true
@@ -1396,10 +1484,10 @@ const pollImageStatus = async (
 
       // 状态: 10=进行中, 20=成功, 30=失败
       if (image.status === 20) {
-        const imageMarkdown = `![生成的图片](${image.picUrl})`
         messageList.value[messageIndex] = {
           type: 'assistant',
-          content: imageMarkdown,
+          content: image.picUrl,
+          msgType: AiMsgContentTypeEnum.IMAGE,
           createTime: Date.now(),
           isGenerating: false,
           imageUrl: image.picUrl,
@@ -1447,6 +1535,7 @@ const generateVideo = async (prompt: string, model: any) => {
   try {
     messageList.value.push({
       type: 'user',
+      msgType: 3, // 3=VIDEO
       content: prompt,
       createTime: Date.now()
     })
@@ -1455,6 +1544,7 @@ const generateVideo = async (prompt: string, model: any) => {
     const aiMessageIndex = messageList.value.length
     messageList.value.push({
       type: 'assistant',
+      msgType: 3, // 3=VIDEO
       content: '🎬 正在生成视频，这可能需要几分钟时间，请耐心等待...',
       createTime: Date.now(),
       isGenerating: true
@@ -1545,10 +1635,10 @@ const pollVideoStatus = async (
 
       // 状态: 10=进行中, 20=成功, 30=失败
       if (video.status === 20) {
-        const videoMarkdown = `🎬 视频生成成功！\n\n[点击查看视频](${video.videoUrl})`
         messageList.value[messageIndex] = {
           type: 'assistant',
-          content: videoMarkdown,
+          content: video.videoUrl,
+          msgType: AiMsgContentTypeEnum.VIDEO,
           createTime: Date.now(),
           isGenerating: false,
           videoUrl: video.videoUrl,
@@ -1595,6 +1685,7 @@ const generateAudio = async (prompt: string, model: any) => {
   try {
     messageList.value.push({
       type: 'user',
+      msgType: 4, // 4=AUDIO
       content: prompt,
       createTime: Date.now()
     })
@@ -1603,6 +1694,7 @@ const generateAudio = async (prompt: string, model: any) => {
     const aiMessageIndex = messageList.value.length
     messageList.value.push({
       type: 'assistant',
+      msgType: 4, // 4=AUDIO
       content: '🎵 正在生成音频，请稍候...',
       createTime: Date.now(),
       isGenerating: true
@@ -1667,10 +1759,10 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
 
       // 20 代表成功
       if (audio.status === 20) {
-        const audioMarkdown = `🎵 音频生成成功！\n\n[点击播放音频](${audio.audioUrl})`
         messageList.value[messageIndex] = {
           type: 'assistant',
-          content: audioMarkdown,
+          content: audio.audioUrl,
+          msgType: AiMsgContentTypeEnum.AUDIO,
           createTime: Date.now(),
           isGenerating: false,
           audioUrl: audio.audioUrl,
@@ -1705,6 +1797,12 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
   pollingTasks.set(audioId, { timerId, conversationId })
 
   poll()
+}
+
+// 图片预览处理
+const handleImagePreview = (imageUrl: string) => {
+  previewItem.value = { picUrl: imageUrl }
+  showImagePreview.value = true
 }
 
 // 功能列表
@@ -1937,6 +2035,8 @@ const loadMessages = async (conversationId: string) => {
         messageList.value.push({
           type: msg.type,
           content: msg.content || '',
+          reasoningContent: msg.reasoningContent, // 推理思考内容
+          msgType: msg.msgType, // 消息内容类型枚举
           createTime: msg.createTime ?? Date.now(),
           id: msg.id,
           replyId: msg.replyId,

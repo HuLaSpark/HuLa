@@ -213,6 +213,7 @@ const platformOptions = [
   { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
   { label: 'MiniMax', value: 'MiniMax' },
   { label: 'BaiChuan (百川)', value: 'BaiChuan' },
+  { label: 'Gitee AI (魔力方舟)', value: 'GiteeAI' },
   // ========== 国外平台 ==========
   { label: 'OpenAI', value: 'OpenAI' },
   { label: 'Azure OpenAI', value: 'AzureOpenAI' },
