@@ -844,16 +844,34 @@ export const useChatStore = defineStore(
       const currentMessages = messageMap[roomId]
       if (!currentMessages) return
 
-      // 将消息转换为数组并按消息ID倒序排序
+      // 将消息转换为数组并按消息ID倒序排序，前面的元素代表最新的消息
       const sortedMessages = Object.values(currentMessages).sort((a, b) => Number(b.message.id) - Number(a.message.id))
 
-      // 保留前20条消息的ID
-      const keepMessageIds = new Set(sortedMessages.slice(0, 20).map((msg) => msg.message.id))
+      if (sortedMessages.length <= pageSize) {
+        return
+      }
+
+      const keptMessages = sortedMessages.slice(0, pageSize)
+      const keepMessageIds = new Set(keptMessages.map((msg) => msg.message.id))
+      const fallbackCursor = keptMessages[keptMessages.length - 1]?.message.id || ''
 
       // 删除多余的消息
       for (const msgId in currentMessages) {
         if (!keepMessageIds.has(msgId)) {
           delete currentMessages[msgId]
+        }
+      }
+
+      if (!messageOptions[roomId]) {
+        messageOptions[roomId] = { isLast: false, isLoading: false, cursor: '' }
+      }
+
+      // 更新游标为当前内存里最旧的那条消息ID，确保后续「加载更多」能从数据库补齐更早的消息
+      if (fallbackCursor) {
+        messageOptions[roomId] = {
+          ...messageOptions[roomId],
+          cursor: fallbackCursor,
+          isLast: false
         }
       }
     }

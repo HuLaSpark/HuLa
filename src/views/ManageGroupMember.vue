@@ -75,7 +75,7 @@
       <!-- 底部操作栏 -->
       <div class="px-16px py-10px bg-white border-t border-gray-200 flex justify-between items-center">
         <span class="text-14px">已选择 {{ selectedList.length }} 人</span>
-        <n-button type="error" :disabled="selectedList.length === 0" :loading="isLoading" @click="handleRemove">
+        <n-button type="error" :disabled="selectedList.length === 0" :loading="isLoading" @click="handleMobileRemove">
           踢出群聊
         </n-button>
       </div>
@@ -155,9 +155,26 @@
     <!-- 底部操作栏 -->
     <div class="px-20px py-12px bg-[--bg-popover] border-t border-[--line-color] flex justify-between items-center">
       <span class="text-13px text-[--text-color]">已选择 {{ selectedList.length }} 人</span>
-      <n-button type="error" :disabled="selectedList.length === 0" :loading="isLoading" @click="handleRemove">
-        踢出群聊
-      </n-button>
+      <n-popconfirm v-model:show="showDeleteConfirm">
+        <template #icon>
+          <svg class="size-22px"><use href="#explosion"></use></svg>
+        </template>
+        <template #action>
+          <n-button size="small" tertiary @click.stop="showDeleteConfirm = false">取消</n-button>
+          <n-button size="small" type="error" @click.stop="handleRemove">确定</n-button>
+        </template>
+        <template #trigger>
+          <n-button
+            secondary
+            class="rounded-14px"
+            type="error"
+            :disabled="selectedList.length === 0"
+            :loading="isLoading">
+            踢出群聊
+          </n-button>
+        </template>
+        确定要踢出 {{ selectedList.length }} 位成员吗？
+      </n-popconfirm>
     </div>
   </div>
 </template>
@@ -187,6 +204,7 @@ const dialog = useDialog()
 const keyword = ref('')
 const selectedList = ref<string[]>([])
 const isLoading = ref(false)
+const showDeleteConfirm = ref(false)
 const scrollHeight = ref(0)
 const scrollArea = ref<HTMLElement>()
 
@@ -228,42 +246,58 @@ const handleClose = () => {
   }
 }
 
-// 处理踢出群聊
-const handleRemove = async () => {
-  // 检查是否是频道（roomId === '1'），频道不允许踢人
+const validateRemoval = () => {
   if (globalStore.currentSessionRoomId === '1') {
     window.$message.warning('频道不允许踢出成员')
-    return
+    return false
   }
 
   if (selectedList.value.length === 0) {
     window.$message.warning('请选择要踢出的成员')
-    return
+    return false
   }
 
-  // 确认对话框
+  return true
+}
+
+// 实际处理踢出群聊
+const handleRemove = async () => {
+  showDeleteConfirm.value = false
+
+  if (!validateRemoval()) {
+    return false
+  }
+
+  const members = [...selectedList.value]
+  const count = members.length
+
+  isLoading.value = true
+  try {
+    await groupStore.removeGroupMembers(members, globalStore.currentSessionRoomId)
+
+    window.$message.success(`成功踢出 ${count} 位成员`)
+    selectedList.value = []
+    handleClose()
+    return true
+  } catch (error) {
+    console.error('踢出失败:', error)
+    window.$message.error('踢出失败，请重试')
+    return false
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 移动端使用对话框二次确认
+const handleMobileRemove = () => {
+  if (!validateRemoval()) return
+
   dialog.warning({
     title: '确认踢出',
     content: `确定要踢出 ${selectedList.value.length} 位成员吗？`,
     positiveText: '确定',
     negativeText: '取消',
-    onPositiveClick: async () => {
-      isLoading.value = true
-      try {
-        // 调用批量踢人接口
-        await groupStore.removeGroupMembers(selectedList.value, globalStore.currentSessionRoomId)
-
-        window.$message.success(`成功踢出 ${selectedList.value.length} 位成员`)
-        selectedList.value = []
-        // 关闭或返回
-        handleClose()
-      } catch (error) {
-        console.error('踢出失败:', error)
-        window.$message.error('踢出失败，请重试')
-      } finally {
-        isLoading.value = false
-      }
-    }
+    onPositiveClick: handleRemove
   })
 }
 

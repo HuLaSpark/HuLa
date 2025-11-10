@@ -196,7 +196,7 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { useDebounceFn, useTimeoutFn } from '@vueuse/core'
+import { useDebounceFn, useEventListener, useTimeoutFn } from '@vueuse/core'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
 import { useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -313,6 +313,70 @@ const topAnnouncement = ref<AnnouncementData | null>(null)
 const hoverId = ref('')
 // 添加标记，用于识别是否正在加载历史消息
 const isLoadingMore = ref(false)
+// 避免初始化自动触发顶部加载
+const suppressTopLoadMore = ref(false)
+
+const temporarilySuppressTopLoadMore = () => {
+  suppressTopLoadMore.value = true
+  const release = () => {
+    suppressTopLoadMore.value = false
+  }
+  if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(release)
+    })
+  } else {
+    setTimeout(release, 32)
+  }
+}
+
+// 滚轮滚动限制状态
+const MAX_WHEEL_DELTA = 130
+const DOM_DELTA_LINE = 1
+const DOM_DELTA_PAGE = 2
+
+const clampWheelDelta = (delta: number): number => {
+  if (Math.abs(delta) <= MAX_WHEEL_DELTA) {
+    return delta
+  }
+  return Math.sign(delta) * MAX_WHEEL_DELTA
+}
+
+const normalizeWheelDelta = (event: WheelEvent, target: HTMLElement): number => {
+  switch (event.deltaMode) {
+    case DOM_DELTA_LINE:
+      return event.deltaY * 16
+    case DOM_DELTA_PAGE:
+      return event.deltaY * target.clientHeight
+    default:
+      return event.deltaY
+  }
+}
+
+const handleWheel = (event: WheelEvent) => {
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  // 跳过触控板缩放或横向滚动
+  if (event.ctrlKey || Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
+    return
+  }
+
+  const normalizedDelta = normalizeWheelDelta(event, container)
+  if (Math.abs(normalizedDelta) < 0.5) {
+    return
+  }
+
+  event.preventDefault()
+  const limitedDelta = clampWheelDelta(normalizedDelta)
+  if (Math.abs(limitedDelta) < 0.5) {
+    return
+  }
+  container.scrollTop += limitedDelta
+}
+
+const stopWheelListener = useEventListener(scrollContainerRef, 'wheel', handleWheel, { passive: false })
+
 // 监听公告更新和清空事件的变量
 let announcementUpdatedListener: any = null
 let announcementClearListener: any = null
@@ -382,6 +446,7 @@ watch(
   ([newRoomId], [oldRoomId]) => {
     // 只有在房间切换且DOM就绪时才触发初始化意图
     if (newRoomId && newRoomId !== oldRoomId) {
+      suppressTopLoadMore.value = true
       scrollIntent.value = ScrollIntentEnum.INITIAL
     }
   },
@@ -494,6 +559,7 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 
 // 滚动到底部
 const scrollToBottom = (): void => {
+  temporarilySuppressTopLoadMore()
   // console.log('触发滚动到底部')
   const container = scrollContainerRef.value
   if (!container) return
@@ -542,7 +608,7 @@ const debouncedScrollOperations = useDebounceFn(async (container: HTMLElement) =
   // 处理触顶加载更多
   if (scrollTop.value < 60) {
     // 如果正在加载或已经触发了加载，或已到达最后一页，则不重复触发
-    if (chatStore.currentMessageOptions?.isLast) return
+    if (suppressTopLoadMore.value || chatStore.currentMessageOptions?.isLast) return
 
     await handleLoadMore()
   }
@@ -732,6 +798,7 @@ onUnmounted(() => {
   if (announcementClearListener) {
     announcementClearListener()
   }
+  stopWheelListener()
 })
 </script>
 
