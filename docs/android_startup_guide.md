@@ -339,3 +339,30 @@ disconnected 192.168.1.43:9222
 1、在谷歌浏览器（或谷歌内核浏览器）中输入网址 `chrome://inspect/#devices`
 2、在浏览器中Remote Target可查看到当前已经连接到的真机，点击 `inspect`即可调试安卓UI
 ![真机调试.png](https://foruda.gitee.com/images/1752748948682584858/b46ef353_9738380.png)
+
+## 六、关于安卓打包问题
+
+Tauri 的 Android 壳包含 **Rust 原生代码**，Gradle 在 `src-tauri/gen/android/app/build.gradle.kts` 默认会同时打出
+**arm64-v8a**、**armeabi-v7a**、**x86**、**x86_64** 四个 **ABI** 的变体（debug 里甚至显式保留各架构的符号）。为了给每个 ABI 提供
+对应的 `.so`，`tauri android build` 会调用 `cargo ndk` 交叉编译，分别把产物放进 `src-tauri/target/aarch64-linux-android` 等目录。
+`.cargo/config.toml` 也预先配置了四套 **NDK linker**，说明项目本身就是面向多 ABI 的。最终生成的 **universal APK/AAB** 会把所有 ABI 的原生
+库一起打包，保证在不同 CPU（32/64 位 ARM、Android 模拟器用的 x86/x86_64）上都能安装运行。
+
+**能否不生成呢？**
+
+1. 如果你确信应用只会跑在某一种架构（例如大部分真机都支持的 **arm64-v8a**），可以在构建前限制 ABI 列表，比如在 PowerShell 中：
+
+```powershell
+$env:TAURI_ANDROID_ARCHS='arm64-v8a'; pnpm tauri android build
+```
+
+   这样 Tauri 只会编译并输出 `aarch64-linux-android` 目录。
+
+2. 也可以在自定义的 Gradle 配置里设置 `android.splits.abi { include("arm64-v8a") }` 或 `ndk { abiFilters += "arm64-v8a" }`，但要放在不会
+   被 `gen/android` 覆盖的位置（例如自建 `android/app/build.gradle.kts` 补丁脚本），否则下次 `tauri android init` 可能把改动冲掉。
+
+3. **缩减 ABI 意味着 APK 只能在被包含的 CPU 架构上运行**。如果只保留 **arm64-v8a**，旧的 32 位设备、某些 x86 模拟器就无法安装；若仍选择
+   **"universalRelease"** 变体，Gradle 也不会再额外帮你补齐缺失的 `.so`。
+
+**默认同时构建四个目录是为了最大化覆盖面和兼容性**；只有在明确知道目标设备范围并愿意放弃其他架构支持时，才建议通过
+`TAURI_ANDROID_ARCHS` 或 **ABI 过滤**来缩小输出。
