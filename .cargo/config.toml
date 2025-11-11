@@ -12,7 +12,7 @@ git-fetch-with-cli = true
 
 # Android NDK 链接配置
 [target.aarch64-linux-android]
-linker = "aarch64-linux-android-clang"
+linker = "aarch64-linux-android26-clang"
 rustflags = [
     "-C", "link-arg=-lc++_shared",
     "-C", "link-arg=-llog",
@@ -20,7 +20,7 @@ rustflags = [
 ]
 
 [target.armv7-linux-androideabi]
-linker = "armv7a-linux-androideabi-clang"
+linker = "armv7a-linux-androideabi26-clang"
 rustflags = [
     "-C", "link-arg=-lc++_shared",
     "-C", "link-arg=-llog",
@@ -28,7 +28,7 @@ rustflags = [
 ]
 
 [target.i686-linux-android]
-linker = "i686-linux-android-clang"
+linker = "i686-linux-android26-clang"
 rustflags = [
     "-C", "link-arg=-lc++_shared",
     "-C", "link-arg=-llog",
@@ -36,7 +36,7 @@ rustflags = [
 ]
 
 [target.x86_64-linux-android]
-linker = "x86_64-linux-android-clang"
+linker = "x86_64-linux-android26-clang"
 rustflags = [
     "-C", "link-arg=-lc++_shared",
     "-C", "link-arg=-llog",

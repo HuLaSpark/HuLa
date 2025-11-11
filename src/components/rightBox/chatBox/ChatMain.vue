@@ -321,13 +321,7 @@ const temporarilySuppressTopLoadMore = () => {
   const release = () => {
     suppressTopLoadMore.value = false
   }
-  if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(release)
-    })
-  } else {
-    setTimeout(release, 32)
-  }
+  setTimeout(release, 32)
 }
 
 // 滚轮滚动限制状态

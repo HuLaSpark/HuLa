@@ -1,4 +1,4 @@
-package com.hula_ios.app
+﻿package com.hula.app
 
 import android.app.Activity
 import android.view.View

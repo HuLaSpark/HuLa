@@ -188,9 +188,9 @@ INFO         | IPv4 server found: 192.168.1.1
 
 执行命令 `pnpm tauri android init`即可初始化安卓版本
 
-### 2、修改gradle-8.9-bin.zip的下载地址（换源）
+### 2、修改gradle-8.14-bin.zip的下载地址（换源）
 
-在 `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.properties`文件中，把 `distributionUrl`改成 `https\://mirrors.cloud.tencent.com/gradle/gradle-8.9-bin.zip`
+在 `src-tauri/gen/android/gradle/wrapper/gradle-wrapper.properties`文件中，把 `distributionUrl`改成 `https\://mirrors.cloud.tencent.com/gradle/gradle-8.14.3-bin.zip`
 
 ## 三、Gradle依赖安装
 
