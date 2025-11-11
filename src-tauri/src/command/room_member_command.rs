@@ -160,7 +160,7 @@ pub async fn cursor_page_room_members(
     Ok(data)
 }
 
-/// 从本地数据库分页查询群房间数据，如果为空则从后端获取
+// 从本地数据库分页查询群房间数据，如果为空则从后端获取
 #[tauri::command]
 pub async fn page_room(
     page_param: PageParam,

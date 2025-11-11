@@ -164,7 +164,14 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
 import type { FormRules, FormInst } from 'naive-ui'
-import { apiKeyPage, apiKeyCreate, apiKeyUpdate, apiKeyDelete, apiKeyBalance } from '@/utils/ImRequestUtils'
+import {
+  apiKeyPage,
+  apiKeyCreate,
+  apiKeyUpdate,
+  apiKeyDelete,
+  apiKeyBalance,
+  platformList
+} from '@/utils/ImRequestUtils'
 
 const showModal = defineModel<boolean>({ default: false })
 const emit = defineEmits<{
@@ -200,27 +207,30 @@ const formData = ref({
 })
 
 // 平台选项
-const platformOptions = [
-  // ========== 国内平台 ==========
-  { label: 'Moonshot (KIMI)', value: 'Moonshot' },
-  { label: 'DeepSeek', value: 'DeepSeek' },
-  { label: 'Baidu (文心一言)', value: 'YiYan' },
-  { label: 'Alibaba (通义千问)', value: 'TongYi' },
-  { label: 'Tencent (混元)', value: 'HunYuan' },
-  { label: 'Zhipu (智谱)', value: 'ZhiPu' },
-  { label: 'XingHuo (星火)', value: 'XingHuo' },
-  { label: 'DouBao (豆包)', value: 'DouBao' },
-  { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
-  { label: 'MiniMax', value: 'MiniMax' },
-  { label: 'BaiChuan (百川)', value: 'BaiChuan' },
-  { label: 'Gitee AI (魔力方舟)', value: 'GiteeAI' },
-  // ========== 国外平台 ==========
-  { label: 'OpenAI', value: 'OpenAI' },
-  { label: 'Azure OpenAI', value: 'AzureOpenAI' },
-  { label: 'Anthropic', value: 'Anthropic' },
-  { label: 'Google', value: 'Google' },
-  { label: 'Ollama', value: 'Ollama' }
-]
+const platformOptions = ref<Array<{ label: string; value: string }>>([])
+
+// 加载平台列表
+const loadPlatformList = async () => {
+  try {
+    const data = await platformList()
+
+    if (data && Array.isArray(data)) {
+      platformOptions.value = data.map((item: any) => ({
+        label: item.label,
+        value: item.platform
+      }))
+    } else {
+      console.warn('⚠️ 平台列表数据格式不正确:', data)
+      platformOptions.value = []
+    }
+  } catch (error) {
+    // 如果加载失败，使用默认值
+    platformOptions.value = [
+      { label: 'SiliconFlow (硅基流动)', value: 'SiliconFlow' },
+      { label: 'Gitee AI', value: 'GiteeAI' }
+    ]
+  }
+}
 
 // 状态选项
 const statusOptions = [
@@ -378,7 +388,13 @@ const handleQueryBalance = async (id: string) => {
 watch(showModal, (val) => {
   if (val) {
     loadApiKeyList()
+    loadPlatformList()
   }
+})
+
+// 组件挂载时加载平台列表
+onMounted(() => {
+  loadPlatformList()
 })
 </script>
 

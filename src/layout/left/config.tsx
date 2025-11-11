@@ -142,8 +142,8 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     dot: false,
     progress: 0,
     size: {
-      minWidth: 1000,
-      width: 1020,
+      minWidth: 1240,
+      width: 1380,
       height: 800
     },
     window: {

@@ -457,6 +457,9 @@ pub enum ImUrl {
     ApiKeySimpleList,
     ApiKeyBalance,
 
+    PlatformList,
+    PlatformAddModel,
+
     ToolCreate,
     ToolUpdate,
     ToolDelete,
@@ -725,6 +728,10 @@ impl ImUrl {
             ImUrl::ApiKeyPage => (http::Method::GET, "ai/api-key/page"),
             ImUrl::ApiKeySimpleList => (http::Method::GET, "ai/api-key/simple-list"),
             ImUrl::ApiKeyBalance => (http::Method::GET, "ai/api-key/balance"),
+
+            // 平台相关接口
+            ImUrl::PlatformList => (http::Method::GET, "ai/platform/list"),
+            ImUrl::PlatformAddModel => (http::Method::POST, "ai/platform/add-model"),
 
             // AI 工具相关接口
             ImUrl::ToolCreate => (http::Method::POST, "ai/tool/create"),
@@ -1014,6 +1021,10 @@ impl ImUrl {
             "apiKeyPage" => Ok(ImUrl::ApiKeyPage),
             "apiKeySimpleList" => Ok(ImUrl::ApiKeySimpleList),
             "apiKeyBalance" => Ok(ImUrl::ApiKeyBalance),
+
+            // ================ 平台配置 ================
+            "platformList" => Ok(ImUrl::PlatformList),
+            "platformAddModel" => Ok(ImUrl::PlatformAddModel),
 
             // ================ AI 工具 ================
             "toolCreate" => Ok(ImUrl::ToolCreate),

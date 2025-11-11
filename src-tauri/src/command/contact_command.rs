@@ -46,7 +46,6 @@ async fn fetch_and_update_contacts(
     request_client: Arc<Mutex<ImRequestClient>>,
     login_uid: String,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
-    // 从后端API获取联系人数据
     let resp: Option<Vec<im_contact::Model>> = request_client
         .lock()
         .await
