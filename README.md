@@ -93,8 +93,8 @@
 | Windows | Windows 10, Windows 11 |
 | macOS | macOS 10.5+ |
 | Linux | Ubuntu 22.0+ |
-| iOS/iPadOS | iOS 9.0+, iPadOS 9.0+ |
-| Android | Android 8.0+ |
+| iOS | iOS 9.0+ |
+| Android | Android 12+ (SDK30+) |
 | Web | ⚠️暂不支持(需要自定义移除对桌面功能) |
 
 ## 📝 项目介绍
