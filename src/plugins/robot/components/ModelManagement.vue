@@ -192,10 +192,38 @@
 
         <n-form-item label="模型标志" path="model">
           <n-flex vertical :size="4" style="width: 100%">
-            <n-input v-model:value="formData.model" :placeholder="modelPlaceholder" :disabled="!formData.platform" />
-            <span class="text-(11px #909090)">
+            <n-flex :size="8" style="width: 100%">
+              <n-select
+                v-if="modelExamples.length > 0"
+                v-model:value="formData.model"
+                :options="modelExamples"
+                :placeholder="modelPlaceholder"
+                :disabled="!formData.platform"
+                filterable
+                tag
+                style="flex: 1" />
+              <n-input
+                v-else
+                v-model:value="formData.model"
+                :placeholder="modelPlaceholder"
+                :disabled="!formData.platform"
+                style="flex: 1" />
+              <n-button v-if="modelDocsUrl" text tag="a" :href="modelDocsUrl" target="_blank" type="info">
+                <template #icon>
+                  <Icon icon="mdi:open-in-new" />
+                </template>
+                文档
+              </n-button>
+            </n-flex>
+            <n-text depth="3" style="font-size: 12px">
               {{ modelHint }}
-            </span>
+            </n-text>
+            <n-text v-if="modelDocsUrl" depth="3" style="font-size: 12px">
+              文档链接：
+              <n-a :href="modelDocsUrl" target="_blank" style="font-size: 12px">
+                {{ modelDocsUrl }}
+              </n-a>
+            </n-text>
           </n-flex>
         </n-form-item>
 
@@ -260,7 +288,14 @@
 import { Icon } from '@iconify/vue'
 import type { FormRules, FormInst } from 'naive-ui'
 import { useUserStore } from '@/stores/user'
-import { modelPage, modelUpdate, modelDelete, apiKeySimpleList } from '@/utils/ImRequestUtils'
+import {
+  modelPage,
+  modelUpdate,
+  modelDelete,
+  apiKeySimpleList,
+  platformList,
+  platformAddModel
+} from '@/utils/ImRequestUtils'
 import ApiKeyManagement from './ApiKeyManagement.vue'
 
 const showModal = defineModel<boolean>({ default: false })
@@ -310,109 +345,94 @@ const formData = ref({
   publicStatus: 0 // 0=公开，1=私有
 })
 
-// 平台对应的模型示例和官网链接
-const platformModelInfo: Record<string, { examples: string; docs: string; hint: string }> = {
-  // ========== 国外平台 ==========
-  OpenAI: {
-    examples: 'gpt-4, gpt-4-turbo, gpt-3.5-turbo',
-    docs: 'https://platform.openai.com/docs/models',
-    hint: '请前往 OpenAI 官网查看可用模型列表'
-  },
-  AzureOpenAI: {
-    examples: 'gpt-4, gpt-35-turbo, gpt-4-turbo',
-    docs: 'https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models',
-    hint: '请前往 Azure OpenAI 官网查看可用模型列表'
-  },
-  Anthropic: {
-    examples: 'claude-3-opus, claude-3-sonnet, claude-3-haiku',
-    docs: 'https://docs.anthropic.com/claude/docs/models-overview',
-    hint: '请前往 Anthropic 官网查看可用模型列表'
-  },
-  Google: {
-    examples: 'gemini-pro, gemini-pro-vision, gemini-1.5-pro',
-    docs: 'https://ai.google.dev/models',
-    hint: '请前往 Google AI 官网查看可用模型列表'
-  },
-  Ollama: {
-    examples: 'llama2, mistral, neural-chat, dolphin-mixtral',
-    docs: 'https://ollama.ai/library',
-    hint: '请前往 Ollama 官网查看可用模型列表'
-  },
-  // ========== 国内平台 ==========
-  Moonshot: {
-    examples: 'moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k',
-    docs: 'https://platform.moonshot.cn/docs',
-    hint: '请前往 Moonshot 官网查看可用模型列表'
-  },
-  DeepSeek: {
-    examples: 'deepseek-chat, deepseek-coder',
-    docs: 'https://platform.deepseek.com/api-docs',
-    hint: '请前往 DeepSeek 官网查看可用模型列表'
-  },
-  YiYan: {
-    examples: 'ernie-bot-4, ernie-bot-turbo, ernie-bot',
-    docs: 'https://cloud.baidu.com/doc/WENXINWORKSHOP/index.html',
-    hint: '请前往百度智能云官网查看可用模型列表'
-  },
-  TongYi: {
-    examples: 'qwen-turbo, qwen-plus, qwen-max, qwen-long',
-    docs: 'https://help.aliyun.com/zh/dashscope/developer-reference/model-square',
-    hint: '请前往阿里云官网查看可用模型列表'
-  },
-  HunYuan: {
-    examples: 'hunyuan-lite, hunyuan-standard, hunyuan-pro',
-    docs: 'https://cloud.tencent.com/document/product/1729',
-    hint: '请前往腾讯云官网查看可用模型列表'
-  },
-  ZhiPu: {
-    examples: 'glm-4, glm-3-turbo, glm-4v',
-    docs: 'https://open.bigmodel.cn/dev/api',
-    hint: '请前往智谱 AI 官网查看可用模型列表'
-  },
-  XingHuo: {
-    examples: 'generalv3.5, generalv3, generalv2.1',
-    docs: 'https://www.xfyun.cn/doc/spark/Web.html',
-    hint: '请前往讯飞星火官网查看可用模型列表'
-  },
-  DouBao: {
-    examples: 'doubao-lite-4k, doubao-lite-32k, doubao-pro-4k',
-    docs: 'https://www.volcengine.com/docs/82379',
-    hint: '请前往字节豆包官网查看可用模型列表'
-  },
-  SiliconFlow: {
-    examples: 'Qwen/Qwen2-7B-Instruct, meta-llama/Llama-2-7b-chat-hf',
-    docs: 'https://docs.siliconflow.cn/zh/api-reference/chat-completions',
-    hint: '请前往硅基流动官网查看可用模型列表'
-  },
-  MiniMax: {
-    examples: 'abab6.5-chat, abab5.5-chat, abab5-chat',
-    docs: 'https://www.minimaxi.com/document/guides/chat',
-    hint: '请前往 MiniMax 官网查看可用模型列表'
-  },
-  BaiChuan: {
-    examples: 'Baichuan2-Turbo, Baichuan2-Turbo-192k, Baichuan2-53B',
-    docs: 'https://platform.baichuan-ai.com/docs/api',
-    hint: '请前往百川智能官网查看可用模型列表'
-  },
-  GiteeAI: {
-    examples: 'tts-1, tts-1-hd, gpt-4o, gpt-4o-mini',
-    docs: 'https://ai.gitee.com/docs',
-    hint: '请前往 Gitee AI 魔力方舟官网查看可用模型列表'
-  },
-  // ========== 其他 ==========
-  Other: {
-    examples: '请输入自定义模型标志',
-    docs: '',
-    hint: '请根据您使用的平台文档填写正确的模型标志'
+// 平台选项和模型信息
+const platformOptions = ref<Array<{ label: string; value: string }>>([])
+const platformModelInfo = ref<Record<string, { examples: string; docs: string; hint: string }>>({})
+
+// 加载平台列表
+const loadPlatformList = async () => {
+  try {
+    const data = await platformList()
+    if (data && Array.isArray(data)) {
+      platformOptions.value = data.map((item: any) => ({
+        label: item.label,
+        value: item.platform
+      }))
+
+      // 构建平台模型信息映射
+      const infoMap: Record<string, { examples: string; docs: string; hint: string }> = {}
+      data.forEach((item: any) => {
+        infoMap[item.platform] = {
+          examples: item.examples || '',
+          docs: item.docs || '',
+          hint: item.hint || ''
+        }
+      })
+      platformModelInfo.value = infoMap
+    }
+  } catch (error) {
+    // 如果加载失败，使用默认值
+    platformOptions.value = [
+      { label: 'OpenAI', value: 'OpenAI' },
+      { label: 'DeepSeek', value: 'DeepSeek' }
+    ]
+    platformModelInfo.value = {
+      OpenAI: {
+        examples: 'gpt-4, gpt-4-turbo, gpt-3.5-turbo',
+        docs: 'https://platform.openai.com/docs/models',
+        hint: '请前往 OpenAI 官网查看可用模型列表'
+      },
+      DeepSeek: {
+        examples: 'deepseek-chat, deepseek-coder',
+        docs: 'https://platform.deepseek.com/api-docs',
+        hint: '请前往 DeepSeek 官网查看可用模型列表'
+      }
+    }
   }
 }
+
+// 计算属性：模型示例列表（用于下拉选择）
+const modelExamples = computed(() => {
+  if (!formData.value.platform) {
+    return []
+  }
+  const info = platformModelInfo.value[formData.value.platform]
+  if (!info || !info.examples) {
+    return []
+  }
+  // 将 examples 字符串按逗号分割，去重，并转换为选项格式
+  const models = info.examples
+    .split(',')
+    .map((model) => model.trim())
+    .filter((model) => model.length > 0)
+
+  // 使用 Set 去重，保持顺序
+  const uniqueModels = Array.from(new Set(models))
+
+  return uniqueModels.map((model) => ({
+    label: model,
+    value: model
+  }))
+})
+
+// 计算属性：模型文档链接
+const modelDocsUrl = computed(() => {
+  if (!formData.value.platform) {
+    return ''
+  }
+  const info = platformModelInfo.value[formData.value.platform]
+  return info ? info.docs : ''
+})
 
 // 计算属性：模型输入框的占位符
 const modelPlaceholder = computed(() => {
   if (!formData.value.platform) {
     return '请先选择平台'
   }
-  const info = platformModelInfo[formData.value.platform]
+  const info = platformModelInfo.value[formData.value.platform]
+  if (modelExamples.value.length > 0) {
+    return '请选择或输入模型标志'
+  }
   return info ? `例如: ${info.examples}` : '请输入模型标志'
 })
 
@@ -421,9 +441,45 @@ const modelHint = computed(() => {
   if (!formData.value.platform) {
     return '请先选择平台后再填写模型标志'
   }
-  const info = platformModelInfo[formData.value.platform]
+  const info = platformModelInfo.value[formData.value.platform]
   return info ? info.hint : '请填写正确的模型标志'
 })
+
+// 监听模型输入变化，自动保存到后端
+let saveModelTimeout: NodeJS.Timeout | null = null
+watch(
+  () => formData.value.model,
+  async (newModel, _oldModel) => {
+    // 清除之前的定时器
+    if (saveModelTimeout) {
+      clearTimeout(saveModelTimeout)
+    }
+
+    // 如果模型为空或平台未选择，不处理
+    if (!newModel || !formData.value.platform) {
+      return
+    }
+
+    // 如果模型已经在示例列表中，不需要保存
+    const existingModels = modelExamples.value.map((item) => item.value)
+    if (existingModels.includes(newModel)) {
+      return
+    }
+
+    // 防抖：用户停止输入 1 秒后再保存
+    saveModelTimeout = setTimeout(async () => {
+      try {
+        await platformAddModel(formData.value.platform, newModel)
+        // 重新加载平台列表，更新示例
+        await loadPlatformList()
+        window.$message?.success('模型已添加到示例列表')
+      } catch (error) {
+        console.error('保存模型失败:', error)
+        // 静默失败，不影响用户操作
+      }
+    }, 1000)
+  }
+)
 
 // 状态选项
 const statusOptions = [
@@ -546,7 +602,6 @@ const handleNameChange = (value: string) => {
 // 公开状态变化处理
 const handlePublicStatusChange = (checked: boolean) => {
   formData.value.publicStatus = checked ? 0 : 1
-  console.log('publicStatus changed to:', formData.value.publicStatus)
 }
 
 // 新增模型
@@ -606,9 +661,6 @@ const handleSubmit = async () => {
       maxContexts: formData.value.maxContexts,
       publicStatus: formData.value.publicStatus
     }
-
-    console.log('提交数据:', submitData)
-
     if (editingModel.value) {
       submitData.id = editingModel.value.id
       await modelUpdate(submitData)
@@ -663,7 +715,13 @@ watch(showModal, (val) => {
   if (val) {
     loadApiKeyOptions()
     loadModelList()
+    loadPlatformList()
   }
+})
+
+// 组件挂载时加载平台列表
+onMounted(() => {
+  loadPlatformList()
 })
 </script>
 

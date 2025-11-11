@@ -872,6 +872,10 @@ export enum ImUrlEnum {
   API_KEY_DELETE = 'apiKeyDelete',
   /** 查询 API 密钥余额 */
   API_KEY_BALANCE = 'apiKeyBalance',
+  /** 获取平台列表 */
+  PLATFORM_LIST = 'platformList',
+  /** 添加平台模型 */
+  PLATFORM_ADD_MODEL = 'platformAddModel',
   /** 聊天角色分页 */
   CHAT_ROLE_PAGE = 'chatRolePage',
   /** 聊天角色类别列表 */

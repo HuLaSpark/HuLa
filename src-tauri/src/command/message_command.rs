@@ -247,7 +247,7 @@ pub async fn check_user_init_and_fetch_messages(
     Ok(())
 }
 
-/// 从后端获取所有消息并保存到数据库
+// 获取所有消息并保存到数据库
 pub async fn fetch_all_messages(
     client: &mut ImRequestClient,
     db_conn: &DatabaseConnection,

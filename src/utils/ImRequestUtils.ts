@@ -1147,6 +1147,21 @@ export async function apiKeyDelete(params: { id: string }) {
   })
 }
 
+// 获取平台列表
+export async function platformList() {
+  return await imRequest({
+    url: ImUrlEnum.PLATFORM_LIST
+  })
+}
+
+// 添加平台模型到示例列表
+export async function platformAddModel(platform: string, model: string) {
+  return await imRequest({
+    url: ImUrlEnum.PLATFORM_ADD_MODEL,
+    body: { platform, model }
+  })
+}
+
 // 查询 API 密钥余额
 export async function apiKeyBalance(params: { id: string }) {
   return await imRequest({
