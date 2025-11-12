@@ -8,8 +8,9 @@
     <component :is="division" />
     <n-scrollbar style="max-height: 320px">
       <n-flex
-        v-for="(group, index) in content"
-        :key="index"
+        v-for="group in content"
+        :key="group.id"
+        v-memo="[group.id, group.messageCount, group.latestContent, group.isAtMe, group.name, group.avatar]"
         @click="handleClickMsg(group)"
         align="left"
         :size="10"

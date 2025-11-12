@@ -157,6 +157,18 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   const copyDisabledTypes: MsgEnum[] = [MsgEnum.NOTICE, MsgEnum.MERGE, MsgEnum.LOCATION, MsgEnum.VOICE]
   const shouldHideCopy = (item: MessageType) => copyDisabledTypes.includes(item.message.type)
   const isNoticeMessage = (item: MessageType) => item.message.type === MsgEnum.NOTICE
+  const revealInDirSafely = async (targetPath?: string | null) => {
+    if (!targetPath) {
+      window.$message?.error('暂时找不到本地文件，请先下载后再试~')
+      return
+    }
+    try {
+      await revealItemInDir(targetPath)
+    } catch (error) {
+      console.error('在文件夹中显示文件失败:', error)
+      window.$message?.error('无法在文件夹中显示该文件')
+    }
+  }
 
   const commonMenuList = ref<OPT.RightMenu[]>([
     {
@@ -307,8 +319,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           // 获取视频的绝对路径
           const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
           const absolutePath = await join(baseDirPath, localPath)
-          // 在文件管理器中显示视频
-          await revealItemInDir(absolutePath)
+          await revealInDirSafely(absolutePath)
         } catch (error) {
           console.error('Failed to show video in folder:', error)
         }
@@ -452,7 +463,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
                     absolutePath = _absolutePath
                     downloadMessage.destroy()
                     window.$message.success('文件下载好啦！请查看~')
-                    await revealItemInDir(_absolutePath)
+                    await revealInDirSafely(_absolutePath)
                     await fileDownloadStore.refreshFileDownloadStatus({
                       fileUrl: item.message.body.url,
                       roomId: currentChatRoomId,
@@ -460,13 +471,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
                       fileName: item.message.body.fileName,
                       exists: true
                     })
+                    return
                   } else {
                     absolutePath = ''
                     window.$message.error('文件下载失败，请重试~')
+                    return
                   }
                 }
 
-                await revealItemInDir(absolutePath)
+                await revealInDirSafely(absolutePath)
               }
             }
           ]
@@ -642,14 +655,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         // 最后判断文件不存在本地，那就下载它
         if (!fileMeta.exists) {
           // 文件不存在本地
-          const downloadMessage = window.$message.info('文件没下载哦~ 请下载文件后再打开🚀...')
+          const downloadMessage = window.$message.info('文件没下载哦, 请下载文件后再打开')
           const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
 
           if (_absolutePath) {
             absolutePath = _absolutePath
             downloadMessage.destroy()
-            window.$message.success('文件下载好啦！请查看~')
-            await revealItemInDir(_absolutePath)
+            window.$message.success('文件已保存到本地')
+            await revealInDirSafely(_absolutePath)
             await fileDownloadStore.refreshFileDownloadStatus({
               fileUrl: item.message.body.url,
               roomId: currentChatRoomId,
@@ -657,13 +670,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
               fileName: item.message.body.fileName,
               exists: true
             })
+            return
           } else {
             absolutePath = ''
-            window.$message.error('文件下载失败，请重试~')
+            window.$message.error('文件下载失败，请重试')
+            return
           }
         }
 
-        await revealItemInDir(absolutePath)
+        await revealInDirSafely(absolutePath)
       }
     }
   ])
@@ -709,6 +724,53 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           console.error('保存图片失败:', error)
           window.$message.error('保存图片失败')
         }
+      }
+    },
+    {
+      label: isMac() ? '在Finder中显示' : '打开文件夹',
+      icon: 'file2',
+      click: async (item: MessageType) => {
+        const fileUrl = item.message.body.url || item.message.body.content
+        const fileName = item.message.body.fileName || extractFileName(fileUrl)
+        if (!fileUrl || !fileName) {
+          window.$message.warning('暂时无法定位该图片~')
+          return
+        }
+
+        const fileStatus = fileDownloadStore.getFileStatus(fileUrl)
+        const currentChatRoomId = globalStore.currentSessionRoomId
+        const currentUserUid = userStore.userInfo!.uid as string
+
+        const resourceDirPath = await userStore.getUserRoomAbsoluteDir()
+        let absolutePath = await join(resourceDirPath, fileName)
+
+        const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])
+
+        if (!fileMeta.exists) {
+          const downloadMessage = window.$message.info('图片没下载, 正在保存到本地...')
+          const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
+
+          if (_absolutePath) {
+            absolutePath = _absolutePath
+            downloadMessage.destroy()
+            window.$message.success('图片已保存到本地')
+            await revealInDirSafely(_absolutePath)
+            await fileDownloadStore.refreshFileDownloadStatus({
+              fileUrl,
+              roomId: currentChatRoomId,
+              userId: currentUserUid,
+              fileName,
+              exists: true
+            })
+            return
+          } else {
+            absolutePath = ''
+            window.$message.error('图片下载失败，请重试~')
+            return
+          }
+        }
+
+        await revealInDirSafely(absolutePath)
       }
     }
   ])

@@ -2,8 +2,9 @@
   <n-flex v-if="isTrayMenuShow" vertical :size="6" class="tray">
     <n-flex vertical :size="6">
       <n-flex
-        v-for="(item, index) in stateList.slice(0, 6)"
-        :key="index"
+        v-for="item in stateList.slice(0, 6)"
+        :key="item.id"
+        v-memo="[item.id, item.title, item.url, stateId]"
         align="center"
         :size="10"
         @click="toggleStatus(item)"
@@ -15,7 +16,8 @@
         @click="createWebviewWindow('在线状态', 'onlineStatus', 320, 480)"
         align="center"
         :size="10"
-        class="p-6px rounded-4px hover:bg-[--tray-hover]">
+        class="p-6px rounded-4px hover:bg-[--tray-hover]"
+        v-once>
         <svg class="size-14px">
           <use href="#more"></use>
         </svg>
@@ -36,19 +38,30 @@
         @click="checkWinExist('home')"
         align="center"
         :size="10"
-        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
+        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]"
+        v-once>
         <span>打开主面板</span>
       </n-flex>
 
       <component :is="division" />
-      <n-flex @click="handleExit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+      <n-flex
+        @click="handleExit"
+        align="center"
+        :size="10"
+        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]"
+        v-once>
         <span>退出</span>
       </n-flex>
     </n-flex>
   </n-flex>
 
   <n-flex v-else vertical :size="6" class="tray">
-    <n-flex @click="handleExit" align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]">
+    <n-flex
+      @click="handleExit"
+      align="center"
+      :size="10"
+      class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]"
+      v-once>
       <span>退出</span>
     </n-flex>
   </n-flex>

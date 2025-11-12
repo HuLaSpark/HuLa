@@ -22,7 +22,7 @@
                   type="textarea"
                   placeholder="请输入公告内容..."
                   class="w-full"
-                  :autosize="{ minRows: 5, maxRows: 10 }"
+                  :autosize="announcementAutosize"
                   :maxlength="1000"
                   :show-count="true" />
               </n-form-item>
@@ -84,6 +84,7 @@ defineOptions({
 const route = useRoute()
 const router = useRouter()
 const globalStore = useGlobalStore()
+const announcementAutosize = { minRows: 5, maxRows: 10 }
 
 // 判断是编辑模式还是新增模式
 const isEditMode = computed(() => !!route.params.id)

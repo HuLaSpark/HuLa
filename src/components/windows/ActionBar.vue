@@ -167,16 +167,24 @@ let unlistenCloseRequested: (() => void) | null = null
 let unlistenResized: (() => void) | null = null
 // 是否是程序内部触发的关闭操作
 let isProgrammaticClose = false
+const handleEscKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && escClose.value) {
+    handleCloseWin()
+  }
+}
 
-watchEffect(() => {
+watchEffect((onCleanup) => {
   tipsRef.type = tips.value.type
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean)
   }
   if (escClose.value && isWindows()) {
-    window.addEventListener('keydown', (e) => isEsc(e))
+    window.addEventListener('keydown', handleEscKeyDown)
+    onCleanup(() => {
+      window.removeEventListener('keydown', handleEscKeyDown)
+    })
   } else {
-    window.removeEventListener('keydown', (e) => isEsc(e))
+    window.removeEventListener('keydown', handleEscKeyDown)
   }
 })
 
@@ -222,14 +230,6 @@ const handleConfirm = async () => {
     await nextTick(() => {
       appWindow.hide()
     })
-  }
-}
-
-/** 监听是否按下esc */
-const isEsc = (e: KeyboardEvent) => {
-  // 判断按下的是否是esc
-  if (e.key === 'Escape' && escClose.value) {
-    handleCloseWin()
   }
 }
 
@@ -299,7 +299,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', (e) => isEsc(e))
+  window.removeEventListener('keydown', handleEscKeyDown)
 
   if (unlistenResized) {
     unlistenResized()

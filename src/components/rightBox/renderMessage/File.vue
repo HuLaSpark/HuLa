@@ -155,6 +155,19 @@ const downloadProgress = computed(() => {
   return fileStatus.value?.progress || 0
 })
 
+const revealInDirSafely = async (targetPath?: string | null) => {
+  if (!targetPath) {
+    window.$message?.error('暂时找不到本地文件，请先下载后再试~')
+    return
+  }
+  try {
+    await revealItemInDir(targetPath)
+  } catch (error) {
+    console.error('在文件夹中显示文件失败:', error)
+    window.$message?.error('无法在文件夹中显示该文件')
+  }
+}
+
 // 是否需要下载（文件未下载到本地且不是上传/下载状态）
 const needsDownload = computed(() => {
   if (isUploading.value || isDownloading.value) return false
@@ -261,7 +274,7 @@ const handleFileClick = async () => {
       try {
         await openPath(status.absolutePath)
       } catch (openError) {
-        await revealItemInDir(status.absolutePath)
+        await revealInDirSafely(status.absolutePath)
       }
     } else if (needsDownload.value) {
       // 需要下载文件
@@ -272,7 +285,7 @@ const handleFileClick = async () => {
         await openPath(props.body.url)
       } catch (openError) {
         console.warn('无法直接打开文件，尝试在文件管理器中显示:', openError)
-        await revealItemInDir(props.body.url)
+        await revealInDirSafely(props.body.url)
       }
     }
   } catch (error) {
@@ -316,7 +329,7 @@ const downloadAndOpenFile = async () => {
         await openPath(absolutePath)
       } catch (openError) {
         console.warn('无法直接打开文件，尝试在文件管理器中显示:', openError)
-        await revealItemInDir(absolutePath)
+        await revealInDirSafely(absolutePath)
       }
     }
   } catch (error) {

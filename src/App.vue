@@ -92,6 +92,7 @@ const preventDrag = (e: MouseEvent) => {
     e.preventDefault()
   }
 }
+const preventGlobalContextMenu = (event: MouseEvent) => event.preventDefault()
 
 useMitt.on(WsResponseMessageType.VideoCallRequest, (event) => {
   info(`收到通话请求：${JSON.stringify(event)}`)
@@ -574,7 +575,7 @@ onMounted(() => {
       }
     })
     /** 禁止右键菜单 */
-    window.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+    window.addEventListener('contextmenu', preventGlobalContextMenu, false)
   }
   // 只在桌面端处理窗口相关事件
   if (isDesktop()) {
@@ -598,7 +599,7 @@ onUnmounted(async () => {
   // 关闭固定缩放，恢复样式与监听
   fixedScale.disable()
 
-  window.removeEventListener('contextmenu', (e) => e.preventDefault(), false)
+  window.removeEventListener('contextmenu', preventGlobalContextMenu, false)
   window.removeEventListener('dragstart', preventDrag)
 
   // 只在桌面端的主窗口中清理全局快捷键

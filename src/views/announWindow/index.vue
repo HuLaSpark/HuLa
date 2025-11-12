@@ -10,7 +10,7 @@
           v-model:value="announContent"
           type="textarea"
           placeholder="填写公告，1～600字"
-          :autosize="{ minRows: 20 }"
+          :autosize="announcementAutosize"
           maxlength="600"
           spellCheck="false"
           autoComplete="off"
@@ -198,6 +198,7 @@ const isBack = ref(false)
 const isTop = ref(false)
 const isEdit = ref(false)
 const editAnnoouncement = ref<any>({})
+const announcementAutosize = { minRows: 20 }
 // 分页参数
 const pageSize = 10
 const pageNum = ref(1)

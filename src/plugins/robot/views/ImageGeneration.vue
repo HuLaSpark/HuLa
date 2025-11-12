@@ -29,7 +29,7 @@
                 v-model:value="formData.prompt"
                 type="textarea"
                 placeholder="请输入图片描述，例如：一只可爱的猫咪在花园里玩耍"
-                :autosize="{ minRows: 3, maxRows: 6 }"
+                :autosize="promptAutosize"
                 maxlength="2000"
                 show-count />
             </n-form-item>
@@ -132,7 +132,7 @@
               :page-count="Math.ceil(totalImages / pageSize)"
               :page-size="pageSize"
               show-size-picker
-              :page-sizes="[10, 20, 30, 50]"
+              :page-sizes="paginationSizes"
               @update:page="handlePageChange"
               @update:page-size="handlePageSizeChange" />
           </n-flex>
@@ -177,6 +177,8 @@ import { imageMyPage, imageDraw, imageDeleteMy, modelPage } from '@/utils/ImRequ
 import { useMessage } from 'naive-ui'
 
 const message = useMessage()
+const promptAutosize = { minRows: 3, maxRows: 6 }
+const paginationSizes = [10, 20, 30, 50]
 
 // 表单数据
 const formData = ref({

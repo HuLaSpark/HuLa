@@ -1,5 +1,13 @@
 <template>
   <component
+    v-memo="[
+      message.message.id,
+      message.message.status,
+      message.message.body?.translatedText?.text || '',
+      uploadProgress,
+      searchKeyword,
+      historyMode
+    ]"
     v-if="historyMode || !hasBubble(message.message.type)"
     :is="componentMap[message.message.type]"
     :body="message.message.body"
@@ -156,6 +164,14 @@
             @reply-emoji="handleEmojiSelect($event, message)"
             @click="handleMsgClick(message)">
             <component
+              v-memo="[
+                message.message.id,
+                message.message.status,
+                message.message.body?.translatedText?.text || '',
+                uploadProgress,
+                searchKeyword,
+                historyMode
+              ]"
               :class="[
                 message.message.type === MsgEnum.VOICE ? 'select-none cursor-pointer' : 'select-text cursor-text',
                 !isSpecialMsgType(message.message.type) ? (isMe ? 'bubble-oneself' : 'bubble') : '',

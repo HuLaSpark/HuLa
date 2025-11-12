@@ -20,7 +20,7 @@
                 type="textarea"
                 placeholder="介绍一下你自己~"
                 class="w-full"
-                :autosize="{ minRows: 5, maxRows: 20 }"
+                :autosize="bioAutosize"
                 :maxlength="300"
                 :show-count="true" />
             </n-form-item>
@@ -54,6 +54,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user.ts'
 
 const userStore = useUserStore()
+const bioAutosize = { minRows: 5, maxRows: 20 }
 
 const router = useRouter()
 const localBio = ref(userStore.userInfo?.resume || '')

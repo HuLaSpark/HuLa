@@ -25,10 +25,7 @@
         <n-input
           v-model:value="requestMsg"
           :allow-input="(value: string) => !value.startsWith(' ') && !value.endsWith(' ')"
-          :autosize="{
-            minRows: 3,
-            maxRows: 3
-          }"
+          :autosize="requestMsgAutosize"
           :maxlength="60"
           :count-graphemes="countGraphemes"
           show-count
@@ -57,6 +54,7 @@ const globalStore = useGlobalStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 const { countGraphemes } = useCommon()
+const requestMsgAutosize = { minRows: 3, maxRows: 3 }
 const userInfo = ref(groupStore.getUserInfo(globalStore.addFriendModalInfo.uid!)!)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userInfo.value!.avatar as string))
 const requestMsg = ref()

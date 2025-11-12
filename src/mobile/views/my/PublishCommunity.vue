@@ -22,7 +22,7 @@
               :maxlength="500"
               show-word-limit
               :rows="8"
-              :autosize="{ minHeight: 150, maxHeight: 300 }" />
+              :autosize="feedAutosize" />
           </div>
 
           <!-- 媒体类型提示（暂时禁用） -->
@@ -197,6 +197,7 @@ import type { FriendItem } from '@/services/types'
 import 'vant/lib/index.css' // Vant UI 样式
 
 const router = useRouter()
+const feedAutosize = { minHeight: 150, maxHeight: 300 }
 const feedStore = useFeedStore()
 const contactStore = useContactStore()
 const groupStore = useGroupStore()

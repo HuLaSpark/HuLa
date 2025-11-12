@@ -4,7 +4,7 @@
 
     <n-flex vertical align="center" :size="20" class="size-full pt-100px" data-tauri-drag-region>
       <div @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" class="box" data-tauri-drag-region>
-        <div id="computer" class="computer">
+        <div id="computer" class="computer" v-once>
           <img class="w-224px h-158px relative" src="../../assets/img/win.png" alt="" />
           <div
             style="background: rgba(111, 111, 111, 0.1)"
