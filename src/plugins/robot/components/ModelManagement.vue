@@ -145,7 +145,12 @@
         </n-form-item>
 
         <n-form-item label="平台" path="platform">
-          <n-input v-model:value="formData.platform" placeholder="根据API密钥自动设置" disabled />
+          <n-select
+            v-model:value="formData.platform"
+            :options="platformOptions"
+            placeholder="请选择平台（默认来自API密钥）"
+            filterable
+            clearable />
         </n-form-item>
 
         <n-form-item label="模型类型" path="type">
@@ -583,11 +588,13 @@ const handleKeyIdChange = (keyId: string) => {
   if (keyId) {
     const apiKeyInfo = apiKeyMap.value.get(keyId)
     if (apiKeyInfo && apiKeyInfo.platform) {
-      // 自动填充平台
       formData.value.platform = apiKeyInfo.platform
       // 清空模型标志，让用户重新输入
       formData.value.model = ''
     }
+  } else {
+    formData.value.platform = ''
+    formData.value.model = ''
   }
 }
 
