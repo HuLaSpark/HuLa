@@ -23,6 +23,7 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri_plugin_fs::FsExt;
 pub mod command;
@@ -39,6 +40,7 @@ pub mod websocket;
 #[cfg(target_os = "ios")]
 mod webview_helper;
 
+use crate::command::app_state_command::is_app_state_ready;
 use crate::command::request_command::{im_request_command, login_command};
 use crate::command::room_member_command::{
     cursor_page_room_members, get_room_members, page_room, update_my_room_info,
@@ -68,6 +70,8 @@ pub struct AppData {
     backend_task: Mutex<bool>,
 }
 
+pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
+
 use crate::command::chat_history_command::query_chat_history;
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
 use crate::command::file_manager_command::{
@@ -78,7 +82,7 @@ use crate::command::message_mark_command::save_message_mark;
 
 #[cfg(desktop)]
 use tauri::Listener;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
 pub fn run() {
@@ -350,6 +354,10 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 // 后端任务默认完成
                 backend_task: Mutex::new(true),
             });
+            APP_STATE_READY.store(true, Ordering::SeqCst);
+            if let Err(e) = app_handle.emit("app-state-ready", ()) {
+                tracing::warn!("Failed to emit app-state-ready event: {}", e);
+            }
         }
         Err(e) => {
             tracing::error!("Failed to initialize application data: {}", e);
@@ -465,5 +473,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         hide_splash_screen,
         #[cfg(target_os = "ios")]
         set_webview_keyboard_adjustment,
+        is_app_state_ready,
     ]
 }

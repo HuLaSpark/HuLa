@@ -24,6 +24,7 @@ import { getEnhancedFingerprint } from '../services/fingerprint'
 import { invoke } from '@tauri-apps/api/core'
 import { useMitt } from './useMitt'
 import { info as logInfo } from '@tauri-apps/plugin-log'
+import { ensureAppStateReady } from '@/utils/AppStateReady'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -258,6 +259,8 @@ export const useLogin = () => {
     const clientId = await getEnhancedFingerprint()
     localStorage.setItem('clientId', clientId)
 
+    await ensureAppStateReady()
+
     invoke('login_command', {
       data: {
         account: account,
@@ -276,8 +279,8 @@ export const useLogin = () => {
         loading.value = false
         loginText.value = '登录成功正在跳转...'
 
-        // 首次登录时自动启用自动登录
-        if (!auto) {
+        // 仅在移动端的首次手动登录时，才默认打开自动登录开关
+        if (!auto && isMobile()) {
           settingStore.setAutoLogin(true)
         }
 

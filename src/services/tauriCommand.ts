@@ -11,6 +11,7 @@ import { useUserStatusStore } from '../stores/userStatus'
 import { getAllUserState, getUserDetail } from '../utils/ImRequestUtils'
 import { ErrorType, invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { getEnhancedFingerprint } from './fingerprint'
+import { ensureAppStateReady } from '@/utils/AppStateReady'
 import type { UserInfoType } from './types'
 
 export type Settings = {
@@ -66,6 +67,8 @@ export const loginCommand = async (
   const loginInfo = settingStore.login.autoLogin ? (userStore.userInfo as UserInfoType) : info
   // 存储此次登陆设备指纹
   const clientId = await getEnhancedFingerprint()
+
+  await ensureAppStateReady()
 
   await invoke('login_command', {
     data: {
