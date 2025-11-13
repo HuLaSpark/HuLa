@@ -135,8 +135,6 @@ export async function detectRemoteFileType(options: {
       throw new Error(`文件不存在, 状态: ${headResponse.status}`)
     }
 
-    console.log('已找到响应头', headResponse)
-
     // 2. 如果是空文件，直接返回 undefined
     if (fileSize === 0) {
       console.log('文件大小为 0 字节，尝试使用后缀名检测')
@@ -186,6 +184,20 @@ export async function getFile(absolutePath: string) {
   return {
     file: new File([blob], fileName, { type: fileType }),
     meta: fileMeta
+  }
+}
+
+export async function getRemoteFileSize(url: string): Promise<number | null> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' })
+    if (!response.ok) {
+      return null
+    }
+    const length = response.headers.get('content-length')
+    return length ? Number(length) : null
+  } catch (error) {
+    console.warn('获取远程文件大小失败:', error)
+    return null
   }
 }
 

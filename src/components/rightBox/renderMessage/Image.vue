@@ -50,10 +50,13 @@
 </template>
 
 <script setup lang="ts">
+import { convertFileSrc } from '@tauri-apps/api/core'
+import { exists } from '@tauri-apps/plugin-fs'
 import { MsgEnum } from '@/enums'
 import { useImageViewer } from '@/hooks/useImageViewer'
 import type { ImageBody, MsgType } from '@/services/types'
 import { isMobile } from '@/utils/PlatformConstants'
+import { useThumbnailCacheStore } from '@/stores/thumbnailCache'
 import { buildQiniuThumbnailUrl, getPreferredQiniuFormat } from '@/utils/QiniuImageUtils'
 
 const ImagePreview = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/ImagePreview.vue')) : void 0
@@ -75,6 +78,8 @@ const isError = ref(false)
 const { openImageViewer } = useImageViewer()
 const showImagePreviewRef = ref(false)
 const imagesRef = ref<string[]>([])
+const thumbnailStore = useThumbnailCacheStore()
+const localThumbnailSrc = ref<string | null>(null)
 
 // 处理图片加载错误
 const handleImageError = () => {
@@ -109,10 +114,9 @@ const handleOpenImageViewer = () => {
 /**
  * 计算图片样式
  */
-const displayImageSrc = computed(() => {
+const remoteThumbnailSrc = computed(() => {
   const originalUrl = props.body?.url
   if (!originalUrl) return ''
-
   const deviceRatio = typeof window !== 'undefined' ? Math.max(window.devicePixelRatio || 1, 1) : 1
   const thumbnailWidth = Math.ceil(MAX_WIDTH * Math.min(deviceRatio, 2))
   const format = getPreferredQiniuFormat()
@@ -125,6 +129,57 @@ const displayImageSrc = computed(() => {
     }) ?? originalUrl
   )
 })
+
+const downloadKey = computed(() => remoteThumbnailSrc.value || props.body?.url || '')
+
+const displayImageSrc = computed(() => localThumbnailSrc.value || remoteThumbnailSrc.value)
+
+const requestThumbnailDownload = () => {
+  if (!downloadKey.value || !props.message) return
+  void thumbnailStore
+    .enqueueThumbnail({ url: downloadKey.value, msgId: props.message.id, roomId: props.message.roomId, kind: 'image' })
+    .then((path) => {
+      if (!path) return
+      localThumbnailSrc.value = convertFileSrc(path)
+    })
+}
+
+const ensureLocalThumbnail = async () => {
+  const localPath = props.body?.thumbnailPath
+  if (!localPath) {
+    localThumbnailSrc.value = null
+    return
+  }
+  try {
+    const existsFlag = await exists(localPath)
+    if (existsFlag) {
+      localThumbnailSrc.value = convertFileSrc(localPath)
+      return
+    }
+  } catch (error) {
+    console.warn('[Image] 检查缩略图文件失败:', error)
+  }
+  localThumbnailSrc.value = null
+  thumbnailStore.invalidate(downloadKey.value)
+  requestThumbnailDownload()
+}
+
+watch(
+  () => props.body?.thumbnailPath,
+  () => {
+    void ensureLocalThumbnail()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => downloadKey.value,
+  () => {
+    if (!props.body?.thumbnailPath) {
+      requestThumbnailDownload()
+    }
+  }
+)
 
 const imageStyle = computed(() => {
   // 如果有原始尺寸，使用原始尺寸计算
@@ -162,6 +217,12 @@ const imageStyle = computed(() => {
   return {
     width: `${Math.ceil(finalWidth)}px`,
     height: `${Math.ceil(finalHeight)}px`
+  }
+})
+
+onMounted(() => {
+  if (props.body?.url && !props.body?.thumbnailPath) {
+    requestThumbnailDownload()
   }
 })
 </script>

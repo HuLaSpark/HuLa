@@ -11,7 +11,7 @@
           ...imageStyle
         }
       }"
-      :src="body?.thumbUrl"
+      :src="displayThumbSrc"
       @error="handleImageError">
       <template #placeholder>
         <n-flex
@@ -123,26 +123,32 @@
 </template>
 
 <script setup lang="ts">
+import { convertFileSrc } from '@tauri-apps/api/core'
 import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
-import { BaseDirectory } from '@tauri-apps/plugin-fs'
-import { MessageStatusEnum } from '@/enums'
+import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
+import { MessageStatusEnum, TauriCommand } from '@/enums'
 import { MittEnum, MsgEnum } from '@/enums/index'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import type { VideoBody } from '@/services/types'
+import type { MsgType, VideoBody } from '@/services/types'
 import { useVideoViewer as useVideoViewerStore } from '@/stores/videoViewer'
+import { useThumbnailCacheStore } from '@/stores/thumbnailCache'
+import { useChatStore } from '@/stores/chat'
 import { formatBytes } from '@/utils/Formatting.ts'
 import { isMobile } from '@/utils/PlatformConstants'
+import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
+const chatStore = useChatStore()
 const { downloadFile, isDownloading, process } = useDownload()
 const props = defineProps<{
   body: VideoBody
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
   onVideoClick?: (url: string) => void
+  message?: MsgType
 }>()
 
 // 视频容器引用
@@ -164,6 +170,21 @@ const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SEN
 const uploadProgress = computed(() => {
   return props.uploadProgress || 0
 })
+const thumbnailStore = useThumbnailCacheStore()
+
+const persistVideoLocalPath = async (absolutePath: string) => {
+  if (!props.message?.id || !absolutePath) return
+  const target = chatStore.getMessage(props.message.id)
+  if (!target) return
+
+  const nextBody = { ...(target.message.body || {}), localPath: absolutePath }
+  if (target.message.body?.localPath === absolutePath) return
+
+  chatStore.updateMsg({ msgId: target.message.id, status: target.message.status, body: nextBody })
+  const updated = { ...target, message: { ...target.message, body: nextBody } }
+  await invokeSilently(TauriCommand.SAVE_MSG, { data: updated as any })
+}
+const localVideoThumbSrc = ref<string | null>(null)
 
 const imageStyle = computed(() => {
   // 如果有原始尺寸，使用原始尺寸计算
@@ -207,6 +228,75 @@ const containerStyle = computed(() => {
   const style = imageStyle.value
   return `width: ${style.width}; height: ${style.height}; position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;`
 })
+
+const remoteThumbSrc = computed(() => props.body?.thumbUrl || '')
+const downloadKey = computed(() => remoteThumbSrc.value || '')
+const displayThumbSrc = computed(() => localVideoThumbSrc.value || remoteThumbSrc.value || '')
+
+const requestVideoThumbnailDownload = () => {
+  if (!downloadKey.value || !props.message) return
+  void thumbnailStore
+    .enqueueThumbnail({ url: downloadKey.value, msgId: props.message.id, roomId: props.message.roomId, kind: 'video' })
+    .then((path) => {
+      if (!path) return
+      localVideoThumbSrc.value = convertFileSrc(path)
+    })
+}
+
+const ensureLocalVideoThumbnail = async () => {
+  const localPath = props.body?.thumbnailPath
+  if (!localPath) {
+    localVideoThumbSrc.value = null
+    return
+  }
+
+  try {
+    const existsFlag = await exists(localPath)
+    if (existsFlag) {
+      localVideoThumbSrc.value = convertFileSrc(localPath)
+      return
+    }
+  } catch (error) {
+    console.warn('[Video] 检查缩略图文件失败:', error)
+  }
+
+  localVideoThumbSrc.value = null
+  thumbnailStore.invalidate(downloadKey.value)
+  requestVideoThumbnailDownload()
+}
+
+watch(
+  () => props.body?.thumbnailPath,
+  () => {
+    void ensureLocalVideoThumbnail()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.body?.localPath,
+  async (path) => {
+    if (!path) return
+    try {
+      const existsFlag = await exists(path)
+      if (existsFlag) {
+        isVideoDownloaded.value = true
+      }
+    } catch (error) {
+      console.warn('[Video] 本地视频校验失败:', error)
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => downloadKey.value,
+  () => {
+    if (!props.body?.thumbnailPath) {
+      requestVideoThumbnailDownload()
+    }
+  }
+)
 
 // 检查视频下载状态（延迟加载）
 const checkDownloadStatusLazy = async () => {
@@ -264,6 +354,7 @@ const downloadVideo = async () => {
         const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
         const path = await join(baseDirPath, localPath)
         videoViewerStore.updateVideoPath(props.body.url, path)
+        void persistVideoLocalPath(path)
       }
     }
   } catch (error) {
@@ -346,6 +437,10 @@ onMounted(() => {
   nextTick(() => {
     setupIntersectionObserver()
   })
+
+  if (!props.body?.thumbnailPath) {
+    requestVideoThumbnailDownload()
+  }
 })
 
 onUnmounted(() => {

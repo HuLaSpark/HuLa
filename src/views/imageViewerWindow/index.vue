@@ -112,12 +112,14 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { NTooltip } from 'naive-ui'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { useDownload } from '@/hooks/useDownload'
+import { useImageViewer as useImageViewerHook } from '@/hooks/useImageViewer'
 import { useTauriListener } from '@/hooks/useTauriListener'
-import { useImageViewer } from '@/stores/imageViewer.ts'
+import { useImageViewer as useImageViewerStore } from '@/stores/imageViewer.ts'
 
 const { addListener } = useTauriListener()
 const { downloadFile } = useDownload()
-const imageViewerStore = useImageViewer()
+const imageViewerStore = useImageViewerStore()
+const { downloadOriginalByIndex } = useImageViewerHook()
 const appWindow = WebviewWindow.getCurrent()
 
 // 初始化数据
@@ -301,10 +303,16 @@ const showTipMessage = (message: string) => {
 }
 
 // 修改切换图片的函数
+const syncCurrentIndex = (index: number) => {
+  currentIndex.value = index
+  imageViewerStore.currentIndex = index
+  downloadOriginalByIndex(index)
+}
+
 const prevImage = () => {
   if (currentIndex.value > 0) {
     resetImage(true) // 立即重置
-    currentIndex.value--
+    syncCurrentIndex(currentIndex.value - 1)
   } else {
     showTipMessage('这是第一张图片')
   }
@@ -313,7 +321,7 @@ const prevImage = () => {
 const nextImage = () => {
   if (currentIndex.value < imageList.value.length - 1) {
     resetImage(true) // 立即重置
-    currentIndex.value++
+    syncCurrentIndex(currentIndex.value + 1)
   } else {
     showTipMessage('已经最后一张图片')
   }
@@ -369,9 +377,9 @@ onMounted(async () => {
 
   await addListener(
     appWindow.listen('update-image', (event: any) => {
-      const { list, index } = event.payload
-      imageList.value = list
-      currentIndex.value = index
+      const { index } = event.payload
+      imageList.value = imageViewerStore.imageList
+      syncCurrentIndex(index)
       // 重置图片状态
       resetImage(true)
     })
@@ -380,11 +388,11 @@ onMounted(async () => {
   if (imageViewerStore.isSingleMode) {
     // 单图模式下不需要设置 imageList 和 currentIndex
     imageList.value = [imageViewerStore.singleImage]
-    currentIndex.value = 0
+    syncCurrentIndex(0)
   } else {
     // 多图模式保持原有逻辑
     imageList.value = imageViewerStore.imageList
-    currentIndex.value = imageViewerStore.currentIndex
+    syncCurrentIndex(imageViewerStore.currentIndex)
   }
 
   // 监听键盘事件

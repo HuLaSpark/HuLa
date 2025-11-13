@@ -1,5 +1,5 @@
 use crate::AppData;
-use crate::repository::im_message_repository;
+use crate::repository::im_message_repository::{self, MessageWithThumbnail};
 use entity::im_message;
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect};
 
@@ -159,7 +159,7 @@ async fn query_all_files(
     db_conn: &sea_orm::DatabaseConnection,
     login_uid: &str,
     param: &FileQueryParam,
-) -> Result<Vec<im_message::Model>, String> {
+) -> Result<Vec<MessageWithThumbnail>, String> {
     im_message_repository::query_file_messages(
         db_conn,
         login_uid,
@@ -178,7 +178,7 @@ async fn query_files_by_senders(
     db_conn: &sea_orm::DatabaseConnection,
     login_uid: &str,
     param: &FileQueryParam,
-) -> Result<Vec<im_message::Model>, String> {
+) -> Result<Vec<MessageWithThumbnail>, String> {
     // 如果指定了联系人，查找与该联系人相关的所有文件
     if let Some(contact_uid) = &param.selected_user {
         // 新策略：基于消息交互历史查找共同房间
@@ -228,7 +228,7 @@ async fn query_files_by_sessions(
     db_conn: &sea_orm::DatabaseConnection,
     login_uid: &str,
     param: &FileQueryParam,
-) -> Result<Vec<im_message::Model>, String> {
+) -> Result<Vec<MessageWithThumbnail>, String> {
     // 如果指定了房间ID，则查询该房间的文件；否则查询所有房间
     let room_id = param.room_id.as_deref();
 
@@ -246,7 +246,12 @@ async fn query_files_by_sessions(
 }
 
 /// 将消息转换为文件信息
-fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> {
+fn convert_message_to_file_info(record: MessageWithThumbnail) -> Option<FileInfo> {
+    let MessageWithThumbnail {
+        message,
+        thumbnail_path,
+    } = record;
+
     // 解析消息体中的文件信息
     if let Some(body) = &message.body {
         // 尝试解析为 JSON
@@ -303,7 +308,9 @@ fn convert_message_to_file_info(message: im_message::Model) -> Option<FileInfo> 
                         .map(|s| s.to_string()),
                     is_downloaded: Some(false),
                     status: "completed".to_string(),
-                    thumbnail_url: file_data["thumbnailUrl"].as_str().map(|s| s.to_string()),
+                    thumbnail_url: thumbnail_path
+                        .clone()
+                        .or_else(|| file_data["thumbnailUrl"].as_str().map(|s| s.to_string())),
                 };
 
                 return Some(file_info);

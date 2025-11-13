@@ -1,8 +1,98 @@
+import { convertFileSrc } from '@tauri-apps/api/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { MsgEnum } from '@/enums'
 import { useWindow } from '@/hooks/useWindow'
 import { useChatStore } from '@/stores/chat'
+import { useFileDownloadStore } from '@/stores/fileDownload'
 import { useImageViewer as useImageViewerStore } from '@/stores/imageViewer'
+import type { FilesMeta } from '@/services/types'
+import { extractFileName } from '@/utils/Formatting'
+import { getFilesMeta } from '@/utils/PathUtil'
+
+type WorkerResponse = {
+  success: boolean
+  url: string
+  buffer?: ArrayBuffer
+  error?: string
+}
+
+type WorkerRequest = {
+  resolve: (value: string | null) => void
+  reject: (reason?: unknown) => void
+  fileName: string
+}
+
+const workerRequests = new Map<string, WorkerRequest>()
+let imageDownloadWorker: Worker | null = null
+const imageDownloaderWorkerUrl = new URL('../workers/imageDownloader.ts', import.meta.url)
+
+const ensureWorker = () => {
+  if (imageDownloadWorker || typeof window === 'undefined') return
+  imageDownloadWorker = new Worker(imageDownloaderWorkerUrl, { type: 'module' })
+  imageDownloadWorker.onmessage = async (event: MessageEvent<WorkerResponse>) => {
+    const { success, url, buffer, error } = event.data
+    const request = workerRequests.get(url)
+    if (!request) {
+      return
+    }
+    workerRequests.delete(url)
+
+    if (!success || !buffer) {
+      request.reject(new Error(error || '下载失败'))
+      return
+    }
+
+    try {
+      const fileDownloadStore = useFileDownloadStore()
+      const absolutePath = await fileDownloadStore.saveFileFromBytes(url, request.fileName, new Uint8Array(buffer))
+      request.resolve(absolutePath)
+    } catch (err) {
+      request.reject(err)
+    }
+  }
+}
+
+const downloadImageWithWorker = (url: string, fileName: string) => {
+  ensureWorker()
+  if (!imageDownloadWorker) {
+    return Promise.reject(new Error('Web Worker 不可用'))
+  }
+
+  const existing = workerRequests.get(url)
+  if (existing) {
+    return new Promise<string | null>((resolve, reject) => {
+      const prevResolve = existing.resolve
+      const prevReject = existing.reject
+      existing.resolve = (value) => {
+        prevResolve(value)
+        resolve(value)
+      }
+      existing.reject = (reason) => {
+        prevReject(reason)
+        reject(reason)
+      }
+    })
+  }
+
+  const promise = new Promise<string | null>((resolve, reject) => {
+    workerRequests.set(url, { resolve, reject, fileName })
+    imageDownloadWorker!.postMessage({ url })
+  })
+
+  return promise
+}
+
+const deduplicateList = (list: string[]) => {
+  const uniqueList: string[] = []
+  const seen = new Set<string>()
+  list.forEach((url) => {
+    if (url && !seen.has(url)) {
+      seen.add(url)
+      uniqueList.push(url)
+    }
+  })
+  return uniqueList
+}
 
 /**
  * 图片查看器Hook，用于处理图片和表情包的查看功能
@@ -11,6 +101,140 @@ export const useImageViewer = () => {
   const chatStore = useChatStore()
   const { createWebviewWindow } = useWindow()
   const imageViewerStore = useImageViewerStore()
+  const fileDownloadStore = useFileDownloadStore()
+
+  const ensureLocalFileExists = async (url: string) => {
+    if (!url) return null
+    const status = fileDownloadStore.getFileStatus(url)
+    const validatePath = async (absolutePath: string | undefined | null) => {
+      if (!absolutePath) {
+        return null
+      }
+      try {
+        const [meta] = await getFilesMeta<FilesMeta>([absolutePath])
+        if (meta?.exists) {
+          return absolutePath
+        }
+        return null
+      } catch (error) {
+        console.error('检查本地图片失败:', error)
+        return null
+      }
+    }
+
+    if (status?.isDownloaded) {
+      const validPath = await validatePath(status.absolutePath)
+      if (validPath) {
+        return validPath
+      }
+
+      fileDownloadStore.updateFileStatus(url, {
+        isDownloaded: false,
+        absolutePath: '',
+        localPath: '',
+        nativePath: '',
+        displayPath: '',
+        status: 'pending',
+        progress: 0
+      })
+    }
+
+    const fileName = extractFileName(url)
+    if (!fileName) {
+      return null
+    }
+
+    try {
+      const exists = await fileDownloadStore.checkFileExists(url, fileName)
+      if (!exists) {
+        return null
+      }
+
+      const refreshedStatus = fileDownloadStore.getFileStatus(url)
+      return await validatePath(refreshedStatus.absolutePath)
+    } catch (error) {
+      console.error('重新检查本地图片失败:', error)
+      return null
+    }
+  }
+
+  const getDisplayUrl = async (url: string) => {
+    const localPath = await ensureLocalFileExists(url)
+    if (localPath) {
+      try {
+        return convertFileSrc(localPath)
+      } catch (error) {
+        console.error('转换本地图片路径失败:', error)
+      }
+    }
+    return url
+  }
+
+  const getLocalMediaPathFromChat = (url: string, includeTypes: MsgEnum[]) => {
+    const messages = Object.values(chatStore.currentMessageMap || {})
+    for (const msg of messages) {
+      if (!includeTypes.includes(msg.message?.type)) continue
+      if (msg.message.body?.url !== url) continue
+      if (msg.message.body?.localPath) {
+        return msg.message.body.localPath as string
+      }
+    }
+    return null
+  }
+
+  const resolveDisplayUrl = async (url: string, includeTypes: MsgEnum[]) => {
+    const localPath = getLocalMediaPathFromChat(url, includeTypes)
+    if (localPath) {
+      try {
+        return convertFileSrc(localPath)
+      } catch (error) {
+        console.error('转换本地媒体路径失败:', error)
+      }
+    }
+    return await getDisplayUrl(url)
+  }
+
+  const replaceImageWithLocalPath = (originalUrl: string, absolutePath: string) => {
+    const index = imageViewerStore.originalImageList.indexOf(originalUrl)
+    if (index === -1) {
+      return
+    }
+    try {
+      const displayUrl = convertFileSrc(absolutePath)
+      imageViewerStore.updateImageAt(index, displayUrl)
+      imageViewerStore.updateSingleImageSource(displayUrl)
+    } catch (error) {
+      console.error('替换本地图片路径失败:', error)
+    }
+  }
+
+  const scheduleDownload = (originalUrl: string) => {
+    const fileName = extractFileName(originalUrl) || `image-${Date.now()}.png`
+    downloadImageWithWorker(originalUrl, fileName)
+      .then((absolutePath) => {
+        if (absolutePath) {
+          replaceImageWithLocalPath(originalUrl, absolutePath)
+        }
+      })
+      .catch((error) => {
+        console.error('图片下载失败:', error)
+      })
+  }
+
+  const downloadOriginalByIndex = (index: number) => {
+    if (index < 0) {
+      return
+    }
+    const originalUrl = imageViewerStore.originalImageList[index]
+    if (!originalUrl) {
+      return
+    }
+    const displayUrl = imageViewerStore.imageList[index]
+    if (!displayUrl || displayUrl !== originalUrl) {
+      return
+    }
+    scheduleDownload(originalUrl)
+  }
 
   /**
    * 获取当前聊天中的所有图片和表情包URL
@@ -72,23 +296,27 @@ export const useImageViewer = () => {
         index = result.index
       }
 
-      // 使用重置方法，自动去重并保持顺序
-      imageViewerStore.resetImageList(list, index)
+      const dedupedList = deduplicateList(list)
+      const resolvedList = await Promise.all(dedupedList.map((item) => resolveDisplayUrl(item, includeTypes)))
+
+      const targetIndex = dedupedList.indexOf(url)
+      const resolvedIndex = targetIndex === -1 ? (index >= 0 ? index : 0) : targetIndex
+
+      imageViewerStore.resetImageList(resolvedList, resolvedIndex, dedupedList)
 
       // 检查图片查看器窗口是否已存在
       const existingWindow = await WebviewWindow.getByLabel('imageViewer')
 
       if (existingWindow) {
         // 如果窗口已存在，更新图片内容并显示窗口
-        await existingWindow.emit('update-image', { list, index }) // 发送更新事件
+        await existingWindow.emit('update-image', { list: resolvedList, index: resolvedIndex })
         await existingWindow.show()
         await existingWindow.setFocus()
         return
       }
 
-      // 获取当前图片的宽高
       const img = new Image()
-      img.src = url
+      img.src = resolvedList[resolvedIndex] || url
 
       await new Promise((resolve, reject) => {
         img.onload = resolve
@@ -144,6 +372,7 @@ export const useImageViewer = () => {
 
   return {
     getAllMediaFromChat,
-    openImageViewer
+    openImageViewer,
+    downloadOriginalByIndex
   }
 }

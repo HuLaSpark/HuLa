@@ -186,6 +186,19 @@ export const useFileDownloadStore = defineStore(
       }
     }
 
+    const finalizeSuccessfulWrite = (fileUrl: string, _fileName: string, absolutePath: string, localPath: string) => {
+      const normalizedPath = absolutePath.replace(/\\/g, '/')
+      updateFileStatus(fileUrl, {
+        isDownloaded: true,
+        localPath,
+        absolutePath,
+        nativePath: absolutePath,
+        displayPath: normalizedPath,
+        status: 'completed',
+        progress: 100
+      })
+    }
+
     /**
      * 下载文件
      * @param fileUrl 文件URL
@@ -262,21 +275,7 @@ export const useFileDownloadStore = defineStore(
         const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
         const absolutePath = await join(baseDirPath, filePath)
 
-        // 保持原生路径格式用于文件操作，规范化路径用于显示
-        const normalizedPath = absolutePath.replace(/\\/g, '/')
-
-        // 更新状态为完成
-        updateFileStatus(fileUrl, {
-          isDownloaded: true,
-          localPath: filePath,
-          absolutePath: absolutePath, // 使用原生路径格式
-          nativePath: absolutePath, // 保存原生路径
-          displayPath: normalizedPath, // 保存显示路径
-          status: 'completed',
-          progress: 100
-        })
-
-        console.log(`文件下载成功: ${normalizedPath}`)
+        finalizeSuccessfulWrite(fileUrl, fileName, absolutePath, filePath)
         return absolutePath // 返回原生路径格式
       } catch (error) {
         console.error('文件下载失败:', error)
@@ -288,6 +287,35 @@ export const useFileDownloadStore = defineStore(
         })
 
         window.$message?.error(`文件下载失败: ${error instanceof Error ? error.message : '未知错误'}`)
+        return null
+      }
+    }
+
+    /**
+     * 将 worker 下载的字节数据写入到本地文件
+     * @param fileUrl 文件URL（作为状态映射 key）
+     * @param fileName 文件名
+     * @param data 文件数据
+     */
+    const saveFileFromBytes = async (fileUrl: string, fileName: string, data: Uint8Array): Promise<string | null> => {
+      try {
+        const downloadsDir = await userStore.getUserRoomDir()
+        const filePath = await join(downloadsDir, fileName)
+        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+
+        await writeFile(filePath, data, { baseDir })
+
+        const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+        const absolutePath = await join(baseDirPath, filePath)
+
+        finalizeSuccessfulWrite(fileUrl, fileName, absolutePath, filePath)
+        return absolutePath
+      } catch (error) {
+        console.error('保存文件失败:', error)
+        updateFileStatus(fileUrl, {
+          status: 'failed',
+          error: error instanceof Error ? error.message : '保存失败'
+        })
         return null
       }
     }
@@ -334,6 +362,7 @@ export const useFileDownloadStore = defineStore(
       updateFileStatus,
       checkFileExists,
       downloadFile,
+      saveFileFromBytes,
       getLocalPath,
       clearDownloadStatus,
       removeFileStatus,

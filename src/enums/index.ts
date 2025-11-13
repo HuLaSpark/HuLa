@@ -189,7 +189,9 @@ export enum StoresEnum {
   /** Bot 视图状态 */
   BOT = 'bot',
   /** 文件管理 */
-  FILE = 'file'
+  FILE = 'file',
+  /** 缩略图缓存 */
+  THUMBNAIL_CACHE = 'thumbnailCache'
 }
 
 /**

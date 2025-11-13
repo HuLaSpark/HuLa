@@ -351,6 +351,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 ### 🏆 金牌赞助者 (￥100+)
 | 💝 日期 | 👤 赞助者 | 💰 金额 | 🏷️ 平台 |
 |---------|----------|--------|---------|
+| 2025-11-12 | **星** | `¥500` | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-03 | **烛火** | `¥500` | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-10-24 | **唐勇（伏威）** | `¥200` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |

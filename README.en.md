@@ -348,6 +348,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 ### 🏆 Gold Sponsors ($15+)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
 |---------|----------|--------|---------|
+| 2025-11-12 | **星** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-03 | **烛火** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-10-24 | **唐勇（伏威）** | `¥400` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |

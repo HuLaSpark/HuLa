@@ -12,7 +12,7 @@
     show-toolbar-tooltip
     preview-disabled
     style="border-radius: 8px; cursor: pointer !important"
-    :src="body?.url"
+    :src="displayEmojiSrc"
     @dblclick="handleOpenImageViewer"
     @error="handleImageError">
     <template #placeholder>
@@ -38,33 +38,96 @@
 </template>
 
 <script setup lang="ts">
+import { convertFileSrc } from '@tauri-apps/api/core'
+import { exists } from '@tauri-apps/plugin-fs'
 import { MsgEnum } from '@/enums/index'
 import { useImageViewer } from '@/hooks/useImageViewer'
-import type { EmojiBody } from '@/services/types'
+import { useThumbnailCacheStore } from '@/stores/thumbnailCache'
+import type { EmojiBody, MsgType } from '@/services/types'
+import { getRemoteFileSize } from '@/utils/PathUtil'
 
 const props = defineProps<{
   body: EmojiBody
   onImageClick?: (url: string) => void
+  message?: MsgType
 }>()
 const isError = ref(false)
-// 使用图片查看器hook
+const localEmojiSrc = ref<string | null>(null)
+const thumbnailStore = useThumbnailCacheStore()
 const { openImageViewer } = useImageViewer()
+const EMOJI_AUTO_DOWNLOAD_LIMIT = 1024 * 1024 // 1MB
 
-// 处理图片加载错误
+const displayEmojiSrc = computed(() => localEmojiSrc.value || props.body?.url || '')
+
 const handleImageError = () => {
   isError.value = true
   console.error('表情包加载失败:', props.body.url)
 }
 
-// 处理打开图片查看器
 const handleOpenImageViewer = () => {
-  if (props.body?.url) {
-    // 如果有自定义点击处理函数，使用它；否则使用默认逻辑
-    if (props.onImageClick) {
-      props.onImageClick(props.body.url)
-    } else {
-      openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
-    }
+  if (!props.body?.url) return
+  if (props.onImageClick) {
+    props.onImageClick(displayEmojiSrc.value)
+  } else {
+    openImageViewer(props.body.url, [MsgEnum.IMAGE, MsgEnum.EMOJI])
   }
 }
+
+const ensureLocalEmoji = async () => {
+  const localPath = props.body?.localPath
+  if (!localPath) {
+    localEmojiSrc.value = null
+    await maybeDownloadEmoji()
+    return
+  }
+  try {
+    const existsFlag = await exists(localPath)
+    if (existsFlag) {
+      localEmojiSrc.value = convertFileSrc(localPath)
+      return
+    }
+  } catch (error) {
+    console.warn('[Emoji] 检查本地表情失败:', error)
+  }
+  localEmojiSrc.value = null
+  await maybeDownloadEmoji()
+}
+
+const maybeDownloadEmoji = async () => {
+  if (!props.body?.url || !props.message) return
+  try {
+    const size = await getRemoteFileSize(props.body.url)
+    if (size === null || size > EMOJI_AUTO_DOWNLOAD_LIMIT) {
+      return
+    }
+    const path = await thumbnailStore.enqueueThumbnail({
+      url: props.body.url,
+      msgId: props.message.id,
+      roomId: props.message.roomId,
+      kind: 'emoji'
+    })
+    if (path) {
+      localEmojiSrc.value = convertFileSrc(path)
+    }
+  } catch (error) {
+    console.warn('[Emoji] 自动下载失败:', error)
+  }
+}
+
+watch(
+  () => props.body?.localPath,
+  () => {
+    void ensureLocalEmoji()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.message?.id,
+  () => {
+    if (!props.body?.localPath) {
+      void maybeDownloadEmoji()
+    }
+  }
+)
 </script>

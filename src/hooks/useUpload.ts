@@ -8,6 +8,7 @@ import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
 import { getQiniuToken } from '@/utils/ImRequestUtils'
 import { isAndroid, isMobile } from '@/utils/PlatformConstants'
+import { getWasmMd5 } from '@/utils/Md5Util'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -59,16 +60,7 @@ const DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024 // 默认分片大小：4MB
 const QINIU_CHUNK_SIZE = 4 * 1024 * 1024 // 七牛云分片大小：4MB
 const CHUNK_THRESHOLD = 4 * 1024 * 1024 // 4MB，超过此大小的文件将使用分片上传
 
-let wasmMd5: any | null = null
 let cryptoJS: any | null = null
-
-const loadWasmMd5 = async () => {
-  if (!wasmMd5) {
-    const module = await import('digest-wasm')
-    wasmMd5 = module.Md5
-  }
-  return wasmMd5 as { digest_u8: (data: Uint8Array) => Promise<string> }
-}
 
 const loadCryptoJS = async () => {
   if (!cryptoJS) {
@@ -114,7 +106,7 @@ export const useUpload = () => {
         const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer as ArrayBuffer)
         hash = CryptoJS.MD5(wordArray).toString()
       } else {
-        const Md5 = await loadWasmMd5()
+        const Md5 = await getWasmMd5()
         hash = await Md5.digest_u8(uint8Array)
       }
       const endTime = performance.now()

@@ -5,12 +5,160 @@ use sea_orm::prelude::Expr;
 use sea_orm::sea_query::{Alias, Value};
 use sea_orm::{
     ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
-    IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TryIntoModel,
+    IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, Statement,
+    TryIntoModel,
 };
+use std::collections::HashMap;
 
 use tracing::{debug, error, info};
 
-pub async fn save_all<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
+#[derive(Clone)]
+pub struct MessageWithThumbnail {
+    pub message: im_message::Model,
+    pub thumbnail_path: Option<String>,
+}
+
+impl MessageWithThumbnail {
+    pub fn new(message: im_message::Model, thumbnail_path: Option<String>) -> Self {
+        Self {
+            message,
+            thumbnail_path,
+        }
+    }
+
+    pub fn key(&self) -> (String, String) {
+        (self.message.id.clone(), self.message.login_uid.clone())
+    }
+}
+
+impl From<im_message::Model> for MessageWithThumbnail {
+    fn from(message: im_message::Model) -> Self {
+        Self {
+            message,
+            thumbnail_path: None,
+        }
+    }
+}
+
+fn collect_message_keys(messages: &[MessageWithThumbnail]) -> Vec<(String, String)> {
+    messages
+        .iter()
+        .map(|msg| (msg.message.id.clone(), msg.message.login_uid.clone()))
+        .collect()
+}
+
+async fn fetch_thumbnail_map<C: ConnectionTrait>(
+    conn: &C,
+    keys: &[(String, String)],
+) -> Result<HashMap<(String, String), String>, CommonError> {
+    if keys.is_empty() {
+        return Ok(HashMap::new());
+    }
+
+    let backend = conn.get_database_backend();
+    let mut sql = String::from("SELECT id, login_uid, thumbnail_path FROM im_message WHERE ");
+    let mut conditions = Vec::with_capacity(keys.len());
+    let mut values = Vec::with_capacity(keys.len() * 2);
+
+    for (id, login_uid) in keys {
+        conditions.push("(id = ? AND login_uid = ?)");
+        values.push(Value::from(id.clone()));
+        values.push(Value::from(login_uid.clone()));
+    }
+
+    sql.push_str(&conditions.join(" OR "));
+
+    let stmt = Statement::from_sql_and_values(backend, sql, values);
+    let rows = conn.query_all(stmt).await?;
+
+    let mut map = HashMap::new();
+    for row in rows {
+        let id: String = row.try_get("", "id")?;
+        let login_uid: String = row.try_get("", "login_uid")?;
+        let path: Option<String> = row.try_get("", "thumbnail_path")?;
+        if let Some(path) = path {
+            map.insert((id, login_uid), path);
+        }
+    }
+
+    Ok(map)
+}
+
+async fn fetch_thumbnail_path<C: ConnectionTrait>(
+    conn: &C,
+    id: &str,
+    login_uid: &str,
+) -> Result<Option<String>, CommonError> {
+    let backend = conn.get_database_backend();
+    let stmt = Statement::from_sql_and_values(
+        backend,
+        "SELECT thumbnail_path FROM im_message WHERE id = ? AND login_uid = ? LIMIT 1",
+        vec![
+            Value::from(id.to_string()),
+            Value::from(login_uid.to_string()),
+        ],
+    );
+
+    if let Some(row) = conn.query_one(stmt).await? {
+        let path: Option<String> = row.try_get("", "thumbnail_path")?;
+        Ok(path)
+    } else {
+        Ok(None)
+    }
+}
+
+async fn update_thumbnail_path<C: ConnectionTrait>(
+    conn: &C,
+    key: &(String, String),
+    path: Option<&str>,
+) -> Result<(), CommonError> {
+    let backend = conn.get_database_backend();
+    let value = match path {
+        Some(p) => Value::from(p.to_string()),
+        None => Value::String(None),
+    };
+
+    let stmt = Statement::from_sql_and_values(
+        backend,
+        "UPDATE im_message SET thumbnail_path = ? WHERE id = ? AND login_uid = ?",
+        vec![
+            value,
+            Value::from(key.0.clone()),
+            Value::from(key.1.clone()),
+        ],
+    );
+
+    conn.execute(stmt).await?;
+    Ok(())
+}
+
+async fn enrich_models_with_thumbnails<C: ConnectionTrait>(
+    conn: &C,
+    messages: Vec<im_message::Model>,
+) -> Result<Vec<MessageWithThumbnail>, CommonError> {
+    if messages.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let keys: Vec<(String, String)> = messages
+        .iter()
+        .map(|msg| (msg.id.clone(), msg.login_uid.clone()))
+        .collect();
+
+    let thumbnail_map = fetch_thumbnail_map(conn, &keys).await?;
+    let enriched = messages
+        .into_iter()
+        .map(|message| {
+            let key = (message.id.clone(), message.login_uid.clone());
+            let path = thumbnail_map.get(&key).cloned();
+            MessageWithThumbnail::new(message, path)
+        })
+        .collect();
+
+    Ok(enriched)
+}
+
+pub async fn save_all<C>(db: &C, messages: Vec<MessageWithThumbnail>) -> Result<(), CommonError>
 where
     C: ConnectionTrait,
 {
@@ -28,7 +176,10 @@ where
     }
 }
 
-async fn save_all_internal<C>(db: &C, messages: Vec<im_message::Model>) -> Result<(), CommonError>
+async fn save_all_internal<C>(
+    db: &C,
+    messages: Vec<MessageWithThumbnail>,
+) -> Result<(), CommonError>
 where
     C: ConnectionTrait,
 {
@@ -74,7 +225,7 @@ where
 /// 处理单批消息：检查存在性，删除已存在的，然后插入新的
 async fn process_message_batch<C>(
     db: &C,
-    messages: Vec<im_message::Model>,
+    mut messages: Vec<MessageWithThumbnail>,
 ) -> Result<(), CommonError>
 where
     C: ConnectionTrait,
@@ -83,11 +234,16 @@ where
         return Ok(());
     }
 
-    // 收集所有消息的主键用于查询
-    let message_keys: Vec<(String, String)> = messages
-        .iter()
-        .map(|msg| (msg.id.clone(), msg.login_uid.clone()))
-        .collect();
+    let message_keys = collect_message_keys(&messages);
+    let existing_thumbnail_map = fetch_thumbnail_map(db, &message_keys).await?;
+
+    for message in &mut messages {
+        if message.thumbnail_path.is_none() {
+            if let Some(path) = existing_thumbnail_map.get(&message.key()) {
+                message.thumbnail_path = Some(path.clone());
+            }
+        }
+    }
 
     // 查询已存在的消息
     let mut condition = sea_orm::Condition::any();
@@ -105,19 +261,13 @@ where
         .await
         .map_err(|e| anyhow::anyhow!("Failed to query existing messages: {}", e))?;
 
-    // 如果有已存在的消息，先删除它们
     if !existing_messages.is_empty() {
-        let existing_keys: Vec<(String, String)> = existing_messages
-            .iter()
-            .map(|msg| (msg.id.clone(), msg.login_uid.clone()))
-            .collect();
-
         let mut delete_condition = sea_orm::Condition::any();
-        for (id, login_uid) in &existing_keys {
+        for msg in &existing_messages {
             delete_condition = delete_condition.add(
                 sea_orm::Condition::all()
-                    .add(im_message::Column::Id.eq(id.clone()))
-                    .add(im_message::Column::LoginUid.eq(login_uid.clone())),
+                    .add(im_message::Column::Id.eq(msg.id.clone()))
+                    .add(im_message::Column::LoginUid.eq(msg.login_uid.clone())),
             );
         }
 
@@ -132,14 +282,18 @@ where
 
     // 插入新消息
     let active_models: Vec<im_message::ActiveModel> = messages
-        .into_iter()
-        .map(|message| message.into_active_model())
+        .iter()
+        .map(|message| message.message.clone().into_active_model())
         .collect();
 
     im_message::Entity::insert_many(active_models)
         .exec(db)
         .await
         .map_err(|e| anyhow::anyhow!("Failed to batch insert messages: {}", e))?;
+
+    for message in &messages {
+        update_thumbnail_path(db, &message.key(), message.thumbnail_path.as_deref()).await?;
+    }
 
     Ok(())
 }
@@ -150,7 +304,7 @@ pub async fn cursor_page_messages(
     room_id: String,
     cursor_page_param: CursorPageParam,
     login_uid: &str,
-) -> Result<CursorPageResp<Vec<im_message::Model>>, CommonError> {
+) -> Result<CursorPageResp<Vec<MessageWithThumbnail>>, CommonError> {
     // 查询总数
     let total = im_message::Entity::find()
         .filter(im_message::Column::RoomId.eq(&room_id))
@@ -200,10 +354,12 @@ pub async fn cursor_page_messages(
 
     let is_last = messages.len() < cursor_page_param.page_size as usize;
 
+    let enriched = enrich_models_with_thumbnails(db, messages).await?;
+
     Ok(CursorPageResp {
         cursor: next_cursor,
         is_last,
-        list: Some(messages),
+        list: Some(enriched),
         total,
     })
 }
@@ -211,29 +367,39 @@ pub async fn cursor_page_messages(
 /// 保存单个消息到数据库
 pub async fn save_message(
     db: &DatabaseTransaction,
-    mut message: im_message::Model,
-) -> Result<(), CommonError> {
+    mut record: MessageWithThumbnail,
+) -> Result<MessageWithThumbnail, CommonError> {
     // 根据消息主键查找是否已存在
-    let existing_message =
-        im_message::Entity::find_by_id((message.id.clone(), message.login_uid.clone()))
-            .one(db)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?;
+    let existing_message = im_message::Entity::find_by_id((
+        record.message.id.clone(),
+        record.message.login_uid.clone(),
+    ))
+    .one(db)
+    .await
+    .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?;
+
+    if record.thumbnail_path.is_none() {
+        record.thumbnail_path =
+            fetch_thumbnail_path(db, &record.message.id, &record.message.login_uid).await?;
+    }
 
     // 如果已存在，则先删除
     if existing_message.is_some() {
-        im_message::Entity::delete_by_id((message.id.clone(), message.login_uid.clone()))
-            .exec(db)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
+        im_message::Entity::delete_by_id((
+            record.message.id.clone(),
+            record.message.login_uid.clone(),
+        ))
+        .exec(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
     }
 
     // 如果缺少，就填充time_block，以便为转发等消息类型呈现时间戳块
-    if message.time_block.is_none() {
-        if let Some(current_send_time) = message.send_time {
+    if record.message.time_block.is_none() {
+        if let Some(current_send_time) = record.message.send_time {
             let last_message = im_message::Entity::find()
-                .filter(im_message::Column::RoomId.eq(message.room_id.clone()))
-                .filter(im_message::Column::LoginUid.eq(message.login_uid.clone()))
+                .filter(im_message::Column::RoomId.eq(record.message.room_id.clone()))
+                .filter(im_message::Column::LoginUid.eq(record.message.login_uid.clone()))
                 .filter(im_message::Column::SendTime.lt(current_send_time))
                 .order_by_desc(Expr::col(im_message::Column::SendTime))
                 .order_by_desc(Expr::col(im_message::Column::Id).cast_as(Alias::new("INTEGER")))
@@ -245,29 +411,29 @@ pub async fn save_message(
             if let Some(last_message) = last_message {
                 if let Some(last_send_time) = last_message.send_time {
                     if current_send_time - last_send_time >= 1000 * 60 * 15 {
-                        message.time_block = Some(current_send_time - last_send_time);
+                        record.message.time_block = Some(current_send_time - last_send_time);
                     }
                 }
             }
         }
     }
 
-    // 插入新消息
-    let active_model = message.into_active_model();
+    let active_model = record.message.clone().into_active_model();
     im_message::Entity::insert(active_model).exec(db).await?;
-    Ok(())
+    update_thumbnail_path(db, &record.key(), record.thumbnail_path.as_deref()).await?;
+    Ok(record)
 }
 
 /// 更新消息发送状态
 pub async fn update_message_status(
     db: &DatabaseConnection,
-    message: im_message::Model,
+    mut record: MessageWithThumbnail,
     status: &str,
     id: Option<String>,
     login_uid: String,
-) -> Result<im_message::Model, CommonError> {
+) -> Result<MessageWithThumbnail, CommonError> {
     let mut active_model: im_message::ActiveModel =
-        im_message::Entity::find_by_id((message.id.clone(), login_uid))
+        im_message::Entity::find_by_id((record.message.id.clone(), login_uid.clone()))
             .one(db)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to find message: {}", e))?
@@ -275,13 +441,13 @@ pub async fn update_message_status(
             .into_active_model();
 
     // 设置 time_block
-    if message.id.starts_with('T') {
+    if record.message.id.starts_with('T') {
         info!("check msg sendTime");
         // 查找该房间的最后一条消息
         let last_message = im_message::Entity::find()
-            .filter(im_message::Column::RoomId.eq(&message.room_id))
-            .filter(im_message::Column::LoginUid.eq(message.login_uid.clone()))
-            .filter(im_message::Column::Id.ne(&message.id))
+            .filter(im_message::Column::RoomId.eq(&record.message.room_id))
+            .filter(im_message::Column::LoginUid.eq(record.message.login_uid.clone()))
+            .filter(im_message::Column::Id.ne(&record.message.id))
             .order_by_desc(im_message::Column::Id)
             .limit(1)
             .one(db)
@@ -291,7 +457,7 @@ pub async fn update_message_status(
         if let Some(last_message) = last_message {
             // 比较时间戳
             if let (Some(last_send_time), Some(send_time)) =
-                (last_message.send_time, message.send_time)
+                (last_message.send_time, record.message.send_time)
             {
                 if send_time - last_send_time >= 1000 * 60 * 15 {
                     active_model.time_block = Set(Some(send_time - last_send_time));
@@ -301,11 +467,14 @@ pub async fn update_message_status(
     }
 
     active_model.send_status = Set(status.to_string());
-    active_model.body = Set(message.body.clone());
+    active_model.body = Set(record.message.body.clone());
+
+    let original_id = record.message.id.clone();
 
     if status == "success" {
         if let Some(message_id) = id {
-            active_model.id = Set(message_id);
+            active_model.id = Set(message_id.clone());
+            record.message.id = message_id;
         } else {
             return Err(CommonError::RequestError(
                 "Message ID is None for successful status".to_string(),
@@ -315,10 +484,14 @@ pub async fn update_message_status(
 
     im_message::Entity::update_many()
         .set(active_model.clone())
-        .filter(im_message::Column::Id.eq(message.id))
+        .filter(im_message::Column::Id.eq(original_id))
         .exec(db)
         .await?;
-    Ok(active_model.try_into_model()?)
+
+    let updated_model = active_model.try_into_model()?;
+    record.message = updated_model;
+    update_thumbnail_path(db, &record.key(), record.thumbnail_path.as_deref()).await?;
+    Ok(record)
 }
 
 /// 更新消息撤回状态
@@ -370,7 +543,7 @@ pub async fn update_message_recall_status(
 pub async fn query_chat_history(
     db: &DatabaseConnection,
     condition: crate::command::chat_history_command::ChatHistoryQueryCondition,
-) -> Result<Vec<im_message::Model>, CommonError> {
+) -> Result<Vec<MessageWithThumbnail>, CommonError> {
     info!(
         "查询聊天历史记录 - 房间: {}, 类型: {:?}, 关键词: {:?}",
         condition.room_id, condition.message_type, condition.search_keyword
@@ -456,7 +629,7 @@ pub async fn query_chat_history(
         .await
         .map_err(|e| anyhow::anyhow!("查询聊天历史记录失败: {}", e))?;
 
-    Ok(messages)
+    enrich_models_with_thumbnails(db, messages).await
 }
 
 /// 专门用于文件管理的查询函数，支持跨房间查询文件类型消息
@@ -468,7 +641,7 @@ pub async fn query_file_messages(
     search_keyword: Option<&str>,
     page: u32,
     page_size: u32,
-) -> Result<Vec<im_message::Model>, CommonError> {
+) -> Result<Vec<MessageWithThumbnail>, CommonError> {
     // 构建基础查询条件
     let mut conditions = Condition::all().add(im_message::Column::LoginUid.eq(login_uid));
 
@@ -545,5 +718,5 @@ pub async fn query_file_messages(
         .await
         .map_err(|e| anyhow::anyhow!("查询文件消息失败: {}", e))?;
 
-    Ok(messages)
+    enrich_models_with_thumbnails(db, messages).await
 }

@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 // 检测浏览器特征
 const detectBrowserFeatures = async (): Promise<Record<string, boolean>> => {
   const features: Record<string, boolean> = {}

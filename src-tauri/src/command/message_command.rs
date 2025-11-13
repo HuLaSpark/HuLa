@@ -2,6 +2,7 @@ use crate::AppData;
 use crate::error::CommonError;
 use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
+use crate::repository::im_message_repository::MessageWithThumbnail;
 use crate::repository::{im_message_repository, im_user_repository};
 use crate::vo::vo::ChatMessageReq;
 
@@ -115,8 +116,8 @@ pub async fn page_msg(
     // 转换数据库模型为响应模型
     let mut raw_list = db_result.list.unwrap_or_default();
     raw_list.sort_by(|a, b| {
-        let a_time = a.send_time.unwrap_or(0);
-        let b_time = b.send_time.unwrap_or(0);
+        let a_time = a.message.send_time.unwrap_or(0);
+        let b_time = b.message.send_time.unwrap_or(0);
         a_time.cmp(&b_time)
     });
 
@@ -134,9 +135,17 @@ pub async fn page_msg(
 }
 
 /// 将数据库消息模型转换为响应模型
-pub fn convert_message_to_resp(msg: im_message::Model, old_msg_id: Option<String>) -> MessageResp {
+pub fn convert_message_to_resp(
+    record: MessageWithThumbnail,
+    old_msg_id: Option<String>,
+) -> MessageResp {
+    let MessageWithThumbnail {
+        message: msg,
+        thumbnail_path,
+    } = record;
+
     // 解析消息体 - 安全地处理 JSON 解析
-    let body = msg.body.as_ref().and_then(|body_str| {
+    let mut body = msg.body.as_ref().and_then(|body_str| {
         if body_str.trim().is_empty() {
             None
         } else {
@@ -155,6 +164,8 @@ pub fn convert_message_to_resp(msg: im_message::Model, old_msg_id: Option<String
             }
         }
     });
+
+    inject_thumbnail_path(&mut body, thumbnail_path.as_deref());
 
     // 解析消息标记 - 支持从 message_marks 字段解析
     let message_marks = msg.message_marks.as_ref().and_then(|marks_str| {
@@ -272,10 +283,10 @@ pub async fn fetch_all_messages(
         // 开启事务
         let tx = db_conn.begin().await?;
 
-        // 转换 MessageResp 为 im_message::Model
-        let db_messages: Vec<im_message::Model> = messages
+        // 转换 MessageResp 为本地存储模型
+        let db_messages: Vec<MessageWithThumbnail> = messages
             .into_iter()
-            .map(|msg_resp| convert_resp_to_model_for_fetch(msg_resp, uid.to_string()))
+            .map(|msg_resp| convert_resp_to_record_for_fetch(msg_resp, uid.to_string()))
             .collect();
         // 保存到本地数据库
         match im_message_repository::save_all(&tx, db_messages).await {
@@ -304,7 +315,7 @@ pub async fn fetch_all_messages(
 }
 
 /// 将 MessageResp 转换为数据库模型（用于 fetch_all_messages）
-fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_message::Model {
+fn convert_resp_to_record_for_fetch(msg_resp: MessageResp, uid: String) -> MessageWithThumbnail {
     use serde_json;
 
     // 序列化消息体为 JSON 字符串
@@ -321,7 +332,7 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
         .as_ref()
         .and_then(|marks| serde_json::to_string(marks).ok());
 
-    im_message::Model {
+    let model = im_message::Model {
         id: msg_resp.message.id.unwrap_or_default(),
         uid: msg_resp.from_user.uid,
         nickname: msg_resp.from_user.nickname,
@@ -332,9 +343,48 @@ fn convert_resp_to_model_for_fetch(msg_resp: MessageResp, uid: String) -> im_mes
         send_time: msg_resp.message.send_time,
         create_time: msg_resp.create_time,
         update_time: msg_resp.update_time,
-        login_uid: uid.to_string(), // 这里暂时设为空字符串，实际使用时会在 save_all 中设置
-        send_status: "success".to_string(), // 从后端获取的消息默认为成功状态
+        login_uid: uid.to_string(),
+        send_status: "success".to_string(),
         time_block: msg_resp.time_block,
+    };
+
+    let thumbnail_path = extract_thumbnail_path_from_body(&msg_resp.message.body);
+    MessageWithThumbnail::new(model, thumbnail_path)
+}
+
+fn extract_thumbnail_path_from_body(body: &Option<serde_json::Value>) -> Option<String> {
+    body.as_ref().and_then(|value| {
+        value.as_object().and_then(|obj| {
+            obj.get("thumbnailPath")
+                .or_else(|| obj.get("thumbnail_path"))
+                .and_then(|v| v.as_str().map(|s| s.to_string()))
+        })
+    })
+}
+
+fn inject_thumbnail_path(body: &mut Option<serde_json::Value>, path: Option<&str>) {
+    let Some(path) = path else {
+        return;
+    };
+
+    if path.is_empty() {
+        return;
+    }
+
+    if let Some(val) = body {
+        if let Some(map) = val.as_object_mut() {
+            let exists = map
+                .get("thumbnailPath")
+                .and_then(|v| v.as_str())
+                .map(|s| !s.is_empty())
+                .unwrap_or(false);
+            if !exists {
+                map.insert(
+                    "thumbnailPath".to_string(),
+                    serde_json::Value::String(path.to_string()),
+                );
+            }
+        }
     }
 }
 
@@ -364,9 +414,10 @@ pub async fn send_msg(
         .body
         .as_ref()
         .and_then(|body| serde_json::to_string(body).ok());
+    let thumbnail_path = extract_thumbnail_path_from_body(&data.body);
 
     // 创建消息模型
-    let mut message = im_message::Model {
+    let message_model = im_message::Model {
         id: data.id.clone(),
         uid: login_uid.clone(),
         nickname,
@@ -382,29 +433,36 @@ pub async fn send_msg(
         time_block: None,
     };
 
+    let mut message_record = MessageWithThumbnail::new(message_model, thumbnail_path);
+
     let tx = state
         .db_conn
         .begin()
         .await
         .map_err(|e| CommonError::DatabaseError(e))?;
     // 先保存到本地数据库
-    if let Err(e) = im_message_repository::save_message(&tx, message.clone()).await {
-        error!("Failed to save message to database: {}", e);
-        return Err(e.to_string());
-    }
+    message_record = match im_message_repository::save_message(&tx, message_record).await {
+        Ok(record) => record,
+        Err(e) => {
+            error!("Failed to save message to database: {}", e);
+            return Err(e.to_string());
+        }
+    };
     tx.commit()
         .await
         .map_err(|e| CommonError::DatabaseError(e))?;
 
     info!(
         "Message saved to local database, ID: {}",
-        message.id.clone()
+        message_record.message.id.clone()
     );
+
+    let msg_id = message_record.message.id.clone();
 
     // 异步发送到后端接口
     let db_conn = state.db_conn.clone();
     let request_client = state.rc.clone();
-    let msg_id = message.id.clone();
+    let mut record_for_send = message_record.clone();
 
     tokio::spawn(async move {
         // 发送到后端接口
@@ -422,13 +480,16 @@ pub async fn send_msg(
             Ok(Some(mut resp)) => {
                 resp.old_msg_id = Some(msg_id.clone());
                 id = resp.message.id.clone();
-                message.body = resp.message.body.as_ref().and_then(|body| {
+                record_for_send.message.body = resp.message.body.as_ref().and_then(|body| {
                     if body.is_null() {
                         None
                     } else {
                         serde_json::to_string(body).ok()
                     }
                 });
+                if let Some(path) = extract_thumbnail_path_from_body(&resp.message.body) {
+                    record_for_send.thumbnail_path = Some(path);
+                }
                 "success"
             }
             _ => "fail",
@@ -437,7 +498,7 @@ pub async fn send_msg(
         // 更新消息状态
         let model = im_message_repository::update_message_status(
             db_conn.deref(),
-            message,
+            record_for_send,
             status,
             id,
             login_uid.clone(),
@@ -461,14 +522,13 @@ pub async fn send_msg(
 
 #[tauri::command]
 pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<(), String> {
-    info!("save msg: {:?}", serde_json::to_string(&data));
     // 创建 im_message::Model
-    let message = convert_resp_to_model_for_fetch(data, state.user_info.lock().await.uid.clone());
+    let record = convert_resp_to_record_for_fetch(data, state.user_info.lock().await.uid.clone());
 
     async {
         let tx = state.db_conn.clone().begin().await?;
         // 保存到数据库
-        im_message_repository::save_message(&tx, message).await?;
+        im_message_repository::save_message(&tx, record).await?;
         tx.commit().await?;
         Ok::<(), CommonError>(())
     }

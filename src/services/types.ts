@@ -373,6 +373,7 @@ export type ImageBody = {
   url: string
   width: number
   height: number
+  thumbnailPath?: string
 }
 /** 语音消息体 */
 export type VoiceBody = {
@@ -399,12 +400,15 @@ export type VideoBody = {
   thumbWidth?: number
   thumbHeight?: number
   thumbUrl?: string
+  thumbnailPath?: string
+  localPath?: string
 }
 /** 文件消息体 */
 export type FileBody = {
   size: number
   fileName: string
   url: string
+  localPath?: string
 }
 /** 文本消息体 */
 export type TextBody = {
@@ -438,6 +442,7 @@ export type AnnouncementBody = TextBody & {
 /** 表情消息 */
 export type EmojiBody = {
   url: string
+  localPath?: string
 }
 
 /** 位置消息体 */

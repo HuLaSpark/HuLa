@@ -110,17 +110,20 @@
 <script setup lang="ts">
 import { join } from '@tauri-apps/api/path'
 import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener'
-import { MessageStatusEnum } from '@/enums'
+import { MessageStatusEnum, TauriCommand } from '@/enums'
 import { useDownload } from '@/hooks/useDownload'
-import type { FileBody, FilesMeta } from '@/services/types'
+import type { FileBody, FilesMeta, MsgType } from '@/services/types'
 import { useFileDownloadStore } from '@/stores/fileDownload'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
+import { useChatStore } from '@/stores/chat'
 import { formatBytes, getFileSuffix } from '@/utils/Formatting'
 import { getFilesMeta } from '@/utils/PathUtil'
+import { invokeSilently } from '@/utils/TauriInvokeHandler'
 
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
+const chatStore = useChatStore()
 
 const { isDownloading: legacyIsDownloading } = useDownload()
 const fileDownloadStore = useFileDownloadStore()
@@ -130,6 +133,7 @@ const props = defineProps<{
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
   searchKeyword?: string
+  message?: MsgType
 }>()
 
 // 图标尺寸状态
@@ -155,6 +159,18 @@ const downloadProgress = computed(() => {
   return fileStatus.value?.progress || 0
 })
 
+const persistFileLocalPath = async (absolutePath: string) => {
+  if (!props.message?.id || !absolutePath) return
+  const target = chatStore.getMessage(props.message.id)
+  if (!target) return
+  if (target.message.body?.localPath === absolutePath) return
+
+  const nextBody = { ...(target.message.body || {}), localPath: absolutePath }
+  chatStore.updateMsg({ msgId: target.message.id, status: target.message.status, body: nextBody })
+  const updated = { ...target, message: { ...target.message, body: nextBody } }
+  await invokeSilently(TauriCommand.SAVE_MSG, { data: updated as any })
+}
+
 const revealInDirSafely = async (targetPath?: string | null) => {
   if (!targetPath) {
     window.$message?.error('暂时找不到本地文件，请先下载后再试~')
@@ -172,6 +188,7 @@ const revealInDirSafely = async (targetPath?: string | null) => {
 const needsDownload = computed(() => {
   if (isUploading.value || isDownloading.value) return false
   if (!props.body?.url) return false
+  if (props.body.localPath) return false
 
   // 如果是本地文件路径，不需要下载
   if (props.body.url.startsWith('file://') || props.body.url.startsWith('/')) return false
@@ -209,6 +226,16 @@ watch(
     }
   },
   { immediate: false }
+)
+
+watch(
+  fileStatus,
+  (status) => {
+    if (status?.isDownloaded && status.absolutePath) {
+      void persistFileLocalPath(status.absolutePath)
+    }
+  },
+  { immediate: true }
 )
 
 // 截断文件名，保留后缀
@@ -324,6 +351,7 @@ const downloadAndOpenFile = async () => {
     const absolutePath = await fileDownloadStore.downloadFile(props.body.url, fileName)
 
     if (absolutePath) {
+      void persistFileLocalPath(absolutePath)
       // 下载成功后尝试打开文件
       try {
         await openPath(absolutePath)
@@ -349,7 +377,10 @@ const downloadFileOnly = async () => {
 
   try {
     const fileName = props.body.fileName
-    await fileDownloadStore.downloadFile(props.body.url, fileName)
+    const absolutePath = await fileDownloadStore.downloadFile(props.body.url, fileName)
+    if (absolutePath) {
+      void persistFileLocalPath(absolutePath)
+    }
   } catch (error) {
     console.error('下载文件失败:', error)
   } finally {

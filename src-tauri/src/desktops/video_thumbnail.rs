@@ -353,12 +353,14 @@ async fn generate_thumbnail_windows(
 
     // 初始化 COM
     unsafe {
-        CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok().map_err(|e| {
-            tauri::Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("初始化 COM 失败: {:?}", e),
-            ))
-        })?;
+        CoInitializeEx(None, COINIT_APARTMENTTHREADED)
+            .ok()
+            .map_err(|e| {
+                tauri::Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("初始化 COM 失败: {:?}", e),
+                ))
+            })?;
     }
 
     let result = unsafe {

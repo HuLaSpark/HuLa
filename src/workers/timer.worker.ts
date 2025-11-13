@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 /** 修改类型定义以支持字符串和数字类型的key */
 type TimerId = number | string
 type TimerInfo = {
