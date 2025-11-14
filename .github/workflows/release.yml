@@ -104,13 +104,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: components-typings
-          path: .
+          path: components-typings
 
       - name: Download frontend dist
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: .
+          path: frontend-dist
 
       - name: Prepare downloaded artifacts
         shell: bash
