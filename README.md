@@ -246,8 +246,8 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 
 | 功能 | 描述           | 状态                                                                                               |
 | ---- | -------------- | -------------------------------------------------------------------------------------------------- |
-| 🧠   | AI 聊天助手    | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
-| 🔌   | 多平台 AI 支持 | ![进行中](https://img.shields.io/badge/🐣-进行中-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 🧠   | AI 聊天助手    | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🔌   | 多平台 AI 支持 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ## 👏 感谢以下贡献者们！
 
@@ -270,6 +270,11 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 <!-- <a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=HuLaSpark/HuLa" />
 </a> -->
+
+<br/>
+
+> [!NOTE]
+> 特别感谢 [@dennis9486](https://github.com/dennis9486) 贡献的截图功能初版实现，代码位于 `src/components/common/Screenshot.vue`，为提升桌面端体验打下基础。
 
 ## 📥 安装与运行
 

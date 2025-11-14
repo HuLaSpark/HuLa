@@ -238,14 +238,35 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 ### 🤖 AI Integration
 | Feature | Description | Status |
 |---------|-------------|--------|
-| 🧠 | AI Chat Assistant | ![In Progress](https://img.shields.io/badge/🐣-In_Progress-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
-| 🔌 | Multi-platform AI Support | ![In Progress](https://img.shields.io/badge/🐣-In_Progress-ee9f20?style=flat&labelColor=fef7e6&color=ee9f20) |
+| 🧠 | AI Chat Assistant | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🔌 | Multi-platform AI Support | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
 ## 👏 Thanks to all Contributors!
 
-<a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=HuLaSpark/HuLa" />
+<a href="https://openomy.com/HuLaSpark/HuLa" target="_blank" style="display: block; width: 100%;" align="center">
+  <img src="https://openomy.com/svg?repo=HuLaSpark/HuLa&chart=bubble&latestMonth=12" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
 </a>
+
+<br/>
+
+<a href="https://openomy.com/HuLaSpark/HuLa" target="_blank" style="display: block; width: 100%;" align="center">
+  <img src="https://openomy.com/svg?repo=HuLaSpark/HuLa&chart=list&latestMonth=12" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
+</a>
+
+<br/>
+
+<a href="https://openomy.com/HuLaSpark/HuLa" target="_blank" style="display: block; width: 100%;" align="center">
+  <img src="https://openomy.com/svg?repo=HuLaSpark/HuLa&chart=podium&latestMonth=12" target="_blank" alt="Contribution Leaderboard" style="display: block; width: 100%;" />
+</a>
+
+<!-- <a href="https://github.com/HuLaSpark/HuLa/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HuLaSpark/HuLa" />
+</a> -->
+
+<br/>
+
+> [!NOTE]
+> Special thanks to [@dennis9486](https://github.com/dennis9486) for delivering the initial screenshot feature implementation located at `src/components/common/Screenshot.vue`, which laid the groundwork for the desktop capture experience.
 
 ## 📥 Installation & Running
 
