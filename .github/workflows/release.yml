@@ -112,6 +112,29 @@ jobs:
           name: frontend-dist
           path: .
 
+      - name: Prepare downloaded artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf dist
+          if [[ -d frontend-dist/dist ]]; then
+            mv frontend-dist/dist dist
+            rm -rf frontend-dist
+          elif [[ -d frontend-dist ]]; then
+            mv frontend-dist dist
+          elif [[ ! -d dist ]]; then
+            echo "无法在 artifact 中找到 dist 目录" >&2
+            ls -la
+            exit 1
+          fi
+
+          if [[ -d components-typings/src/typings ]]; then
+            mkdir -p src/typings
+            cp -R components-typings/src/typings/. src/typings/
+            rm -rf components-typings
+          fi
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
