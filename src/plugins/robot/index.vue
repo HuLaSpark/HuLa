@@ -22,9 +22,12 @@ import Right from './layout/Right.vue'
 import ChatRoleManagement from './components/ChatRoleManagement.vue'
 import ModelManagement from './components/ModelManagement.vue'
 import { getUseMonaco } from 'vue-renderer-markdown'
+import { initMarkdownRenderer } from '@/plugins/robot/utils/markdown'
 
 const showRoleManagement = ref(false)
 const showModelManagement = ref(false)
+/** 初始化 Markdown 渲染器 */
+initMarkdownRenderer()
 
 // 监听打开角色管理事件
 useMitt.on('open-role-management', () => {

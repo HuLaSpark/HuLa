@@ -177,8 +177,8 @@ importers:
         specifier: 0.14.10
         version: 0.14.10(vue@3.5.24(typescript@5.9.3))
       vue-renderer-markdown:
-        specifier: 0.0.61-beta.9
-        version: 0.0.61-beta.9(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3))
+        specifier: 0.0.62-beta.1
+        version: 0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3))
       vue-router:
         specifier: ^4.6.3
         version: 4.6.3(vue@3.5.24(typescript@5.9.3))
@@ -4645,8 +4645,8 @@ packages:
     resolution: {integrity: sha512-UhDfHmA92YAlNnCfhmq0VeNL5bDbiZGg7sZ2IvPsXubGkiNa9EC+tUTsjBRsYUAz87btI6/1wf4XoVvQ3uRnmQ==}
     engines: {node: '>=18'}
 
-  stream-markdown-parser@0.0.17:
-    resolution: {integrity: sha512-SSwYQLPgTboi05/7uqbqbvRt0C6Jh+mrqZgPRi2MPOXZrhJrieCuceZ5lTCvo/sfKyLEtcKiNLEGfoMSHrEJmw==}
+  stream-markdown-parser@0.0.19:
+    resolution: {integrity: sha512-msxvSiZjURiIjQWR1jJKgBLWzXJyrDXFRgOQsoZ4IE4tq179kX0UoNkzHgwfrgsyxEVscFZIcvs4ct5wvpMzcQ==}
 
   stream-markdown@0.0.9:
     resolution: {integrity: sha512-oodVRz9a4AF03eIkOZkP4LIAw0UusWU2KJwQLDI4Yu463KEYVCdsHpdg0OjLdRgh55aT97N5E6y77CJfauWgoA==}
@@ -5148,8 +5148,8 @@ packages:
     peerDependencies:
       vue: ^3.0.0
 
-  vue-renderer-markdown@0.0.61-beta.9:
-    resolution: {integrity: sha512-7czSLHIaQDbSfRewytYumlKz7zfWzAaaIKsS6Q5YEp6JofcAqFS/UvmOH5qm9vaJzTZVTvUtiKxhLniuNCJ/ng==}
+  vue-renderer-markdown@0.0.62-beta.1:
+    resolution: {integrity: sha512-iiHxHdz8u6CtqapAMxGNTCXgDfqWoGpphBULmA8Aq9mHtzS7qZKZ3f1KGPd+QEWrAziXVZj3fGC1PEMnGhDT/Q==}
     peerDependencies:
       katex: '>=0.16.22'
       mermaid: '>=11'
@@ -9770,7 +9770,7 @@ snapshots:
 
   stdin-discarder@0.2.2: {}
 
-  stream-markdown-parser@0.0.17:
+  stream-markdown-parser@0.0.19:
     dependencies:
       markdown-it-container: 4.0.0
       markdown-it-emoji: 3.0.0
@@ -10254,10 +10254,10 @@ snapshots:
     dependencies:
       vue: 3.5.24(typescript@5.9.3)
 
-  vue-renderer-markdown@0.0.61-beta.9(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3)):
+  vue-renderer-markdown@0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3)):
     dependencies:
       '@floating-ui/dom': 1.7.4
-      stream-markdown-parser: 0.0.17
+      stream-markdown-parser: 0.0.19
       vue: 3.5.24(typescript@5.9.3)
     optionalDependencies:
       katex: 0.16.25

@@ -46,6 +46,11 @@
   :deep(.loading-skeleton .skeleton-line) {
     background: var(--code-block-skeleton-line);
   }
+
+  :deep(.code-block-content) {
+    max-height: none !important;
+    overflow: visible !important;
+  }
 }
 
 .code-block-dark {

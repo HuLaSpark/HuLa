@@ -264,25 +264,11 @@
                               :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                               <MarkdownRender
                                 :content="message.reasoningContent"
+                                :custom-id="markdownCustomId"
                                 :is-dark="isDarkTheme"
                                 :viewportPriority="false"
-                                :code-block-light-theme="'vitesse-light'"
-                                :code-block-dark-theme="'vitesse-dark'"
-                                :themes="['vitesse-light', 'vitesse-dark']"
-                                :code-block-props="{
-                                  showPreviewButton: false,
-                                  showFontSizeButtons: false,
-                                  enableFontSizeControl: false,
-                                  showExpandButton: false,
-                                  showLanguageSelect: false,
-                                  showCopyButton: true,
-                                  showLineNumber: false,
-                                  monacoOptions: {
-                                    MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
-                                    readOnly: true,
-                                    minimap: { enabled: false }
-                                  }
-                                }" />
+                                :themes="markdownThemes"
+                                :code-block-props="markdownCodeBlockProps" />
                             </div>
                           </div>
 
@@ -290,25 +276,11 @@
                           <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                             <MarkdownRender
                               :content="message.content"
+                              :custom-id="markdownCustomId"
                               :is-dark="isDarkTheme"
                               :viewportPriority="false"
-                              :code-block-light-theme="'vitesse-light'"
-                              :code-block-dark-theme="'vitesse-dark'"
-                              :themes="['vitesse-light', 'vitesse-dark']"
-                              :code-block-props="{
-                                showPreviewButton: false,
-                                showFontSizeButtons: false,
-                                enableFontSizeControl: false,
-                                showExpandButton: false,
-                                showLanguageSelect: false,
-                                showCopyButton: true,
-                                showLineNumber: false,
-                                monacoOptions: {
-                                  MAX_HEIGHT: Number.MAX_SAFE_INTEGER,
-                                  readOnly: true,
-                                  minimap: { enabled: false }
-                                }
-                              }" />
+                              :themes="markdownThemes"
+                              :code-block-props="markdownCodeBlockProps" />
                           </div>
                         </div>
                       </template>
@@ -800,26 +772,14 @@
   </n-modal>
 </template>
 <script setup lang="ts">
-import {
-  type InputInst,
-  NPagination,
-  NTag,
-  NEmpty,
-  NSpin,
-  NAvatar,
-  NSelect,
-  NButtonGroup,
-  NButton,
-  NUpload,
-  NPopover,
-  UploadFileInfo
-} from 'naive-ui'
+import { type InputInst, UploadFileInfo } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import MarkdownRender from 'vue-renderer-markdown'
+import { ROBOT_MARKDOWN_CUSTOM_ID } from '@/plugins/robot/utils/markdown'
 import { useResizeObserver } from '@vueuse/core'
 import { ThemeEnum, AiMsgContentTypeEnum } from '@/enums'
 import 'vue-renderer-markdown/index.css'
@@ -853,6 +813,10 @@ import { UploadSceneEnum } from '@/enums'
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const { page, themes } = storeToRefs(settingStore)
+const SHIKI_LIGHT_THEME = 'vitesse-light'
+const SHIKI_DARK_THEME = 'vitesse-dark'
+const markdownCustomId = ROBOT_MARKDOWN_CUSTOM_ID
+const markdownThemes = [SHIKI_LIGHT_THEME, SHIKI_DARK_THEME] as const
 
 const MsgInputRef = ref()
 /** 是否是编辑模式 */
@@ -878,6 +842,14 @@ const isDarkTheme = computed(() => {
   }
   return content === ThemeEnum.DARK
 })
+
+const markdownCodeBlockProps = computed(() => ({
+  isDark: isDarkTheme.value,
+  darkTheme: SHIKI_DARK_THEME,
+  lightTheme: SHIKI_LIGHT_THEME,
+  themes: [SHIKI_DARK_THEME, SHIKI_LIGHT_THEME] as const,
+  showHeader: true
+}))
 
 // 同时监听 isDarkTheme 的变化，确保在主题切换时组件能正确更新
 watch(

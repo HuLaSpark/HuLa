@@ -86,6 +86,11 @@
   <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ru">Русский</a>
 </p>
 
+<div style="background-color:#fbb99030;color:#fbb990;padding:16px;border-radius:12px;">
+  <p><strong>⚠️ Important Notice</strong></p>
+  <p>Please read this README carefully before joining the group. Questions like “Is there a mobile client?”, “Does it support the web?”, or “Which features are available?” will not be answered in the group because maintaining this open-source project already consumes significant effort. Please avoid disturbing the author or maintainers during holidays or rest days; if you need help, feel free to send a small red envelope in the group and someone will respond. Sponsoring HuLa allows a dedicated consultation or accelerated feature development, and giving the project a star grants one consultation.thank you for your understanding🙏</p>
+</div>
+
 ## 🌐 Supported Platforms
 
 | Platform | Supported Versions |
@@ -115,66 +120,60 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 </div>
 
 <!-- Main Interface -->
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img.png" alt="Main Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
-      <br><em>💬 Main Chat Interface</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_1.png" alt="Chat Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
-      <br><em>🗨️ Chat Conversation Interface</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_2.png" alt="Contact Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
-      <br><em>😊 Emoji Selection</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_3.png" alt="Settings Interface" width="400" style="border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 8px;">
-      <br><em>⚙️ System Settings</em>
-    </td>
-  </tr>
-</table>
-
-<br>
-
-<!-- Feature Showcase -->
 <div align="center">
-  <h4>🌟 Feature Highlights</h4>
+  <h4>Part 1 · img2 Series Screens</h4>
 </div>
 
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_4.png" alt="Message Features" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>📱 Diverse Messaging</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_5.png" alt="Theme Switching" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>🎨 Status Toggle</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_6.png" alt="Emojis" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>📷 Image Viewer</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_7.png" alt="Group Management" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>👥 Group Management</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_8.png" alt="Personal Settings" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>🤖 ChatBot Plugin Features</em>
-    </td>
-    <td align="center">
-      <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_9.png" alt="File Transfer" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
-      <br><em>🤖 ChatBot Settings Page</em>
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-1.webp" alt="img2-1" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-2.webp" alt="img2-2" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-3.webp" alt="img2-3" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-4.webp" alt="img2-4" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-5.webp" alt="img2-5" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-6.webp" alt="img2-6" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-7.webp" alt="img2-7" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-8.webp" alt="img2-8" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-9.webp" alt="img2-9" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-10.webp" alt="img2-10" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-11.webp" alt="img2-11" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-12.webp" alt="img2-12" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-13.webp" alt="img2-13" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-14.webp" alt="img2-14" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-15.webp" alt="img2-15" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+</div>
+
+<div align="center">
+  <h4>Part 2 · img Series Screens</h4>
+</div>
+
+<div align="center">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img.png" alt="img-main" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_1.png" alt="img-conversation" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_2.png" alt="img-contacts" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_3.png" alt="img-settings" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_4.png" alt="Message Features" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_5.png" alt="Theme Switching" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_6.png" alt="Emojis" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_7.png" alt="Group Management" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_8.png" alt="Personal Settings" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img_9.png" alt="File Transfer" width="280" style="border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 6px;">
+</div>
+
+<div align="center">
+  <h4>Part 3 · img3 Series Screens</h4>
+</div>
+
+<div align="center">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-1.webp" alt="img3-1" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-2.webp" alt="img3-2" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-3.webp" alt="img3-3" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-4.webp" alt="img3-4" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-5.webp" alt="img3-5" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-6.webp" alt="img3-6" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+  <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img3-7.webp" alt="img3-6" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
+</div>
+
+<br>
 
 ## ✨ Features
 

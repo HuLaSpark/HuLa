@@ -131,7 +131,7 @@
     "vue": "^3.5.24",
     "vue-cropper": "1.1.4",
     "vue-demi": "0.14.10",
-    "vue-renderer-markdown": "0.0.61-beta.9",
+    "vue-renderer-markdown": "0.0.62-beta.1",
     "vue-router": "^4.6.3",
     "vue-virtual-scroller": "2.0.0-beta.8"
   },
