@@ -85,10 +85,9 @@
   <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ru">Русский</a>
 </p>
 
-<div style="background-color:#fbb99030;color:#fbb990;padding:16px;border-radius:12px;">
-  <p><strong>⚠️ 重要提示</strong></p>
-  <p>加群前请仔细认真阅读本 README，否则在群里问有没有移动端、是否支持 Web、支持什么功能等问题不予以回答。因为本组织在维持开源已经很耗费精力了，并且请不要在节假日、休息日打扰作者或者组织维护人员，遇到问题可以在群里发个小红包自然有人会过来回答你。赞助 HuLa 可单独咨询或加速开发某功能，Star 项目可咨询一次。感谢您的理解🙏</p>
-</div>
+> [!WARNING]
+> ⚠️ 重要提示
+> 加群前请仔细认真阅读本 README，否则在群里问有没有移动端、是否支持 Web、支持什么功能等问题不予以回答。因为本组织在维持开源已经很耗费精力了，并且请不要在节假日、休息日打扰作者或者组织维护人员，遇到问题可以在群里发个小红包自然有人会过来回答你。赞助 HuLa 可单独咨询或加速开发某功能，Star 项目可咨询一次。感谢您的理解🙏
 
 ## 🌐 支持平台
 
@@ -97,7 +96,7 @@
 | Windows | Windows 10, Windows 11               |
 | macOS   | macOS 10.5+                          |
 | Linux   | Ubuntu 22.0+                         |
-| iOS     | iOS 9.0+                             |
+| iOS     | iOS 9.0+  ⚠️（ios26后续兼容）          |
 | Android | Android 12+ (SDK30+)                 |
 | Web     | ⚠️暂不支持(需要自定义移除对桌面功能) |
 
@@ -120,7 +119,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 
 <!-- 主界面展示 -->
 <div align="center">
-  <h4>第一部分 · img2 系列界面</h4>
+  <h4>PC端界面展示，有其他功能未在介绍截图内，请自行下载体验 🙏</h4>
 </div>
 
 <div align="center">
@@ -141,9 +140,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
   <img src="preview/img2-15.webp" alt="img2-15" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
 </div>
 
-<div align="center">
-  <h4>第二部分 · img 系列界面</h4>
-</div>
+<br/>
 
 <div align="center">
   <img src="preview/img.png" alt="img-主界面" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
@@ -159,7 +156,7 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 </div>
 
 <div align="center">
-  <h4>第三部分 · img3 系列界面</h4>
+  <h4>移动端界面展示</h4>
 </div>
 
 <div align="center">

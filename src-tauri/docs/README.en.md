@@ -98,7 +98,7 @@
 | Windows | Windows 10, Windows 11 |
 | macOS | macOS 10.5+ |
 | Linux | Ubuntu 22.0+ |
-| iOS | iOS 9.0+ |
+| iOS | iOS 9.0+ ⚠️(ios26 compatible) |
 | Android | Android 12+ (SDK30+) |
 | Web | ⚠️Not currently supported (custom removal required) |
 
@@ -121,7 +121,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 
 <!-- Main Interface -->
 <div align="center">
-  <h4>Part 1 · img2 Series Screens</h4>
+  <h4>PC interface display, there are other functions not in the introduction screenshot, please download your own experience</h4>
 </div>
 
 <div align="center">
@@ -142,9 +142,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
   <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img2-15.webp" alt="img2-15" width="220" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
 </div>
 
-<div align="center">
-  <h4>Part 2 · img Series Screens</h4>
-</div>
+<br/>
 
 <div align="center">
   <img src="https://raw.gitcode.com/HuLaSpark/HuLa/files/master/preview/img.png" alt="img-main" width="280" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 8px;">
@@ -160,7 +158,7 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 </div>
 
 <div align="center">
-  <h4>Part 3 · img3 Series Screens</h4>
+  <h4>Mobile interface display</h4>
 </div>
 
 <div align="center">
