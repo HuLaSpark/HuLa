@@ -1,5 +1,31 @@
 
 
+## [3.0.4](https://github.com/HuLaSpark/HuLa/compare/v3.0.3...v3.0.4) (2025-11-14)
+
+
+### ✨ Features | 新功能
+
+* **common:** :sparkles: generate images sounds videos text ([c46cd1a](https://github.com/HuLaSpark/HuLa/commit/c46cd1a85cfe3ea0f3464dfb4311927020b50caa))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **android:** :bug: fix android does not start due to version dependency ([0ff3ecc](https://github.com/HuLaSpark/HuLa/commit/0ff3ecc75f042cc2d7276b4f144c447fdf938e94))
+* **android:** :bug: fix android packaging issues ([1e2b748](https://github.com/HuLaSpark/HuLa/commit/1e2b748494e9addae780588e72cc907abd5a5a47))
+* **ci:** :bug: fix release.yml issues ([b59d517](https://github.com/HuLaSpark/HuLa/commit/b59d51771712a99839d7884a594291ca3d391592))
+* **common:** :bug: develop Gitee AI ([9b76348](https://github.com/HuLaSpark/HuLa/commit/9b76348cd23472b5d99f608b496381ed5ec1bd8f))
+* **common:** :bug: development ai platform ([4b5b8d1](https://github.com/HuLaSpark/HuLa/commit/4b5b8d1d4460f80aedb040db82e76e520e91b43c))
+* **common:** :bug: fix message loss when resetting message after bottoming ([a0e2178](https://github.com/HuLaSpark/HuLa/commit/a0e2178177f2cd95c854a3e204aa1c63dff478d1))
+* **hooks:** :bug: fix restart application is not ready to call tauri command ([23ca225](https://github.com/HuLaSpark/HuLa/commit/23ca2252696e563b2ba00ff4177cdd98fed0b5fe))
+* **release:** :bug: fix ci issue in release version ([f0c4cd1](https://github.com/HuLaSpark/HuLa/commit/f0c4cd18dfdc866a4449c83215b63e9528578c15))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **cache:** :zap: optimize thumbnail download and rendering ([a1a80fd](https://github.com/HuLaSpark/HuLa/commit/a1a80fd291ac45364ac9596b5702bf7f9c21fc63))
+* **common:** :zap: optimize pop-up logic for child windows and restrictions on mac ([6fe865c](https://github.com/HuLaSpark/HuLa/commit/6fe865c03b265aba801a962a2b8cc1d0593564d6))
+* **common:** :zap: responsive expressions for optimizing lists ([f372241](https://github.com/HuLaSpark/HuLa/commit/f372241390e90db96e2a7fed85eba84fba30cd10))
+
 ## [3.0.3](https://github.com/HuLaSpark/HuLa/compare/v3.0.2...v3.0.3) (2025-11-06)
 
 
