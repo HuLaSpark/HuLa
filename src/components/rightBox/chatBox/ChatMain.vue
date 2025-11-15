@@ -198,7 +198,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn, useEventListener, useTimeoutFn } from '@vueuse/core'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
-import { useChatMain } from '@/hooks/useChatMain.ts'
+import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -235,6 +235,8 @@ const userStore = useUserStore()
 const networkStatus = useNetworkStatus()
 // const { footerHeight } = useChatLayoutGlobal() // 已移除，不再需要
 const { createWebviewWindow } = useWindow()
+const chatMainContext = useChatMain(false, { enableGroupNicknameModal: true })
+provide(chatMainInjectionKey, chatMainContext)
 const {
   handleConfirm,
   tips,
@@ -246,7 +248,7 @@ const {
   groupNicknameError,
   groupNicknameSubmitting,
   handleGroupNicknameConfirm
-} = useChatMain(false, { enableGroupNicknameModal: true })
+} = chatMainContext
 const { enableScroll } = usePopover(selectKey, 'image-chat-main')
 
 const isMobileRef = ref(isMobile())

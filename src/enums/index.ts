@@ -119,7 +119,9 @@ export enum MittEnum {
   /** 切换会话 */
   MSG_INIT = 'msg_init',
   /** 会话切换完成*/
-  SESSION_CHANGED = 'sessionChanged'
+  SESSION_CHANGED = 'sessionChanged',
+  /** 更新会话最后一条消息 */
+  UPDATE_SESSION_LAST_MSG = 'updateSessionLastMsg'
 }
 
 /** 主题类型 */
@@ -546,6 +548,10 @@ export enum TauriCommand {
   SAVE_MSG = 'save_msg',
   /** 保存消息标记 */
   SAVE_MESSAGE_MARK = 'save_message_mark',
+  /** 删除单条聊天消息 */
+  DELETE_MESSAGE = 'delete_message',
+  /** 删除房间内的所有聊天记录 */
+  DELETE_ROOM_MESSAGES = 'delete_room_messages',
   /** 更新消息撤回状态 */
   UPDATE_MESSAGE_RECALL_STATUS = 'update_message_recall_status',
   /** 获取用户 tokens */

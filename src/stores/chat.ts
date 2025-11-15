@@ -695,6 +695,34 @@ export const useChatStore = defineStore(
       }
     }
 
+    const clearRoomMessages = (roomId: string) => {
+      if (!roomId) return
+
+      if (messageMap[roomId]) {
+        messageMap[roomId] = {}
+      }
+
+      if (replyMapping[roomId]) {
+        replyMapping[roomId] = {}
+      }
+
+      const defaultOptions = {
+        isLast: true,
+        isLoading: false,
+        cursor: ''
+      }
+
+      if (globalStore.currentSessionRoomId === roomId) {
+        currentMessageOptions.value = defaultOptions
+        currentReplyMap.value = {}
+        currentMsgReply.value = {}
+      } else {
+        messageOptions[roomId] = defaultOptions
+      }
+
+      newMsgCount[roomId] = { count: 0, isStart: false }
+    }
+
     // 更新消息
     const updateMsg = ({
       msgId,
@@ -948,6 +976,7 @@ export const useChatStore = defineStore(
       chatMessageList,
       pushMsg,
       deleteMsg,
+      clearRoomMessages,
       clearNewMsgCount,
       updateMarkCount,
       updateRecallMsg,

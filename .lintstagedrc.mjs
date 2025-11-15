@@ -23,5 +23,7 @@ export default {
   '*.vue': [
     createCommand('biome check --write --unsafe', ''),
     createCommand('prettier --write', '')
-  ]
+  ],
+  // Rust 代码：使用 manifest-path 指定 workspace，避免切换目录
+  'src-tauri/**/*.rs': () => 'cargo fmt --manifest-path src-tauri/Cargo.toml'
 }

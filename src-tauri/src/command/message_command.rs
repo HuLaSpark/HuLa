@@ -561,3 +561,102 @@ pub async fn update_message_recall_status(
 
     Ok(())
 }
+#[tauri::command]
+pub async fn delete_message(
+    message_id: String,
+    room_id: Option<String>,
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    let login_uid = state.user_info.lock().await.uid.clone();
+
+    let resolved_room_id = if let Some(room) = room_id {
+        room
+    } else {
+        im_message_repository::get_room_id_by_message_id(
+            state.db_conn.deref(),
+            &message_id,
+            &login_uid,
+        )
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "消息不存在或房间信息缺失".to_string())?
+    };
+
+    im_message_repository::delete_message_by_id(state.db_conn.deref(), &message_id, &login_uid)
+        .await
+        .map_err(|e| {
+            error!("Failed to delete message {}: {}", message_id, e);
+            e.to_string()
+        })?;
+
+    im_message_repository::record_deleted_message(
+        state.db_conn.deref(),
+        &message_id,
+        &resolved_room_id,
+        &login_uid,
+    )
+    .await
+    .map_err(|e| {
+        error!(
+            "Failed to record deletion for message {} in room {}: {}",
+            message_id, resolved_room_id, e
+        );
+        e.to_string()
+    })?;
+
+    info!(
+        "Deleted message {} for current user {} from local database",
+        message_id, login_uid
+    );
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_room_messages(
+    room_id: String,
+    state: State<'_, AppData>,
+) -> Result<u64, String> {
+    let login_uid = state.user_info.lock().await.uid.clone();
+
+    let last_msg_id =
+        im_message_repository::get_room_max_message_id(state.db_conn.deref(), &room_id, &login_uid)
+            .await
+            .map_err(|e| {
+                error!(
+                    "Failed to query last message id for room {}: {}",
+                    room_id, e
+                );
+                e.to_string()
+            })?;
+
+    let affected_rows =
+        im_message_repository::delete_messages_by_room(state.db_conn.deref(), &room_id, &login_uid)
+            .await
+            .map_err(|e| {
+                error!("Failed to delete messages for room {}: {}", room_id, e);
+                e.to_string()
+            })?;
+
+    im_message_repository::record_room_clear(
+        state.db_conn.deref(),
+        &room_id,
+        &login_uid,
+        last_msg_id,
+    )
+    .await
+    .map_err(|e| {
+        error!(
+            "Failed to record room clear for room {} (user {}): {}",
+            room_id, login_uid, e
+        );
+        e.to_string()
+    })?;
+
+    info!(
+        "Deleted {} messages for room {} (user {})",
+        affected_rows, room_id, login_uid
+    );
+
+    Ok(affected_rows)
+}

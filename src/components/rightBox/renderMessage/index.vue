@@ -305,7 +305,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
-import { useChatMain } from '@/hooks/useChatMain'
+import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain'
 import { useMitt } from '@/hooks/useMitt'
 import { usePopover } from '@/hooks/usePopover'
 import type { MessageType } from '@/services/types'
@@ -367,7 +367,9 @@ const activeReply = ref<string>('')
 const hoverMsgId = ref<string>('')
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = useChatMain()
+const injectedChatMain = inject(chatMainInjectionKey, null)
+const chatMainApi = injectedChatMain ?? useChatMain()
+const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = chatMainApi
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()

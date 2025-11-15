@@ -316,6 +316,11 @@ onMounted(async () => {
       })
     )
   }
+  useMitt.on(MittEnum.UPDATE_SESSION_LAST_MSG, (payload?: { roomId?: string }) => {
+    const roomId = payload?.roomId
+    if (!roomId) return
+    delete sessionMsgCache[roomId]
+  })
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)
   })
