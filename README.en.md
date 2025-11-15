@@ -344,9 +344,12 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
   <h3>🤝 HuLa Community Discussion Group</h3>
   <p><em>Join developers and users for discussions, get the latest news and technical support</em></p>
 
-  <div style="display: flex; justify-content: center; gap: 20px;">
+  <p><em>Use the HuLa mobile app to scan the Issues group QR code below and share feedback anytime.</em></p>
+
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
     <img src="preview/wx.png" width="260" height="340" alt="WeChat Group QR Code">
     <img src="preview/qq.jpg" width="260" height="340" alt="QQ Group QR Code">
+    <img src="preview/HuLa-QR.png" width="315" height="315" alt="HuLa Issues Group QR Code">
   </div>
 </div>
 

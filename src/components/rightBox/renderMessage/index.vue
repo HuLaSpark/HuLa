@@ -120,7 +120,12 @@
                   </span>
                 </n-popover>
                 <!-- 用户名 -->
-                <span class="text-12px select-none color-#909090 inline-block align-top">
+                <span
+                  :class="[
+                    'text-12px select-none color-#909090 inline-block align-top',
+                    !isMe ? 'cursor-pointer hover:color-#13987f transition-colors' : ''
+                  ]"
+                  @click.stop="handleMentionUser">
                   {{ senderDisplayName }}
                 </span>
                 <!-- 消息归属地 -->
@@ -382,6 +387,13 @@ const handleAvatarClick = (uid: string, msgId: string) => {
   } else {
     selectKey.value = msgId
   }
+}
+
+const handleMentionUser = () => {
+  if (!props.isGroup || isMe.value) return
+  const targetUid = props.fromUser?.uid
+  if (!targetUid) return
+  useMitt.emit(MittEnum.AT, targetUid)
 }
 
 // 获取用户头像
