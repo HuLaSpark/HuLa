@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="remote-login-modal size-full select-none">
+  <n-config-provider :theme="naiveTheme" class="remote-login-modal size-full select-none">
     <div class="w-350px h-310px border-rd-8px select-none cursor-default">
       <div class="bg-[--bg-popover] size-full p-6px box-border flex flex-col">
         <svg
@@ -35,14 +35,19 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { lightTheme } from 'naive-ui'
+import { darkTheme, lightTheme } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { isMac } from '@/utils/PlatformConstants'
 
 const ip = ref('未知IP')
 const showModal = ref(true)
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 let currentWindow: WebviewWindow | null = null
 let parentWindow: WebviewWindow | null = null
 let unlistenClose: (() => void) | undefined

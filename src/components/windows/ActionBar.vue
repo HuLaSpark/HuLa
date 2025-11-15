@@ -10,8 +10,10 @@
         v-if="proxy"
         @click="router.push('/network')"
         :class="{ network: isWindows() }"
-        class="w-30px h-24px flex-center">
-        <svg class="size-16px color-#404040 cursor-pointer">
+        class="w-30px h-24px flex-center hover-box">
+        <svg
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
+          class="size-16px cursor-pointer">
           <use href="#settings"></use>
         </svg>
       </div>

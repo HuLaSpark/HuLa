@@ -81,3 +81,14 @@
       40vmax 60vmax;
   }
 }
+
+[data-theme='dark'] {
+  .login-box {
+    background-color: #0F2027;
+    background-image: radial-gradient(closest-side, #2c5a53, rgba(44, 90, 83, 0)),
+      radial-gradient(closest-side, #2a4a75, rgba(32, 58, 67, 0)),
+      radial-gradient(closest-side, #5a3d5c80, rgba(44, 62, 80, 0)),
+      radial-gradient(closest-side, #164A41, rgba(22, 74, 65, 0)),
+      radial-gradient(closest-side, #203A43, rgba(77, 105, 110, 0));
+  }
+}

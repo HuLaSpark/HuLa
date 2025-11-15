@@ -1,6 +1,6 @@
 <template>
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" proxy />
 
@@ -9,9 +9,10 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          class="welcome size-80px rounded-50% border-(2px solid #fff)"
-          :src="AvatarUtils.getAvatarUrl(info.avatar)"
-          color="#fff" />
+          class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
+          :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
+          :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+          :src="AvatarUtils.getAvatarUrl(info.avatar)" />
       </n-flex>
 
       <!-- 登录菜单 -->
@@ -31,10 +32,10 @@
           clearable>
           <template #suffix>
             <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
-              <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 cursor-pointer">
+              <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050 dark:color-#909090 cursor-pointer">
                 <use href="#down"></use>
               </svg>
-              <svg v-else class="down w-18px h-18px color-#505050 cursor-pointer">
+              <svg v-else class="down w-18px h-18px color-#505050 dark:color-#909090 cursor-pointer">
                 <use href="#up"></use>
               </svg>
             </n-flex>
@@ -45,18 +46,18 @@
         <div
           style="border: 1px solid rgba(70, 70, 70, 0.1)"
           v-if="loginHistories.length > 0 && arrowStatus"
-          class="account-box absolute w-260px max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
+          class="account-box absolute w-260px max-h-140px bg-#fdfdfd98 dark:bg-#48484e98 backdrop-blur-sm mt-45px z-99 rounded-8px p-8px box-border">
           <n-scrollbar style="max-height: 120px" trigger="none">
             <n-flex
               vertical
               v-for="item in loginHistories"
               :key="item.account"
               @click="giveAccount(item)"
-              class="p-8px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px">
+              class="p-8px cursor-pointer hover:bg-#90909020 dark:hover:bg-#90909030 hover:rounded-6px">
               <div class="flex-between-center">
                 <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" color="#fff" class="size-28px rounded-50%" />
-                <p class="text-14px color-#505050">{{ item.account }}</p>
-                <svg @click.stop="delAccount(item)" class="w-12px h-12px">
+                <p class="text-14px color-#505050 dark:color-#fefefe">{{ item.account }}</p>
+                <svg @click.stop="delAccount(item)" class="w-12px h-12px dark:color-#fefefe">
                   <use href="#close"></use>
                 </svg>
               </div>
@@ -115,13 +116,15 @@
           <n-avatar
             round
             :size="110"
-            color="#fff"
-            class="border-(2px solid #fff)"
+            :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
+            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ?? '')" />
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-18px">{{ userStore.userInfo?.name || '' }}</n-ellipsis>
+          <n-ellipsis style="max-width: 200px" class="text-(18px [--chat-text-color])">
+            {{ userStore.userInfo?.name || '' }}
+          </n-ellipsis>
         </n-flex>
       </n-flex>
 
@@ -141,12 +144,13 @@
     <!-- 底部操作栏 -->
     <n-flex justify="center" class="text-14px" id="bottomBar">
       <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
-      <div class="w-1px h-14px bg-#ccc"></div>
+      <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
       <div v-if="uiState === 'auto'" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
         v-else
         trigger="click"
         id="moreShow"
+        class="bg-#fdfdfd98! dark:bg-#48484e98! backdrop-blur-sm"
         v-model:show="moreShow"
         :show-checkmark="false"
         :show-arrow="false">
@@ -155,12 +159,12 @@
         </template>
         <n-flex vertical :size="2">
           <div
-            class="register text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
             @click="createWebviewWindow('注册', 'register', 600, 600)">
             注册账号
           </div>
           <div
-            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px"
+            class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
             @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
             忘记密码
           </div>
@@ -168,7 +172,7 @@
             v-if="!isCompatibility()"
             @click="router.push('/network')"
             :class="{ network: isMac() }"
-            class="text-14px cursor-pointer hover:bg-#f3f3f3 hover:rounded-6px p-8px">
+            class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
             网络设置
           </div>
         </n-flex>
@@ -179,7 +183,8 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useNetwork } from '@vueuse/core'
-import { lightTheme } from 'naive-ui'
+import { darkTheme, lightTheme } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { type DriverStepConfig, useDriver } from '@/hooks/useDriver'
 import { useMitt } from '@/hooks/useMitt'
@@ -196,6 +201,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isCompatibility, isDesktop, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useLogin } from '@/hooks/useLogin'
+import { ThemeEnum } from '@/enums'
 
 // 定义引导步骤配置
 const driverSteps: DriverStepConfig[] = [
@@ -240,6 +246,8 @@ const driverSteps: DriverStepConfig[] = [
 ]
 
 const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const guideStore = useGuideStore()

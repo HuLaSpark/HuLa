@@ -17,7 +17,13 @@
         :stroke="isValid ? '#13987f' : '#909090'"
         d="m16 24 6 6 12-12" />
     </svg>
-    <p :class="['text-12px', { 'color-#131313': isValid, 'color-#909090': !isValid }]">{{ message }}</p>
+    <p
+      :class="[
+        'text-12px',
+        { 'color-#131313 dark:color-#fefefe': isValid, 'color-#909090 dark:color-#707070': !isValid }
+      ]">
+      {{ message }}
+    </p>
   </n-flex>
 </template>
 

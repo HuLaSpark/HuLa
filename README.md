@@ -408,6 +408,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 
 | 💝 日期    | 👤 赞助者      | 💰 金额 | 🏷️ 平台                                                                                              |
 | ---------- | -------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| 2025-11-15 | **云鹏**       | `¥20`   | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-08-12 | **\*持**       | `¥20`   | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-06-03 | **洪流**       | `¥20`   | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
 | 2025-05-27 | **刘启成**     | `¥20`   | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |

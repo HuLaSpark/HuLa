@@ -1,12 +1,14 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="size-full bg-#fff rounded-8px select-none cursor-default">
+  <n-config-provider
+    :theme="naiveTheme"
+    class="size-full bg-#fff dark:bg-#202020 rounded-8px select-none cursor-default">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" />
 
     <n-flex vertical class="w-full size-full">
       <!-- 标题 -->
       <n-flex justify="center" class="w-full">
-        <p class="text-18px select-none">找回密码</p>
+        <p class="text-(18px [--text-color]) select-none">找回密码</p>
       </n-flex>
 
       <!-- 步骤条 -->
@@ -160,10 +162,16 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { lightTheme } from 'naive-ui'
+import { darkTheme, lightTheme } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import Validation from '@/components/common/Validation.vue'
+import { useSettingStore } from '@/stores/setting'
 import { forgetPassword, getCaptcha, sendCaptcha } from '@/utils/ImRequestUtils'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
+
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))

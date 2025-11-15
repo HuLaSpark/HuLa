@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
@@ -105,10 +105,16 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
+import { darkTheme, lightTheme } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import router from '@/router'
 import { updateSettings } from '@/services/tauriCommand'
+import { useSettingStore } from '@/stores/setting'
 import type { ProxySettings } from '@/typings/global'
+
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 
 const apiOptions = [
   {
@@ -243,17 +249,5 @@ const updateTauriSettings = async (proxySettings: ProxySettings) => {
 
 :deep(.n-tabs .n-tabs-nav.n-tabs-nav--line-type.n-tabs-nav--top .n-tabs-nav-scroll-content) {
   border-bottom: 1px solid transparent;
-}
-
-:deep(.hover-box) {
-  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
-  svg {
-    color: #404040;
-  }
-}
-:deep(.action-close) {
-  svg {
-    color: #404040;
-  }
 }
 </style>

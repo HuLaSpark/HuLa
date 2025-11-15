@@ -1,7 +1,7 @@
 <template>
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider
-    :theme="lightTheme"
+    :theme="naiveTheme"
     data-tauri-drag-region
     class="login-box size-full rounded-8px select-none flex flex-col">
     <!--顶部操作栏-->
@@ -231,17 +231,23 @@
 <script setup lang="ts">
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import dayjs from 'dayjs'
-import { lightTheme, type FormInst } from 'naive-ui'
+import { darkTheme, lightTheme, type FormInst } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { useWindow } from '@/hooks/useWindow'
 import type { RegisterUserReq } from '@/services/types.ts'
+import { useSettingStore } from '@/stores/setting'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 
 // 输入框类型定义
 type InputType = 'nickName' | 'email' | 'password' | 'confirmPassword'
+
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 
 /** 注册信息 */
 const info = unref(

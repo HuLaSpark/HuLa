@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
@@ -56,7 +56,7 @@
     <!-- 底部操作栏 -->
     <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
-      <div class="w-1px h-14px bg-#ccc"></div>
+      <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
       <div class="color-#13987f cursor-pointer" @click="createWebviewWindow('注册', 'register', 600, 600)">
         注册账号
       </div>
@@ -65,15 +65,20 @@
 </template>
 <script setup lang="ts">
 import { emit } from '@tauri-apps/api/event'
-import { lightTheme } from 'naive-ui'
+import { darkTheme, lightTheme } from 'naive-ui'
+import { storeToRefs } from 'pinia'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { loginCommand } from '@/services/tauriCommand'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
 import { checkQRStatus, generateQRCode } from '@/utils/ImRequestUtils'
 
 const globalStore = useGlobalStore()
+const settingStore = useSettingStore()
+const { themes } = storeToRefs(settingStore)
+const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 const { createWebviewWindow } = useWindow()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const loading = ref(true)
@@ -270,18 +275,4 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 @use '@/styles/scss/global/login-bg';
-
-:deep(.hover-box) {
-  @apply w-28px h24px flex-center hover:bg-#e7e7e7;
-
-  svg {
-    color: #404040;
-  }
-}
-
-:deep(.action-close) {
-  svg {
-    color: #404040;
-  }
-}
 </style>

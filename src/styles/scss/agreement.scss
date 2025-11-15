@@ -1,0 +1,112 @@
+.agreement-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--center-bg-color);
+  color: var(--text-color);
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  --agreement-heading-color: #333;
+  --agreement-subheading-color: #444;
+  --agreement-paragraph-color: #555;
+  --agreement-muted-color: #666;
+  --agreement-accent-color: #13987f90;
+  --agreement-scrollbar-track: #f1f1f1;
+  --agreement-scrollbar-thumb: #c1c1c1;
+  --agreement-scrollbar-thumb-hover: #a8a8a8;
+}
+
+[data-theme='dark'] .agreement-container {
+  --agreement-heading-color: #f3f3f3;
+  --agreement-subheading-color: #e4e4e7;
+  --agreement-paragraph-color: #d5d5d5;
+  --agreement-muted-color: #b5b5b5;
+  --agreement-accent-color: rgba(19, 152, 127, 0.55);
+  --agreement-scrollbar-track: #2b2b2b;
+  --agreement-scrollbar-thumb: #3f3f3f;
+  --agreement-scrollbar-thumb-hover: #575757;
+}
+
+.agreement-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  line-height: 1.6;
+  color: inherit;
+
+  .agreement-header {
+    text-align: center;
+    margin-bottom: 30px;
+
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--agreement-heading-color);
+      margin-bottom: 10px;
+    }
+
+    .update-time {
+      font-size: 14px;
+      color: var(--agreement-muted-color);
+    }
+  }
+
+  .agreement-body {
+    max-width: 800px;
+    margin: 0 auto;
+
+    section {
+      margin-bottom: 25px;
+
+      h2 {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--agreement-heading-color);
+        width: fit-content;
+        margin-bottom: 15px;
+        border-bottom: 2px solid var(--agreement-accent-color);
+        padding-bottom: 5px;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--agreement-subheading-color);
+        margin: 15px 0 10px 0;
+      }
+
+      p {
+        font-size: 14px;
+        color: var(--agreement-paragraph-color);
+        margin-bottom: 10px;
+        text-indent: 2em;
+      }
+    }
+  }
+}
+
+.agreement-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agreement-content::-webkit-scrollbar-track {
+  background: var(--agreement-scrollbar-track);
+  border-radius: 3px;
+}
+
+.agreement-content::-webkit-scrollbar-thumb {
+  background: var(--agreement-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.agreement-content::-webkit-scrollbar-thumb:hover {
+  background: var(--agreement-scrollbar-thumb-hover);
+}
+
+:deep(.action-close) {
+  svg {
+    color: var(--action-bar-icon-color);
+  }
+}
