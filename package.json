@@ -143,7 +143,7 @@
     "@inquirer/prompts": "^7.8.6",
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "8.0.2",
-    "@tauri-apps/cli": "2.9.4",
+    "@tauri-apps/cli": "2.9.1",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^24.10.0",
     "@types/three": "^0.181.0",
