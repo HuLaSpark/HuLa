@@ -120,7 +120,12 @@
                   </span>
                 </n-popover>
                 <!-- 用户名 -->
-                <span class="text-12px select-none color-#909090 inline-block align-top">
+                <span
+                  :class="[
+                    'text-12px select-none color-#909090 inline-block align-top',
+                    !isMe ? 'cursor-pointer hover:color-#13987f transition-colors' : ''
+                  ]"
+                  @click.stop="handleMentionUser">
                   {{ senderDisplayName }}
                 </span>
                 <!-- 消息归属地 -->
@@ -300,7 +305,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
-import { useChatMain } from '@/hooks/useChatMain'
+import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain'
 import { useMitt } from '@/hooks/useMitt'
 import { usePopover } from '@/hooks/usePopover'
 import type { MessageType } from '@/services/types'
@@ -362,7 +367,9 @@ const activeReply = ref<string>('')
 const hoverMsgId = ref<string>('')
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
-const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = useChatMain()
+const injectedChatMain = inject(chatMainInjectionKey, null)
+const chatMainApi = injectedChatMain ?? useChatMain()
+const { optionsList, report, activeBubble, handleItemType, emojiList, specialMenuList, handleMsgClick } = chatMainApi
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
@@ -382,6 +389,13 @@ const handleAvatarClick = (uid: string, msgId: string) => {
   } else {
     selectKey.value = msgId
   }
+}
+
+const handleMentionUser = () => {
+  if (!props.isGroup || isMe.value) return
+  const targetUid = props.fromUser?.uid
+  if (!targetUid) return
+  useMitt.emit(MittEnum.AT, targetUid)
 }
 
 // 获取用户头像

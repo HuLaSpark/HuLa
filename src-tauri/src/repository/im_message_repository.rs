@@ -1,6 +1,8 @@
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
+use chrono::Utc;
 use entity::im_message;
+use lazy_static::lazy_static;
 use sea_orm::prelude::Expr;
 use sea_orm::sea_query::{Alias, Value};
 use sea_orm::{
@@ -9,8 +11,14 @@ use sea_orm::{
     TryIntoModel,
 };
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use tracing::{debug, error, info};
+
+lazy_static! {
+    static ref DELETED_TABLE_INITIALIZED: AtomicBool = AtomicBool::new(false);
+    static ref ROOM_CLEAR_TABLE_INITIALIZED: AtomicBool = AtomicBool::new(false);
+}
 
 #[derive(Clone)]
 pub struct MessageWithThumbnail {
@@ -38,6 +46,112 @@ impl From<im_message::Model> for MessageWithThumbnail {
             thumbnail_path: None,
         }
     }
+}
+
+fn parse_message_id(id: &str) -> Option<i64> {
+    id.parse::<i64>().ok()
+}
+
+async fn ensure_deleted_message_table<C: ConnectionTrait>(conn: &C) -> Result<(), CommonError> {
+    if DELETED_TABLE_INITIALIZED.load(Ordering::SeqCst) {
+        return Ok(());
+    }
+
+    let backend = conn.get_database_backend();
+    let stmt = Statement::from_string(
+        backend,
+        "CREATE TABLE IF NOT EXISTS im_deleted_message (
+            id TEXT NOT NULL,
+            room_id TEXT NOT NULL,
+            login_uid TEXT NOT NULL,
+            deleted_at INTEGER NOT NULL,
+            PRIMARY KEY (id, login_uid)
+        )"
+        .to_string(),
+    );
+    conn.execute(stmt)
+        .await
+        .map_err(CommonError::DatabaseError)?;
+    DELETED_TABLE_INITIALIZED.store(true, Ordering::SeqCst);
+    Ok(())
+}
+
+async fn ensure_room_clear_table<C: ConnectionTrait>(conn: &C) -> Result<(), CommonError> {
+    if ROOM_CLEAR_TABLE_INITIALIZED.load(Ordering::SeqCst) {
+        return Ok(());
+    }
+
+    let backend = conn.get_database_backend();
+    let stmt = Statement::from_string(
+        backend,
+        "CREATE TABLE IF NOT EXISTS im_room_clear_record (
+            room_id TEXT NOT NULL,
+            login_uid TEXT NOT NULL,
+            cleared_at INTEGER NOT NULL,
+            last_cleared_msg_id TEXT,
+            PRIMARY KEY (room_id, login_uid)
+        )"
+        .to_string(),
+    );
+    conn.execute(stmt)
+        .await
+        .map_err(CommonError::DatabaseError)?;
+    ROOM_CLEAR_TABLE_INITIALIZED.store(true, Ordering::SeqCst);
+    Ok(())
+}
+
+async fn should_skip_message_insert<C: ConnectionTrait>(
+    conn: &C,
+    message_id: &str,
+    room_id: &str,
+    login_uid: &str,
+    send_time: Option<i64>,
+) -> Result<bool, CommonError> {
+    ensure_deleted_message_table(conn).await?;
+    let backend = conn.get_database_backend();
+    let deleted_stmt = Statement::from_sql_and_values(
+        backend,
+        "SELECT 1 FROM im_deleted_message WHERE id = ? AND login_uid = ? LIMIT 1",
+        vec![
+            Value::from(message_id.to_string()),
+            Value::from(login_uid.to_string()),
+        ],
+    );
+    if conn.query_one(deleted_stmt).await?.is_some() {
+        return Ok(true);
+    }
+
+    ensure_room_clear_table(conn).await?;
+    let clear_stmt = Statement::from_sql_and_values(
+        backend,
+        "SELECT cleared_at, last_cleared_msg_id FROM im_room_clear_record WHERE room_id = ? AND login_uid = ? LIMIT 1",
+        vec![
+            Value::from(room_id.to_string()),
+            Value::from(login_uid.to_string()),
+        ],
+    );
+
+    if let Some(row) = conn.query_one(clear_stmt).await? {
+        let cleared_at: i64 = row.try_get("", "cleared_at")?;
+        if let Some(send_time) = send_time {
+            if send_time <= cleared_at {
+                return Ok(true);
+            }
+        }
+
+        let last_id: Option<String> = row.try_get("", "last_cleared_msg_id")?;
+        if let Some(last_id) = last_id {
+            if let (Some(current), Ok(threshold)) =
+                (parse_message_id(message_id), last_id.parse::<i64>())
+            {
+                if current <= threshold {
+                    return Ok(true);
+                }
+            }
+        }
+    }
+
+    Ok(false)
 }
 
 fn collect_message_keys(messages: &[MessageWithThumbnail]) -> Vec<(String, String)> {
@@ -225,7 +339,7 @@ where
 /// 处理单批消息：检查存在性，删除已存在的，然后插入新的
 async fn process_message_batch<C>(
     db: &C,
-    mut messages: Vec<MessageWithThumbnail>,
+    messages: Vec<MessageWithThumbnail>,
 ) -> Result<(), CommonError>
 where
     C: ConnectionTrait,
@@ -233,6 +347,27 @@ where
     if messages.is_empty() {
         return Ok(());
     }
+
+    let mut filtered_messages = Vec::with_capacity(messages.len());
+    for message in messages.into_iter() {
+        let skip = should_skip_message_insert(
+            db,
+            &message.message.id,
+            &message.message.room_id,
+            &message.message.login_uid,
+            message.message.send_time,
+        )
+        .await?;
+        if !skip {
+            filtered_messages.push(message);
+        }
+    }
+
+    if filtered_messages.is_empty() {
+        return Ok(());
+    }
+
+    let mut messages = filtered_messages;
 
     let message_keys = collect_message_keys(&messages);
     let existing_thumbnail_map = fetch_thumbnail_map(db, &message_keys).await?;
@@ -369,6 +504,18 @@ pub async fn save_message(
     db: &DatabaseTransaction,
     mut record: MessageWithThumbnail,
 ) -> Result<MessageWithThumbnail, CommonError> {
+    if should_skip_message_insert(
+        db,
+        &record.message.id,
+        &record.message.room_id,
+        &record.message.login_uid,
+        record.message.send_time,
+    )
+    .await?
+    {
+        return Ok(record);
+    }
+
     // 根据消息主键查找是否已存在
     let existing_message = im_message::Entity::find_by_id((
         record.message.id.clone(),
@@ -422,6 +569,120 @@ pub async fn save_message(
     im_message::Entity::insert(active_model).exec(db).await?;
     update_thumbnail_path(db, &record.key(), record.thumbnail_path.as_deref()).await?;
     Ok(record)
+}
+
+pub async fn delete_message_by_id(
+    db: &DatabaseConnection,
+    message_id: &str,
+    login_uid: &str,
+) -> Result<u64, CommonError> {
+    let result = im_message::Entity::delete_many()
+        .filter(im_message::Column::Id.eq(message_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
+        .exec(db)
+        .await?;
+
+    Ok(result.rows_affected)
+}
+
+pub async fn delete_messages_by_room(
+    db: &DatabaseConnection,
+    room_id: &str,
+    login_uid: &str,
+) -> Result<u64, CommonError> {
+    let result = im_message::Entity::delete_many()
+        .filter(im_message::Column::RoomId.eq(room_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
+        .exec(db)
+        .await?;
+
+    Ok(result.rows_affected)
+}
+
+pub async fn get_room_max_message_id(
+    db: &DatabaseConnection,
+    room_id: &str,
+    login_uid: &str,
+) -> Result<Option<String>, CommonError> {
+    let backend = db.get_database_backend();
+    let stmt = Statement::from_sql_and_values(
+        backend,
+        "SELECT MAX(CAST(id AS INTEGER)) as max_id FROM im_message WHERE room_id = ? AND login_uid = ?",
+        vec![
+            Value::from(room_id.to_string()),
+            Value::from(login_uid.to_string()),
+        ],
+    );
+
+    if let Some(row) = db.query_one(stmt).await? {
+        let max_id: Option<i64> = row.try_get("", "max_id")?;
+        Ok(max_id.map(|id| id.to_string()))
+    } else {
+        Ok(None)
+    }
+}
+
+pub async fn get_room_id_by_message_id(
+    db: &DatabaseConnection,
+    message_id: &str,
+    login_uid: &str,
+) -> Result<Option<String>, CommonError> {
+    let message = im_message::Entity::find_by_id((message_id.to_string(), login_uid.to_string()))
+        .one(db)
+        .await?;
+
+    Ok(message.map(|model| model.room_id))
+}
+
+pub async fn record_deleted_message(
+    db: &DatabaseConnection,
+    message_id: &str,
+    room_id: &str,
+    login_uid: &str,
+) -> Result<(), CommonError> {
+    ensure_deleted_message_table(db).await?;
+    let backend = db.get_database_backend();
+    let stmt = Statement::from_sql_and_values(
+        backend,
+        "INSERT INTO im_deleted_message (id, room_id, login_uid, deleted_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(id, login_uid) DO UPDATE SET room_id = excluded.room_id, deleted_at = excluded.deleted_at",
+        vec![
+            Value::from(message_id.to_string()),
+            Value::from(room_id.to_string()),
+            Value::from(login_uid.to_string()),
+            Value::from(Utc::now().timestamp_millis()),
+        ],
+    );
+    db.execute(stmt).await.map_err(CommonError::DatabaseError)?;
+    Ok(())
+}
+
+pub async fn record_room_clear(
+    db: &DatabaseConnection,
+    room_id: &str,
+    login_uid: &str,
+    last_cleared_msg_id: Option<String>,
+) -> Result<(), CommonError> {
+    ensure_room_clear_table(db).await?;
+    let backend = db.get_database_backend();
+    let stmt = Statement::from_sql_and_values(
+        backend,
+        "INSERT INTO im_room_clear_record (room_id, login_uid, cleared_at, last_cleared_msg_id)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(room_id, login_uid) DO UPDATE SET cleared_at = excluded.cleared_at, last_cleared_msg_id = excluded.last_cleared_msg_id",
+        vec![
+            Value::from(room_id.to_string()),
+            Value::from(login_uid.to_string()),
+            Value::from(Utc::now().timestamp_millis()),
+            match last_cleared_msg_id {
+                Some(id) => Value::from(id),
+                None => Value::String(None),
+            },
+        ],
+    );
+    db.execute(stmt).await.map_err(CommonError::DatabaseError)?;
+    Ok(())
 }
 
 /// 更新消息发送状态

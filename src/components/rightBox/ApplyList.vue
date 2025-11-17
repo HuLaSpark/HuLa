@@ -16,6 +16,7 @@
           <n-flex
             align="center"
             justify="space-between"
+            :size="0"
             class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
             <n-flex align="center" :size="10">
               <n-avatar
@@ -47,9 +48,11 @@
 
                   <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
                 </n-flex>
-                <p v-if="isFriendApplyOrGroupInvite(item)" class="text-(12px [--text-color])">
+                <n-performant-ellipsis
+                  v-if="isFriendApplyOrGroupInvite(item)"
+                  class="text-(12px [--text-color]) w-400px truncate">
                   留言：{{ item.content }}
-                </p>
+                </n-performant-ellipsis>
                 <p v-else class="text-(12px [--text-color])">
                   处理人：{{ groupStore.getUserInfo(item.senderId)?.name || '未知用户' }}
                 </p>

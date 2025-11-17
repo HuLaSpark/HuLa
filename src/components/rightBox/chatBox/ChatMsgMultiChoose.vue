@@ -96,10 +96,36 @@
       </div>
     </div>
   </n-modal>
+
+  <n-modal v-model:show="showDeleteConfirm" class="w-350px border-rd-8px">
+    <div class="bg-[--bg-popover] w-360px h-full p-6px box-border flex flex-col">
+      <div
+        v-if="isMac()"
+        @click="showDeleteConfirm = false"
+        class="mac-close z-999 size-13px shadow-inner bg-#ed6a5eff rounded-50% select-none absolute left-6px">
+        <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          <use href="#close"></use>
+        </svg>
+      </div>
+
+      <svg v-if="isWindows()" @click="showDeleteConfirm = false" class="w-12px h-12px ml-a cursor-pointer select-none">
+        <use href="#close"></use>
+      </svg>
+      <div class="flex flex-col gap-30px p-[22px_10px_10px_22px] select-none">
+        <span class="text-14px leading-normal">{{ deleteConfirmText }}</span>
+
+        <n-flex justify="end">
+          <n-button class="w-78px" secondary @click="showDeleteConfirm = false">取消</n-button>
+          <n-button class="w-78px" color="#13987f" :loading="isDeleting" @click="handleBatchDelete">确定</n-button>
+        </n-flex>
+      </div>
+    </div>
+  </n-modal>
 </template>
 
 <script setup lang="ts">
-import { MergeMessageType, MittEnum, RoomTypeEnum } from '@/enums'
+import { ErrorType } from '@/common/exception'
+import { MergeMessageType, MittEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
@@ -108,6 +134,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import type { MsgId } from '@/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
@@ -115,7 +142,9 @@ const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const showModal = ref(false)
+const showDeleteConfirm = ref(false)
 const searchText = ref('')
+const isDeleting = ref(false)
 const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
 const selectedMsgs = computed(() =>
   chatStore.chatMessageList.filter((msg) => msg.isCheck === true && isMessageMultiSelectEnabled(msg.message.type))
@@ -152,6 +181,65 @@ const filteredSessionList = computed(() => {
 })
 
 let mergeMessageType: MergeMessageType = MergeMessageType.SINGLE
+const deleteConfirmText = computed(() => {
+  const count = selectedMsgs.value.length
+  if (!count) {
+    return '请选择需要删除的消息'
+  }
+  return `删除后将不会出现在你的消息记录中，确定删除这${count}条消息吗?`
+})
+
+const handleDeleteClick = () => {
+  if (selectedMsgs.value.length === 0) {
+    window.$message?.warning('请选择需要删除的消息')
+    return
+  }
+  showDeleteConfirm.value = true
+}
+
+const handleBatchDelete = async () => {
+  if (isDeleting.value || selectedMsgs.value.length === 0) return
+  const roomId = globalStore.currentSessionRoomId
+  if (!roomId) {
+    window.$message?.error('无法确定当前会话，删除失败')
+    showDeleteConfirm.value = false
+    return
+  }
+
+  isDeleting.value = true
+  const ids = selectedMsgs.value.map((msg) => msg.message.id)
+
+  try {
+    await Promise.all(
+      ids.map((messageId) =>
+        invokeWithErrorHandler(
+          TauriCommand.DELETE_MESSAGE,
+          {
+            messageId,
+            roomId
+          },
+          {
+            customErrorMessage: '删除消息失败',
+            errorType: ErrorType.Client
+          }
+        )
+      )
+    )
+    ids.forEach((id) => chatStore.deleteMsg(id))
+    window.$message?.success('已删除选中消息')
+    chatStore.clearMsgCheck()
+    chatStore.resetSessionSelection()
+    chatStore.setMsgMultiChoose(false)
+    useMitt.emit(MittEnum.UPDATE_SESSION_LAST_MSG, { roomId })
+    showDeleteConfirm.value = false
+  } catch (error) {
+    console.error('批量删除消息失败:', error)
+    window.$message?.error('删除消息失败，请稍后再试')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 const opts = computed(() => [
   {
     text: '逐条转发',
@@ -190,9 +278,8 @@ const opts = computed(() => [
   {
     text: '删除',
     icon: '#delete',
-    click: () => {
-      window.$message.warning('暂未实现')
-    }
+    disabled: selectedMsgs.value.length === 0,
+    click: handleDeleteClick
   },
   {
     text: '',

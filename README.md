@@ -353,9 +353,12 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
   <h3>🤝 HuLa 社区讨论群</h3>
   <p><em>与开发者和用户一起交流讨论，获取最新资讯和技术支持</em></p>
 
-  <div style="display: flex; justify-content: center; gap: 20px;">
+  <p><em>使用 HuLa 移动端扫码加入下方 Issues 群，第一时间反馈问题与建议。</em></p>
+
+  <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
     <img src="preview/wx.png" width="260" height="340" alt="微信群二维码">
     <img src="preview/qq.jpg" width="260" height="340" alt="QQ群二维码">
+    <img src="preview/HuLa-QR.png" width="315" height="315" alt="HuLa Issues 群二维码">
   </div>
 </div>
 

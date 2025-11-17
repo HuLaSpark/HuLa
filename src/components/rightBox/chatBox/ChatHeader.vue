@@ -500,6 +500,7 @@
 </template>
 
 <script setup lang="ts">
+import { ErrorType } from '@/common/exception'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import ManageGroupMember from '@/views/ManageGroupMember.vue'
@@ -512,6 +513,7 @@ import {
   RoomTypeEnum,
   SessionOperateEnum,
   ThemeEnum,
+  TauriCommand,
   UserType
 } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
@@ -529,6 +531,7 @@ import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImRequestUtils'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const { createModalWindow, startRtcCall } = useWindow()
@@ -903,6 +906,27 @@ const handleGroupInfoChange = () => {
   }
 }
 
+const deleteRoomMessages = async (roomId: string) => {
+  if (!roomId) return
+  try {
+    await invokeWithErrorHandler(
+      TauriCommand.DELETE_ROOM_MESSAGES,
+      { roomId },
+      {
+        customErrorMessage: '删除聊天记录失败',
+        errorType: ErrorType.Client
+      }
+    )
+    chatStore.clearRoomMessages(roomId)
+    useMitt.emit(MittEnum.UPDATE_SESSION_LAST_MSG, { roomId })
+    window.$message?.success('聊天记录已删除')
+    modalShow.value = false
+    sidebarShow.value = false
+  } catch (error) {
+    console.error('删除聊天记录失败:', error)
+  }
+}
+
 /** 删除操作二次提醒 */
 const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
@@ -974,6 +998,8 @@ const handleConfirm = async () => {
     } catch (error) {
       console.error('退出群聊失败:', error)
     }
+  } else if (currentOption === RoomActEnum.DELETE_RECORD) {
+    await deleteRoomMessages(targetRoomId)
   } else if (currentOption === RoomActEnum.UPDATE_GROUP_NAME) {
     // 确认修改群名称
     await saveGroupName()
