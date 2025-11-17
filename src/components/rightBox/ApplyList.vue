@@ -50,7 +50,7 @@
                 </n-flex>
                 <n-performant-ellipsis
                   v-if="isFriendApplyOrGroupInvite(item)"
-                  class="text-(12px [--text-color]) w-400px truncate">
+                  class="text-(12px [--text-color]) w-340px truncate">
                   留言：{{ item.content }}
                 </n-performant-ellipsis>
                 <p v-else class="text-(12px [--text-color])">
