@@ -86,11 +86,32 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
                 }
             }
             WindowEvent::CloseRequested { .. } => {
+                let app_handle = window.app_handle();
+                let windows = window.app_handle().webview_windows();
+                if window.label().eq("update") {
+                    let state: tauri::State<'_, crate::AppData> = window.state();
+                    let user_info = state.user_info.clone();
+                    let app_handle = app_handle.clone();
+                    let has_other = windows.iter().any(|(name, _)| {
+                        name != "checkupdate" && name != "capture" && name != "update"
+                    });
+
+                    tauri::async_runtime::spawn(async move {
+                        let user_info = user_info.lock().await;
+                        let not_logg_in = user_info.uid.trim().is_empty();
+
+                        // 如果是 update 窗口被用户关闭，没有登录并且没有其它有效窗口，直接退出程序
+                        if not_logg_in && !has_other {
+                            app_handle.exit(0);
+                        }
+                    });
+                }
                 // 如果是login窗口被用户关闭，直接退出程序
-                if window.label().eq("login") {
+                else if window.label().eq("login") {
                     // 检查是否有其他窗口存在，如果有home窗口，说明是登录成功后的正常关闭
-                    let windows = window.app_handle().webview_windows();
-                    let has_home_window = windows.iter().any(|(name, _)| name == "home");
+                    let has_home_window = windows
+                        .iter()
+                        .any(|(name, _)| name == "home" || name == "update");
 
                     if !has_home_window {
                         // 没有home窗口，说明是用户直接关闭login窗口，退出程序
