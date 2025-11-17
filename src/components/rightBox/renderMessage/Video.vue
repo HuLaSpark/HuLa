@@ -129,6 +129,7 @@ import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
 import { MessageStatusEnum, TauriCommand } from '@/enums'
 import { MittEnum, MsgEnum } from '@/enums/index'
 import { useDownload } from '@/hooks/useDownload'
+import { useIntersectionTaskQueue } from '@/hooks/useIntersectionTaskQueue'
 import { useMitt } from '@/hooks/useMitt'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
 import type { MsgType, VideoBody } from '@/services/types'
@@ -171,6 +172,9 @@ const uploadProgress = computed(() => {
   return props.uploadProgress || 0
 })
 const thumbnailStore = useThumbnailCacheStore()
+const { observe: observeVideoVisibility, disconnect: disconnectVideoVisibility } = useIntersectionTaskQueue({
+  threshold: 0.5
+})
 
 const persistVideoLocalPath = async (absolutePath: string) => {
   if (!props.message?.id || !absolutePath) return
@@ -305,32 +309,13 @@ const checkDownloadStatusLazy = async () => {
   isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
 }
 
-let intersectionObserver: IntersectionObserver | null = null
-
 // 使用 IntersectionObserver 在视频进入视口时检查下载状态
 const setupIntersectionObserver = () => {
   if (!videoContainerRef.value || hasCheckedDownloadStatus.value) return
 
-  intersectionObserver?.disconnect()
-
-  intersectionObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // 视频进入视口，检查下载状态
-          checkDownloadStatusLazy()
-          // 检查后断开观察
-          intersectionObserver?.disconnect()
-        }
-      })
-    },
-    {
-      // 当视频50%可见时触发
-      threshold: 0.5
-    }
-  )
-
-  intersectionObserver.observe(videoContainerRef.value)
+  observeVideoVisibility(videoContainerRef.value, () => {
+    void checkDownloadStatusLazy()
+  })
 }
 
 // 处理图片加载错误
@@ -447,8 +432,7 @@ onUnmounted(() => {
   // 清理事件监听
   useMitt.off(MittEnum.VIDEO_DOWNLOAD_STATUS_UPDATED, handleVideoDownloadStatusUpdate)
 
-  intersectionObserver?.disconnect()
-  intersectionObserver = null
+  disconnectVideoVisibility()
 })
 </script>
 

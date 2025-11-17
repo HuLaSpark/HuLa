@@ -114,7 +114,6 @@
     "internal-ip": "^8.0.1",
     "mermaid": "^11.12.1",
     "mitt": "^3.0.1",
-    "monaco-editor": "0.52.2",
     "naive-ui": "^2.43.1",
     "p-limit": "^7.2.0",
     "pinia": "^3.0.3",

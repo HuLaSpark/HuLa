@@ -23,8 +23,8 @@ use desktops::{common_cmd, directory_scanner, init, tray, video_thumbnail::get_v
 use directory_scanner::{cancel_directory_scan, get_directory_usage_info_with_progress};
 #[cfg(desktop)]
 use init::DesktopCustomInit;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri_plugin_fs::FsExt;
 pub mod command;
 pub mod common;
@@ -77,7 +77,10 @@ use crate::command::contact_command::{hide_contact_command, list_contacts_comman
 use crate::command::file_manager_command::{
     debug_message_stats, get_navigation_items, query_files,
 };
-use crate::command::message_command::{page_msg, save_msg, send_msg, update_message_recall_status};
+use crate::command::message_command::{
+    delete_message, delete_room_messages, page_msg, save_msg, send_msg,
+    update_message_recall_status,
+};
 use crate::command::message_mark_command::save_message_mark;
 
 #[cfg(desktop)]
@@ -439,6 +442,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         page_msg,
         send_msg,
         save_msg,
+        delete_message,
+        delete_room_messages,
         update_message_recall_status,
         save_message_mark,
         // 聊天历史相关命令

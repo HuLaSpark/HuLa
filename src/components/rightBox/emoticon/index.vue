@@ -82,13 +82,17 @@
                   placement="top"
                   @clickoutside="activeMenuId = ''">
                   <template #trigger>
-                    <n-image
-                      width="60"
-                      height="60"
-                      preview-disabled
-                      :src="item.expressionUrl"
-                      @contextmenu.prevent="handleContextMenu($event, item)"
-                      class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
+                    <div
+                      class="emoji-visibility-wrapper size-full"
+                      :ref="(el) => registerEmojiVisibilityTarget(el, item)">
+                      <n-image
+                        width="60"
+                        height="60"
+                        preview-disabled
+                        :src="emojiLocalPathMap[item.id] || item.expressionUrl"
+                        @contextmenu.prevent="handleContextMenu($event, item)"
+                        class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
+                    </div>
                   </template>
                   <n-button quaternary size="tiny" @click.stop="deleteMyEmoji(item.id)">
                     删除
@@ -137,17 +141,20 @@
 </template>
 
 <script setup lang="ts">
+import type { ComponentPublicInstance } from 'vue'
+import { convertFileSrc } from '@tauri-apps/api/core'
+import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
+import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
 import HulaEmojis from 'hula-emojis'
+import type { EmojiItem as EmojiListItem } from '@/services/types'
+import { useIntersectionTaskQueue } from '@/hooks/useIntersectionTaskQueue'
 import { useEmojiStore } from '@/stores/emoji'
 import { useHistoryStore } from '@/stores/history.ts'
+import { useUserStore } from '@/stores/user'
 import { getAllTypeEmojis } from '@/utils/Emoji.ts'
+import { md5FromString } from '@/utils/Md5Util'
+import { detectRemoteFileType, getUserEmojiDir } from '@/utils/PathUtil'
 import { isMobile } from '@/utils/PlatformConstants'
-
-type EmojiType = {
-  expressionEmojis: EmojiItem
-  animalEmojis: EmojiItem
-  gestureEmojis: EmojiItem
-}
 
 type TabItem = {
   id: number
@@ -157,9 +164,22 @@ type TabItem = {
   cover?: string
 }
 
-interface EmojiItem {
+interface EmojiGroupItem {
   name: string
   value: any[]
+}
+
+type EmojiType = {
+  expressionEmojis: EmojiGroupItem
+  animalEmojis: EmojiGroupItem
+  gestureEmojis: EmojiGroupItem
+}
+
+type EmojiCacheEnvironment = {
+  uid: string
+  emojiDir: string
+  baseDir: BaseDirectory
+  baseDirPath: string
 }
 
 const emit = defineEmits(['emojiHandle'])
@@ -168,12 +188,29 @@ const props = defineProps<{
 }>()
 const { emoji, setEmoji, lastEmojiTabIndex, setLastEmojiTabIndex } = useHistoryStore()
 const emojiStore = useEmojiStore()
+const userStore = useUserStore()
 /** 获取米游社的表情包 */
 const emojisBbs = HulaEmojis.MihoyoBbs
 const activeIndex = ref(lastEmojiTabIndex)
 const currentSeriesIndex = ref(0)
 // 设置当前右键点击的表情项ID
 const activeMenuId = ref('')
+const emojiLocalPathMap = ref<Record<string, string>>({})
+// 仅在元素可见时调度本地缓存，阈值随端变化
+const {
+  observe: observeEmojiVisibility,
+  unobserve: unobserveEmojiVisibility,
+  disconnect: disconnectEmojiObserver
+} = useIntersectionTaskQueue({
+  threshold: isMobile() ? 0.2 : 0.35,
+  rootMargin: isMobile() ? '24px 0px 24px' : '40px 0px 80px'
+})
+const emojiVisibilityTargetMap = new Map<string, Element>()
+const cachingEmojiIds = new Set<string>()
+const emojiCacheEnv = ref<EmojiCacheEnvironment | null>(null)
+const emojiWorkerUrl = new URL('../../../workers/imageDownloader.ts', import.meta.url)
+let emojiCacheWorker: Worker | null = null
+const emojiExtCache = new Map<string, string>()
 
 // 生成选项卡数组
 const tabList = computed<TabItem[]>(() => {
@@ -227,6 +264,261 @@ const emojiRef = reactive<{
   historyList: emoji,
   allEmoji: emojiObj.value
 })
+
+// 只在支持 window/Worker 的环境下按需创建 emoji 缓存 Worker，并在全局复用
+const getEmojiWorker = () => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  if (!emojiCacheWorker) {
+    emojiCacheWorker = new Worker(emojiWorkerUrl)
+  }
+  return emojiCacheWorker
+}
+
+const getEmojiBaseDir = () => (isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource)
+const getEmojiBaseDirPath = async () => (isMobile() ? await appDataDir() : await resourceDir())
+
+// 兜底从 URL 字符串中推断扩展名，避免远端类型识别失败
+const inferExtFromUrl = (url: string) => {
+  try {
+    const { pathname } = new URL(url)
+    const index = pathname.lastIndexOf('.')
+    if (index !== -1) {
+      return pathname.slice(index + 1)
+    }
+  } catch {
+    const clean = url.split('?')[0]
+    const index = clean.lastIndexOf('.')
+    if (index !== -1) {
+      return clean.slice(index + 1)
+    }
+  }
+  return null
+}
+
+// 优先使用 detectRemoteFileType 获取真实扩展名，否则回退到 URL 规则推断并缓存结果
+const resolveEmojiExtension = async (url: string) => {
+  if (emojiExtCache.has(url)) {
+    return emojiExtCache.get(url)!
+  }
+  let ext = ''
+  try {
+    const info = await detectRemoteFileType({ url, fileSize: 1 })
+    ext = info?.ext || ''
+  } catch (error) {
+    console.warn('识别表情类型失败:', error)
+  }
+  if (!ext) {
+    ext = inferExtFromUrl(url) || 'png'
+  }
+  emojiExtCache.set(url, ext)
+  return ext
+}
+
+// 使用 Emoji URL 的 md5 + 扩展名生成稳定文件名，避免重复下载
+const buildEmojiFileName = async (url: string) => {
+  const hash = await md5FromString(url)
+  const ext = await resolveEmojiExtension(url)
+  return `${hash}.${ext}`
+}
+
+// 将绝对路径转换为 Tauri 可访问的 file URI，并写入响应式映射
+const setEmojiLocalPath = (id: string, absolutePath: string) => {
+  emojiLocalPathMap.value = {
+    ...emojiLocalPathMap.value,
+    [id]: convertFileSrc(absolutePath)
+  }
+}
+
+const ensureEmojiCacheEnvironment = async () => {
+  const uid = userStore.userInfo?.uid
+  if (!uid) {
+    return null
+  }
+  if (emojiCacheEnv.value?.uid === uid) {
+    return emojiCacheEnv.value
+  }
+  try {
+    const [emojiDir, baseDirPath] = await Promise.all([getUserEmojiDir(uid), getEmojiBaseDirPath()])
+    const env: EmojiCacheEnvironment = {
+      uid,
+      emojiDir,
+      baseDir: getEmojiBaseDir(),
+      baseDirPath
+    }
+    emojiCacheEnv.value = env
+    return env
+  } catch (error) {
+    console.error('初始化表情缓存目录失败:', error)
+    return null
+  }
+}
+
+const releaseEmojiObserver = (id: string) => {
+  const target = emojiVisibilityTargetMap.get(id)
+  if (target) {
+    unobserveEmojiVisibility(target)
+    emojiVisibilityTargetMap.delete(id)
+  }
+}
+
+const resolveVisibilityElement = (target: Element | ComponentPublicInstance | null) => {
+  if (!target) {
+    return null
+  }
+  if (target instanceof Element) {
+    return target
+  }
+  const el = target.$el
+  return el instanceof Element ? el : null
+}
+
+// 首选借助 Worker 下载以隔离网络 I/O；若无 Worker（如 SSR）则回退到 fetch
+const downloadEmojiFile = async (url: string) => {
+  const worker = getEmojiWorker()
+  if (!worker) {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`下载表情失败: ${response.status} ${response.statusText}`)
+    }
+    return new Uint8Array(await response.arrayBuffer())
+  }
+
+  return await new Promise<Uint8Array>((resolve, reject) => {
+    const handleMessage = (event: MessageEvent<any>) => {
+      const data = event.data
+      if (!data || data.url !== url) {
+        return
+      }
+      cleanup()
+      if (data.success && data.buffer) {
+        resolve(new Uint8Array(data.buffer))
+      } else {
+        reject(new Error(data.error || '下载表情失败'))
+      }
+    }
+
+    const handleError = (event: ErrorEvent) => {
+      cleanup()
+      reject(new Error(event.message))
+    }
+
+    const cleanup = () => {
+      worker.removeEventListener('message', handleMessage)
+      worker.removeEventListener('error', handleError)
+    }
+
+    worker.addEventListener('message', handleMessage)
+    worker.addEventListener('error', handleError)
+    worker.postMessage({ url })
+  })
+}
+
+const cleanupLocalEmojiMap = (validIds: string[]) => {
+  const validSet = new Set(validIds)
+  const nextMap = { ...emojiLocalPathMap.value }
+  let changed = false
+  Object.keys(nextMap).forEach((id) => {
+    if (!validSet.has(id)) {
+      delete nextMap[id]
+      changed = true
+    }
+  })
+  if (changed) {
+    emojiLocalPathMap.value = nextMap
+  }
+}
+
+const cleanupEmojiObservers = (validIds: string[]) => {
+  const validSet = new Set(validIds)
+  emojiVisibilityTargetMap.forEach((el, id) => {
+    if (!validSet.has(id)) {
+      unobserveEmojiVisibility(el)
+      emojiVisibilityTargetMap.delete(id)
+    }
+  })
+}
+
+// 只有当收藏项真正出现在视口内时才执行缓存下载
+const handleEmojiVisibility = async (emojiItem: EmojiListItem) => {
+  const id = emojiItem.id
+  if (emojiLocalPathMap.value[id] || cachingEmojiIds.has(id)) {
+    releaseEmojiObserver(id)
+    return
+  }
+  const env = await ensureEmojiCacheEnvironment()
+  if (!env) {
+    return
+  }
+  cachingEmojiIds.add(id)
+  try {
+    await ensureEmojiCached(emojiItem, env.emojiDir, env.baseDir, env.baseDirPath)
+  } catch (error) {
+    console.error('缓存表情失败:', emojiItem.expressionUrl, error)
+  } finally {
+    cachingEmojiIds.delete(id)
+    releaseEmojiObserver(id)
+  }
+}
+
+// 绑定 DOM 元素到观察器，等待其进入视口后触发下载
+const registerEmojiVisibilityTarget = (target: Element | ComponentPublicInstance | null, emojiItem: EmojiListItem) => {
+  releaseEmojiObserver(emojiItem.id)
+  const el = resolveVisibilityElement(target)
+  if (!el || !emojiItem.expressionUrl || emojiLocalPathMap.value[emojiItem.id]) {
+    return
+  }
+  emojiVisibilityTargetMap.set(emojiItem.id, el)
+  observeEmojiVisibility(el, () => {
+    void handleEmojiVisibility(emojiItem)
+  })
+}
+
+// 根据用户 UID 的缓存目录落盘单个 Emoji，若文件不存在则下载后写入
+const ensureEmojiCached = async (
+  emojiItem: EmojiListItem,
+  emojiDir: string,
+  baseDir: BaseDirectory,
+  baseDirPath: string
+) => {
+  const fileName = await buildEmojiFileName(emojiItem.expressionUrl)
+  const relativePath = await join(emojiDir, fileName)
+  const hasFile = await exists(relativePath, { baseDir })
+  if (!hasFile) {
+    const bytes = await downloadEmojiFile(emojiItem.expressionUrl)
+    await writeFile(relativePath, bytes, { baseDir })
+  }
+  const absolutePath = await join(baseDirPath, relativePath)
+  setEmojiLocalPath(emojiItem.id, absolutePath)
+}
+
+// 监听收藏列表变化，保持本地映射与观察目标同步
+watch(
+  () => emojiStore.emojiList.map((item) => ({ id: item.id, url: item.expressionUrl })),
+  (list) => {
+    const ids = list.map((item) => item.id)
+    cleanupLocalEmojiMap(ids)
+    cleanupEmojiObservers(ids)
+  },
+  { immediate: true, deep: true }
+)
+
+// 用户切换时重置缓存上下文与观察器
+watch(
+  () => userStore.userInfo?.uid,
+  () => {
+    emojiLocalPathMap.value = {}
+    emojiCacheEnv.value = null
+    cachingEmojiIds.clear()
+    emojiVisibilityTargetMap.forEach((el) => {
+      unobserveEmojiVisibility(el)
+    })
+    emojiVisibilityTargetMap.clear()
+    disconnectEmojiObserver()
+  },
+  { immediate: true }
+)
 
 /**
  * 检查字符串是否为URL
@@ -314,18 +606,19 @@ const selectSeries = (index: number) => {
 }
 
 onMounted(async () => {
-  // try {
-  //   const file = await create('emoji-test.txt', { baseDir: BaseDirectory.App })
-  //   await file.write(new TextEncoder().encode('Hello world'))
-  //   await file.close()
-  // } catch (error) {
-  //   console.error('Error handling file:', error)
-  // }
   // 获取我的表情包列表
   await emojiStore.getEmojiList()
   // 如果上次选择的是表情包系列，设置正确的currentSeriesIndex
   if (activeIndex.value > 0) {
     currentSeriesIndex.value = activeIndex.value - 1
+  }
+})
+
+onBeforeUnmount(() => {
+  disconnectEmojiObserver()
+  if (emojiCacheWorker) {
+    emojiCacheWorker.terminate()
+    emojiCacheWorker = null
   }
 })
 </script>
@@ -357,6 +650,10 @@ onMounted(async () => {
       @apply hover:scale-116 bg-[--emoji-hover] rounded-8px;
     }
   }
+}
+
+.emoji-visibility-wrapper {
+  @apply w-full h-full;
 }
 
 .expression-item {

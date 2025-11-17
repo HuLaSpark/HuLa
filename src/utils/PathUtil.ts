@@ -9,6 +9,8 @@ import { isMobile } from './PlatformConstants'
 const USER_DATA = 'userData'
 // 统一存放三维模型的子目录名
 const MODELS_DIR = 'models'
+// 用户专属表情包目录名
+const EMOJIS_DIR = 'emojis'
 
 /**
  * 确保资源目录下存在 userData 根目录。
@@ -62,6 +64,34 @@ export const getUserAbsoluteVideosDir = async (userUid: string, roomId: string) 
   const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
   const absoluteDir = await join(baseDirPath, filePath)
   return absoluteDir
+}
+
+/**
+ * 确保用户表情包目录 userData/{uid}/emojis 存在，并返回相对路径
+ * @param userUid 用户ID
+ */
+const getUserEmojiDir = async (userUid: string): Promise<string> => {
+  await ensureUserDataRoot()
+  const emojiDir = await join(USER_DATA, userUid, EMOJIS_DIR)
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const hasEmojiDir = await exists(emojiDir, { baseDir })
+  if (!hasEmojiDir) {
+    await mkdir(emojiDir, {
+      baseDir,
+      recursive: true
+    })
+  }
+  return emojiDir
+}
+
+/**
+ * 获取用户表情包目录的绝对路径
+ * @param userUid 用户ID
+ */
+export const getUserAbsoluteEmojiDir = async (userUid: string): Promise<string> => {
+  const emojiDir = await getUserEmojiDir(userUid)
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+  return await join(baseDirPath, emojiDir)
 }
 
 const getImageCache = (subFolder: string, userUid: string): string => {
@@ -231,4 +261,4 @@ export async function getFilesMeta<T>(filesPath: string[]) {
   })
 }
 
-export { getPathCache, getUserVideosDir, getImageCache }
+export { getPathCache, getUserVideosDir, getUserEmojiDir, getImageCache }

@@ -4,7 +4,18 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import type { FileTypeResult } from 'file-type'
-import { MergeMessageType, MittEnum, MsgEnum, PowerEnum, CallTypeEnum, RoleEnum, RoomTypeEnum } from '@/enums'
+import type { InjectionKey } from 'vue'
+import { ErrorType } from '@/common/exception'
+import {
+  MergeMessageType,
+  MittEnum,
+  MsgEnum,
+  PowerEnum,
+  CallTypeEnum,
+  RoleEnum,
+  RoomTypeEnum,
+  TauriCommand
+} from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -27,6 +38,7 @@ import { detectImageFormat, imageUrlToUint8Array, isImageUrl } from '@/utils/Ima
 import { recallMsg, removeGroupMember, updateMyRoomInfo } from '@/utils/ImRequestUtils'
 import { detectRemoteFileType, getFilesMeta } from '@/utils/PathUtil'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
+import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useWindow } from './useWindow'
 
 type UseChatMainOptions = {
@@ -64,6 +76,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   const modalShow = ref(false)
   /** 需要删除信息的下标 */
   const delIndex = ref('')
+  const delRoomId = ref('')
   /** 选中的气泡消息 */
   const activeBubble = ref('')
   /** 记录历史消息下标 */
@@ -497,6 +510,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
               tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
               modalShow.value = true
               delIndex.value = item.message.id
+              delRoomId.value = item.message.roomId
             }
           }
         ]
@@ -1170,9 +1184,34 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   }
 
   /** 删除信息事件 */
-  const handleConfirm = () => {
-    chatStore.deleteMsg(delIndex.value)
-    modalShow.value = false
+  const handleConfirm = async () => {
+    if (!delIndex.value) return
+    const targetRoomId = delRoomId.value || globalStore.currentSessionRoomId
+    if (!targetRoomId) {
+      window.$message?.error('无法确定消息所属的会话')
+      return
+    }
+    try {
+      await invokeWithErrorHandler(
+        TauriCommand.DELETE_MESSAGE,
+        {
+          messageId: delIndex.value,
+          roomId: targetRoomId
+        },
+        {
+          customErrorMessage: '删除消息失败',
+          errorType: ErrorType.Client
+        }
+      )
+      chatStore.deleteMsg(delIndex.value)
+      useMitt.emit(MittEnum.UPDATE_SESSION_LAST_MSG, { roomId: targetRoomId })
+      delIndex.value = ''
+      delRoomId.value = ''
+      modalShow.value = false
+      window.$message?.success('消息已删除')
+    } catch (error) {
+      console.error('删除消息失败:', error)
+    }
   }
 
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
@@ -1235,3 +1274,6 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     activeBubble
   }
 }
+
+export type UseChatMainContext = ReturnType<typeof useChatMain>
+export const chatMainInjectionKey = Symbol('chatMainInjectionKey') as InjectionKey<UseChatMainContext>
