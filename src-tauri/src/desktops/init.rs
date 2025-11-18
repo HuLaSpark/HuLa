@@ -87,33 +87,40 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
             }
             WindowEvent::CloseRequested { .. } => {
                 let app_handle = window.app_handle();
-                let windows = window.app_handle().webview_windows();
-                if window.label().eq("update") {
+                let windows = app_handle.webview_windows();
+                let win_label = window.label();
+
+                // 检查窗口是否是无效窗口(不重要的可退出的)
+                let is_ignored_window =
+                    |name: &str| matches!(name, "checkupdate" | "capture" | "update" | "tray");
+
+                if win_label.eq("update") {
                     let state: tauri::State<'_, crate::AppData> = window.state();
                     let user_info = state.user_info.clone();
+
+                    let has_other_active_windows =
+                        windows.iter().any(|(name, _)| !is_ignored_window(name));
+
                     let app_handle = app_handle.clone();
-                    let has_other = windows.iter().any(|(name, _)| {
-                        name != "checkupdate" && name != "capture" && name != "update"
-                    });
 
                     tauri::async_runtime::spawn(async move {
                         let user_info = user_info.lock().await;
                         let not_logg_in = user_info.uid.trim().is_empty();
 
-                        // 如果是 update 窗口被用户关闭，没有登录并且没有其它有效窗口，直接退出程序
-                        if not_logg_in && !has_other {
+                        //  update 窗口关闭 + 未登录 + 没有其他有效窗口 => 退出程序
+                        if not_logg_in && !has_other_active_windows {
                             app_handle.exit(0);
                         }
                     });
                 }
                 // 如果是login窗口被用户关闭，直接退出程序
-                else if window.label().eq("login") {
+                else if win_label.eq("login") {
                     // 检查是否有其他窗口存在，如果有home窗口，说明是登录成功后的正常关闭
-                    let has_home_window = windows
+                    let has_home_or_update = windows
                         .iter()
-                        .any(|(name, _)| name == "home" || name == "update");
+                        .any(|(name, _)| matches!(name.as_str(), "home" | "update"));
 
-                    if !has_home_window {
+                    if !has_home_or_update {
                         // 没有home窗口，说明是用户直接关闭login窗口，退出程序
                         window.app_handle().exit(0);
                     }
