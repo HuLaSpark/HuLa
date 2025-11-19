@@ -172,8 +172,10 @@ const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visible
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
 
+type SessionMsgCacheItem = { msg: string; isAtMe: boolean; time: number; senderName: string }
+
 // 缓存每个会话的格式化消息，避免重复计算
-const sessionMsgCache = reactive<Record<string, { msg: string; isAtMe: boolean; time: number }>>({})
+const sessionMsgCache = reactive<Record<string, SessionMsgCacheItem>>({})
 
 // 会话列表
 const sessionList = computed(() => {
@@ -204,20 +206,34 @@ const sessionList = computed(() => {
         const lastMsg = messages[messages.length - 1]
         const cacheKey = item.roomId
         const cached = sessionMsgCache[cacheKey]
+        const sendTime = lastMsg?.message?.sendTime || 0
 
         // 如果有消息且缓存不存在或已过期，重新计算
-        if (lastMsg && (!cached || cached.time < (lastMsg.message.sendTime || 0))) {
-          isAtMe = checkRoomAtMe(item.roomId, item.type, globalStore.currentSessionRoomId!, messages, item.unreadCount)
+        if (lastMsg) {
+          const senderName = getMessageSenderName(lastMsg, '', item.roomId, item.type)
+          const shouldRefreshCache = !cached || cached.time < sendTime || cached.senderName !== senderName
 
-          const senderName = getMessageSenderName(lastMsg, '', item.roomId)
-          // 获取纯文本消息内容（不包含 @我 标记）
-          displayMsg = formatMessageContent(lastMsg, item.type, senderName)
+          if (shouldRefreshCache) {
+            isAtMe = checkRoomAtMe(
+              item.roomId,
+              item.type,
+              globalStore.currentSessionRoomId!,
+              messages,
+              item.unreadCount
+            )
+            // 获取纯文本消息内容（不包含 @我 标记）
+            displayMsg = formatMessageContent(lastMsg, item.type, senderName, item.roomId)
 
-          // 更新缓存（只缓存纯文本消息内容）
-          sessionMsgCache[cacheKey] = {
-            msg: displayMsg,
-            isAtMe,
-            time: lastMsg.message.sendTime || 0
+            // 更新缓存（只缓存纯文本消息内容）
+            sessionMsgCache[cacheKey] = {
+              msg: displayMsg,
+              isAtMe,
+              time: sendTime,
+              senderName
+            }
+          } else {
+            displayMsg = cached.msg
+            isAtMe = item.unreadCount > 0 ? cached.isAtMe : false
           }
         } else if (cached) {
           // 使用缓存的值，但如果未读数为0，强制isAtMe为false

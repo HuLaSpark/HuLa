@@ -225,10 +225,20 @@ onMounted(async () => {
         const currentTime = Date.now()
 
         // 获取发送者信息
-        const senderName = getMessageSenderName(msg, session?.name || '', session!.roomId)
+        const senderName = getMessageSenderName(
+          msg,
+          session?.name || '',
+          session?.roomId || msg.message.roomId,
+          session?.type
+        )
 
         // 格式化消息内容
-        const formattedContent = formatMessageContent(msg, session?.type || RoomTypeEnum.GROUP, senderName)
+        const formattedContent = formatMessageContent(
+          msg,
+          session?.type || RoomTypeEnum.GROUP,
+          senderName,
+          session?.roomId || msg.message.roomId
+        )
 
         if (existingGroup) {
           // 如果该房间的消息已存在，更新最新内容和计数

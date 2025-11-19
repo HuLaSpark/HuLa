@@ -20,12 +20,13 @@ export const useReplaceMsg = () => {
    * @returns 是否@当前用户
    */
   const checkMessageAtMe = (message: MessageType) => {
-    if (!message?.message?.body?.atUidList || !userStore.userInfo!.uid) {
+    const currentUid = userStore.userInfo?.uid
+    if (!message?.message?.body?.atUidList || !currentUid) {
       return false
     }
 
     // 确保类型一致的比较
-    return message.message.body.atUidList.some((atUid: string) => String(atUid) === String(userStore.userInfo!.uid))
+    return message.message.body.atUidList.some((atUid: string) => String(atUid) === String(currentUid))
   }
 
   /**
@@ -79,18 +80,31 @@ export const useReplaceMsg = () => {
    * @param defaultName 默认名称（可选）
    * @returns 发送者用户名
    */
-  const getMessageSenderName = (message: MessageType, defaultName: string = '', roomId: string) => {
-    if (!message?.fromUser?.uid) return defaultName
-    const session = chatStore.getSession(roomId)
-    // 防御性检查：如果 session 不存在，返回默认名称
-    if (!session) return defaultName
-
-    if (session.type === RoomTypeEnum.GROUP) {
-      const user = groupStore.getUser(roomId, message.fromUser.uid)
-      return user?.myName || user?.name || ''
-    } else {
-      return groupStore.getUserInfo(message.fromUser.uid)?.name || defaultName
+  const getMessageSenderName = (
+    message: MessageType,
+    defaultName: string = '',
+    roomId?: string,
+    roomTypeHint?: RoomTypeEnum
+  ) => {
+    if (!message?.fromUser?.uid) {
+      return defaultName
     }
+
+    const resolvedRoomId = roomId || message.message?.roomId || ''
+    const fallbackName = message.fromUser?.username || defaultName || message.fromUser?.uid || ''
+    const session = chatStore.getSession(resolvedRoomId)
+    const resolvedRoomType = roomTypeHint ?? session?.type
+
+    const globalUser = groupStore.getUserInfo(message.fromUser.uid, resolvedRoomId)
+
+    if (resolvedRoomType === RoomTypeEnum.GROUP) {
+      const user = groupStore.getUser(resolvedRoomId, message.fromUser.uid)
+      const resolvedName = user?.myName || user?.name || globalUser?.name || fallbackName
+      return resolvedName
+    }
+
+    const resolvedName = globalUser?.name || fallbackName
+    return resolvedName
   }
 
   /**
@@ -100,9 +114,14 @@ export const useReplaceMsg = () => {
    * @param userName 发送消息用户的名称（可选，如果不提供会自动从消息中提取）
    * @returns 格式化后的消息内容
    */
-  const formatMessageContent = (message: MessageType, roomType: RoomTypeEnum, userName: string = '') => {
-    // 如果没有提供用户名，自动从消息中获取
-    const senderName = userName
+  const formatMessageContent = (
+    message: MessageType,
+    roomType: RoomTypeEnum,
+    userName: string = '',
+    roomId?: string
+  ) => {
+    const resolvedRoomId = roomId ?? message.message?.roomId ?? ''
+    const senderName = userName || getMessageSenderName(message, '', resolvedRoomId, roomType)
     // 判断是否是撤回消息
     if (message.message?.type === MsgEnum.RECALL) {
       return formatRecallMessage(message, roomType, senderName)

@@ -170,6 +170,8 @@ export enum StoresEnum {
   CONTACTS = 'contacts',
   /** 聊天 */
   CHAT = 'chat',
+  /** 会话未读缓存 */
+  SESSION_UNREAD = 'sessionUnread',
   /** 缓存 */
   CACHED = 'cached',
   /** 配置 */

@@ -135,9 +135,7 @@ export const useLogin = () => {
     settingStore.closeAutoLogin()
     loginStore.loginStatus = LoginStatus.Init
     globalStore.updateCurrentSessionRoomId('')
-    // 4. 清除未读数
-    chatStore.clearUnreadCount()
-    // 5. 清除系统托盘图标上的未读数
+    // 2. 清除系统托盘图标上的未读数
     if (isMac()) {
       await invokeWithErrorHandler('set_badge_count', { count: undefined })
     }

@@ -14,6 +14,7 @@ import { useUserStore } from '@/stores/user.ts'
 import { getSessionDetail } from '@/utils/ImRequestUtils'
 import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useSessionUnreadStore } from '@/stores/sessionUnread'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 
 type RecalledMessage = {
@@ -46,10 +47,10 @@ export const useChatStore = defineStore(
   StoresEnum.CHAT,
   () => {
     const route = useRoute()
-    // const router = useRouter()
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
     const groupStore = useGroupStore()
+    const sessionUnreadStore = useSessionUnreadStore()
 
     // 会话列表
     const sessionList = ref<SessionItem[]>([])
@@ -57,6 +58,30 @@ export const useChatStore = defineStore(
     const sessionMap = ref<Record<string, SessionItem>>({})
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+
+    // 持久化的未读数同步回内存里的会话对象，确保刷新或切账号后还能看到旧的未读状态
+    const syncPersistedUnreadCounts = (targetSessions: SessionItem[] = sessionList.value) => {
+      if (!targetSessions.length) {
+        return
+      }
+      sessionUnreadStore.apply(userStore.userInfo?.uid, targetSessions)
+    }
+
+    // 更新本地缓存里的某个会话未读数
+    const persistUnreadCount = (roomId: string, count: number) => {
+      if (!roomId) {
+        return
+      }
+      sessionUnreadStore.set(userStore.userInfo?.uid, roomId, count)
+    }
+
+    // 在删除会话或清理数据时同步移除缓存，避免旧数据污染
+    const removeUnreadCountCache = (roomId: string) => {
+      if (!roomId) {
+        return
+      }
+      sessionUnreadStore.remove(userStore.userInfo?.uid, roomId)
+    }
 
     // 存储所有消息的Record
     const messageMap = reactive<Record<string, Record<string, MessageType>>>({})
@@ -314,20 +339,26 @@ export const useChatStore = defineStore(
       try {
         if (sessionOptions.isLoading) return
         sessionOptions.isLoading = true
-        const response: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
+        const data: any = await invokeWithErrorHandler(TauriCommand.LIST_CONTACTS, undefined, {
           customErrorMessage: '获取会话列表失败',
           errorType: ErrorType.Network
         }).catch(() => {
           sessionOptions.isLoading = false
           return null
         })
-        if (!response) return
-        const data = response
-        if (!data) {
-          return
-        }
+        if (!data) return
+
+        // console.log(
+        //   '[SessionDebug] 后端返回的会话列表:',
+        //   data.map((item: SessionItem) => ({
+        //     roomId: item.roomId,
+        //     unreadCount: item.unreadCount,
+        //     name: item.name
+        //   }))
+        // )
 
         sessionList.value = [...data]
+        syncPersistedUnreadCounts()
         sessionOptions.isLoading = false
 
         // 同步更新 sessionMap
@@ -373,6 +404,11 @@ export const useChatStore = defineStore(
         // 同步更新 sessionMap
         sessionMap.value[roomId] = updatedSession
 
+        if ('unreadCount' in data && typeof updatedSession.unreadCount === 'number') {
+          persistUnreadCount(roomId, updatedSession.unreadCount)
+          requestUnreadCountUpdate(roomId)
+        }
+
         // 如果更新了免打扰状态，需要重新计算全局未读数
         if ('muteNotification' in data) {
           requestUnreadCountUpdate()
@@ -394,6 +430,7 @@ export const useChatStore = defineStore(
 
     const addSession = async (roomId: string) => {
       const resp = await getSessionDetail({ id: roomId })
+      syncPersistedUnreadCounts([resp])
       sessionList.value.unshift(resp)
       // 同步更新 sessionMap
       sessionMap.value[roomId] = resp
@@ -465,6 +502,7 @@ export const useChatStore = defineStore(
         if (msg.fromUser.uid !== userStore.userInfo!.uid) {
           if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
             session.unreadCount = (session.unreadCount || 0) + 1
+            persistUnreadCount(session.roomId, session.unreadCount)
             // 使用防抖机制更新，适合并发消息场景
             requestUnreadCountUpdate()
           }
@@ -776,6 +814,7 @@ export const useChatStore = defineStore(
       if (session) {
         // 更新会话的未读数
         session.unreadCount = 0
+        persistUnreadCount(roomId, 0)
 
         // 重新计算全局未读数，使用 chatStore 中的方法以保持一致性
         updateTotalUnreadCount()
@@ -807,6 +846,7 @@ export const useChatStore = defineStore(
         // 删除会话后更新未读计数
         requestUnreadCountUpdate()
       }
+      removeUnreadCountCache(roomId)
     }
 
     // 监听 Worker 消息
@@ -863,6 +903,7 @@ export const useChatStore = defineStore(
     const clearUnreadCount = () => {
       sessionList.value.forEach((session) => {
         session.unreadCount = 0
+        persistUnreadCount(session.roomId, 0)
       })
       // 更新全局未读数
       requestUnreadCountUpdate()
