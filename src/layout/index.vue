@@ -1,26 +1,22 @@
 <template>
-  <div id="layout" class="flex min-w-310px bg-[--right-bg-color] h-full">
-    <Suspense>
-      <template #default>
-        <div class="flex flex-1 min-h-0">
-          <!-- 使用keep-alive包裹异步组件 -->
-          <keep-alive>
-            <AsyncLeft />
-          </keep-alive>
-          <keep-alive>
-            <AsyncCenter />
-          </keep-alive>
-          <keep-alive>
-            <AsyncRight v-if="!shrinkStatus" />
-          </keep-alive>
-        </div>
-      </template>
-      <template #fallback>
-        <div class="flex flex-1 items-center justify-center">
-          <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
-        </div>
-      </template>
-    </Suspense>
+  <div id="layout" class="relative flex min-w-310px bg-[--right-bg-color] h-full">
+    <div class="flex flex-1 min-h-0">
+      <!-- 使用keep-alive包裹异步组件 -->
+      <keep-alive>
+        <AsyncLeft />
+      </keep-alive>
+      <keep-alive>
+        <AsyncCenter />
+      </keep-alive>
+      <keep-alive>
+        <AsyncRight v-if="!shrinkStatus" />
+      </keep-alive>
+    </div>
+    <div
+      v-if="shouldBlockInitialRender"
+      class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
+      <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
+    </div>
   </div>
 </template>
 
@@ -54,11 +50,50 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 const fileStore = useFileStore()
 const settingStore = useSettingStore()
-const userUid = computed(() => userStore.userInfo!.uid)
+const userUid = computed(() => userStore.userInfo?.uid ?? '')
+const hasCachedSessions = computed(() => chatStore.sessionList.length > 0)
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
 const { resetLoginState, logout, init } = useLogin()
+const INITIAL_SYNC_FLAG_PREFIX = 'hula_initial_sync_'
+const initialSyncStorageKey = computed(() => (userUid.value ? `${INITIAL_SYNC_FLAG_PREFIX}${userUid.value}` : ''))
+const requiresInitialSync = ref(true)
+const shouldBlockInitialRender = computed(() => requiresInitialSync.value && !hasCachedSessions.value)
+
+const syncInitialSyncState = () => {
+  if (!initialSyncStorageKey.value || typeof window === 'undefined') {
+    requiresInitialSync.value = true
+    return
+  }
+  try {
+    requiresInitialSync.value = localStorage.getItem(initialSyncStorageKey.value) !== '1'
+  } catch (error) {
+    console.warn('[layout] 读取初始化标记失败:', error)
+    requiresInitialSync.value = true
+  }
+}
+
+watch(
+  () => initialSyncStorageKey.value,
+  () => {
+    syncInitialSyncState()
+  },
+  { immediate: true }
+)
+
+const markInitialSyncCompleted = () => {
+  if (!initialSyncStorageKey.value || typeof window === 'undefined') {
+    requiresInitialSync.value = false
+    return
+  }
+  try {
+    localStorage.setItem(initialSyncStorageKey.value, '1')
+  } catch (error) {
+    console.warn('[layout] 写入初始化标记失败:', error)
+  }
+  requiresInitialSync.value = false
+}
 
 // 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
@@ -88,7 +123,23 @@ const AsyncRight = defineAsyncComponent({
     loadingText.value = '正在加载右侧面板...'
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
-    await init()
+    if (shouldBlockInitialRender.value) {
+      try {
+        await init()
+        markInitialSyncCompleted()
+      } catch (error) {
+        console.error('[layout] 首次同步数据失败:', error)
+        throw error
+      }
+    } else {
+      init()
+        .then(() => {
+          markInitialSyncCompleted()
+        })
+        .catch((error) => {
+          console.error('[layout] 增量数据同步失败:', error)
+        })
+    }
 
     // 在组件加载完成后，使用nextTick等待DOM更新
     nextTick(() => {
@@ -245,8 +296,9 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
     addFileToStore(data)
   }
 
+  const currentUid = userUid.value
   // 不是自己发的消息才通知
-  if (data.fromUser.uid !== userUid.value) {
+  if (!currentUid || data.fromUser.uid !== currentUid) {
     // 获取该消息的会话信息
     const session = chatStore.sessionList.find((s) => s.roomId === data.message.roomId)
 

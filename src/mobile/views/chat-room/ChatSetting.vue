@@ -19,7 +19,7 @@
                 <n-avatar
                   class="absolute"
                   :size="38"
-                  :src="AvatarUtils.getAvatarUrl(globalStore.currentSession.avatar!)"
+                  :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')"
                   fallback-src="/logo.png"
                   :style="{
                     'object-fit': 'cover',
@@ -45,9 +45,9 @@
 
             <div class="text-14px flex items-center h-full gap-5px">
               <span>
-                {{ globalStore.currentSession.name }}
+                {{ activeItem?.name || '' }}
               </span>
-              <span v-if="globalStore.currentSession.hotFlag === 1">
+              <span v-if="activeItem?.hotFlag === 1">
                 <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
                   <use href="#auth"></use>
                 </svg>
@@ -122,11 +122,11 @@
               <!-- 群号 -->
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
-                @click="handleCopy(globalStore.currentSession.account)"
+                @click="handleCopy(activeItem?.account || '')"
                 class="flex justify-between py-15px items-center">
                 <div class="text-14px">{{ isGroup ? '群号/二维码' : 'Hula号/二维码' }}</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>{{ globalStore.currentSession.account }}</div>
+                  <div>{{ activeItem?.account || '' }}</div>
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#saoma-i3589iic"></use>
@@ -205,7 +205,7 @@
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
                 <div class="text-14px">设置为置顶</div>
-                <n-switch :value="activeItem.top" @update:value="handleTop" />
+                <n-switch :value="!!activeItem?.top" @update:value="handleTop" />
               </div>
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
@@ -213,7 +213,7 @@
                 <div class="text-14px">消息免打扰</div>
                 <n-switch
                   @update:value="handleNotification"
-                  :value="activeItem.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
+                  :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ const avatarValue = ref('')
 const nicknameValue = ref('')
 const options = ref<Array<{ name: string; src: string }>>([])
 const { currentSession: activeItem } = storeToRefs(globalStore)
-const friend = contactStore.contactsList.find((item) => item.uid === globalStore.currentSession.detailId)
+const friend = computed(() => contactStore.contactsList.find((item) => item.uid === activeItem.value?.detailId))
 
 // 保存初始值，用于判断是否真正修改了内容
 const initialRemarkValue = ref('')
@@ -366,33 +366,43 @@ async function handleExit() {
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
+      const session = activeItem.value
+      if (!session) {
+        window.$message.warning('当前会话不存在')
+        return
+      }
       try {
         if (isGroup.value) {
           if (isLord.value) {
-            if (activeItem.value.roomId === '1') {
+            if (session.roomId === '1') {
               window.$message.warning('无法解散频道')
               return
             }
 
-            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+            groupStore.exitGroup(session.roomId).then(() => {
               window.$message.success('已解散群聊')
               // 删除当前的会话
-              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+              useMitt.emit(MittEnum.DELETE_SESSION, session.roomId)
             })
           } else {
-            if (activeItem.value.roomId === '1') {
+            if (session.roomId === '1') {
               window.$message.warning('无法退出频道')
               return
             }
 
-            groupStore.exitGroup(activeItem.value.roomId).then(() => {
+            groupStore.exitGroup(session.roomId).then(() => {
               window.$message.success('已退出群聊')
               // 删除当前的会话
-              useMitt.emit(MittEnum.DELETE_SESSION, activeItem.value.roomId)
+              useMitt.emit(MittEnum.DELETE_SESSION, session.roomId)
             })
           }
         } else {
-          await deleteFriend({ targetUid: globalStore.currentSession.detailId })
+          const detailId = session.detailId
+          if (!detailId) {
+            window.$message.warning('无法获取好友信息')
+            return
+          }
+          await deleteFriend({ targetUid: detailId })
           window.$message.success('删除好友成功')
         }
 
@@ -420,7 +430,12 @@ const clickInfo = () => {
   if (isGroup) {
     openAvatarCropper()
   } else {
-    router.push(`/mobile/mobileFriends/friendInfo/${globalStore.currentSession.detailId}`)
+    const detailId = activeItem.value?.detailId
+    if (!detailId) {
+      window.$message.warning('当前会话信息未就绪')
+      return
+    }
+    router.push(`/mobile/mobileFriends/friendInfo/${detailId}`)
   }
 }
 /**
@@ -459,10 +474,12 @@ const handleLoadGroupAnnoun = async () => {
 
 /** 置顶 */
 const handleTop = (value: boolean) => {
-  setSessionTop({ roomId: activeItem.value.roomId, top: value })
+  const session = activeItem.value
+  if (!session) return
+  setSessionTop({ roomId: session.roomId, top: value })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.value.roomId, { top: value })
+      chatStore.updateSession(session.roomId, { top: value })
       window.$message.success(value ? '已置顶' : '已取消置顶')
     })
     .catch(() => {
@@ -496,12 +513,19 @@ const handleInfoUpdate = async () => {
       return
     }
 
+    const detailId = activeItem.value?.detailId
+    if (!detailId) {
+      window.$message.warning('无法获取好友信息')
+      return
+    }
     await modifyFriendRemark({
-      targetUid: globalStore.currentSession.detailId,
+      targetUid: detailId,
       remark: remarkValue.value
     })
 
-    friend!.remark = remarkValue.value
+    if (friend.value) {
+      friend.value.remark = remarkValue.value
+    }
     // 更新初始值
     initialRemarkValue.value = remarkValue.value
   }
@@ -510,17 +534,19 @@ const handleInfoUpdate = async () => {
 
 // 处理群名称更新
 const handleGroupInfoUpdate = async () => {
+  const session = activeItem.value
+  if (!session) return
   // 检查群名称是否真正修改了
   if (nameValue.value === initialNameValue.value) {
     return
   }
 
   await updateRoomInfo({
-    id: activeItem.value.roomId,
+    id: session.roomId,
     name: nameValue.value,
     avatar: avatarValue.value
   })
-  activeItem.value.avatar = avatarValue.value
+  session.avatar = avatarValue.value
 
   // 更新初始值
   initialNameValue.value = nameValue.value
@@ -555,13 +581,15 @@ const fetchGroupMembers = async (roomId: string) => {
 
 /** 处理屏蔽消息 */
 const handleShield = (value: boolean) => {
+  const session = activeItem.value
+  if (!session) return
   shield({
-    roomId: activeItem.value.roomId,
+    roomId: session.roomId,
     state: value
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.value.roomId, {
+      chatStore.updateSession(session.roomId, {
         shield: value
       })
 
@@ -582,26 +610,25 @@ const handleShield = (value: boolean) => {
 
 /** 处理消息免打扰 */
 const handleNotification = (value: boolean) => {
+  const session = activeItem.value
+  if (!session) return
   const newType = value ? NotificationTypeEnum.NOT_DISTURB : NotificationTypeEnum.RECEPTION
   // 如果当前是屏蔽状态，需要先取消屏蔽
-  if (activeItem.value.shield) {
+  if (session.shield) {
     handleShield(false)
   }
   notification({
-    roomId: activeItem.value.roomId,
+    roomId: session.roomId,
     type: newType
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(activeItem.value.roomId, {
+      chatStore.updateSession(session.roomId, {
         muteNotification: newType
       })
 
       // 如果从免打扰切换到允许提醒，需要重新计算全局未读数
-      if (
-        activeItem.value.muteNotification === NotificationTypeEnum.NOT_DISTURB &&
-        newType === NotificationTypeEnum.RECEPTION
-      ) {
+      if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB && newType === NotificationTypeEnum.RECEPTION) {
         chatStore.updateTotalUnreadCount()
       }
 
@@ -657,7 +684,7 @@ onMounted(async () => {
       })
   } else {
     // 这里需要拿到好友的信息
-    remarkValue.value = friend?.remark || ''
+    remarkValue.value = friend.value?.remark || ''
     // 保存初始值
     initialRemarkValue.value = remarkValue.value
   }

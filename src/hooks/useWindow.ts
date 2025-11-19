@@ -400,14 +400,19 @@ export const useWindow = () => {
 
   const startRtcCall = async (callType: CallTypeEnum) => {
     try {
+      const currentSession = globalStore.currentSession
+      if (!currentSession) {
+        window.$message?.warning?.('当前会话尚未准备好')
+        return
+      }
       // 判断是否为群聊，如果是群聊则跳过
-      if (globalStore.currentSession.type === RoomTypeEnum.GROUP) {
+      if (currentSession.type === RoomTypeEnum.GROUP) {
         window.$message.warning('群聊暂不支持音视频通话')
         return
       }
 
       // 获取当前房间好友的ID（单聊时使用detailId作为remoteUid）
-      const remoteUid = globalStore.currentSession.detailId
+      const remoteUid = currentSession.detailId
       if (!remoteUid) {
         window.$message.error('无法获取对方用户信息')
         return

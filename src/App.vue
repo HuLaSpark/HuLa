@@ -495,11 +495,17 @@ useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusCha
 
 const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
   info(`监听到视频通话调用，remotedUid: ${remotedUid}, callType: ${callType}`)
+  const currentSession = globalStore.currentSession
+  const targetUid = remotedUid || currentSession?.detailId
+  if (!targetUid) {
+    console.warn('[App] 当前会话尚未就绪或无法解析对端用户，忽略通话事件')
+    return
+  }
   if (isMobile()) {
     router.push({
       path: '/mobile/rtcCall',
       query: {
-        remoteUserId: globalStore.currentSession.detailId,
+        remoteUserId: targetUid,
         roomId: globalStore.currentSessionRoomId,
         callType: callType,
         // 接受方
@@ -507,7 +513,7 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
       }
     })
   } else {
-    await createRtcCallWindow(true, remotedUid, globalStore.currentSessionRoomId, callType)
+    await createRtcCallWindow(true, targetUid, globalStore.currentSessionRoomId, callType)
   }
 }
 

@@ -9,7 +9,7 @@
 
     <div class="w-full min-h-20px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
       <div class="flex-1 min-h-0">
-        <chat-footer :detail-id="globalStore.currentSession!.detailId"></chat-footer>
+        <chat-footer :detail-id="globalStore.currentSession?.detailId"></chat-footer>
       </div>
     </div>
   </div>

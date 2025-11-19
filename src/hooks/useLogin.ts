@@ -134,6 +134,7 @@ export const useLogin = () => {
     }
     settingStore.closeAutoLogin()
     loginStore.loginStatus = LoginStatus.Init
+    globalStore.updateCurrentSessionRoomId('')
     // 4. 清除未读数
     chatStore.clearUnreadCount()
     // 5. 清除系统托盘图标上的未读数
@@ -143,6 +144,8 @@ export const useLogin = () => {
   }
 
   const init = async () => {
+    // 初始化前清空当前选中的会话，避免自动打开会话
+    globalStore.updateCurrentSessionRoomId('')
     // 连接 ws
     await rustWebSocketClient.initConnect()
 
@@ -178,8 +181,8 @@ export const useLogin = () => {
     }
     // 加载所有会话
     await chatStore.getSessionList(true)
-    // 设置全局会话为第一个
-    globalStore.currentSessionRoomId = chatStore.sessionList[0].roomId
+    // 重置当前选中会话，等待用户主动选择
+    globalStore.updateCurrentSessionRoomId('')
 
     // 加载所有群的成员数据
     const groupSessions = chatStore.getGroupSessions()

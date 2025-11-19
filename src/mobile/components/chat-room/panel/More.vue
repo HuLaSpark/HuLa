@@ -114,10 +114,15 @@ const handleClickIcon = (item: any) => {
 }
 
 const startCall = (callType: CallTypeEnum) => {
+  const currentSession = globalStore.currentSession
+  if (!currentSession?.detailId) {
+    pickRtcCall.value = false
+    return
+  }
   router.push({
     path: `/mobile/rtcCall`,
     query: {
-      remoteUserId: globalStore.currentSession.detailId,
+      remoteUserId: currentSession.detailId,
       roomId: globalStore.currentSessionRoomId,
       callType: callType
     }

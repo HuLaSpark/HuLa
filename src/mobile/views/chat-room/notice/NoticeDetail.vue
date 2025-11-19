@@ -121,11 +121,12 @@ const canEdit = computed(() => {
   if (!announcement.value) return false
 
   // 当前用户是公告发布者
-  const isPublisher = announcement.value.uid === userStore.userInfo?.uid
+  const currentUid = userStore.userInfo?.uid
+  const isPublisher = announcement.value.uid === currentUid
 
   // 当前用户是群主或管理员
-  const isLord = groupStore.isCurrentLord(userStore.userInfo?.uid!)
-  const isAdmin = groupStore.isAdmin(userStore.userInfo?.uid!)
+  const isLord = currentUid ? groupStore.isCurrentLord(currentUid) : false
+  const isAdmin = currentUid ? groupStore.isAdmin(currentUid) : false
   return isPublisher || isLord || isAdmin
 })
 

@@ -236,9 +236,15 @@ const VoicePanel = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/VoicePanel.vue'))
   : void 0
 
-const { detailId } = defineProps<{
-  detailId: SessionItem['detailId']
-}>()
+const props = withDefaults(
+  defineProps<{
+    detailId?: SessionItem['detailId']
+  }>(),
+  {
+    detailId: ''
+  }
+)
+const detailId = computed(() => props.detailId || '')
 const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const historyStore = useHistoryStore()
@@ -335,7 +341,9 @@ const isSingleChat = computed(() => {
 /** 是否是好友关系 */
 const isFriend = computed(() => {
   if (!isSingleChat.value) return true
-  return contactStore.contactsList.some((contact: FriendItem) => contact.uid === detailId)
+  const target = detailId.value
+  if (!target) return false
+  return contactStore.contactsList.some((contact: FriendItem) => contact.uid === target)
 })
 
 // 监听emojiShow的变化，当emojiShow为true时关闭recentlyTip

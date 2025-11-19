@@ -3,9 +3,7 @@
     <template #header>
       <HeaderBar
         ref="headerBar"
-        :room-name="
-          globalStore.currentSession.remark ? globalStore.currentSession.remark : globalStore.currentSession.name
-        "
+        :room-name="currentSession?.remark || currentSession?.name || ''"
         :msg-count="1002"
         :is-official="globalStore.currentSessionRoomId === '1'"
         @room-name-click="handleRoomNameClick" />
@@ -43,6 +41,7 @@
 <script setup lang="ts">
 import router from '@/router'
 import { useGlobalStore } from '@/stores/global'
+import { storeToRefs } from 'pinia'
 import { UserType } from '@/enums'
 import { open } from '@tauri-apps/plugin-dialog'
 import HuLaAssistant from '@/components/rightBox/chatBox/HuLaAssistant.vue'
@@ -53,6 +52,7 @@ defineOptions({
 })
 
 const globalStore = useGlobalStore()
+const { currentSession } = storeToRefs(globalStore)
 
 const footerBar = ref<any>()
 const headerBar = ref<any>()

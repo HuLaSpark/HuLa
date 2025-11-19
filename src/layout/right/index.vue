@@ -2,14 +2,14 @@
   <!-- 主容器维持 600px 的最小宽度，确保聊天侧边信息不过度挤压 -->
   <main data-tauri-drag-region class="flex-1 bg-[--right-bg-color] flex flex-col min-h-0 min-w-600px">
     <div
-      :style="{ background: isChat ? 'var(--right-theme-bg-color)' : '' }"
+      :style="{ background: shouldShowChat ? 'var(--right-theme-bg-color)' : '' }"
       data-tauri-drag-region
       class="flex-1 flex flex-col min-h-0">
       <ActionBar :current-label="appWindow.label" />
 
       <!-- 需要判断当前路由是否是信息详情界面 -->
       <div class="flex-1 min-h-0 flex flex-col">
-        <ChatBox v-if="isChat" />
+        <ChatBox v-if="shouldShowChat" />
 
         <Details :content="detailsContent" v-else-if="detailsShow && isDetails && detailsContent?.type !== 'apply'" />
 
@@ -33,17 +33,19 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import type { DetailsContent } from '@/services/types'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useGlobalStore } from '@/stores/global'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
+const globalStore = useGlobalStore()
+const { currentSession } = storeToRefs(globalStore)
 const detailsShow = ref(false)
 const detailsContent = ref<DetailsContent>()
 const imgTheme = ref<ThemeEnum>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
-const isChat = computed(() => {
-  return router.currentRoute.value.path.includes('/message')
-})
+const isChatRoute = computed(() => router.currentRoute.value.path.includes('/message'))
+const shouldShowChat = computed(() => isChatRoute.value && !!currentSession.value)
 const isDetails = computed(() => {
   return router.currentRoute.value.path.includes('/friendsList')
 })

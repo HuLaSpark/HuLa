@@ -32,9 +32,25 @@ export const useGlobalStore = defineStore(
     })
 
     const currentSessionRoomId = ref('')
+    const lastKnownSession = ref<SessionItem | null>(null)
     // 当前会话信息：包含房间ID和房间类型
-    const currentSession = computed((): SessionItem => {
-      return chatStore.getSession(currentSessionRoomId.value)!
+    const currentSession = computed((): SessionItem | null => {
+      const cachedRoomId = currentSessionRoomId.value
+      if (!cachedRoomId) {
+        lastKnownSession.value = null
+        return null
+      }
+
+      let session: SessionItem | undefined = chatStore.getSession(cachedRoomId)
+      if (!session) {
+        session = chatStore.sessionList.find((item) => item.roomId === cachedRoomId)
+      }
+      if (session) {
+        lastKnownSession.value = session
+        return session
+      }
+
+      return lastKnownSession.value && lastKnownSession.value.roomId === cachedRoomId ? lastKnownSession.value : null
     })
 
     /** 当前选中的联系人信息 */

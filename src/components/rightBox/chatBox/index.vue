@@ -22,7 +22,7 @@
           </template>
           <template #2>
             <!-- 输入框和操作列表 -->
-            <ChatFooter :detail-id="globalStore.currentSession!.detailId" />
+            <ChatFooter :detail-id="currentSession?.detailId" />
           </template>
         </n-split>
       </div>
