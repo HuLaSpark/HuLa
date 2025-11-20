@@ -5,7 +5,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { exitGroup, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
+import { exitGroup, notification, setSessionTop, shield, markMsgRead } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
 const msgBoxShow = ref(false)
@@ -29,6 +29,10 @@ export const useMessage = () => {
     msgBoxShow.value = true
     // 更新当前会话信息
     globalStore.updateCurrentSessionRoomId(item.roomId)
+    if (item.unreadCount && item.unreadCount > 0) {
+      markMsgRead(item.roomId)
+      chatStore.markSessionRead(item.roomId)
+    }
   }
 
   /**
