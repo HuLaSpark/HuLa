@@ -381,7 +381,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     #[cfg(mobile)]
     use crate::command::set_complete;
     use crate::command::user_command::{
-        get_user_tokens, save_user_info, update_user_last_opt_time,
+        get_user_tokens, save_user_info, update_token, update_user_last_opt_time,
     };
     #[cfg(desktop)]
     use crate::desktops::common_cmd::set_badge_count;
@@ -431,6 +431,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // 通用命令（桌面端和移动端都支持）
         save_user_info,
         get_user_tokens,
+        update_token,
         remove_tokens,
         update_user_last_opt_time,
         page_room,
