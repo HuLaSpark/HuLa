@@ -195,7 +195,9 @@ export enum StoresEnum {
   /** 文件管理 */
   FILE = 'file',
   /** 缩略图缓存 */
-  THUMBNAIL_CACHE = 'thumbnailCache'
+  THUMBNAIL_CACHE = 'thumbnailCache',
+  /** 初始化同步状态 */
+  INITIAL_SYNC = 'initialSync'
 }
 
 /**

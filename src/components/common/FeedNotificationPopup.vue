@@ -10,7 +10,7 @@
         <h3 class="text-16px font-600">朋友圈通知</h3>
         <div class="flex items-center gap-8px">
           <n-button
-            v-if="notificationStore.notificationStats.unreadCount > 0"
+            v-if="feednotificationStore.notificationStats.unreadCount > 0"
             text
             type="primary"
             size="small"
@@ -24,13 +24,13 @@
       <!-- 通知列表 -->
       <div class="flex-1 overflow-y-auto">
         <div
-          v-if="notificationStore.notifications.length === 0"
+          v-if="feednotificationStore.notifications.length === 0"
           class="flex items-center justify-center h-full text-#999">
           暂无通知
         </div>
 
         <div
-          v-for="notification in notificationStore.notifications"
+          v-for="notification in feednotificationStore.notifications"
           :key="notification.id"
           class="border-b border-#f0f0f0 p-12px hover:bg-#f9f9f9 cursor-pointer transition-colors"
           @click="handleNotificationClick(notification)">
@@ -73,7 +73,7 @@
       </div>
 
       <!-- 底部操作 -->
-      <div v-if="notificationStore.notifications.length > 0" class="border-t border-#e5e5e5 p-12px flex gap-8px">
+      <div v-if="feednotificationStore.notifications.length > 0" class="border-t border-#e5e5e5 p-12px flex gap-8px">
         <n-button type="error" text block size="small" @click="clearAllNotifications">清空所有通知</n-button>
       </div>
     </div>
@@ -122,14 +122,14 @@
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
-const notificationStore = useFeedNotificationStore()
+const feednotificationStore = useFeedNotificationStore()
 const showPopup = ref(false)
 const showCommentModal = ref(false)
 const selectedNotification = ref<any>(null)
 
 // 监听通知列表变化
 watch(
-  () => notificationStore.notifications.length,
+  () => feednotificationStore.notifications.length,
   (newLength) => {
     console.log('📢 通知列表变化，当前通知数:', newLength)
   }
@@ -139,8 +139,8 @@ watch(
  * 打开弹窗
  */
 const openPopup = () => {
-  console.log('🔔 打开通知弹窗，当前通知数:', notificationStore.notifications.length)
-  console.log('🔔 通知列表:', notificationStore.notifications)
+  console.log('🔔 打开通知弹窗，当前通知数:', feednotificationStore.notifications.length)
+  console.log('🔔 通知列表:', feednotificationStore.notifications)
   showPopup.value = true
 }
 
@@ -155,7 +155,7 @@ const closePopup = () => {
  * 处理通知点击
  */
 const handleNotificationClick = (notification: any) => {
-  notificationStore.markAsRead(notification.id)
+  feednotificationStore.markAsRead(notification.id)
   selectedNotification.value = notification
   showCommentModal.value = true
 }
@@ -164,14 +164,14 @@ const handleNotificationClick = (notification: any) => {
  * 标记所有为已读
  */
 const markAllAsRead = () => {
-  notificationStore.markAllAsRead()
+  feednotificationStore.markAllAsRead()
 }
 
 /**
  * 删除通知
  */
 const deleteNotification = (notificationId: string) => {
-  notificationStore.deleteNotification(notificationId)
+  feednotificationStore.deleteNotification(notificationId)
 }
 
 /**
@@ -179,7 +179,7 @@ const deleteNotification = (notificationId: string) => {
  */
 const clearAllNotifications = () => {
   if (confirm('确定要清空所有通知吗？')) {
-    notificationStore.clearAllNotifications()
+    feednotificationStore.clearAllNotifications()
   }
 }
 

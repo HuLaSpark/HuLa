@@ -544,9 +544,6 @@ const requestNetworkPermissionForIOS = async () => {
 }
 
 onMounted(() => {
-  // 初始化朋友圈通知存储
-  feedNotificationStore.initialize()
-
   // iOS应用启动时预请求网络权限（必须在最开始执行）
   if (isIOS()) {
     requestNetworkPermissionForIOS()
