@@ -41,6 +41,7 @@ import { useChatStore } from '@/stores/chat'
 import { useFileStore } from '@/stores/file'
 import { useUserStore } from '@/stores/user'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useInitialSyncStore } from '@/stores/initialSync.ts'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
 import { audioManager } from '@/utils/AudioManager'
@@ -50,48 +51,42 @@ const userStore = useUserStore()
 const chatStore = useChatStore()
 const fileStore = useFileStore()
 const settingStore = useSettingStore()
+// 负责记录哪些账号已经完成过首次同步的全局 store，避免多账号串数据
+const initialSyncStore = useInitialSyncStore()
 const userUid = computed(() => userStore.userInfo?.uid ?? '')
 const hasCachedSessions = computed(() => chatStore.sessionList.length > 0)
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
 const loadingText = ref('正在加载应用...')
 const { resetLoginState, logout, init } = useLogin()
-const INITIAL_SYNC_FLAG_PREFIX = 'hula_initial_sync_'
-const initialSyncStorageKey = computed(() => (userUid.value ? `${INITIAL_SYNC_FLAG_PREFIX}${userUid.value}` : ''))
+// 是否需要阻塞首屏并做初始化同步
 const requiresInitialSync = ref(true)
 const shouldBlockInitialRender = computed(() => requiresInitialSync.value && !hasCachedSessions.value)
 
+// 根据当前 uid 判断是否需要阻塞首屏并重新同步（依赖持久化的初始化完成名单）
 const syncInitialSyncState = () => {
-  if (!initialSyncStorageKey.value || typeof window === 'undefined') {
+  if (!userUid.value || typeof window === 'undefined') {
     requiresInitialSync.value = true
     return
   }
-  try {
-    requiresInitialSync.value = localStorage.getItem(initialSyncStorageKey.value) !== '1'
-  } catch (error) {
-    console.warn('[layout] 读取初始化标记失败:', error)
-    requiresInitialSync.value = true
-  }
+  requiresInitialSync.value = !initialSyncStore.isSynced(userUid.value)
 }
 
 watch(
-  () => initialSyncStorageKey.value,
+  () => userUid.value,
   () => {
     syncInitialSyncState()
   },
   { immediate: true }
 )
 
+// 初始化同步成功后标记当前 uid，后续启动直接走增量
 const markInitialSyncCompleted = () => {
-  if (!initialSyncStorageKey.value || typeof window === 'undefined') {
+  if (!userUid.value || typeof window === 'undefined') {
     requiresInitialSync.value = false
     return
   }
-  try {
-    localStorage.setItem(initialSyncStorageKey.value, '1')
-  } catch (error) {
-    console.warn('[layout] 写入初始化标记失败:', error)
-  }
+  initialSyncStore.markSynced(userUid.value)
   requiresInitialSync.value = false
 }
 

@@ -18,6 +18,11 @@ export interface FeedNotificationItem {
   isRead: boolean // 是否已读
 }
 
+interface NotificationStats {
+  unreadCount: number
+  totalCount: number
+}
+
 /**
  * 朋友圈通知 Store
  * 管理朋友圈的点赞和评论通知
@@ -27,7 +32,7 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
   const notifications = ref<FeedNotificationItem[]>([])
 
   // 通知统计
-  const notificationStats = reactive({
+  const notificationStats = reactive<NotificationStats>({
     unreadCount: 0, // 未读通知数
     totalCount: 0 // 总通知数
   })
@@ -52,9 +57,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
       if (!notification.isRead) {
         notificationStats.unreadCount++
       }
-
-      // 保存到本地存储
-      saveToLocalStorage()
     }
   }
 
@@ -66,7 +68,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
     if (notification && !notification.isRead) {
       notification.isRead = true
       notificationStats.unreadCount = Math.max(0, notificationStats.unreadCount - 1)
-      saveToLocalStorage()
     }
   }
 
@@ -78,7 +79,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
       n.isRead = true
     })
     notificationStats.unreadCount = 0
-    saveToLocalStorage()
   }
 
   /**
@@ -93,7 +93,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
       }
       notifications.value.splice(index, 1)
       notificationStats.totalCount = Math.max(0, notificationStats.totalCount - 1)
-      saveToLocalStorage()
     }
   }
 
@@ -104,46 +103,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
     notifications.value = []
     notificationStats.unreadCount = 0
     notificationStats.totalCount = 0
-    localStorage.removeItem('feedNotifications')
-  }
-
-  /**
-   * 保存到本地存储
-   */
-  const saveToLocalStorage = () => {
-    try {
-      const data = {
-        notifications: notifications.value,
-        stats: notificationStats
-      }
-      localStorage.setItem('feedNotifications', JSON.stringify(data))
-    } catch (error) {
-      console.error('保存通知到本地存储失败:', error)
-    }
-  }
-
-  /**
-   * 从本地存储加载
-   */
-  const loadFromLocalStorage = () => {
-    try {
-      const data = localStorage.getItem('feedNotifications')
-      if (data) {
-        const parsed = JSON.parse(data)
-        notifications.value = parsed.notifications || []
-        notificationStats.unreadCount = parsed.stats?.unreadCount || 0
-        notificationStats.totalCount = parsed.stats?.totalCount || 0
-      }
-    } catch (error) {
-      console.error('从本地存储加载通知失败:', error)
-    }
-  }
-
-  /**
-   * 初始化（应在应用启动时调用）
-   */
-  const initialize = () => {
-    loadFromLocalStorage()
   }
 
   return {
@@ -153,7 +112,6 @@ export const useFeedNotificationStore = defineStore(StoresEnum.FEED_NOTIFICATION
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    clearAllNotifications,
-    initialize
+    clearAllNotifications
   }
 })

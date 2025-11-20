@@ -96,9 +96,9 @@
 | Platform | Supported Versions |
 |----------|-------------------|
 | Windows | Windows 10, Windows 11 |
-| macOS | macOS 10.5+ |
+| macOS | macOS 10.5+ Mac26 has supported |
 | Linux | Ubuntu 22.0+ |
-| iOS | iOS 9.0+ ⚠️(ios26 compatible) |
+| iOS | iOS 9.0+ (iOS26 Real machine is supported. Tauri does not support Intel chips running on ios26 emulators) |
 | Android | Android 12+ (SDK30+) |
 | Web | ⚠️Not currently supported (custom removal required) |
 
