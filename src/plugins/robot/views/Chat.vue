@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <!-- 主体内容 -->
   <main class="chat-main-container">
     <div class="chat-content-area">
@@ -1930,11 +1930,11 @@ const handleSelectRole = async (role: any) => {
   showRolePopover.value = false
 
   try {
-    // 如果当前有会话，则调用后端API更新会话的角色
     if (currentChat.value.id && currentChat.value.id !== '0') {
       await conversationUpdateMy({
         id: currentChat.value.id,
-        roleId: String(role.id)
+        roleId: role.id,
+        modelId: role.modelId ? role.modelId : undefined
       })
     } else {
       // 如果没有会话，只选择角色，不创建会话
@@ -2050,7 +2050,9 @@ const handleCreateNewChat = async () => {
         title: data.title || selectedRole.value?.name || '新的会话',
         createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
         messageCount: data.messageCount || 0,
-        isPinned: data.pinned || false
+        isPinned: data.pinned || false,
+        roleId: selectedRole.value?.id,
+        modelId: data.modelId
       }
 
       useMitt.emit('add-conversation', newChat)

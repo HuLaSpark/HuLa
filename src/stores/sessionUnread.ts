@@ -44,12 +44,20 @@ export const useSessionUnreadStore = defineStore(StoresEnum.SESSION_UNREAD, () =
 
     sessions.forEach((session) => {
       const cached = cache[session.roomId]
+      const serverCount = sanitizeCount(session.unreadCount)
       if (typeof cached === 'number') {
-        if (session.unreadCount !== cached) {
-          session.unreadCount = cached
+        const cachedCount = sanitizeCount(cached)
+        const finalCount = Math.max(cachedCount, serverCount)
+        if (session.unreadCount !== finalCount) {
+          session.unreadCount = finalCount
+        }
+        if (cachedCount !== finalCount) {
+          cache[session.roomId] = finalCount
         }
       } else {
-        cache[session.roomId] = sanitizeCount(session.unreadCount)
+        const finalCount = serverCount
+        session.unreadCount = finalCount
+        cache[session.roomId] = finalCount
       }
     })
   }

@@ -95,9 +95,9 @@
               <n-descriptions-item v-if="balanceMap[apiKey.id]" label="账户余额">
                 <n-flex align="center" :size="8">
                   <span class="text-primary font-600 text-16px">
-                    {{ balanceMap[apiKey.id].balance || '0' }}
+                    {{ balanceMap[apiKey.id].balanceInfos[0].totalBalance || '0' }}
                   </span>
-                  <span class="text-gray-500">{{ balanceMap[apiKey.id].currency || 'USD' }}</span>
+                  <span class="text-gray-500">{{ balanceMap[apiKey.id].balanceInfos[0].currency || 'USD' }}</span>
                 </n-flex>
               </n-descriptions-item>
             </n-descriptions>
