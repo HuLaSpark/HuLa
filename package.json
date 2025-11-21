@@ -110,7 +110,7 @@
     "file-type": "^21.0.0",
     "github-markdown-css": "^5.8.1",
     "grapheme-splitter": "^1.0.4",
-    "hula-emojis": "^1.2.30",
+    "hula-emojis": "^1.2.31",
     "internal-ip": "^8.0.1",
     "mermaid": "^11.12.1",
     "mitt": "^3.0.1",
