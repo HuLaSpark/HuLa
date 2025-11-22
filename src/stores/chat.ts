@@ -334,6 +334,22 @@ export const useChatStore = defineStore(
       }
     }
 
+    const remoteSyncLocks = new Set<string>()
+    const fetchCurrentRoomRemoteOnce = async (size = pageSize) => {
+      const roomId = globalStore.currentSessionRoomId
+      if (!roomId) return
+      if (remoteSyncLocks.has(roomId)) return
+      remoteSyncLocks.add(roomId)
+      try {
+        const opts = messageOptions[roomId] || { isLast: false, isLoading: false, cursor: '' }
+        opts.cursor = ''
+        messageOptions[roomId] = opts
+        await getPageMsg(size, roomId, '')
+      } finally {
+        remoteSyncLocks.delete(roomId)
+      }
+    }
+
     // 获取会话列表
     const getSessionList = async (_isFresh = false) => {
       try {
@@ -1048,6 +1064,7 @@ export const useChatStore = defineStore(
       requestUnreadCountUpdate,
       clearUnreadCount,
       resetAndRefreshCurrentRoomMessages,
+      fetchCurrentRoomRemoteOnce,
       getGroupSessions,
       removeSession,
       changeRoom,
