@@ -382,7 +382,8 @@ onMounted(async () => {
       syncCurrentIndex(index)
       // 重置图片状态
       resetImage(true)
-    })
+    }),
+    'update-image'
   )
 
   if (imageViewerStore.isSingleMode) {

@@ -329,7 +329,8 @@ onMounted(async () => {
     await addListener(
       appWindow.listen('search_to_msg', (event: { payload: { uid: string; roomType: number } }) => {
         openMsgSession(event.payload.uid, event.payload.roomType)
-      })
+      }),
+      'search_to_msg'
     )
   }
   useMitt.on(MittEnum.UPDATE_SESSION_LAST_MSG, (payload?: { roomId?: string }) => {

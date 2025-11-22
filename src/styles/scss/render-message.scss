@@ -15,9 +15,6 @@
   &.active {
     background-color: var(--bg-bubble-active);
     color: var(--text-color);
-    &::selection {
-      background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
-    }
   }
 }
 @mixin float($position: top) {
@@ -28,19 +25,22 @@
   }
 }
 .bubble {
-  &::selection {
-    background: var(--select-bg-color, rgba(19, 152, 127, 0.3)); /* 设置选中背景颜色 */
-  }
   @include bubble;
 }
 .bubble-oneself {
   @include bubble;
   @apply rounded-[18px_2px_18px_18px] color-#fff;
   background-color: var(--bg-active-msg);
+}
 
-  &::selection {
-    background: var(--select-bg-color-self, rgba(255, 255, 255, 0.3)); /* 自己消息选中背景颜色 */
-  }
+/* 选中文本时的高亮颜色（包含根节点与后代，避免被全局 ::selection 覆盖） */
+.bubble::selection,
+.bubble *::selection {
+  background: var(--select-bg-color, rgba(19, 152, 127, 0.3));
+}
+.bubble-oneself::selection,
+.bubble-oneself *::selection {
+  background: var(--select-bg-color-self, rgba(255, 255, 255, 0.3));
 }
 .photo-wall {
   @extend .bubble-oneself;
@@ -226,4 +226,33 @@
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   -khtml-user-select: text !important;
+}
+
+/** 默认禁选外层，避免选中空白区域；具体内容元素再单独开启 */
+.chat-message-max-width {
+  user-select: none;
+
+  .bubble,
+  .bubble-oneself,
+  .translated-text,
+  .select-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+/* 桌面端全局：禁选消息容器，只有气泡内部允许选中，避免在 mac WebKit 上拖拽时染色到上下 padding */
+:global(#image-chat-main .message-list) {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:global(#image-chat-main .message-list .bubble),
+:global(#image-chat-main .message-list .bubble-oneself),
+:global(#image-chat-main .message-list .translated-text),
+:global(#image-chat-main .message-list .select-text),
+:global(#image-chat-main .message-list .reply-bubble),
+:global(#image-chat-main .message-list .emoji-reply-bubble) {
+  user-select: text;
+  -webkit-user-select: text;
 }

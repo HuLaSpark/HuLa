@@ -45,7 +45,7 @@
         class="mr-3 select-none"
         :focusable="false"
         @click.stop />
-      <div class="flex items-start flex-1 select-none" :class="isMe ? 'flex-row-reverse' : ''">
+      <div class="flex items-start flex-1" :class="isMe ? 'flex-row-reverse' : ''">
         <!-- 回复消息提示的箭头 -->
         <svg
           v-if="activeReply === message.message.id"
@@ -83,11 +83,7 @@
           <InfoPopover v-if="selectKey === message.message.id" :uid="fromUser.uid" />
         </n-popover>
 
-        <n-flex
-          vertical
-          :size="6"
-          class="color-[--text-color] flex-1 select-none"
-          :class="isMe ? 'items-end mr-10px' : ''">
+        <n-flex vertical :size="6" class="color-[--text-color] flex-1" :class="isMe ? 'items-end mr-10px' : ''">
           <n-flex :size="6" align="center" :style="isMe ? 'flex-direction: row-reverse' : ''">
             <ContextMenu
               @select="$event.click(message, 'Main')"
@@ -204,9 +200,7 @@
 
             <!-- 显示翻译文本 -->
             <Transition name="fade-translate" appear mode="out-in">
-              <div
-                v-if="message.message.body.translatedText"
-                class="translated-text select-none cursor-default flex flex-col">
+              <div v-if="message.message.body.translatedText" class="translated-text cursor-default flex flex-col">
                 <n-flex align="center" justify="space-between" class="mb-6px">
                   <n-flex align="center" :size="4">
                     <span class="text-(12px #909090)">{{ message.message.body.translatedText.provider }}</span>
@@ -373,8 +367,6 @@ const { optionsList, report, activeBubble, handleItemType, emojiList, specialMen
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
-const recordEL = ref<HTMLElement>()
-
 const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
 const bubbleMaxWidth = computed(() => {
   if (isMobile()) {
@@ -543,11 +535,15 @@ const isMe = computed(() => {
 
 // 解决mac右键会选中文本的问题
 const handleMacSelect = (event: Event): void => {
-  if (isMac()) {
-    const target = event.target as HTMLElement
-    target.classList.add('select-none')
-    recordEL.value = target
-  }
+  if (!isMac()) return
+
+  const target = event.target as HTMLElement | null
+  if (!target) return
+
+  target.classList.add('select-none')
+  requestAnimationFrame(() => {
+    target.classList.remove('select-none')
+  })
 }
 
 const closeMenu = (event: any) => {
@@ -610,20 +606,23 @@ onUnmounted(() => {
  * 长按事件（开始）
  */
 
-const longPressOption = ref({
+const longPressOption = computed(() => ({
   delay: 700,
   modifiers: {
-    prevent: true,
-    stop: true
+    // 只在移动端阻止默认行为，桌面端允许文本选中
+    prevent: isMobile(),
+    stop: isMobile()
   },
   reset: true,
   windowResize: true,
   windowScroll: true,
   immediate: true,
   updateTiming: 'sync'
-})
+}))
 
 const handleLongPress = (e: PointerEvent, _menu: any) => {
+  if (!isMobile()) return
+
   // 1. 阻止默认行为（防止系统菜单出现）
   e.preventDefault()
   e.stopPropagation()

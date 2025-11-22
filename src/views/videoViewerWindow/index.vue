@@ -371,7 +371,8 @@ onMounted(async () => {
           })
         }
       })
-    })
+    }),
+    'video-updated'
   )
 
   // 统一使用列表模式初始化

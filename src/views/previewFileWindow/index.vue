@@ -146,7 +146,8 @@ onMounted(async () => {
       merge(uiData.payload, payload)
 
       updateFile(payload.resourceFile.absolutePath || '', payload.resourceFile.localExists)
-    })
+    }),
+    'preview-file-update'
   )
 
   try {

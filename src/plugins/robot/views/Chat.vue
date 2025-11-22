@@ -216,8 +216,8 @@
                     </n-popconfirm>
                   </n-flex>
                   <div
-                    class="bubble select-text text-14px"
-                    :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai'"
+                    :class="getMessageBubbleClass(message)"
+                    class="select-text text-14px"
                     style="white-space: pre-wrap">
                     <template v-if="message.type === 'user'">
                       {{ message.content }}
@@ -912,6 +912,13 @@ const messageContentRef = ref<HTMLElement | null>(null)
 const shouldAutoStickBottom = ref(true)
 const showScrollbar = ref(true)
 const loadingMessages = ref(false) // 消息加载状态
+
+const getMessageBubbleClass = (message: Message) => {
+  if (message.type === 'assistant' && message.msgType === AiMsgContentTypeEnum.IMAGE) {
+    return []
+  }
+  return ['bubble', message.type === 'user' ? 'bubble-oneself' : 'bubble-ai']
+}
 
 const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
 const deleteWithMessages = ref(false) // 是否同时删除消息
@@ -2388,6 +2395,12 @@ watch(
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  :deep(.link-node),
+  :deep(.footnote-link) {
+    --link-color: #13987f;
+    color: #13987f;
+  }
 }
 
 /* 原生滚动条样式与交互 */
