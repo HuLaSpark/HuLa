@@ -41,13 +41,35 @@ export const useContextMenu = (ContextMenuRef: Ref, isNull?: Ref<boolean>) => {
     scrollbar_sidebar && (scrollbar_sidebar.style.pointerEvents = isBan ? 'none' : '')
   }
 
+  const isSelectionInsideContext = () => {
+    const selection = window.getSelection()
+    if (!selection?.anchorNode || !selection?.focusNode) return false
+
+    const contextEl = ContextMenuRef.value as HTMLElement | null
+    if (!contextEl) return false
+
+    const resolveElement = (node: Node | null) => {
+      if (!node) return null
+      return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement
+    }
+
+    const anchorElement = resolveElement(selection.anchorNode)
+    const focusElement = resolveElement(selection.focusNode)
+    if (!anchorElement || !focusElement) return false
+
+    return contextEl.contains(anchorElement) && contextEl.contains(focusElement)
+  }
+
   const handleContextMenu = (e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (isNull?.value) return
 
-    // 在显示菜单前清除选择
-    disableTextSelection()
+    // 如果当前右键目标包含了已有的文本选择，则保留用户选择，避免影响复制/翻译
+    if (!isSelectionInsideContext()) {
+      // 在显示菜单前清除选择
+      disableTextSelection()
+    }
 
     handleVirtualListScroll(true)
     showMenu.value = true

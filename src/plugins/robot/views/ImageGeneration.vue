@@ -171,12 +171,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { imageMyPage, imageDraw, imageDeleteMy, modelPage } from '@/utils/ImRequestUtils'
-import { useMessage } from 'naive-ui'
 
-const message = useMessage()
 const promptAutosize = { minRows: 3, maxRows: 6 }
 const paginationSizes = [10, 20, 30, 50]
 
@@ -245,7 +242,7 @@ const loadImages = async (showSuccessNotification = false) => {
         newList.forEach((img: any) => {
           if (img.status === 20 && !completedImageIds.has(img.id)) {
             completedImageIds.add(img.id)
-            message.success('图片生成成功')
+            window.$message.success('图片生成成功')
           }
         })
       }
@@ -262,7 +259,7 @@ const loadImages = async (showSuccessNotification = false) => {
 // 生成图片
 const handleGenerate = async () => {
   if (!formData.value.modelId || !formData.value.prompt) {
-    message.warning('请选择模型并输入提示词')
+    window.$message.warning('请选择模型并输入提示词')
     return
   }
 
@@ -278,7 +275,7 @@ const handleGenerate = async () => {
 
     if (res?.data) {
       // 只显示一次提交成功的提示
-      message.success('图片生成任务已提交')
+      window.$message.success('图片生成任务已提交')
       // 重新加载列表(不显示成功通知)
       await loadImages(false)
       // 开始轮询
@@ -286,7 +283,7 @@ const handleGenerate = async () => {
     }
   } catch (error: any) {
     // 移除console.error
-    message.error(error?.message || '生成图片失败')
+    window.$message.error(error?.message || '生成图片失败')
   } finally {
     isGenerating.value = false
   }
@@ -320,11 +317,11 @@ const stopPolling = () => {
 const handleDelete = async (id: string) => {
   try {
     await imageDeleteMy({ id })
-    message.success('删除成功')
+    window.$message.success('删除成功')
     await loadImages(false)
   } catch (error) {
     // 移除console.error
-    message.error('删除失败')
+    window.$message.error('删除失败')
   }
 }
 
@@ -366,7 +363,6 @@ const handleModelChange = () => {
   // 模型切换时可以重置参数
 }
 
-// 生命周期
 onMounted(async () => {
   loadModels()
   await loadImages(false)

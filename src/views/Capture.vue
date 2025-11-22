@@ -15,7 +15,8 @@ watchEffect(() => {
       nextTick(() => {
         isCapturing.value = e.payload as boolean
       })
-    })
+    }),
+    'capture-toggle'
   )
 })
 </script>

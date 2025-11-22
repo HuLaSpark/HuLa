@@ -43,17 +43,18 @@
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 import DynamicDetail from '@/components/common/DynamicDetail.vue'
 import { useWindow } from '@/hooks/useWindow'
 import { useRoute } from 'vue-router'
+import { useTauriListener } from '@/hooks/useTauriListener'
 
 const { getWindowPayload } = useWindow()
 const route = useRoute()
+const { addListener } = useTauriListener()
 
 // 动态ID
 const feedId = ref<string>('')
-let unlisten: UnlistenFn | null = null
 
 // 获取窗口传递的参数
 onMounted(async () => {
@@ -73,22 +74,18 @@ onMounted(async () => {
   }
 
   // 监听 payload 更新事件，用于窗口复用时更新内容
-  unlisten = await listen('window-payload-updated', async (event: any) => {
-    const payload = event.payload
-    if (payload && payload.feedId) {
-      feedId.value = payload.feedId
-    }
-  })
+  await addListener(
+    listen('window-payload-updated', async (event: any) => {
+      const payload = event.payload
+      if (payload && payload.feedId) {
+        feedId.value = payload.feedId
+      }
+    }),
+    'window-payload-updated'
+  )
 
   // 显示窗口
   await currentWindow.show()
-})
-
-// 清理监听器
-onUnmounted(() => {
-  if (unlisten) {
-    unlisten()
-  }
 })
 
 // 关闭窗口
