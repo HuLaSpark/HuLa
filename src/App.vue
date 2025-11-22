@@ -48,6 +48,8 @@ import { useFeedStore } from '@/stores/feed'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
   : null
@@ -354,6 +356,14 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
       )
     }
   }
+  if (userStore.userInfo?.uid) {
+    await invoke('sync_messages', {
+      param: {
+        asyncData: true,
+        uid: userStore.userInfo.uid
+      }
+    })
+  }
 })
 
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
@@ -609,6 +619,26 @@ onUnmounted(async () => {
   if (isDesktop() && appWindow.label === 'home') {
     await cleanupGlobalShortcut()
   }
+  listen('websocket-event', async (event) => {
+    const payload: any = event.payload
+    if (
+      payload &&
+      payload.type === 'connectionStateChanged' &&
+      payload.state === 'CONNECTED' &&
+      payload.isReconnection
+    ) {
+      if (userStore.userInfo?.uid) {
+        await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
+      }
+      await chatStore.getSessionList(true)
+      await chatStore.setAllSessionMsgList(20)
+      if (globalStore.currentSessionRoomId) {
+        await chatStore.resetAndRefreshCurrentRoomMessages()
+        await chatStore.fetchCurrentRoomRemoteOnce(20)
+      }
+      unreadCountManager.refreshBadge(globalStore.unReadMark)
+    }
+  })
 })
 
 /** 控制阴影 */
