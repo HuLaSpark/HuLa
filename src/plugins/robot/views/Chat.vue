@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <!-- 主体内容 -->
   <main class="chat-main-container">
     <div class="chat-content-area">
@@ -216,8 +216,8 @@
                     </n-popconfirm>
                   </n-flex>
                   <div
-                    class="bubble select-text text-14px"
-                    :class="message.type === 'user' ? 'bubble-oneself' : 'bubble-ai'"
+                    :class="getMessageBubbleClass(message)"
+                    class="select-text text-14px"
                     style="white-space: pre-wrap">
                     <template v-if="message.type === 'user'">
                       {{ message.content }}
@@ -912,6 +912,13 @@ const messageContentRef = ref<HTMLElement | null>(null)
 const shouldAutoStickBottom = ref(true)
 const showScrollbar = ref(true)
 const loadingMessages = ref(false) // 消息加载状态
+
+const getMessageBubbleClass = (message: Message) => {
+  if (message.type === 'assistant' && message.msgType === AiMsgContentTypeEnum.IMAGE) {
+    return []
+  }
+  return ['bubble', message.type === 'user' ? 'bubble-oneself' : 'bubble-ai']
+}
 
 const showDeleteChatConfirm = ref(false) // 删除会话确认框显示状态
 const deleteWithMessages = ref(false) // 是否同时删除消息
@@ -1930,11 +1937,11 @@ const handleSelectRole = async (role: any) => {
   showRolePopover.value = false
 
   try {
-    // 如果当前有会话，则调用后端API更新会话的角色
     if (currentChat.value.id && currentChat.value.id !== '0') {
       await conversationUpdateMy({
         id: currentChat.value.id,
-        roleId: String(role.id)
+        roleId: role.id,
+        modelId: role.modelId ? role.modelId : undefined
       })
     } else {
       // 如果没有会话，只选择角色，不创建会话
@@ -2050,7 +2057,9 @@ const handleCreateNewChat = async () => {
         title: data.title || selectedRole.value?.name || '新的会话',
         createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
         messageCount: data.messageCount || 0,
-        isPinned: data.pinned || false
+        isPinned: data.pinned || false,
+        roleId: selectedRole.value?.id,
+        modelId: data.modelId
       }
 
       useMitt.emit('add-conversation', newChat)
@@ -2386,6 +2395,12 @@ watch(
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  :deep(.link-node),
+  :deep(.footnote-link) {
+    --link-color: #13987f;
+    color: #13987f;
+  }
 }
 
 /* 原生滚动条样式与交互 */

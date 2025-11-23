@@ -314,6 +314,33 @@ pub async fn fetch_all_messages(
     Ok(())
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncMessagesParam {
+    pub async_data: Option<bool>,
+    pub uid: Option<String>,
+}
+
+#[tauri::command]
+pub async fn sync_messages(
+    param: Option<SyncMessagesParam>,
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    use std::ops::Deref;
+
+    let async_data = param.as_ref().and_then(|p| p.async_data).unwrap_or(true);
+    let uid = match param.as_ref().and_then(|p| p.uid.clone()) {
+        Some(v) if !v.is_empty() => v,
+        _ => state.user_info.lock().await.uid.clone(),
+    };
+
+    let mut client = state.rc.lock().await;
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), &uid, async_data)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// 将 MessageResp 转换为数据库模型（用于 fetch_all_messages）
 fn convert_resp_to_record_for_fetch(msg_resp: MessageResp, uid: String) -> MessageWithThumbnail {
     use serde_json;

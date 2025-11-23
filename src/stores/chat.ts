@@ -58,6 +58,8 @@ export const useChatStore = defineStore(
     const sessionMap = ref<Record<string, SessionItem>>({})
     // 会话列表的加载状态
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
+    // 消息同步加载状态（用于显示同步中的提示）
+    const syncLoading = ref(false)
 
     // 持久化的未读数同步回内存里的会话对象，确保刷新或切账号后还能看到旧的未读状态
     const syncPersistedUnreadCounts = (targetSessions: SessionItem[] = sessionList.value) => {
@@ -331,6 +333,22 @@ export const useChatStore = defineStore(
 
       for (const msg of data.list) {
         messageMap[roomId][msg.message.id] = msg
+      }
+    }
+
+    const remoteSyncLocks = new Set<string>()
+    const fetchCurrentRoomRemoteOnce = async (size = pageSize) => {
+      const roomId = globalStore.currentSessionRoomId
+      if (!roomId) return
+      if (remoteSyncLocks.has(roomId)) return
+      remoteSyncLocks.add(roomId)
+      try {
+        const opts = messageOptions[roomId] || { isLast: false, isLoading: false, cursor: '' }
+        opts.cursor = ''
+        messageOptions[roomId] = opts
+        await getPageMsg(size, roomId, '')
+      } finally {
+        remoteSyncLocks.delete(roomId)
       }
     }
 
@@ -1033,6 +1051,7 @@ export const useChatStore = defineStore(
       currentMsgReply,
       sessionList,
       sessionOptions,
+      syncLoading,
       getSessionList,
       updateSession,
       updateSessionLastActiveTime,
@@ -1048,6 +1067,7 @@ export const useChatStore = defineStore(
       requestUnreadCountUpdate,
       clearUnreadCount,
       resetAndRefreshCurrentRoomMessages,
+      fetchCurrentRoomRemoteOnce,
       getGroupSessions,
       removeSession,
       changeRoom,

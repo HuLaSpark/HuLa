@@ -24,7 +24,7 @@ importers:
         specifier: 2.5.1
         version: 2.5.1
       '@tauri-apps/plugin-barcode-scanner':
-        specifier: ^2.4.2
+        specifier: 2.4.2
         version: 2.4.2
       '@tauri-apps/plugin-clipboard-manager':
         specifier: 2.3.2
@@ -90,8 +90,8 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
       dayjs:
-        specifier: ^1.11.18
-        version: 1.11.18
+        specifier: ^1.11.19
+        version: 1.11.19
       digest-wasm:
         specifier: ^0.1.4
         version: 0.1.4
@@ -114,8 +114,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       hula-emojis:
-        specifier: ^1.2.30
-        version: 1.2.30
+        specifier: ^1.2.31
+        version: 1.2.33
       internal-ip:
         specifier: ^8.0.1
         version: 8.0.1
@@ -144,11 +144,11 @@ importers:
         specifier: ^0.3.10
         version: 0.3.10
       stream-markdown:
-        specifier: ^0.0.9
-        version: 0.0.9(shiki@3.14.0)
+        specifier: ^0.0.10
+        version: 0.0.10(shiki@3.15.0)
       stream-monaco:
-        specifier: ^0.0.2
-        version: 0.0.2(monaco-editor@0.52.2)
+        specifier: ^0.0.6
+        version: 0.0.6(monaco-editor@0.52.2)
       tauri-plugin-mic-recorder-api:
         specifier: ^2.0.0
         version: 2.0.0
@@ -178,7 +178,7 @@ importers:
         version: 11.1.12(vue@3.5.24(typescript@5.9.3))
       vue-renderer-markdown:
         specifier: 0.0.62-beta.1
-        version: 0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
+        version: 0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.15.0)(stream-markdown@0.0.10(shiki@3.15.0))(stream-monaco@0.0.6(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       vue-router:
         specifier: ^4.6.3
         version: 4.6.3(vue@3.5.24(typescript@5.9.3))
@@ -1668,26 +1668,26 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@shikijs/core@3.14.0':
-    resolution: {integrity: sha512-qRSeuP5vlYHCNUIrpEBQFO7vSkR7jn7Kv+5X3FO/zBKVDGQbcnlScD3XhkrHi/R8Ltz0kEjvFR9Szp/XMRbFMw==}
+  '@shikijs/core@3.15.0':
+    resolution: {integrity: sha512-8TOG6yG557q+fMsSVa8nkEDOZNTSxjbbR8l6lF2gyr6Np+jrPlslqDxQkN6rMXCECQ3isNPZAGszAfYoJOPGlg==}
 
-  '@shikijs/engine-javascript@3.14.0':
-    resolution: {integrity: sha512-3v1kAXI2TsWQuwv86cREH/+FK9Pjw3dorVEykzQDhwrZj0lwsHYlfyARaKmn6vr5Gasf8aeVpb8JkzeWspxOLQ==}
+  '@shikijs/engine-javascript@3.15.0':
+    resolution: {integrity: sha512-ZedbOFpopibdLmvTz2sJPJgns8Xvyabe2QbmqMTz07kt1pTzfEvKZc5IqPVO/XFiEbbNyaOpjPBkkr1vlwS+qg==}
 
-  '@shikijs/engine-oniguruma@3.14.0':
-    resolution: {integrity: sha512-TNcYTYMbJyy+ZjzWtt0bG5y4YyMIWC2nyePz+CFMWqm+HnZZyy9SWMgo8Z6KBJVIZnx8XUXS8U2afO6Y0g1Oug==}
+  '@shikijs/engine-oniguruma@3.15.0':
+    resolution: {integrity: sha512-HnqFsV11skAHvOArMZdLBZZApRSYS4LSztk2K3016Y9VCyZISnlYUYsL2hzlS7tPqKHvNqmI5JSUJZprXloMvA==}
 
-  '@shikijs/langs@3.14.0':
-    resolution: {integrity: sha512-DIB2EQY7yPX1/ZH7lMcwrK5pl+ZkP/xoSpUzg9YC8R+evRCCiSQ7yyrvEyBsMnfZq4eBzLzBlugMyTAf13+pzg==}
+  '@shikijs/langs@3.15.0':
+    resolution: {integrity: sha512-WpRvEFvkVvO65uKYW4Rzxs+IG0gToyM8SARQMtGGsH4GDMNZrr60qdggXrFOsdfOVssG/QQGEl3FnJ3EZ+8w8A==}
 
-  '@shikijs/monaco@3.14.0':
-    resolution: {integrity: sha512-haqNhks0JBCWr7QBPwkwSkK/UqwyZjQ0vC4YjYlECYLGkYixV8FNx2b6OUL4wgq5fd0SimGwDIOxGCH2KAil3g==}
+  '@shikijs/monaco@3.15.0':
+    resolution: {integrity: sha512-MKURaG5ehas44DBOfw0szEp89fA3WTERl7B6MjWcRQMIvHd++OQmPLyk1wcWbqZ3Jcvj0QBCJw+5tR/IBW016g==}
 
-  '@shikijs/themes@3.14.0':
-    resolution: {integrity: sha512-fAo/OnfWckNmv4uBoUu6dSlkcBc+SA1xzj5oUSaz5z3KqHtEbUypg/9xxgJARtM6+7RVm0Q6Xnty41xA1ma1IA==}
+  '@shikijs/themes@3.15.0':
+    resolution: {integrity: sha512-8ow2zWb1IDvCKjYb0KiLNrK4offFdkfNVPXb1OZykpLCzRU6j+efkY+Y7VQjNlNFXonSw+4AOdGYtmqykDbRiQ==}
 
-  '@shikijs/types@3.14.0':
-    resolution: {integrity: sha512-bQGgC6vrY8U/9ObG1Z/vTro+uclbjjD/uG58RvfxKZVD5p9Yc1ka3tVyEFy7BNJLzxuWyHH5NWynP9zZZS59eQ==}
+  '@shikijs/types@3.15.0':
+    resolution: {integrity: sha512-BnP+y/EQnhihgHy4oIAN+6FFtmfTekwOLsQbRw9hOKwqgNy8Bdsjq8B05oAt/ZgvIWWFrshV71ytOrlPfYjIJw==}
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
@@ -2942,8 +2942,8 @@ packages:
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
 
-  dayjs@1.11.18:
-    resolution: {integrity: sha512-zFBQ7WFRvVRhKcWoUh+ZA1g2HVgUbsZm9sbddh8EC5iv93sui8DVVz1Npvz+r6meo9VKfa8NyLWBsQK1VvIKPA==}
+  dayjs@1.11.19:
+    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -3417,8 +3417,8 @@ packages:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
 
-  hula-emojis@1.2.30:
-    resolution: {integrity: sha512-fMRupLHjkh0sLKdseI9yGcuQsZJ3DU3pNMcni+AvVbi+u2cETmJfIQWLNGfBnR4ACbe4XzsOB6++V+xb0naQmA==}
+  hula-emojis@1.2.33:
+    resolution: {integrity: sha512-ckeGqaNYQ28tbUdjOYBNcmncP72WQiu/aEWhFlDsN8j3qppIjc2tBLlauT6KAdemmXyzqf46kI6c7AHQxsMCmw==}
 
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
@@ -4566,8 +4566,8 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  shiki@3.14.0:
-    resolution: {integrity: sha512-J0yvpLI7LSig3Z3acIuDLouV5UCKQqu8qOArwMx+/yPVC3WRMgrP67beaG8F+j4xfEWE0eVC4GeBCIXeOPra1g==}
+  shiki@3.15.0:
+    resolution: {integrity: sha512-kLdkY6iV3dYbtPwS9KXU7mjfmDm25f5m0IPNFnaXO7TBPcvbUOY72PYXSuSqDzwp+vlH/d7MXpHlKO/x+QoLXw==}
 
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
@@ -4660,13 +4660,13 @@ packages:
   stream-markdown-parser@0.0.19:
     resolution: {integrity: sha512-msxvSiZjURiIjQWR1jJKgBLWzXJyrDXFRgOQsoZ4IE4tq179kX0UoNkzHgwfrgsyxEVscFZIcvs4ct5wvpMzcQ==}
 
-  stream-markdown@0.0.9:
-    resolution: {integrity: sha512-oodVRz9a4AF03eIkOZkP4LIAw0UusWU2KJwQLDI4Yu463KEYVCdsHpdg0OjLdRgh55aT97N5E6y77CJfauWgoA==}
+  stream-markdown@0.0.10:
+    resolution: {integrity: sha512-k3B1h1gUga0nArchDSD6O8+rxXiL6WvuZ11hZgxpYy9Z1Pihjt8rYROoTdJeC2k2ymctLYTDIGRI6AASjipLeg==}
     peerDependencies:
       shiki: '>=3.13.0'
 
-  stream-monaco@0.0.2:
-    resolution: {integrity: sha512-vf7mWmVMvIdEgLPUiaF9riIxSHt5Vd/J+RRxT8R7OUgPBHo0CsBjWMCmUE4L4MMZednpY+MUY9fwfmA3pQm0Xg==}
+  stream-monaco@0.0.6:
+    resolution: {integrity: sha512-ZyhDI9rIhcWEw7ld8az8Qu2Iug1pL4lwR+V/yzxuOok72mBPvSR3LVbOUxq7Rcb6dF1it2BWDmpiORJcw5c7kw==}
     hasBin: true
     peerDependencies:
       monaco-editor: ^0.52.2
@@ -6546,39 +6546,39 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.1':
     optional: true
 
-  '@shikijs/core@3.14.0':
+  '@shikijs/core@3.15.0':
     dependencies:
-      '@shikijs/types': 3.14.0
+      '@shikijs/types': 3.15.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
       hast-util-to-html: 9.0.5
 
-  '@shikijs/engine-javascript@3.14.0':
+  '@shikijs/engine-javascript@3.15.0':
     dependencies:
-      '@shikijs/types': 3.14.0
+      '@shikijs/types': 3.15.0
       '@shikijs/vscode-textmate': 10.0.2
       oniguruma-to-es: 4.3.3
 
-  '@shikijs/engine-oniguruma@3.14.0':
+  '@shikijs/engine-oniguruma@3.15.0':
     dependencies:
-      '@shikijs/types': 3.14.0
+      '@shikijs/types': 3.15.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@shikijs/langs@3.14.0':
+  '@shikijs/langs@3.15.0':
     dependencies:
-      '@shikijs/types': 3.14.0
+      '@shikijs/types': 3.15.0
 
-  '@shikijs/monaco@3.14.0':
+  '@shikijs/monaco@3.15.0':
     dependencies:
-      '@shikijs/core': 3.14.0
-      '@shikijs/types': 3.14.0
+      '@shikijs/core': 3.15.0
+      '@shikijs/types': 3.15.0
       '@shikijs/vscode-textmate': 10.0.2
 
-  '@shikijs/themes@3.14.0':
+  '@shikijs/themes@3.15.0':
     dependencies:
-      '@shikijs/types': 3.14.0
+      '@shikijs/types': 3.15.0
 
-  '@shikijs/types@3.14.0':
+  '@shikijs/types@3.15.0':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
@@ -7999,7 +7999,7 @@ snapshots:
 
   date-fns@3.6.0: {}
 
-  dayjs@1.11.18: {}
+  dayjs@1.11.19: {}
 
   debug@4.4.3:
     dependencies:
@@ -8535,7 +8535,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  hula-emojis@1.2.30: {}
+  hula-emojis@1.2.33: {}
 
   human-signals@2.1.0: {}
 
@@ -9022,7 +9022,7 @@ snapshots:
       d3: 7.9.0
       d3-sankey: 0.12.3
       dagre-d3-es: 7.0.13
-      dayjs: 1.11.18
+      dayjs: 1.11.19
       dompurify: 3.3.0
       katex: 0.16.25
       khroma: 2.1.0
@@ -9711,14 +9711,14 @@ snapshots:
       interpret: 1.4.0
       rechoir: 0.6.2
 
-  shiki@3.14.0:
+  shiki@3.15.0:
     dependencies:
-      '@shikijs/core': 3.14.0
-      '@shikijs/engine-javascript': 3.14.0
-      '@shikijs/engine-oniguruma': 3.14.0
-      '@shikijs/langs': 3.14.0
-      '@shikijs/themes': 3.14.0
-      '@shikijs/types': 3.14.0
+      '@shikijs/core': 3.15.0
+      '@shikijs/engine-javascript': 3.15.0
+      '@shikijs/engine-oniguruma': 3.15.0
+      '@shikijs/langs': 3.15.0
+      '@shikijs/themes': 3.15.0
+      '@shikijs/types': 3.15.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
 
@@ -9812,16 +9812,16 @@ snapshots:
       markdown-it-task-checkbox: 1.0.6
       markdown-it-ts: 0.0.2-beta.3
 
-  stream-markdown@0.0.9(shiki@3.14.0):
+  stream-markdown@0.0.10(shiki@3.15.0):
     dependencies:
-      shiki: 3.14.0
+      shiki: 3.15.0
 
-  stream-monaco@0.0.2(monaco-editor@0.52.2):
+  stream-monaco@0.0.6(monaco-editor@0.52.2):
     dependencies:
-      '@shikijs/monaco': 3.14.0
+      '@shikijs/monaco': 3.15.0
       alien-signals: 2.0.8
       monaco-editor: 0.52.2
-      shiki: 3.14.0
+      shiki: 3.15.0
 
   string-argv@0.3.2: {}
 
@@ -10291,7 +10291,7 @@ snapshots:
     dependencies:
       vue: 3.5.24(typescript@5.9.3)
 
-  vue-renderer-markdown@0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3)):
+  vue-renderer-markdown@0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.15.0)(stream-markdown@0.0.10(shiki@3.15.0))(stream-monaco@0.0.6(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3)):
     dependencies:
       '@floating-ui/dom': 1.7.4
       stream-markdown-parser: 0.0.19
@@ -10299,9 +10299,9 @@ snapshots:
     optionalDependencies:
       katex: 0.16.25
       mermaid: 11.12.1
-      shiki: 3.14.0
-      stream-markdown: 0.0.9(shiki@3.14.0)
-      stream-monaco: 0.0.2(monaco-editor@0.52.2)
+      shiki: 3.15.0
+      stream-markdown: 0.0.10(shiki@3.15.0)
+      stream-monaco: 0.0.6(monaco-editor@0.52.2)
       vue-i18n: 11.1.12(vue@3.5.24(typescript@5.9.3))
 
   vue-resize@2.0.0-alpha.1(vue@3.5.24(typescript@5.9.3)):

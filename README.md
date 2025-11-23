@@ -94,9 +94,9 @@
 | 平台    | 支持版本                             |
 | ------- | ------------------------------------ |
 | Windows | Windows 10, Windows 11               |
-| macOS   | macOS 10.5+                          |
+| macOS   | macOS 10.5+ Mac26已支持               |
 | Linux   | Ubuntu 22.0+                         |
-| iOS     | iOS 9.0+  ⚠️（ios26后续兼容）          |
+| iOS     | iOS 9.0+ (iOS26 真机已支持， Tauri不支持Intel芯片在ios26模拟器上运行) |
 | Android | Android 12+ (SDK30+)                 |
 | Web     | ⚠️暂不支持(需要自定义移除对桌面功能) |
 

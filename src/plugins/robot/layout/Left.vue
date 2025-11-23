@@ -446,14 +446,15 @@ const add = async () => {
     })
 
     if (data) {
-      // ✅ 直接使用后端返回的会话对象，避免刷新闪烁
       const rawCreateTime = Number(data.createTime)
       const newChat: ChatItem = {
-        id: data.id || data, // 兼容后端返回整个对象或只返回ID
+        id: data.id || data,
         title: data.title || '新的会话',
         createTime: Number.isFinite(rawCreateTime) ? rawCreateTime : Date.now(),
         messageCount: data.messageCount || 0,
-        isPinned: data.pinned || false
+        isPinned: data.pinned || false,
+        roleId: firstAvailableRoleId.value,
+        modelId: data.modelId
       }
 
       // 新会话添加到列表顶部

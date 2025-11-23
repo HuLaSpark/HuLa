@@ -49,6 +49,9 @@ import { useFeedStore } from '@/stores/feed'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+import { useTauriListener } from '@/hooks/useTauriListener'
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
   : null
@@ -65,6 +68,7 @@ const appWindow = WebviewWindow.getCurrent()
 const { createRtcCallWindow, sendWindowPayload } = useWindow()
 const globalStore = useGlobalStore()
 const router = useRouter()
+const { addListener } = useTauriListener()
 // 只在桌面端初始化窗口管理功能
 const { createWebviewWindow } = isDesktop() ? useWindow() : { createWebviewWindow: () => {} }
 const settingStore = useSettingStore()
@@ -355,6 +359,14 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
       )
     }
   }
+  if (userStore.userInfo?.uid) {
+    await invoke('sync_messages', {
+      param: {
+        asyncData: true,
+        uid: userStore.userInfo.uid
+      }
+    })
+  }
 })
 
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {
@@ -520,16 +532,40 @@ const handleVideoCall = async (remotedUid: string, callType: CallTypeEnum) => {
 
 const listenMobileReLogin = async () => {
   if (isMobile()) {
-    // 动态导入
-    const { listen } = await import('@tauri-apps/api/event')
     const { useLogin } = await import('@/hooks/useLogin')
 
     const { resetLoginState, logout } = useLogin()
-    listen('relogin', async () => {
-      info('收到重新登录事件')
-      await resetLoginState()
-      await logout()
-    })
+    addListener(
+      listen('relogin', async () => {
+        info('收到重新登录事件')
+        await resetLoginState()
+        await logout()
+      }),
+      'mobile-relogin'
+    )
+  }
+}
+
+const handleWebsocketEvent = async (event: any) => {
+  const payload: any = event.payload
+  if (payload && payload.type === 'connectionStateChanged' && payload.state === 'CONNECTED' && payload.isReconnection) {
+    // 开始同步，显示加载状态
+    chatStore.syncLoading = true
+    try {
+      if (userStore.userInfo?.uid) {
+        await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
+      }
+      await chatStore.getSessionList(true)
+      await chatStore.setAllSessionMsgList(20)
+      if (globalStore.currentSessionRoomId) {
+        await chatStore.resetAndRefreshCurrentRoomMessages()
+        await chatStore.fetchCurrentRoomRemoteOnce(20)
+      }
+      unreadCountManager.refreshBadge(globalStore.unReadMark)
+    } finally {
+      // 同步完成，隐藏加载状态
+      chatStore.syncLoading = false
+    }
   }
 }
 
@@ -545,9 +581,6 @@ const requestNetworkPermissionForIOS = async () => {
 }
 
 onMounted(() => {
-  // 初始化朋友圈通知存储
-  feedNotificationStore.initialize()
-
   // iOS应用启动时预请求网络权限（必须在最开始执行）
   if (isIOS()) {
     requestNetworkPermissionForIOS()
@@ -568,6 +601,8 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = themes.value.content
   window.addEventListener('dragstart', preventDrag)
+
+  addListener(listen('websocket-event', handleWebsocketEvent), 'websocket-event')
 
   // 只在桌面端的主窗口中初始化全局快捷键
   if (isDesktop() && appWindow.label === 'home') {
@@ -595,9 +630,12 @@ onMounted(() => {
       const closeWindow = await WebviewWindow.getByLabel(event.close)
       closeWindow?.close()
     })
-    appWindow.listen(EventEnum.EXIT, async () => {
-      await exit(0)
-    })
+    addListener(
+      appWindow.listen(EventEnum.EXIT, async () => {
+        await exit(0)
+      }),
+      'app-exit'
+    )
   }
   listenMobileReLogin()
 })

@@ -4,7 +4,7 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import type { FileTypeResult } from 'file-type'
-import type { InjectionKey } from 'vue'
+import { onUnmounted, type InjectionKey } from 'vue'
 import { ErrorType } from '@/common/exception'
 import {
   MergeMessageType,
@@ -291,7 +291,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           window.$message.warning('功能暂开发')
           return
         }
-        handleCopy(item.message.body.url, true)
+        handleCopy(item.message.body.url, true, item.message.id)
       }
     },
     ...commonMenuList.value,
@@ -345,7 +345,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '复制',
       icon: 'copy',
       click: (item: MessageType) => {
-        handleCopy(item.message.body.content, true)
+        handleCopy(item.message.body.content, true, item.message.id)
       },
       visible: (item: MessageType) => !shouldHideCopy(item)
     },
@@ -353,15 +353,22 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       label: '翻译',
       icon: 'translate',
       click: async (item: MessageType) => {
-        const content = item.message.body.content
-        const result = await translateText(content, chat.value.translate)
-        if (!item.message.body.translatedText) {
-          item.message.body.translatedText = {
-            provider: result.provider,
-            text: result.text
-          }
-        } else {
+        const selectedText = getSelectedText(item.message.id)
+        if (!selectedText && item.message.body.translatedText) {
           delete item.message.body.translatedText
+          return
+        }
+
+        const content = selectedText || item.message.body.content
+        if (!content) {
+          window.$message?.warning('没有可翻译的内容')
+          return
+        }
+
+        const result = await translateText(content, chat.value.translate)
+        item.message.body.translatedText = {
+          provider: result.provider,
+          text: result.text
         }
       },
       visible: (item: MessageType) => {
@@ -380,7 +387,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             icon: 'copy',
             click: (item: MessageType) => {
               const content = item.message.body.url || item.message.body.content
-              handleCopy(content, true)
+              handleCopy(content, true, item.message.id)
             }
           }
         ]
@@ -704,7 +711,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       click: async (item: MessageType) => {
         // 对于图片消息，优先使用 url 字段，回退到 content 字段
         const imageUrl = item.message.body.url || item.message.body.content
-        await handleCopy(imageUrl, true)
+        await handleCopy(imageUrl, true, item.message.id)
       }
     },
     ...commonMenuList.value,
@@ -1088,20 +1095,68 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     return type === 'friend' ? isFriend && uid !== myUid : isFriend || uid === myUid
   }
 
+  const extractMsgIdFromDataKey = (dataKey?: string | null) => {
+    if (!dataKey) return ''
+    return dataKey.replace(/^[A-Za-z]/, '')
+  }
+
+  const resolveSelectionMessageId = (selection: Selection): string => {
+    const resolveElement = (node: Node | null) => {
+      if (!node) return null
+      return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement
+    }
+
+    const anchorElement = resolveElement(selection.anchorNode)
+    const focusElement = resolveElement(selection.focusNode)
+
+    if (!anchorElement || !focusElement) return ''
+
+    const anchorKey = anchorElement.closest('[data-key]')?.getAttribute('data-key')
+    const focusKey = focusElement.closest('[data-key]')?.getAttribute('data-key')
+
+    if (!anchorKey || !focusKey || anchorKey !== focusKey) {
+      return ''
+    }
+
+    const chatMainElement = document.getElementById('image-chat-main')
+    if (chatMainElement && (!chatMainElement.contains(anchorElement) || !chatMainElement.contains(focusElement))) {
+      return ''
+    }
+
+    return extractMsgIdFromDataKey(anchorKey)
+  }
+
   /**
-   * 获取用户选中的文本
+   * 获取用户选中的文本（仅返回聊天气泡内的选择，并可校验消息ID）
    */
-  const getSelectedText = (): string => {
+  const getSelectedText = (messageId?: string): string => {
     const selection = window.getSelection()
-    return selection ? selection.toString().trim() : ''
+    if (!selection || selection.rangeCount === 0) {
+      return ''
+    }
+
+    const text = selection.toString().trim()
+    if (!text) {
+      return ''
+    }
+
+    const selectedMessageId = resolveSelectionMessageId(selection)
+    if (!selectedMessageId) {
+      return ''
+    }
+
+    if (messageId && selectedMessageId !== messageId) {
+      return ''
+    }
+
+    return text
   }
 
   /**
    * 检查是否有文本被选中
    */
-  const hasSelectedText = (): boolean => {
-    const selection = window.getSelection()
-    return selection ? selection.toString().trim().length > 0 : false
+  const hasSelectedText = (messageId?: string): boolean => {
+    return getSelectedText(messageId).length > 0
   }
 
   /**
@@ -1119,14 +1174,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
    * @param content 复制的内容（作为回退）
    * @param prioritizeSelection 是否优先复制选中的文本
    */
-  const handleCopy = async (content: string | undefined, prioritizeSelection: boolean = true) => {
+  const handleCopy = async (content: string | undefined, prioritizeSelection: boolean = true, messageId?: string) => {
     try {
       let textToCopy = content || ''
       let isSelectedText = false
 
       // 如果启用了优先选择模式，检查是否有选中的文本
       if (prioritizeSelection) {
-        const selectedText = getSelectedText()
+        const selectedText = getSelectedText(messageId)
         if (selectedText) {
           textToCopy = selectedText
           isSelectedText = true
@@ -1214,6 +1269,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     }
   }
 
+  let activeKeyPressListener: ((e: KeyboardEvent) => void) | null = null
+
+  const removeKeyPressListener = () => {
+    if (activeKeyPressListener) {
+      document.removeEventListener('keydown', activeKeyPressListener)
+      activeKeyPressListener = null
+    }
+  }
+
   /** 点击气泡消息时候监听用户是否按下ctrl+c来复制内容 */
   const handleMsgClick = (item: MessageType) => {
     if (item.message.type === MsgEnum.VIDEO_CALL) {
@@ -1232,20 +1296,29 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         activeBubble.value = item.message.id
       }
     }
+
+    // 先移除可能残留的监听，避免重复绑定
+    removeKeyPressListener()
+
     // 启用键盘监听
     const handleKeyPress = (e: KeyboardEvent) => {
       if ((e.ctrlKey && e.key === 'c') || (e.metaKey && e.key === 'c')) {
         // 优先复制用户选中的文本，如果没有选中则复制整个消息内容
         // 对于图片或其他类型的消息，优先使用 url 字段
         const contentToCopy = item.message.body.url || item.message.body.content
-        handleCopy(contentToCopy, true)
+        handleCopy(contentToCopy, true, item.message.id)
         // 取消监听键盘事件，以免多次绑定
-        document.removeEventListener('keydown', handleKeyPress)
+        removeKeyPressListener()
       }
     }
+    activeKeyPressListener = handleKeyPress
     // 绑定键盘事件到 document
     document.addEventListener('keydown', handleKeyPress)
   }
+
+  onUnmounted(() => {
+    removeKeyPressListener()
+  })
 
   return {
     handleMsgClick,

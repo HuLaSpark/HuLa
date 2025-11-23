@@ -30,7 +30,8 @@
           vertical
           :size="12"
           align="center"
-          class="w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          class="w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+          style="pointer-events: none">
           <svg class="size-42px animate-pulse">
             <use :href="`#${scanStatus.icon}`"></use>
           </svg>
@@ -42,7 +43,8 @@
           vertical
           :size="12"
           align="center"
-          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+          style="pointer-events: none">
           <n-spin size="small" />
           <span class="text-(16px #e3e3e3)">刷新中</span>
         </n-flex>
@@ -64,13 +66,14 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { emit } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
 import { darkTheme, lightTheme } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { loginCommand } from '@/services/tauriCommand'
+import { TauriCommand } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { checkQRStatus, generateQRCode } from '@/utils/ImRequestUtils'
@@ -143,10 +146,12 @@ const handleConfirmed = async (res: any) => {
   confirmedHandled.value = true
   clearPolling()
   try {
-    await emit('set_user_info', {
-      token: res.data.token,
-      refreshToken: res.data.refreshToken || '',
-      uid: res.data.uid
+    await invoke(TauriCommand.UPDATE_TOKEN, {
+      req: {
+        uid: res.data.uid,
+        token: res.data.token,
+        refreshToken: res.data.refreshToken || ''
+      }
     })
 
     await loginCommand({ uid: res.data.uid }, true).then(() => {

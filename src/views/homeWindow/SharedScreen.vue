@@ -26,22 +26,22 @@ peerConnection.ontrack = (event) => {
 }
 
 onBeforeUnmount(async () => {
+  // 保证监听在挂载阶段注册，卸载时由 useTauriListener 自动清理
+  await getCurrentWebviewWindow().show()
+  await emit('SharedScreenWin')
+})
+
+onMounted(async () => {
   await addListener(
     appWindow.listen('offer', async (event) => {
       console.log(event.payload)
       await peerConnection.setRemoteDescription(new RTCSessionDescription(event.payload as RTCSessionDescriptionInit))
       const answer = await peerConnection.createAnswer()
       await peerConnection.setLocalDescription(answer)
-      // 在这里，你需要将应答发送给发送方
-      // 你可以使用信令服务器来发送应答，或者将应答复制粘贴到发送方页面
       console.log(JSON.stringify(answer))
-    })
+    }),
+    'shared-screen-offer'
   )
-})
-
-onMounted(async () => {
-  await getCurrentWebviewWindow().show()
-  await emit('SharedScreenWin')
 })
 </script>
 

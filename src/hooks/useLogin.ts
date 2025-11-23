@@ -180,19 +180,26 @@ export const useLogin = () => {
     } else {
       await configStore.initConfig()
     }
-    // 加载所有会话
-    await chatStore.getSessionList(true)
-    // 重置当前选中会话，等待用户主动选择
-    globalStore.updateCurrentSessionRoomId('')
+    // 开始同步，显示加载状态
+    chatStore.syncLoading = true
+    try {
+      // 加载所有会话
+      await chatStore.getSessionList(true)
+      // 重置当前选中会话，等待用户主动选择
+      globalStore.updateCurrentSessionRoomId('')
 
-    // 加载所有群的成员数据
-    const groupSessions = chatStore.getGroupSessions()
-    await Promise.all([
-      ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
-      groupStore.setGroupDetails(),
-      chatStore.setAllSessionMsgList(20),
-      cachedStore.getAllBadgeList()
-    ])
+      // 加载所有群的成员数据
+      const groupSessions = chatStore.getGroupSessions()
+      await Promise.all([
+        ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
+        groupStore.setGroupDetails(),
+        chatStore.setAllSessionMsgList(20),
+        cachedStore.getAllBadgeList()
+      ])
+    } finally {
+      // 同步完成，隐藏加载状态
+      chatStore.syncLoading = false
+    }
     // 强制持久化
     groupStore.$persist()
     chatStore.$persist()

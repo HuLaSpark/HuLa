@@ -1,4 +1,4 @@
-import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
@@ -7,6 +7,7 @@ import { useUserStore } from '@/stores/user'
 import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
 import { isMobile } from '../utils/PlatformConstants'
 import { useMitt } from './useMitt'
+import { useTauriListener } from './useTauriListener'
 
 interface RtcMsgVO {
   roomId: string
@@ -72,18 +73,7 @@ const rtcCallBellUrl = '/sound/hula_bell.mp3'
  * @returns rtc 相关的状态和方法
  */
 export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTypeEnum, isReceiver: boolean) => {
-  // 收集 tauri 事件监听的卸载函数
-  const unlistenFns: UnlistenFn[] = []
-
-  const cleanupTauriListeners = () => {
-    try {
-      unlistenFns.forEach((fn) => {
-        fn()
-      })
-    } finally {
-      unlistenFns.length = 0
-    }
-  }
+  const { addListener } = useTauriListener()
 
   const router = useRouter()
 
@@ -1065,14 +1055,15 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 监听 WebRTC 信令消息（注册并保存卸载函数）
   // useMitt.on(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
   void (async () => {
-    unlistenFns.push(
-      await listen('ws-webrtc-signal', (event: any) => {
+    await addListener(
+      listen('ws-webrtc-signal', (event: any) => {
         info(`收到信令消息: ${JSON.stringify(event.payload)}`)
         handleSignalMessage(event.payload)
-      })
+      }),
+      `${roomId}-ws-webrtc-signal`
     )
-    unlistenFns.push(
-      await listen('ws-call-accepted', (event: any) => {
+    await addListener(
+      listen('ws-call-accepted', (event: any) => {
         info(`通话被接受: ${JSON.stringify(event.payload)}`)
         // // 接受方，发送是否接受
         // info(`收到 CallAccepted'消息 ${isReceiver}`)
@@ -1081,36 +1072,42 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
           // 对方接通后，主叫方窗口前置并聚焦
           void focusCurrentWindow()
         }
-      })
+      }),
+      `${roomId}-ws-call-accepted`
     )
-    unlistenFns.push(
-      await listen('ws-room-closed', (event: any) => {
+    await addListener(
+      listen('ws-room-closed', (event: any) => {
         info(`房间已关闭: ${JSON.stringify(event.payload)}`)
         endCall()
-      })
+      }),
+      `${roomId}-ws-room-closed`
     )
-    unlistenFns.push(
-      await listen('ws-dropped', (_: any) => {
+    await addListener(
+      listen('ws-dropped', (_: any) => {
         endCall()
-      })
+      }),
+      `${roomId}-ws-dropped`
     )
-    unlistenFns.push(
-      await listen('ws-call-rejected', (event: any) => {
+    await addListener(
+      listen('ws-call-rejected', (event: any) => {
         info(`通话被拒绝: ${JSON.stringify(event.payload)}`)
         endCall()
-      })
+      }),
+      `${roomId}-ws-call-rejected`
     )
-    unlistenFns.push(
-      await listen('ws-cancel', (event: any) => {
+    await addListener(
+      listen('ws-cancel', (event: any) => {
         info(`已取消通话: ${JSON.stringify(event.payload)}`)
         endCall()
-      })
+      }),
+      `${roomId}-ws-cancel`
     )
-    unlistenFns.push(
-      await listen('ws-timeout', (event: any) => {
+    await addListener(
+      listen('ws-timeout', (event: any) => {
         info(`已取消通话: ${JSON.stringify(event.payload)}`)
         endCall()
-      })
+      }),
+      `${roomId}-ws-timeout`
     )
   })()
 
@@ -1124,8 +1121,6 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   onUnmounted(() => {
     // 移除 WebRTC 信令消息监听器
     useMitt.off(WsResponseMessageType.WEBRTC_SIGNAL, handleSignalMessage)
-    // 移除 Tauri 事件监听器
-    cleanupTauriListeners()
   })
 
   return {

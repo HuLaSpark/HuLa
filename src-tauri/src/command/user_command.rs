@@ -1,4 +1,5 @@
 use crate::AppData;
+use crate::repository::im_user_repository;
 use chrono::Local;
 use entity::im_user;
 use entity::prelude::ImUserEntity;
@@ -30,6 +31,14 @@ pub struct UpdateTokenRequest {
 pub struct TokenResponse {
     token: Option<String>,
     refresh_token: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateUserTokenRequest {
+    uid: String,
+    token: String,
+    refresh_token: String,
 }
 
 #[tauri::command]
@@ -119,5 +128,33 @@ pub async fn remove_tokens(state: State<'_, AppData>) -> Result<(), String> {
     rc.refresh_token = None;
 
     info!("✅ Successfully removed user token info");
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_token(
+    req: UpdateUserTokenRequest,
+    state: State<'_, AppData>,
+) -> Result<(), String> {
+    info!("Updating user token");
+    {
+        let mut user_info = state.user_info.lock().await;
+        user_info.uid = req.uid.clone();
+        user_info.token = req.token.clone();
+        user_info.refresh_token = req.refresh_token.clone();
+    }
+    {
+        let mut rc = state.rc.lock().await;
+        rc.token = Some(req.token.clone());
+        rc.refresh_token = Some(req.refresh_token.clone());
+    }
+    im_user_repository::save_user_tokens(
+        state.db_conn.deref(),
+        &req.uid,
+        &req.token,
+        &req.refresh_token,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
     Ok(())
 }
