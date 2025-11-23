@@ -23,10 +23,10 @@
   },
   "term": {
     "checkout": {
-      "text1": "I have read and agree to",
-      "text2": " the Terms of Service",
-      "text3": " and ",
-      "text4": "HuLa Privacy Policy"
+      "text1": "I accept the",
+      "text2": " Terms ",
+      "text3": " & ",
+      "text4": "Privacy Policy"
     }
   },
   "auth_way": {
