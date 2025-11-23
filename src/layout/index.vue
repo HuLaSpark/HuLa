@@ -63,6 +63,15 @@ const { resetLoginState, logout, init } = useLogin()
 const requiresInitialSync = ref(true)
 const shouldBlockInitialRender = computed(() => requiresInitialSync.value && !hasCachedSessions.value)
 
+let initPromise: Promise<void> | null = null
+// 只有首次登录需要延迟异步组件的加载，后续重新登录直接渲染
+const maybeDelayForInitialRender = async () => {
+  if (!shouldBlockInitialRender.value) {
+    return
+  }
+  await new Promise((resolve) => setTimeout(resolve, 600))
+}
+
 // 根据当前 uid 判断是否需要阻塞首屏并重新同步（依赖持久化的初始化完成名单）
 const syncInitialSyncState = () => {
   if (!userUid.value || typeof window === 'undefined') {
@@ -90,50 +99,77 @@ const markInitialSyncCompleted = () => {
   requiresInitialSync.value = false
 }
 
+const runInitWithMode = (block: boolean) => {
+  // 共同的初始化流程
+  const p = init().then(() => {
+    markInitialSyncCompleted()
+  })
+
+  if (block) {
+    // 首次完整同步：阻塞并抛出错误
+    return p.catch((error) => {
+      console.error('[layout] 首次同步数据失败:', error)
+      throw error
+    })
+  } else {
+    // 增量同步：后台执行，错误只打日志
+    p.catch((error) => {
+      console.error('[layout] 增量数据同步失败:', error)
+    })
+    return p
+  }
+}
+
+// 确保初始化流程只触发一次
+const ensureInitStarted = (blockInit: boolean) => {
+  if (!initPromise) {
+    initPromise = runInitWithMode(blockInit)
+  }
+  return initPromise
+}
+
 // 修改异步组件的加载配置
 const AsyncLeft = defineAsyncComponent({
   loader: async () => {
+    const blockInit = shouldBlockInitialRender.value
+    const initTask = ensureInitStarted(blockInit)
+    await maybeDelayForInitialRender()
     loadingText.value = '正在加载左侧面板...'
     const comp = await import('./left/index.vue')
     loadingPercentage.value = 33
+    if (blockInit) {
+      await initTask
+    }
     return comp
-  },
-  delay: 600,
-  timeout: 3000
+  }
 })
 
 const AsyncCenter = defineAsyncComponent({
   loader: async () => {
+    const blockInit = shouldBlockInitialRender.value
+    const initTask = ensureInitStarted(blockInit)
     await import('./left/index.vue')
     loadingText.value = '正在加载数据中...'
     const comp = await import('./center/index.vue')
     loadingPercentage.value = 66
+    if (blockInit) {
+      await initTask
+    }
     return comp
   }
 })
 
 const AsyncRight = defineAsyncComponent({
   loader: async () => {
+    const blockInit = shouldBlockInitialRender.value
+    const initTask = ensureInitStarted(blockInit)
+    await maybeDelayForInitialRender()
     await import('./center/index.vue')
     loadingText.value = '正在加载右侧面板...'
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
-    if (shouldBlockInitialRender.value) {
-      try {
-        await init()
-        markInitialSyncCompleted()
-      } catch (error) {
-        console.error('[layout] 首次同步数据失败:', error)
-        throw error
-      }
-    } else {
-      init()
-        .then(() => {
-          markInitialSyncCompleted()
-        })
-        .catch((error) => {
-          console.error('[layout] 增量数据同步失败:', error)
-        })
+    if (blockInit) {
+      await initTask
     }
 
     // 在组件加载完成后，使用nextTick等待DOM更新
@@ -143,9 +179,7 @@ const AsyncRight = defineAsyncComponent({
     })
 
     return comp
-  },
-  delay: 600,
-  timeout: 3000
+  }
 })
 
 const globalStore = useGlobalStore()

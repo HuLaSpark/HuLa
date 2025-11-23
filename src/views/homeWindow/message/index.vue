@@ -1,5 +1,10 @@
 <template>
   <n-scrollbar ref="msg-scrollbar" style="max-height: calc(100vh / var(--page-scale, 1) - 70px)">
+    <!-- 消息同步加载提示 -->
+    <div v-if="syncLoading" class="flex-center gap-10px py-12px text-(12px [--text-color])">
+      <n-spin :size="14" />
+      <span>正在同步消息</span>
+    </div>
     <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
@@ -165,6 +170,7 @@ const settingStore = useSettingStore()
 const botStore = useBotStore()
 const { addListener } = useTauriListener()
 const { themes } = storeToRefs(settingStore)
+const { syncLoading } = storeToRefs(chatStore)
 const botDisplayText = computed(() => botStore.displayText)
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')

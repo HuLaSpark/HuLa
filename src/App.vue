@@ -548,16 +548,23 @@ const listenMobileReLogin = async () => {
 const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
   if (payload && payload.type === 'connectionStateChanged' && payload.state === 'CONNECTED' && payload.isReconnection) {
-    if (userStore.userInfo?.uid) {
-      await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
+    // 开始同步，显示加载状态
+    chatStore.syncLoading = true
+    try {
+      if (userStore.userInfo?.uid) {
+        await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
+      }
+      await chatStore.getSessionList(true)
+      await chatStore.setAllSessionMsgList(20)
+      if (globalStore.currentSessionRoomId) {
+        await chatStore.resetAndRefreshCurrentRoomMessages()
+        await chatStore.fetchCurrentRoomRemoteOnce(20)
+      }
+      unreadCountManager.refreshBadge(globalStore.unReadMark)
+    } finally {
+      // 同步完成，隐藏加载状态
+      chatStore.syncLoading = false
     }
-    await chatStore.getSessionList(true)
-    await chatStore.setAllSessionMsgList(20)
-    if (globalStore.currentSessionRoomId) {
-      await chatStore.resetAndRefreshCurrentRoomMessages()
-      await chatStore.fetchCurrentRoomRemoteOnce(20)
-    }
-    unreadCountManager.refreshBadge(globalStore.unReadMark)
   }
 }
 
