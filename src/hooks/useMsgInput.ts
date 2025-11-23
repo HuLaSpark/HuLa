@@ -22,6 +22,8 @@ import { type SelectionRange, useCommon } from './useCommon.ts'
 import { globalFileUploadQueue } from './useFileUploadQueue.ts'
 import { useTrigger } from './useTrigger'
 import { UploadProviderEnum, useUpload } from './useUpload.ts'
+import { useI18n } from 'vue-i18n'
+
 /**
  * 光标管理器
  */
@@ -64,6 +66,7 @@ export function useCursorManager() {
 }
 
 export const useMsgInput = (messageInputDom: Ref) => {
+  const { t } = useI18n()
   const groupStore = useGroupStore()
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
@@ -174,10 +177,10 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const selectedAitKey = ref(personList.value[0]?.uid ?? null)
   /** 右键菜单列表 */
   const menuList = ref([
-    { label: '剪切', icon: 'screenshot', disabled: true },
-    { label: '复制', icon: 'copy', disabled: true },
+    { label: t('editor.menu.cut'), icon: 'screenshot', disabled: true },
+    { label: t('editor.menu.copy'), icon: 'copy', disabled: true },
     {
-      label: '粘贴',
+      label: t('editor.menu.paste'),
       icon: 'intersection',
       click: async () => {
         try {
@@ -222,8 +225,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
         }
       }
     },
-    { label: '另存为', icon: 'Importing', disabled: true },
-    { label: '全部选择', icon: 'check-one' }
+    { label: t('editor.menu.save_as'), icon: 'Importing', disabled: true },
+    { label: t('editor.menu.select_all'), icon: 'check-one' }
   ])
 
   // 将 useTrigger 的初始化移到这里

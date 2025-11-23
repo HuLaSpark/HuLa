@@ -1,6 +1,7 @@
 import 'uno.css'
 import '@unocss/reset/eric-meyer.css' // unocss提供的浏览器默认样式重置
 import TlbsMap from 'tlbs-map-vue'
+import { setupI18n } from '@/services/i18n'
 import { AppException } from '@/common/exception.ts'
 import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
@@ -46,7 +47,14 @@ async function setup() {
 }
 
 const app = createApp(App)
-app.use(router).use(pinia).use(TlbsMap).directive('resize', vResize).directive('slide', vSlide).mount('#app')
+app
+  .use(router)
+  .use(pinia)
+  .use(TlbsMap)
+  .use(setupI18n)
+  .directive('resize', vResize)
+  .directive('slide', vSlide)
+  .mount('#app')
 app.config.errorHandler = (err) => {
   if (err instanceof AppException) {
     window.$message.error(err.message)

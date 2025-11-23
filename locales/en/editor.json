@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "select_all": "Select All",
+    "save_as": "Save As",
+    "paste": "Paste",
+    "copy": "Copy",
+    "cut": "Cut"
+  },
+  "send": "Send",
+  "placeholder": "A kind word warms the heart; a harsh word wounds it.",
+  "send_or_newline": "{send} 发送/{newline} 换行",
+  "file": "File",
+  "image": "Image",
+  "voice": "Voice",
+  "location": "Location",
+  "chat_history": "Chat History",
+  "screenshot": "Screenshot",
+  "screenshot_hide_curr_window": "Hide window during screenshot",
+  "relation": {
+    "not_friends": "You are no longer friends."
+  }
+}

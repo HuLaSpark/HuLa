@@ -69,6 +69,7 @@ declare namespace STO {
       fonts: string
       /** 高斯模糊 */
       blur: boolean
+      lang: string
     }
     /** 更新设置 */
     update: {

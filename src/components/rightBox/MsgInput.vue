@@ -44,7 +44,7 @@
               @blur="handleBlur"
               @compositionend="updateSelectionRange"
               @keydown.exact.ctrl.enter="handleEnterKey"
-              data-placeholder="善言一句暖人心，恶语一句伤人心"
+              :data-placeholder="t('editor.placeholder')"
               :class="
                 isMobile()
                   ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
@@ -60,7 +60,7 @@
           <n-config-provider :theme="lightTheme">
             <n-button-group size="small">
               <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="handleDesktopSend">
-                发送
+                {{ t('editor.send') }}
               </n-button>
               <n-button color="#13987f" class="p-[0_6px]">
                 <template #icon>
@@ -83,26 +83,24 @@
                           align="center"
                           :size="4"
                           class="text-(12px #777) cursor-default tracking-1 select-none">
-                          <span v-if="chatKey !== 'Enter'">
-                            {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
-                          </span>
-                          <svg class="size-12px">
-                            <use href="#Enter"></use>
-                          </svg>
-                          发送 /
-                          <n-flex v-if="chatKey !== 'Enter'" align="center" :size="6">
-                            <svg class="size-12px">
-                              <use href="#Enter"></use>
-                            </svg>
-                            <p>或</p>
-                          </n-flex>
-                          <n-flex align="center" :size="0">
-                            {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
-                            <svg class="size-12px">
-                              <use href="#Enter"></use>
-                            </svg>
-                          </n-flex>
-                          换行
+                          <i18n-t keypath="editor.send_or_newline">
+                            <template #send>
+                              <span v-if="chatKey !== 'Enter'">
+                                {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
+                              </span>
+                              <svg class="size-12px">
+                                <use href="#Enter"></use>
+                              </svg>
+                            </template>
+                            <template #newline>
+                              <n-flex align="center" :size="0">
+                                {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
+                                <svg class="size-12px">
+                                  <use href="#Enter"></use>
+                                </svg>
+                              </n-flex>
+                            </template>
+                          </i18n-t>
                         </n-flex>
                       </template>
                     </n-popselect>
@@ -241,6 +239,7 @@ import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { sendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useGroupStore } from '@/stores/group'
 import { MobilePanelStateEnum } from '@/enums'
+import { useI18n, I18nT } from 'vue-i18n'
 
 interface Props {
   isAIMode?: boolean
@@ -250,6 +249,7 @@ const props = withDefaults(defineProps<Props>(), {
   isAIMode: false
 })
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)

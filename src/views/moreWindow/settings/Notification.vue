@@ -2,14 +2,14 @@
   <n-flex vertical :size="40">
     <!-- 消息通知设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">提示音</span>
+      <span class="pl-10px">{{ t('setting.notice.sound') }}</span>
 
       <n-flex class="item p-12px" :size="12" vertical>
         <!-- 消息提示音 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
-            <span>消息提示音</span>
-            <span class="text-(12px #909090)">开启后，收到新消息时会播放提示音</span>
+            <span>{{ t('setting.notice.message_sound') }}</span>
+            <span class="text-(12px #909090)">{{ t('setting.notice.message_sound_descript') }}</span>
           </n-flex>
 
           <n-switch size="small" v-model:value="messageSound" />
@@ -20,8 +20,13 @@
     <!-- 群消息设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <n-flex align="center" justify="space-between" class="pl-10px pr-10px">
-        <span>群消息设置</span>
-        <n-input v-model:value="searchKeyword" size="small" placeholder="搜索群聊" clearable style="width: 200px">
+        <span>{{ t('setting.notice.group_setting') }}</span>
+        <n-input
+          v-model:value="searchKeyword"
+          size="small"
+          :placeholder="t('setting.notice.input.search_group_placholder')"
+          clearable
+          style="width: 200px">
           <template #prefix>
             <svg class="size-14px"><use href="#search"></use></svg>
           </template>
@@ -40,22 +45,22 @@
               v-model:checked="selectAll"
               :indeterminate="selectedSessions.length > 0 && selectedSessions.length < filteredGroupSessions.length"
               @update:checked="handleSelectAll">
-              全选 ({{ selectedSessions.length }}/{{ filteredGroupSessions.length }})
+              {{ t('setting.notice.select_all') }} ({{ selectedSessions.length }}/{{ filteredGroupSessions.length }})
             </n-checkbox>
           </n-flex>
 
           <n-flex v-if="selectedSessions.length > 0" align="center" :size="8">
-            <span class="text-(12px #909090)">批量设置:</span>
+            <span class="text-(12px #909090)">{{ t('setting.notice.batch_set') }}:</span>
             <n-button
               size="small"
               type="primary"
               secondary
               :disabled="isProcessing"
               @click="batchSetNotification('allow')">
-              允许提醒
+              {{ t('setting.notice.group_notic_type.allow') }}
             </n-button>
             <n-button size="small" secondary :disabled="isProcessing" @click="batchSetNotification('mute')">
-              免打扰
+              {{ t('setting.notice.group_notic_type.silent') }}
             </n-button>
             <n-button
               size="small"
@@ -63,7 +68,7 @@
               secondary
               :disabled="isProcessing"
               @click="batchSetNotification('shield')">
-              屏蔽
+              {{ t('setting.notice.group_notic_type.block') }}
             </n-button>
           </n-flex>
         </n-flex>
@@ -129,7 +134,9 @@ import { useChatStore } from '@/stores/chat'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, shield } from '@/utils/ImRequestUtils'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const chatStore = useChatStore()
 
@@ -185,16 +192,16 @@ const selectAll = computed({
 // 获取通知状态文本
 const getNotificationStatusText = (session: SessionItem) => {
   if (session.shield) {
-    return '已屏蔽消息'
+    return t('setting.notice.group_notic_type.block')
   }
 
   switch (session.muteNotification) {
     case NotificationTypeEnum.RECEPTION:
-      return '允许消息提醒'
+      return t('setting.notice.group_notic_type.allow')
     case NotificationTypeEnum.NOT_DISTURB:
-      return '接收消息但不提醒'
+      return t('setting.notice.group_notic_type.silent')
     default:
-      return '允许消息提醒'
+      return t('setting.notice.group_notic_type.allow')
   }
 }
 
@@ -202,7 +209,7 @@ const getNotificationStatusText = (session: SessionItem) => {
 const getNotificationOptions = (session: SessionItem) => {
   return [
     {
-      label: '允许消息提醒',
+      label: t('setting.notice.group_notic_type.allow'),
       key: 'allow',
       icon:
         !session.shield && session.muteNotification === NotificationTypeEnum.RECEPTION
@@ -210,7 +217,7 @@ const getNotificationOptions = (session: SessionItem) => {
           : undefined
     },
     {
-      label: '接收消息但不提醒',
+      label: t('setting.notice.group_notic_type.silent'),
       key: 'mute',
       icon:
         !session.shield && session.muteNotification === NotificationTypeEnum.NOT_DISTURB
@@ -218,7 +225,7 @@ const getNotificationOptions = (session: SessionItem) => {
           : undefined
     },
     {
-      label: '屏蔽群消息',
+      label: t('setting.notice.group_notic_type.block'),
       key: 'shield',
       icon: session.shield
         ? () => h('svg', { class: 'size-14px text-#13987f' }, [h('use', { href: '#check-small' })])
@@ -249,7 +256,7 @@ const handleSessionSelect = (roomId: string, checked: boolean) => {
 // 批量设置通知
 const batchSetNotification = async (type: string) => {
   if (selectedSessions.value.length === 0) {
-    window.$message?.warning('请先选择要设置的群聊')
+    window.$message?.warning(t('setting.notice.message_select_group_first'))
     return
   }
 
@@ -268,9 +275,9 @@ const batchSetNotification = async (type: string) => {
       if (!session) {
         processingResults.value.push({
           roomId,
-          name: '未知群聊',
+          name: t('setting.notice.unknow_group'),
           success: false,
-          error: '找不到群聊信息'
+          error: t('setting.notice.group_chat_not_found')
         })
       } else {
         try {
@@ -285,7 +292,7 @@ const batchSetNotification = async (type: string) => {
             roomId,
             name: session.name,
             success: false,
-            error: error.message || '设置失败'
+            error: error.message || t('setting.notice.setup_fail')
           })
         }
       }
@@ -301,22 +308,26 @@ const batchSetNotification = async (type: string) => {
 
     const typeText =
       {
-        allow: '允许消息提醒',
-        mute: '免打扰',
-        shield: '屏蔽'
-      }[type] || '未知'
+        allow: t('setting.notice.group_notic_type.allow'),
+        mute: t('setting.notice.group_notic_type.silent'),
+        shield: t('setting.notice.group_notic_type.block')
+      }[type] || t('setting.notice.unknow')
 
     if (failCount === 0) {
-      window.$message?.success(`批量设置完成！${successCount} 个群聊已设置为${typeText}`)
+      window.$message?.success(
+        t('setting.notice.message_group_batch_setup_success', { count: successCount, type: typeText })
+      )
     } else {
-      window.$message?.warning(`批量设置完成：${successCount} 个成功，${failCount} 个失败`)
+      window.$message?.warning(
+        t('setting.notice.message_group_batch_update_result', { success_count: successCount, fail_count: failCount })
+      )
     }
 
     // 清空选择
     selectedSessions.value = []
   } catch (error) {
     console.error('批量设置失败:', error)
-    window.$message?.error('批量设置失败，请重试')
+    window.$message?.error(t('setting.notice.setup_fail'))
   } finally {
     // 延迟隐藏进度条，让用户看到完成状态
     setTimeout(() => {
@@ -348,7 +359,7 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
           muteNotification: NotificationTypeEnum.RECEPTION
         })
 
-        window.$message?.success('已允许消息提醒')
+        window.$message?.success(t('setting.notice.message_reminder_allowed'))
         break
 
       case 'mute':
@@ -372,7 +383,7 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
 
         // 设置免打扰时更新全局未读数
         chatStore.updateTotalUnreadCount()
-        window.$message?.success('已设置接收消息但不提醒')
+        window.$message?.success(t('setting.notice.message_reminder_silent'))
         break
 
       case 'shield':
@@ -385,7 +396,9 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
           shield: !session.shield
         })
 
-        window.$message?.success(session.shield ? '已取消屏蔽' : '已屏蔽消息')
+        window.$message?.success(
+          session.shield ? t('setting.notice.message_unblocked') : t('setting.notice.group_notic_type.block')
+        )
         break
     }
   } catch (error) {

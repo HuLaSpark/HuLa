@@ -1,19 +1,23 @@
 import { MacOsKeyEnum, WinKeyEnum } from '@/enums'
 import { isWindows } from '@/utils/PlatformConstants'
+import { useI18nGlobal } from '~/src/services/i18n'
 
 const key = computed(() => {
   return `${isWindows() ? WinKeyEnum.CTRL : MacOsKeyEnum['⌘']}`
 })
+
+const { t } = useI18nGlobal()
+
 /** 侧边栏选项 */
 const sideOptions = ref<OPT.L.SettingSide[]>([
   {
     url: '/general',
-    label: '通用',
+    label: t('setting.general.title'),
     icon: 'setting-config'
   },
   {
     url: '/notification',
-    label: '消息通知',
+    label: t('setting.notice.title'),
     icon: 'remind'
   },
   {
@@ -28,7 +32,7 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
   },
   {
     url: '/loginSetting',
-    label: '登录设置',
+    label: t('setting.login.title'),
     icon: 'settings'
   },
   {
@@ -74,4 +78,20 @@ const fontOptions = [
     value: 'AliFangYuan'
   }
 ]
-export { sideOptions, sendOptions, fontOptions, translateOptions }
+
+const langOptions = [
+  {
+    label: 'Automatic',
+    value: 'AUTO'
+  },
+  {
+    label: '简体中文',
+    value: 'zh-CN'
+  },
+  {
+    label: 'English',
+    value: 'en'
+  }
+]
+
+export { sideOptions, sendOptions, fontOptions, translateOptions, langOptions }

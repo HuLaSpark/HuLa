@@ -173,9 +173,12 @@ importers:
       vue-demi:
         specifier: 0.14.10
         version: 0.14.10(vue@3.5.24(typescript@5.9.3))
+      vue-i18n:
+        specifier: ^11.1.12
+        version: 11.1.12(vue@3.5.24(typescript@5.9.3))
       vue-renderer-markdown:
         specifier: 0.0.62-beta.1
-        version: 0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3))
+        version: 0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3))
       vue-router:
         specifier: ^4.6.3
         version: 4.6.3(vue@3.5.24(typescript@5.9.3))
@@ -1251,6 +1254,18 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
+
+  '@intlify/core-base@11.1.12':
+    resolution: {integrity: sha512-whh0trqRsSqVLNEUCwU59pyJZYpU8AmSWl8M3Jz2Mv5ESPP6kFh4juas2NpZ1iCvy7GlNRffUD1xr84gceimjg==}
+    engines: {node: '>= 16'}
+
+  '@intlify/message-compiler@11.1.12':
+    resolution: {integrity: sha512-Fv9iQSJoJaXl4ZGkOCN1LDM3trzze0AS2zRz2EHLiwenwL6t0Ki9KySYlyr27yVOj5aVz0e55JePO+kELIvfdQ==}
+    engines: {node: '>= 16'}
+
+  '@intlify/shared@11.1.12':
+    resolution: {integrity: sha512-Om86EjuQtA69hdNj3GQec9ZC0L0vPSAnXzB3gP/gyJ7+mA7t06d9aOAiqMZ+xEOsumGP4eEBlfl8zF2LOTzf2A==}
+    engines: {node: '>= 16'}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -5140,6 +5155,12 @@ packages:
   vue-flow-layout@0.2.0:
     resolution: {integrity: sha512-zKgsWWkXq0xrus7H4Mc+uFs1ESrmdTXlO0YNbR6wMdPaFvosL3fMB8N7uTV308UhGy9UvTrGhIY7mVz9eN+L0Q==}
 
+  vue-i18n@11.1.12:
+    resolution: {integrity: sha512-BnstPj3KLHLrsqbVU2UOrPmr0+Mv11bsUZG0PyCOzsawCivk8W00GMXHeVUWIDOgNaScCuZah47CZFE+Wnl8mw==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      vue: ^3.0.0
+
   vue-observe-visibility@2.0.0-alpha.1:
     resolution: {integrity: sha512-flFbp/gs9pZniXR6fans8smv1kDScJ8RS7rEpMjhVabiKeq7Qz3D9+eGsypncjfIyyU84saU88XZ0zjbD6Gq/g==}
     peerDependencies:
@@ -6154,6 +6175,18 @@ snapshots:
   '@inquirer/type@3.0.8(@types/node@24.10.0)':
     optionalDependencies:
       '@types/node': 24.10.0
+
+  '@intlify/core-base@11.1.12':
+    dependencies:
+      '@intlify/message-compiler': 11.1.12
+      '@intlify/shared': 11.1.12
+
+  '@intlify/message-compiler@11.1.12':
+    dependencies:
+      '@intlify/shared': 11.1.12
+      source-map-js: 1.2.1
+
+  '@intlify/shared@11.1.12': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -10247,11 +10280,18 @@ snapshots:
 
   vue-flow-layout@0.2.0: {}
 
+  vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)):
+    dependencies:
+      '@intlify/core-base': 11.1.12
+      '@intlify/shared': 11.1.12
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.24(typescript@5.9.3)
+
   vue-observe-visibility@2.0.0-alpha.1(vue@3.5.24(typescript@5.9.3)):
     dependencies:
       vue: 3.5.24(typescript@5.9.3)
 
-  vue-renderer-markdown@0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue@3.5.24(typescript@5.9.3)):
+  vue-renderer-markdown@0.0.62-beta.1(katex@0.16.25)(mermaid@11.12.1)(shiki@3.14.0)(stream-markdown@0.0.9(shiki@3.14.0))(stream-monaco@0.0.2(monaco-editor@0.52.2))(vue-i18n@11.1.12(vue@3.5.24(typescript@5.9.3)))(vue@3.5.24(typescript@5.9.3)):
     dependencies:
       '@floating-ui/dom': 1.7.4
       stream-markdown-parser: 0.0.19
@@ -10262,6 +10302,7 @@ snapshots:
       shiki: 3.14.0
       stream-markdown: 0.0.9(shiki@3.14.0)
       stream-monaco: 0.0.2(monaco-editor@0.52.2)
+      vue-i18n: 11.1.12(vue@3.5.24(typescript@5.9.3))
 
   vue-resize@2.0.0-alpha.1(vue@3.5.24(typescript@5.9.3)):
     dependencies:

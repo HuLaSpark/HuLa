@@ -14,6 +14,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { exit } from '@tauri-apps/plugin-process'
+import { loadLanguage } from '@/services/i18n'
 import {
   CallTypeEnum,
   EventEnum,
@@ -644,6 +645,17 @@ watch(
     document.documentElement.style.setProperty('--font-family', val)
   },
   { immediate: true }
+)
+
+/**
+ * 语言发生变化
+ */
+watch(
+  () => page.value.lang,
+  (lang) => {
+    lang = lang === 'AUTO' ? navigator.language : lang
+    loadLanguage(lang)
+  }
 )
 
 /** 控制变化主题 */

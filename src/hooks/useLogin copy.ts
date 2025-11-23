@@ -25,7 +25,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useMitt } from './useMitt'
 import { info as logInfo } from '@tauri-apps/plugin-log'
 import { ensureAppStateReady } from '@/utils/AppStateReady'
-import { useI18nGlobal } from '../services/i18n'
+import { useI18n } from 'vue-i18n'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -42,7 +42,7 @@ export const useLogin = () => {
   const loginHistoriesStore = useLoginHistoriesStore()
   const { createWebviewWindow } = useWindow()
 
-  const { t } = useI18nGlobal()
+  const { t } = useI18n()
 
   /**
    * 在 composable 初始化时获取 router 实例

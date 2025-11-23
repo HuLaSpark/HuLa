@@ -1,5 +1,6 @@
 import type { JSX } from 'vue/jsx-runtime'
 import { ThemeEnum } from '@/enums'
+import { useI18nGlobal } from '~/src/services/i18n'
 
 type Topic = {
   title: string
@@ -7,9 +8,11 @@ type Topic = {
   model: JSX.Element
 }[]
 
+const { t } = useI18nGlobal()
+
 const topicsList: Topic = [
   {
-    title: '白天模式',
+    title: t('setting.general.appearance.theme.light'),
     code: ThemeEnum.LIGHT,
     model: (() => (
       <div class="size-full flex">
@@ -48,7 +51,7 @@ const topicsList: Topic = [
     ))()
   },
   {
-    title: '夜间模式',
+    title: t('setting.general.appearance.theme.dark'),
     code: ThemeEnum.DARK,
     model: (() => (
       <div class="size-full flex">
@@ -87,7 +90,7 @@ const topicsList: Topic = [
     ))()
   },
   {
-    title: '跟随系统',
+    title: t('setting.general.appearance.theme.auto'),
     code: ThemeEnum.OS,
     model: (() => (
       <div class="size-full flex">

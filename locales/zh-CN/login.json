@@ -1,0 +1,48 @@
+{
+  "button": {
+    "login": {
+      "default": "登录",
+      "network_error": "网络异常"
+    },
+    "qr_code": "扫码登录"
+  },
+  "input": {
+    "account": {
+      "placeholder": "邮箱/HuLa账号"
+    },
+    "pass": {
+      "placeholder": "输入 HuLa 密码"
+    }
+  },
+  "option": {
+    "more": "更多选项",
+    "items": {
+      "forget": "忘记密码",
+      "network_setting": "网络设置"
+    }
+  },
+  "term": {
+    "checkout": {
+      "text1": "已阅读并同意",
+      "text2": "服务协议",
+      "text3": "和",
+      "text4": "HuLa隐私保护指引"
+    }
+  },
+  "auth_way": {
+    "acc_pss": "账密登录"
+  },
+  "register": "注册账号",
+  "qr_code_expired": "二维码已过期",
+  "qr_code_expired_hint": "请稍后再试",
+  "qr_code_scan_hint": "请使用 HuLa App 扫码登录",
+  "qr_code_gen_fail_hint": "生成二维码失败",
+  "qr_code_scan_success_hint": "扫码成功，等待授权",
+  "wait_auth_hint": "等待授权...",
+  "login_success": "登录成功",
+  "fetch_user_fail": "获取用户信息失败",
+  "loggingin": "登录中...",
+  "refreshing": "刷新中...",
+  "loading": "加载中...",
+  "scan_qr_code_fail": "扫码失败"
+}
