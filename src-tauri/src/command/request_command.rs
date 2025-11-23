@@ -133,7 +133,7 @@ async fn handle_login_success(
     .map_err(|e| e.to_string())?;
 
     let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data)
+    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data, false)
         .await
         .map_err(|e| e.to_string())?;
 

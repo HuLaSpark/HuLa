@@ -358,14 +358,6 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
       )
     }
   }
-  if (userStore.userInfo?.uid) {
-    await invoke('sync_messages', {
-      param: {
-        asyncData: true,
-        uid: userStore.userInfo.uid
-      }
-    })
-  }
 })
 
 useMitt.on(WsResponseMessageType.ROOM_DISSOLUTION, async (roomId: string) => {

@@ -12,9 +12,7 @@
         <AsyncRight v-if="!shrinkStatus" />
       </keep-alive>
     </div>
-    <div
-      v-if="shouldBlockInitialRender"
-      class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
+    <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
       <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
     </div>
   </div>
@@ -45,6 +43,7 @@ import { useInitialSyncStore } from '@/stores/initialSync.ts'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
 import { audioManager } from '@/utils/AudioManager'
+import { useOverlayController } from '@/hooks/useOverlayController'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -62,6 +61,12 @@ const { resetLoginState, logout, init } = useLogin()
 // 是否需要阻塞首屏并做初始化同步
 const requiresInitialSync = ref(true)
 const shouldBlockInitialRender = computed(() => requiresInitialSync.value && !hasCachedSessions.value)
+const { overlayVisible, markAsyncLoaded } = useOverlayController({
+  isInitialSync: shouldBlockInitialRender,
+  progress: loadingPercentage,
+  asyncTotal: 3,
+  minDisplayMs: 600
+})
 
 let initPromise: Promise<void> | null = null
 // 只有首次登录需要延迟异步组件的加载，后续重新登录直接渲染
@@ -101,7 +106,7 @@ const markInitialSyncCompleted = () => {
 
 const runInitWithMode = (block: boolean) => {
   // 共同的初始化流程
-  const p = init().then(() => {
+  const p = init({ isInitialSync: block }).then(() => {
     markInitialSyncCompleted()
   })
 
@@ -140,6 +145,7 @@ const AsyncLeft = defineAsyncComponent({
     if (blockInit) {
       await initTask
     }
+    markAsyncLoaded()
     return comp
   }
 })
@@ -155,6 +161,7 @@ const AsyncCenter = defineAsyncComponent({
     if (blockInit) {
       await initTask
     }
+    markAsyncLoaded()
     return comp
   }
 })
@@ -171,6 +178,7 @@ const AsyncRight = defineAsyncComponent({
     if (blockInit) {
       await initTask
     }
+    markAsyncLoaded()
 
     // 在组件加载完成后，使用nextTick等待DOM更新
     nextTick(() => {
