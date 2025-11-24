@@ -109,7 +109,7 @@
 
               <n-dropdown
                 :options="getNotificationOptions(session)"
-                @select="(key: string) => handleNotificationChange(session, key)"
+                @select="(key: NotificationChangeKey) => handleNotificationChange(session, key)"
                 trigger="click"
                 :scrollable="false"
                 @update:show="(show: boolean) => (isDropdownShow = show)">
@@ -134,7 +134,10 @@ import { useChatStore } from '@/stores/chat'
 import { useSettingStore } from '@/stores/setting'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, shield } from '@/utils/ImRequestUtils'
+import { assign } from 'es-toolkit/compat'
 import { useI18n } from 'vue-i18n'
+
+type NotificationChangeKey = 'allow' | 'mute' | 'shield'
 
 const { t } = useI18n()
 const settingStore = useSettingStore()
@@ -188,6 +191,11 @@ const selectAll = computed({
     }
   }
 })
+
+const applySessionUpdate = (session: SessionItem, data: Partial<SessionItem>) => {
+  chatStore.updateSession(session.roomId, data)
+  assign(session, data)
+}
 
 // 获取通知状态文本
 const getNotificationStatusText = (session: SessionItem) => {
@@ -254,7 +262,7 @@ const handleSessionSelect = (roomId: string, checked: boolean) => {
 }
 
 // 批量设置通知
-const batchSetNotification = async (type: string) => {
+const batchSetNotification = async (type: NotificationChangeKey) => {
   if (selectedSessions.value.length === 0) {
     window.$message?.warning(t('setting.notice.message_select_group_first'))
     return
@@ -281,7 +289,7 @@ const batchSetNotification = async (type: string) => {
         })
       } else {
         try {
-          await handleNotificationChange(session, type)
+          await handleNotificationChange(session, type, { silent: true })
           processingResults.value.push({
             roomId,
             name: session.name,
@@ -337,7 +345,13 @@ const batchSetNotification = async (type: string) => {
 }
 
 // 处理通知设置变更
-const handleNotificationChange = async (session: SessionItem, key: string) => {
+const handleNotificationChange = async (
+  session: SessionItem,
+  key: NotificationChangeKey,
+  options?: { silent?: boolean }
+) => {
+  const silent = options?.silent ?? false
+
   try {
     switch (key) {
       case 'allow':
@@ -347,7 +361,7 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
             roomId: session.roomId,
             state: false
           })
-          chatStore.updateSession(session.roomId, { shield: false })
+          applySessionUpdate(session, { shield: false })
         }
 
         await notification({
@@ -355,11 +369,13 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
           type: NotificationTypeEnum.RECEPTION
         })
 
-        chatStore.updateSession(session.roomId, {
+        applySessionUpdate(session, {
           muteNotification: NotificationTypeEnum.RECEPTION
         })
 
-        window.$message?.success(t('setting.notice.message_reminder_allowed'))
+        if (!silent) {
+          window.$message?.success(t('setting.notice.message_reminder_allowed'))
+        }
         break
 
       case 'mute':
@@ -369,7 +385,7 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
             roomId: session.roomId,
             state: false
           })
-          chatStore.updateSession(session.roomId, { shield: false })
+          applySessionUpdate(session, { shield: false })
         }
 
         await notification({
@@ -377,33 +393,39 @@ const handleNotificationChange = async (session: SessionItem, key: string) => {
           type: NotificationTypeEnum.NOT_DISTURB
         })
 
-        chatStore.updateSession(session.roomId, {
+        applySessionUpdate(session, {
           muteNotification: NotificationTypeEnum.NOT_DISTURB
         })
 
         // 设置免打扰时更新全局未读数
         chatStore.updateTotalUnreadCount()
-        window.$message?.success(t('setting.notice.message_reminder_silent'))
+        if (!silent) {
+          window.$message?.success(t('setting.notice.message_reminder_silent'))
+        }
         break
 
       case 'shield':
         await shield({
           roomId: session.roomId,
-          state: !session.shield
+          state: true
         })
 
-        chatStore.updateSession(session.roomId, {
-          shield: !session.shield
+        applySessionUpdate(session, {
+          shield: true
         })
 
-        window.$message?.success(
-          session.shield ? t('setting.notice.message_unblocked') : t('setting.notice.group_notic_type.block')
-        )
+        if (!silent) {
+          window.$message?.success(t('setting.notice.group_notic_type.block'))
+        }
         break
     }
   } catch (error) {
     console.error('设置群消息通知失败:', error)
-    window.$message?.error('设置失败，请重试')
+    if (!silent) {
+      window.$message?.error('设置失败，请重试')
+      return
+    }
+    throw error
   }
 }
 

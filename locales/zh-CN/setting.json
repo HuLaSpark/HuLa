@@ -36,7 +36,7 @@
     "select_all": "全选",
     "group_notic_type": {
       "allow": "允许",
-      "silent": "静默",
+      "silent": "免打扰",
       "block": "屏蔽"
     },
     "input": {
@@ -47,8 +47,8 @@
     "unknow_group": "未知群聊",
     "group_chat_not_found": "未找到群聊信息。",
     "setup_fail": "设置失败",
-    "message_group_batch_setup_success": "批量设置完成！{count} 个群聊已设置为 {type}。",
-    "message_group_batch_update_result": "批量更新完成：{success_count} 个成功，{fail_count} 个失败。",
+    "message_group_batch_setup_success": "批量设置完成：{count} 个群聊已设置为 {type}",
+    "message_group_batch_update_result": "批量更新完成：{success_count} 个成功，{fail_count} 个失败",
     "message_reminder_allowed": "消息提醒已允许",
     "message_reminder_silent": "已设置接收消息但不提醒",
     "message_ring": "响铃",
