@@ -25,6 +25,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useMitt } from './useMitt'
 import { info as logInfo } from '@tauri-apps/plugin-log'
 import { ensureAppStateReady } from '@/utils/AppStateReady'
+import { useI18nGlobal } from '../services/i18n'
 import { useInitialSyncStore } from '@/stores/initialSync'
 
 export const useLogin = () => {
@@ -43,6 +44,8 @@ export const useLogin = () => {
   const initialSyncStore = useInitialSyncStore()
   const { createWebviewWindow } = useWindow()
 
+  const { t } = useI18nGlobal()
+
   /**
    * 在 composable 初始化时获取 router 实例
    * 注意: useRouter() 必须在组件 setup 上下文中调用
@@ -60,7 +63,7 @@ export const useLogin = () => {
   const { isOnline } = useNetwork()
   const loading = ref(false)
   /** 登录按钮的文本内容 */
-  const loginText = ref(isOnline.value ? '登录' : '网络异常')
+  const loginText = ref(isOnline.value ? t('login.button.login.default') : t('login.button.login.network_error'))
   const loginDisabled = ref(!isOnline.value)
   /** 账号信息 */
   const info = ref({

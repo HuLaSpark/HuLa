@@ -1,0 +1,58 @@
+{
+  "general": {
+    "title": "General",
+    "appearance": {
+      "title": "Appearance",
+      "theme": {
+        "auto": "Follow system",
+        "light": "Light",
+        "dark": "Dark"
+      }
+    },
+    "chat": {
+      "title": "Chat",
+      "translate_service": "Translation Service"
+    },
+    "ui": {
+      "title": "UI",
+      "language": "Language",
+      "blur": "Gaussian blur",
+      "shadow": "Enable Shadow",
+      "font": "Font Family",
+      "menu_name": "Menu Name"
+    }
+  },
+  "login": {
+    "title": "Log-in",
+    "auto_login_startup": "Auto-login on startup",
+    "launch_startup": "Launch at startup"
+  },
+  "notice": {
+    "title": "Notifications",
+    "sound": "Sound",
+    "message_sound": "New Message Alert Sound",
+    "message_sound_descript": "After turning on, a prompt sound will play when a new message is received.",
+    "group_setting": "Group settings",
+    "select_all": "Select All",
+    "group_notic_type": {
+      "allow": "Allow",
+      "silent": "Silent",
+      "block": "Block"
+    },
+    "input": {
+      "search_group_placholder": "Serch Group"
+    },
+    "batch_set": "Batch Set",
+    "message_select_group_first": "Please select a group chat to configure first.",
+    "unknow_group": "Unknow Group",
+    "group_chat_not_found": "Group chat information not found.",
+    "setup_fail": "Setup failed",
+    "message_group_batch_setup_success": "Batch settings completed! {count} group chat has been set to {type}.",
+    "message_group_batch_update_result": "Batch update completed: {success_count} successful, {fail_count} failed.",
+    "message_reminder_allowed": "Message reminders have been allowed",
+    "message_reminder_silent": "Messages will be received but not notified",
+    "message_ring": "Ring",
+    "message_unblocked": "Unblocked"
+  },
+  "unknow": "Unknow"
+}

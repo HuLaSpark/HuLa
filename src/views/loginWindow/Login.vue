@@ -24,7 +24,7 @@
           type="text"
           :placeholder="accountPH"
           @focus="accountPH = ''"
-          @blur="accountPH = '邮箱/HuLa账号'"
+          @blur="accountPH = t('login.input.account.placeholder')"
           spellCheck="false"
           autoComplete="off"
           autoCorrect="off"
@@ -79,17 +79,21 @@
           autoCapitalize="off"
           :placeholder="passwordPH"
           @focus="passwordPH = ''"
-          @blur="passwordPH = '输入HuLa密码'"
+          @blur="passwordPH = t('login.input.pass.placeholder')"
           clearable />
 
         <!-- 协议 -->
         <n-flex align="center" justify="center" :size="6">
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px agreement">
-            <span>已阅读并同意</span>
-            <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
-            <span>和</span>
-            <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
+            <span>{{ t('login.term.checkout.text1') }}</span>
+            <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">
+              {{ t('login.term.checkout.text2') }}
+            </span>
+            <span>{{ t('login.term.checkout.text3') }}</span>
+            <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">
+              {{ t('login.term.checkout.text4') }}
+            </span>
           </div>
         </n-flex>
 
@@ -143,7 +147,7 @@
 
     <!-- 底部操作栏 -->
     <n-flex justify="center" class="text-14px" id="bottomBar">
-      <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">扫码登录</div>
+      <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">{{ t('login.button.qr_code') }}</div>
       <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
       <div v-if="uiState === 'auto'" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
       <n-popover
@@ -155,25 +159,25 @@
         :show-checkmark="false"
         :show-arrow="false">
         <template #trigger>
-          <div class="color-#13987f cursor-pointer">更多选项</div>
+          <div class="color-#13987f cursor-pointer">{{ t('login.option.more') }}</div>
         </template>
         <n-flex vertical :size="2">
           <div
             class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
             @click="createWebviewWindow('注册', 'register', 600, 600)">
-            注册账号
+            {{ t('login.register') }}
           </div>
           <div
             class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
             @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
-            忘记密码
+            {{ t('login.option.items.forget') }}
           </div>
           <div
             v-if="!isCompatibility()"
             @click="router.push('/network')"
             :class="{ network: isMac() }"
             class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
-            网络设置
+            {{ t('login.option.items.network_setting') }}
           </div>
         </n-flex>
       </n-popover>
@@ -181,6 +185,7 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useNetwork } from '@vueuse/core'
 import { darkTheme, lightTheme } from 'naive-ui'
@@ -245,6 +250,8 @@ const driverSteps: DriverStepConfig[] = [
   }
 ]
 
+const { t } = useI18n()
+
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
@@ -267,8 +274,9 @@ const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
-const accountPH = ref('邮箱/HuLa账号')
-const passwordPH = ref('输入HuLa密码')
+const accountPH = ref(t('login.input.account.placeholder'))
+const passwordPH = ref(t('login.input.pass.placeholder'))
+
 /** 登录按钮的文本内容 */
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)

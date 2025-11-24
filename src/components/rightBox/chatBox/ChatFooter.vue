@@ -12,7 +12,7 @@
         <svg class="size-24px">
           <use href="#cloudError"></use>
         </svg>
-        <span class="text-(14px [--chat-text-color])">你们当前已经不是好友关系</span>
+        <span class="text-(14px [--chat-text-color])">{{ t('editor.relation.not_friends') }}</span>
       </n-flex>
     </div>
 
@@ -105,7 +105,7 @@
                     <svg class="size-14px">
                       <use href="#screenshot"></use>
                     </svg>
-                    <p>截图</p>
+                    <p>{{ t('editor.screenshot') }}</p>
                   </n-flex>
                   <p class="text-(12px #909090)">{{ settingStore.shortcuts.screenshot }}</p>
                 </n-flex>
@@ -116,7 +116,7 @@
                   justify="space-between"
                   @click="isConceal = !isConceal">
                   <n-checkbox v-model:checked="isConceal" @click.stop />
-                  <p class="text-(12px --chat-text-color)">截图时隐藏当前窗口</p>
+                  <p class="text-(12px --chat-text-color)">{{ t('editor.screenshot_hide_curr_window') }}</p>
                 </n-flex>
               </div>
             </n-popover>
@@ -133,7 +133,7 @@
                 </svg>
               </div>
             </template>
-            <span>文件</span>
+            <span>{{ t('editor.file') }}</span>
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
@@ -141,7 +141,7 @@
                 <use href="#photo"></use>
               </svg>
             </template>
-            <span>图片</span>
+            <span>{{ t('editor.image') }}</span>
           </n-popover>
           <n-popover trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
@@ -149,7 +149,7 @@
                 <use href="#voice"></use>
               </svg>
             </template>
-            <span>语音信息</span>
+            <span>{{ t('editor.voice') }}</span>
           </n-popover>
           <n-popover v-if="!isMac()" trigger="hover" :show-arrow="false" placement="bottom">
             <template #trigger>
@@ -157,7 +157,7 @@
                 <use href="#local"></use>
               </svg>
             </template>
-            <span>位置</span>
+            <span>{{ t('editor.location') }}</span>
           </n-popover>
         </n-flex>
 
@@ -167,7 +167,7 @@
               <use href="#history"></use>
             </svg>
           </template>
-          <span>聊天记录</span>
+          <span>{{ t('editor.chat_history') }}</span>
         </n-popover>
       </n-flex>
 
@@ -229,7 +229,9 @@ import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
 import { useDebounceFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 // 移动端组件条件导入
 const More = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/chat-room/panel/More.vue')) : void 0
 const VoicePanel = isMobile()

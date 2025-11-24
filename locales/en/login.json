@@ -1,0 +1,48 @@
+{
+  "button": {
+    "login": {
+      "default": "Login",
+      "network_error": "Network Error"
+    },
+    "qr_code": "Login with QR Code"
+  },
+  "input": {
+    "account": {
+      "placeholder": "Email / HuLa Account"
+    },
+    "pass": {
+      "placeholder": "Enter HuLa Password"
+    }
+  },
+  "option": {
+    "more": "More Options",
+    "items": {
+      "forget": "Forgot Password",
+      "network_setting": "Network Settings"
+    }
+  },
+  "term": {
+    "checkout": {
+      "text1": "I accept the",
+      "text2": " Terms ",
+      "text3": " & ",
+      "text4": "Privacy Policy"
+    }
+  },
+  "auth_way": {
+    "acc_pss": "Account & Password Login"
+  },
+  "register": "Register Account",
+  "qr_code_expired": "QR code expired",
+  "qr_code_expired_hint": "Please try again later",
+  "qr_code_scan_hint": "Please use HuLa App to scan the QR code",
+  "qr_code_gen_fail_hint": "Failed to generate QR code",
+  "qr_code_scan_success_hint": "Scan successful, waiting for authorization",
+  "wait_auth_hint": "Waiting for authorization...",
+  "login_success": "Login successful",
+  "fetch_user_fail": "Failed to fetch user information",
+  "loggingin": "Logging in...",
+  "refreshing": "Refreshing...",
+  "loading": "Loading...",
+  "scan_qr_code_fail": "QR code scan failed"
+}

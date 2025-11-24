@@ -1,0 +1,58 @@
+{
+  "general": {
+    "title": "通用",
+    "appearance": {
+      "title": "外观",
+      "theme": {
+        "auto": "跟随系统",
+        "light": "浅色",
+        "dark": "深色"
+      }
+    },
+    "chat": {
+      "title": "聊天",
+      "translate_service": "翻译服务"
+    },
+    "ui": {
+      "title": "界面",
+      "language": "语言",
+      "blur": "高斯模糊",
+      "shadow": "启用阴影",
+      "font": "字体",
+      "menu_name": "菜单名称"
+    }
+  },
+  "login": {
+    "title": "登录",
+    "auto_login_startup": "启动时自动登录",
+    "launch_startup": "开机自启动"
+  },
+  "notice": {
+    "title": "通知",
+    "sound": "声音",
+    "message_sound": "新消息提醒声音",
+    "message_sound_descript": "开启后，当收到新消息会播放提示音。",
+    "group_setting": "群设置",
+    "select_all": "全选",
+    "group_notic_type": {
+      "allow": "允许",
+      "silent": "静默",
+      "block": "屏蔽"
+    },
+    "input": {
+      "search_group_placholder": "搜索群聊"
+    },
+    "batch_set": "批量设置",
+    "message_select_group_first": "请先选择要设置的群聊。",
+    "unknow_group": "未知群聊",
+    "group_chat_not_found": "未找到群聊信息。",
+    "setup_fail": "设置失败",
+    "message_group_batch_setup_success": "批量设置完成！{count} 个群聊已设置为 {type}。",
+    "message_group_batch_update_result": "批量更新完成：{success_count} 个成功，{fail_count} 个失败。",
+    "message_reminder_allowed": "消息提醒已允许",
+    "message_reminder_silent": "已设置接收消息但不提醒",
+    "message_ring": "响铃",
+    "message_unblocked": "已取消屏蔽"
+  },
+  "unknow": "未知"
+}

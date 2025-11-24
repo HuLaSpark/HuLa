@@ -2,7 +2,7 @@
   <n-flex vertical :size="40">
     <!-- 通用设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">外观设置</span>
+      <span class="pl-10px">{{ t('setting.general.appearance.title') }}</span>
       <n-flex align="center" :size="20" class="item">
         <n-flex
           vertical
@@ -60,7 +60,7 @@
 
     <!--  聊天设置  -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">聊天</span>
+      <span class="pl-10px">{{ t('setting.general.chat.title') }}</span>
 
       <n-flex class="item" :size="12" vertical>
         <!-- 双击打开独立会话 -->
@@ -72,7 +72,7 @@
 
         <!-- 翻译api选项 -->
         <n-flex align="center" justify="space-between">
-          <span>翻译提供商</span>
+          <span>{{ t('setting.general.chat.translate_service') }}</span>
 
           <n-select
             class="w-140px"
@@ -86,11 +86,19 @@
 
     <!-- 界面设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">界面</span>
+      <span class="pl-10px">{{ t('setting.general.ui.title') }}</span>
 
       <n-flex class="item" :size="12" vertical>
+        <!-- 字体 -->
         <n-flex align="center" justify="space-between">
-          <span>是否开启透明高斯模糊</span>
+          <span>{{ t('setting.general.ui.language') }}</span>
+          <n-select class="w-140px" size="small" label-field="label" v-model:value="page.lang" :options="langOptions" />
+        </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
+        <n-flex align="center" justify="space-between">
+          <span>{{ t('setting.general.ui.blur') }}</span>
 
           <n-switch size="small" v-model:value="page.blur" />
         </n-flex>
@@ -98,7 +106,7 @@
         <span class="w-full h-1px bg-[--line-color]"></span>
 
         <n-flex align="center" justify="space-between">
-          <span>是否开启阴影</span>
+          <span>{{ t('setting.general.ui.shadow') }}</span>
 
           <n-switch size="small" v-model:value="page.shadow" />
         </n-flex>
@@ -107,7 +115,7 @@
 
         <!-- 字体 -->
         <n-flex align="center" justify="space-between">
-          <span>字体样式</span>
+          <span>{{ t('setting.general.ui.font') }}</span>
           <n-select
             class="w-140px"
             size="small"
@@ -120,7 +128,7 @@
 
         <!-- 菜单显示模式 -->
         <n-flex align="center" justify="space-between">
-          <span>显示菜单名</span>
+          <span>{{ t('setting.general.ui.menu_name') }}</span>
 
           <n-switch size="small" v-model:value="showText" />
         </n-flex>
@@ -136,9 +144,11 @@ import { NSwitch } from 'naive-ui'
 import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isWindows } from '@/utils/PlatformConstants'
-import { fontOptions, translateOptions } from './config.ts'
+import { fontOptions, translateOptions, langOptions } from './config.ts'
 import { topicsList } from './model.tsx'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes, tips, chat, page } = settingStore

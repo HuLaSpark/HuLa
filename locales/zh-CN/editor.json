@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "select_all": "全选",
+    "save_as": "另存为",
+    "paste": "粘贴",
+    "copy": "复制",
+    "cut": "剪切"
+  },
+  "send": "发送",
+  "placeholder": "善言一句暖人心，恶语一句伤人心",
+  "send_or_newline": "{send} 发送/{newline} 换行",
+  "file": "文件",
+  "image": "图片",
+  "voice": "语音",
+  "location": "位置",
+  "chat_history": "聊天记录",
+  "screenshot": "截图",
+  "screenshot_hide_curr_window": "截图时隐藏当前窗口",
+  "relation": {
+    "not_friends": "你们当前已经不是好友关系"
+  }
+}
