@@ -4,7 +4,7 @@
       "default": "Login",
       "network_error": "Network Error"
     },
-    "qr_code": "Login with QR Code"
+    "qr_code": "QR Code"
   },
   "input": {
     "account": {

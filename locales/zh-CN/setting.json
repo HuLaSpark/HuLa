@@ -54,5 +54,45 @@
     "message_ring": "响铃",
     "message_unblocked": "已取消屏蔽"
   },
+  "shortcut": {
+    "title": "快捷键",
+    "global_shortcut_title": "全局",
+    "enable_global_shortcuts": "启用全局快捷键",
+    "enable_global_shortcuts_hint": "关闭后，下方所有快捷键将失效。",
+    "function_shortcut_title": "功能",
+    "message_title": "Message",
+    "screenshot": "截图",
+    "screenshot_hint": "按快捷键进行截图",
+    "panel_switch": "主面板切换",
+    "panel_switch_hint": "按快捷键切换主面板",
+    "message_shortcut": "消息",
+    "send_message_shortcut": "发送消息",
+    "send_message_shortcut_hint": "按快捷键发送消息",
+    "send_message_shortcut_option": "按 {key} 键发送消息",
+    "unbound": "未绑定",
+    "bound": "已绑定",
+    "reset": "重置",
+    "shortcut_update_result": "{name} 已更新",
+    "shortcut_setting_failed": "{name} 设置失败",
+    "global_enable": "全局快捷键已开启",
+    "global_disable": "全局快捷键已关闭",
+    "global_toggle_failed": "全局快捷键开关设置失败",
+    "send_message_updated": "发送消息快捷键已更新",
+    "send_message_failed": "发送消息快捷键设置失败"
+  },
+  "storage": {
+    "title": "存储",
+    "file_scan_progress": "扫描文件中",
+    "usage": "扫描文件占比",
+    "used_space": "已用空间",
+    "app_used_space": "Hula 数据",
+    "free_space": "可用空间",
+    "directory": "目录",
+    "curr_dir": "当前目录"
+  },
+  "theme": {
+    "title": "主题",
+    "restore_default": "恢复默认"
+  },
   "unknow": "未知"
 }

@@ -54,5 +54,45 @@
     "message_ring": "Ring",
     "message_unblocked": "Unblocked"
   },
+  "shortcut": {
+    "title": "Shortcuts",
+    "global_shortcut_title": "Global",
+    "enable_global_shortcuts": "Enable Global Shortcuts",
+    "enable_global_shortcuts_hint": "After closing, all shortcuts below will be disabled.",
+    "function_shortcut_title": "Function",
+    "message_title": "Message",
+    "screenshot": "Screenshot",
+    "screenshot_hint": "Press the shortcut key to capture",
+    "panel_switch": "Main panel switch",
+    "panel_switch_hint": "Press the shortcut key to switch the main panel",
+    "message_shortcut": "Message",
+    "send_message_shortcut": "Send Message",
+    "send_message_shortcut_hint": "Press the shortcut key to send a message",
+    "send_message_shortcut_option": "Press {key} to send",
+    "unbound": "Unbound",
+    "bound": "Bound",
+    "reset": "Reset",
+    "shortcut_update_result": "{name} has been updated",
+    "shortcut_setting_failed": "{name} setting failed",
+    "global_enable": "Global shortcuts enabled",
+    "global_disable": "Global shortcuts disabled",
+    "global_toggle_failed": "Failed to set the global shortcut toggle",
+    "send_message_updated": "Send message shortcut updated",
+    "send_message_failed": "Send message shortcut failed"
+  },
+  "storage": {
+    "title": "Storage",
+    "file_scan_progress": "Scanning Progress",
+    "usage": "File Scan Progress",
+    "used_space": "Used Space",
+    "app_used_space": "Hula Data",
+    "free_space": "Free Space",
+    "directory": "Directory",
+    "curr_dir": "Current directory"
+  },
+  "theme": {
+    "title": "Theme",
+    "restore_default": "Restore"
+  },
   "unknow": "Unknow"
 }
