@@ -2879,6 +2879,7 @@ dependencies = [
  "objc2-core-foundation",
  "objc2-foundation 0.3.2",
  "objc2-ui-kit",
+ "once_cell",
  "pulldown-cmark",
  "reqwest",
  "rodio",

@@ -8,11 +8,13 @@ use crate::vo::vo::ChatMessageReq;
 
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
+use once_cell::sync::Lazy;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops::Deref;
+use std::sync::atomic::{AtomicI64, Ordering};
 use tauri::{State, ipc::Channel};
 use tracing::{debug, error, info};
 
@@ -220,11 +222,42 @@ pub async fn check_user_init_and_fetch_messages(
     db_conn: &DatabaseConnection,
     uid: &str,
     async_data: bool,
+    force_full: bool,
 ) -> Result<(), CommonError> {
+    // 防止高频同步，10秒内只允许一次同步(比如弱网、网络不好情况下会重复重连)
+    static MESSAGE_SYNC_LOCK: Lazy<tokio::sync::Mutex<()>> =
+        Lazy::new(|| tokio::sync::Mutex::new(()));
+    static LAST_MESSAGE_SYNC_MS: AtomicI64 = AtomicI64::new(0);
+    const MESSAGE_SYNC_COOLDOWN_MS: i64 = 10_000;
+
     info!(
         "Checking user initialization status and fetching messages, uid: {}",
         uid
     );
+
+    let now_ms = chrono::Utc::now().timestamp_millis();
+    if !force_full {
+        let last = LAST_MESSAGE_SYNC_MS.load(Ordering::Relaxed);
+        if now_ms - last < MESSAGE_SYNC_COOLDOWN_MS {
+            info!(
+                "Skip message sync due to cooldown (last={}ms, now={}ms, uid={})",
+                last, now_ms, uid
+            );
+            return Ok(());
+        }
+    }
+
+    let guard = match MESSAGE_SYNC_LOCK.try_lock() {
+        Ok(g) => g,
+        Err(_) => {
+            info!(
+                "Skip message sync because another sync is in progress, uid={}",
+                uid
+            );
+            return Ok(());
+        }
+    };
+
     // 检查用户的 is_init 状态
     if let Ok(user) = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid))
@@ -232,8 +265,9 @@ pub async fn check_user_init_and_fetch_messages(
         .await
     {
         if let Some(user_model) = user {
-            // 如果 is_init 为 true，调用后端接口获取所有消息
-            if user_model.is_init {
+            let should_full_sync = force_full || user_model.is_init;
+            // 如果 is_init 为 true，调用后端接口获取所有消息；否则按增量模式同步
+            if should_full_sync {
                 info!(
                     "User {} needs initialization, starting to fetch all messages",
                     uid
@@ -245,16 +279,20 @@ pub async fn check_user_init_and_fetch_messages(
                 }
             } else {
                 info!(
-                    "User {} offline message update, async_data: {:?}",
+                    "User {} incremental/offline message update, async_data: {:?}",
                     uid, async_data
                 );
-                if let Err(e) = fetch_all_messages(client, db_conn, uid, async_data).await {
-                    error!("Failed to update offline messages: {}", e);
-                    return Err(e);
-                }
+                fetch_all_messages(client, db_conn, uid, async_data)
+                    .await
+                    .map_err(|e| {
+                        error!("Failed to update offline messages: {}", e);
+                        e
+                    })?;
             }
         }
     }
+    LAST_MESSAGE_SYNC_MS.store(now_ms, Ordering::Relaxed);
+    drop(guard);
     Ok(())
 }
 
@@ -318,6 +356,7 @@ pub async fn fetch_all_messages(
 #[serde(rename_all = "camelCase")]
 pub struct SyncMessagesParam {
     pub async_data: Option<bool>,
+    pub full_sync: Option<bool>,
     pub uid: Option<String>,
 }
 
@@ -329,15 +368,22 @@ pub async fn sync_messages(
     use std::ops::Deref;
 
     let async_data = param.as_ref().and_then(|p| p.async_data).unwrap_or(true);
+    let full_sync = param.as_ref().and_then(|p| p.full_sync).unwrap_or(false);
     let uid = match param.as_ref().and_then(|p| p.uid.clone()) {
         Some(v) if !v.is_empty() => v,
         _ => state.user_info.lock().await.uid.clone(),
     };
 
     let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), &uid, async_data)
-        .await
-        .map_err(|e| e.to_string())?;
+    check_user_init_and_fetch_messages(
+        &mut client,
+        state.db_conn.deref(),
+        &uid,
+        async_data,
+        full_sync,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
     Ok(())
 }
 
