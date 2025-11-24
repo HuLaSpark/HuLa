@@ -13,6 +13,7 @@ import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
+import { atStartup } from './build/config/console'
 import { getRootPath, getSrcPath } from './build/config/getPath'
 
 function getLocalIP() {
@@ -66,7 +67,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         : '127.0.0.1'
   })()
 
-  console.log('Host:', host)
+  // 是否开启启动时打印信息
+  atStartup(config, mode, host)()
 
   return {
     resolve: {

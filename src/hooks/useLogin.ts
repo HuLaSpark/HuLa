@@ -170,7 +170,7 @@ export const useLogin = () => {
 
     // 后台同步消息：登录命令已触发一次全量/离线同步，这里避免重复拉取；仅在需要时再显式调用
     // 将消息预取和其他预热放后台，避免阻塞 UI
-    Promise.allSettled([
+    await Promise.allSettled([
       chatStore.setAllSessionMsgList(20),
       groupStore.setGroupDetails(),
       cachedStore.getAllBadgeList()
