@@ -18,11 +18,14 @@ const i18n = createI18n({
   locale: ''
 })
 
-/** 如非必要，请不要直接使用它!!! */
+/**
+ * 在 setup 外使用，这似乎与 vue-i18n v9.x 相悖
+ * 如非必要，请不要直接使用它!!!
+ */
 export const useI18nGlobal = () => i18n.global
 
 // 动态导入所有 JSON 文件
-type LoadLocale = () => Promise<{ default: Record<string, any> }>
+type LoadLocale = () => Promise<{ default: Record<string, string> }>
 
 const locales = Object.entries(import.meta.glob('../../locales/**/*.json'))
   .map(([path, loader]) => {
