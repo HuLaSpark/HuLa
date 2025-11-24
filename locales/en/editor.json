@@ -8,7 +8,7 @@
   },
   "send": "Send",
   "placeholder": "A kind word warms the heart; a harsh word wounds it.",
-  "send_or_newline": "{send} 发送/{newline} 换行",
+  "send_or_newline": "{send} Send/{newline} Enter",
   "file": "File",
   "image": "Image",
   "voice": "Voice",
