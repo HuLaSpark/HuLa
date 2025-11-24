@@ -1,0 +1,15 @@
+{
+  "search_suggestions": "建议",
+  "search_guide": "在搜索框内搜索",
+  "no_search_results": "未找到相关结果",
+  "search_result": "搜索结果",
+  "search_history": "历史记录",
+  "search_input_placeholder": "搜索",
+  "clear_search_history": "清空",
+  "action": {
+    "message": "Hula",
+    "message_short_title": "消息",
+    "contact": "好友列表",
+    "contact_short_title": "好友"
+  }
+}

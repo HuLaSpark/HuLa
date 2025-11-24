@@ -22,7 +22,7 @@ const i18n = createI18n({
 export const useI18nGlobal = () => i18n.global
 
 // 动态导入所有 JSON 文件
-type LoadLocale = () => Promise<{ default: Record<string, any> }>
+type LoadLocale = () => Promise<{ default: Record<string, string> }>
 
 const locales = Object.entries(import.meta.glob('../../locales/**/*.json'))
   .map(([path, loader]) => {

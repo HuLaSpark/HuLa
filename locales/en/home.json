@@ -1,0 +1,15 @@
+{
+  "search_suggestions": "Search Suggestions",
+  "search_guide": "Search in the search box",
+  "no_search_results": "No relevant results found",
+  "search_result": "Search Results",
+  "search_history": "History",
+  "search_input_placeholder": "Search",
+  "clear_search_history": "Clear",
+  "action": {
+    "message": "Hula",
+    "message_short_title": "Messages",
+    "contact": "Contacts",
+    "contact_short_title": "Contacts"
+  }
+}

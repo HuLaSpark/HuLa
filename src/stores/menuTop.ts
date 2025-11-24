@@ -1,24 +1,26 @@
 import { defineStore } from 'pinia'
 import { type PluginEnum, StoresEnum } from '@/enums'
+import { useI18n } from 'vue-i18n'
 
 export const useMenuTopStore = defineStore(
   StoresEnum.MENUTOP,
   () => {
+    const { t } = useI18n()
     // 初始状态
     const initialState: OPT.L.Common[] = [
       {
         url: 'message',
         icon: 'message',
         iconAction: 'message-action',
-        title: '消息列表',
-        shortTitle: '消息'
+        title: t('home.action.message'),
+        shortTitle: t('home.action.message_short_title')
       },
       {
         url: 'friendsList',
         icon: 'avatar',
         iconAction: 'avatar-action',
-        title: '好友列表',
-        shortTitle: '好友'
+        title: t('home.action.contact'),
+        shortTitle: t('home.action.contact_short_title')
       }
     ]
 

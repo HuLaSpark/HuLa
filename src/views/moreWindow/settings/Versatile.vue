@@ -11,7 +11,7 @@
           class="bg-[--bg-setting-item] p-[2px_6px] cursor-pointer rounded-50px w-80px h-30px">
           <svg class="size-22px outline-none color-[--chat-text-color]"><use href="#forbid"></use></svg>
 
-          <p class="text-(12px [--chat-text-color])">恢复默认</p>
+          <p class="text-(12px [--chat-text-color])">{{ t('setting.theme.restore_default') }}</p>
         </n-flex>
       </n-flex>
     </n-flex>
@@ -37,7 +37,9 @@
 <script setup lang="ts">
 import { useSettingStore } from '@/stores/setting.ts'
 import { versatileModel } from './model.tsx'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 

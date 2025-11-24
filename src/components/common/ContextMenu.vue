@@ -21,7 +21,7 @@
               </n-popover>
             </div>
             <div v-if="!showAllEmojis && emoji.length > 4" class="p-4px">
-              <div class="emoji-more-btn" @click="showAllEmojis = true">更多</div>
+              <div class="emoji-more-btn" @click="showAllEmojis = true">{{ t('menu.ctx_menu_more') }}</div>
             </div>
           </div>
         </div>
@@ -132,6 +132,7 @@
 import { useContextMenu } from '@/hooks/useContextMenu.ts'
 import { useViewport } from '@/hooks/useViewport.ts'
 import { isMobile } from '@/utils/PlatformConstants'
+import { useI18n } from 'vue-i18n'
 
 type Props = {
   content?: Record<string, any>
@@ -139,6 +140,7 @@ type Props = {
   emoji?: any[]
   specialMenu?: any[]
 }
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<Props>(), {
   content: () => ({}),
