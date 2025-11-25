@@ -146,42 +146,54 @@
     </n-flex>
 
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px" id="bottomBar">
-      <div class="color-#13987f cursor-pointer" @click="router.push('/qrCode')">{{ t('login.button.qr_code') }}</div>
-      <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
-      <div v-if="uiState === 'auto'" class="color-#13987f cursor-pointer" @click="removeToken">移除账号</div>
-      <n-popover
-        v-else
-        trigger="click"
-        id="moreShow"
-        class="bg-#fdfdfd98! dark:bg-#48484e98! backdrop-blur-sm"
-        v-model:show="moreShow"
-        :show-checkmark="false"
-        :show-arrow="false">
-        <template #trigger>
-          <div class="color-#13987f cursor-pointer">{{ t('login.option.more') }}</div>
-        </template>
-        <n-flex vertical :size="2">
-          <div
-            class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
-            @click="createWebviewWindow('注册', 'register', 600, 600)">
-            {{ t('login.register') }}
-          </div>
-          <div
-            class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
-            @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
-            {{ t('login.option.items.forget') }}
-          </div>
-          <div
-            v-if="!isCompatibility()"
-            @click="router.push('/network')"
-            :class="{ network: isMac() }"
-            class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
-            {{ t('login.option.items.network_setting') }}
-          </div>
-        </n-flex>
-      </n-popover>
-    </n-flex>
+    <div class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full" id="bottomBar">
+      <div
+        class="color-#13987f cursor-pointer justify-self-end text-right"
+        :title="qrCodeTitle"
+        @click="router.push('/qrCode')">
+        {{ qrCodeLabel }}
+      </div>
+      <div class="w-1px h-14px bg-#ccc dark:bg-#707070 justify-self-center"></div>
+      <div
+        v-if="uiState === 'auto'"
+        class="color-#13987f cursor-pointer justify-self-start text-left"
+        :title="removeAccountTitle"
+        @click="removeToken">
+        {{ removeAccountLabel }}
+      </div>
+      <div v-else class="justify-self-start text-left">
+        <n-popover
+          trigger="click"
+          id="moreShow"
+          class="bg-#fdfdfd98! dark:bg-#48484e98! backdrop-blur-sm"
+          v-model:show="moreShow"
+          :show-checkmark="false"
+          :show-arrow="false">
+          <template #trigger>
+            <div class="color-#13987f cursor-pointer" :title="moreTitle">{{ moreLabel }}</div>
+          </template>
+          <n-flex vertical :size="2">
+            <div
+              class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
+              @click="createWebviewWindow('注册', 'register', 600, 600)">
+              {{ t('login.register') }}
+            </div>
+            <div
+              class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
+              @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
+              {{ t('login.option.items.forget') }}
+            </div>
+            <div
+              v-if="!isCompatibility()"
+              @click="router.push('/network')"
+              :class="{ network: isMac() }"
+              class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
+              {{ t('login.option.items.network_setting') }}
+            </div>
+          </n-flex>
+        </n-popover>
+      </div>
+    </div>
   </n-config-provider>
 </template>
 <script setup lang="ts">
@@ -206,6 +218,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isCompatibility, isDesktop, isMac } from '@/utils/PlatformConstants'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { useLogin } from '@/hooks/useLogin'
+import { formatBottomText } from '@/utils/Formatting'
 import { ThemeEnum } from '@/enums'
 
 // 定义引导步骤配置
@@ -274,10 +287,24 @@ const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
+// 输入框占位符
 const accountPH = ref(t('login.input.account.placeholder'))
 const passwordPH = ref(t('login.input.pass.placeholder'))
 
-/** 登录按钮的文本内容 */
+// 底部操作栏多语言超过6个字符时显示省略号
+const MAX_BOTTOM_TEXT_LEN = 6
+const qrCodeText = computed(() => t('login.button.qr_code'))
+const moreText = computed(() => t('login.option.more'))
+const removeAccountText = computed(() => '移除账号')
+const qrCodeLabel = computed(() => formatBottomText(qrCodeText.value, MAX_BOTTOM_TEXT_LEN))
+const moreLabel = computed(() => formatBottomText(moreText.value, MAX_BOTTOM_TEXT_LEN))
+const removeAccountLabel = computed(() => formatBottomText(removeAccountText.value, MAX_BOTTOM_TEXT_LEN))
+const qrCodeTitle = computed(() => (qrCodeLabel.value !== qrCodeText.value ? qrCodeText.value : undefined))
+const moreTitle = computed(() => (moreLabel.value !== moreText.value ? moreText.value : undefined))
+const removeAccountTitle = computed(() =>
+  removeAccountLabel.value !== removeAccountText.value ? removeAccountText.value : undefined
+)
+
 /** 是否直接跳转 */
 const isJumpDirectly = ref(false)
 

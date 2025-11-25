@@ -21,5 +21,22 @@
   "modify_group_nickname": "修改在群昵称",
   "add_friend": "添加好友",
   "report": "举报",
-  "ctx_menu_more": "更多"
+  "ctx_menu_more": "更多",
+  "pin": "置顶",
+  "unpin": "取消置顶",
+  "copy_account": "复制账号",
+  "mark_unread": "标记未读",
+  "group_message_setting": "群消息设置",
+  "set_do_not_disturb": "设置免打扰",
+  "unset_do_not_disturb": "取消免打扰",
+  "allow_notifications": "允许消息提醒",
+  "receive_silently": "接收消息但不提醒",
+  "block_group_messages": "屏蔽群消息",
+  "unblock_group_messages": "取消屏蔽群消息",
+  "block_user_messages": "屏蔽此人消息",
+  "unblock_user_messages": "取消屏蔽消息",
+  "remove_from_list": "从消息列表中移除",
+  "delete_friend": "删除好友",
+  "dissolve_group": "解散群聊",
+  "leave_group": "退出群聊"
 }

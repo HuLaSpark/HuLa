@@ -6,7 +6,7 @@ import pLimit from 'p-limit'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { MittEnum, type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
@@ -16,6 +16,7 @@ import { renderReplyContent } from '@/utils/RenderReplyContent.ts'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useSessionUnreadStore } from '@/stores/sessionUnread'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
+import { useMitt } from '@/hooks/useMitt'
 
 type RecalledMessage = {
   messageId: string
@@ -250,6 +251,17 @@ export const useChatStore = defineStore(
 
       return Object.values(messageMap[roomId]).sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
+
+    const findRoomIdByMsgId = (msgId: string) => {
+      if (!msgId) return ''
+      for (const roomId of Object.keys(messageMap)) {
+        const roomMessages = messageMap[roomId]
+        if (roomMessages && msgId in roomMessages) {
+          return roomId
+        }
+      }
+      return ''
+    }
 
     /**
      * 登录之后，加载一次所有会话的消息
@@ -660,10 +672,13 @@ export const useChatStore = defineStore(
     // 更新消息撤回状态
     const updateRecallMsg = async (data: RevokedMsgType) => {
       const { msgId } = data
-      const message = currentMessageMap.value?.[msgId]
-      if (message && typeof data.recallUid === 'string') {
-        let recallMessageBody: string = ''
+      const roomIdFromPayload = data.roomId || currentMessageMap.value?.[msgId]?.message?.roomId
+      const resolvedRoomId = roomIdFromPayload || findRoomIdByMsgId(msgId)
+      const roomMessages = resolvedRoomId ? messageMap[resolvedRoomId] : undefined
+      const message = roomMessages?.[msgId] || currentMessageMap.value?.[msgId]
+      let recallMessageBody = ''
 
+      if (message && typeof data.recallUid === 'string') {
         const currentUid = userStore.userInfo!.uid
         // 被撤回消息的原始发送人
         const senderUid = message.fromUser.uid
@@ -725,6 +740,14 @@ export const useChatStore = defineStore(
         } catch (error) {
           console.error(`[RECALL] Failed to update message recall status in database:`, error)
         }
+      }
+
+      if (resolvedRoomId) {
+        const session = sessionMap.value[resolvedRoomId]
+        if (session && recallMessageBody) {
+          session.text = recallMessageBody
+        }
+        useMitt.emit(MittEnum.UPDATE_SESSION_LAST_MSG, { roomId: resolvedRoomId })
       }
 
       // 更新与这条撤回消息有关的消息

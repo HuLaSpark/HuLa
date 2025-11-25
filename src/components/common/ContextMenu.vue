@@ -20,7 +20,7 @@
                 <span>{{ item.title }}</span>
               </n-popover>
             </div>
-            <div v-if="!showAllEmojis && emoji.length > 4" class="p-4px">
+            <div v-if="!showAllEmojis && emoji.length > 4" class="py-4px">
               <div class="emoji-more-btn" @click="showAllEmojis = true">{{ t('menu.ctx_menu_more') }}</div>
             </div>
           </div>
@@ -566,10 +566,11 @@ const shouldShowArrow = (item: any) => {
   }
 
   .emoji-more-btn {
-    @apply flex-center size-28px rounded-4px text-12px cursor-pointer bg-[--bg-menu-hover] hover:bg-[--emoji-hover];
+    @apply flex-center size-28px px-4px rounded-4px text-12px cursor-pointer bg-[--bg-menu-hover] hover:bg-[--emoji-hover];
   }
   .menu-list {
     @include menu-list();
+    min-width: 180px;
     .menu-item-disabled {
       @include menu-item();
       color: var(--disabled-color);
@@ -628,10 +629,20 @@ const shouldShowArrow = (item: any) => {
     gap: 10px;
     width: 100%;
     position: relative;
+    svg {
+      flex-shrink: 0;
+    }
+    p {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     .arrow-icon {
       position: absolute;
-      right: 0;
+      right: -4px;
       width: 12px;
       height: 12px;
       color: var(--text-color);

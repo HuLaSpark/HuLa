@@ -1,5 +1,5 @@
 {
-  "check_update": "Check for Updates",
+  "check_update": "Check Updates",
   "lock_screen": "Lock Screen",
   "settings": "Settings",
   "about": "About",
@@ -21,5 +21,22 @@
   "modify_group_nickname": "My Alias in Group",
   "add_friend": "Add Friend",
   "report": "Report",
-  "ctx_menu_more": "More"
+  "ctx_menu_more": "More",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "copy_account": "Copy Account",
+  "mark_unread": "Mark as Unread",
+  "group_message_setting": "Group notifications",
+  "set_do_not_disturb": "Mute alerts",
+  "unset_do_not_disturb": "Unmute alerts",
+  "allow_notifications": "Notify me",
+  "receive_silently": "Receive silently",
+  "block_group_messages": "Mute group",
+  "unblock_group_messages": "Unmute group",
+  "block_user_messages": "Block chat",
+  "unblock_user_messages": "Unblock chat",
+  "remove_from_list": "Remove chat",
+  "delete_friend": "Remove friend",
+  "dissolve_group": "Disband group",
+  "leave_group": "Leave Group"
 }

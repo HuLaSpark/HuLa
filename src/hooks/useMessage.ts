@@ -7,10 +7,12 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { exitGroup, notification, setSessionTop, shield, markMsgRead } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
+import { useI18n } from 'vue-i18n'
 
 const msgBoxShow = ref(false)
 const shrinkStatus = ref(false)
 export const useMessage = () => {
+  const { t } = useI18n()
   const globalStore = useGlobalStore()
   const chatStore = useChatStore()
   const settingStore = useSettingStore()
@@ -83,7 +85,7 @@ export const useMessage = () => {
 
   const menuList = ref<OPT.RightMenu[]>([
     {
-      label: (item: SessionItem) => (item.top ? '取消置顶' : '置顶'),
+      label: (item: SessionItem) => (item.top ? t('menu.unpin') : t('menu.pin')),
       icon: (item: SessionItem) => (item.top ? 'to-bottom' : 'to-top'),
       click: (item: SessionItem) => {
         setSessionTop({ roomId: item.roomId, top: !item.top })
@@ -98,7 +100,7 @@ export const useMessage = () => {
       }
     },
     {
-      label: '复制账号',
+      label: () => t('menu.copy_account'),
       icon: 'copy',
       click: (item: any) => {
         navigator.clipboard.writeText(item.account)
@@ -106,16 +108,18 @@ export const useMessage = () => {
       }
     },
     {
-      label: '标记未读',
+      label: () => t('menu.mark_unread'),
       icon: 'message-unread'
     },
     {
       label: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
-          return '群消息设置'
+          return t('menu.group_message_setting')
         }
 
-        return item.muteNotification === NotificationTypeEnum.RECEPTION ? '设置免打扰' : '取消免打扰'
+        return item.muteNotification === NotificationTypeEnum.RECEPTION
+          ? t('menu.set_do_not_disturb')
+          : t('menu.unset_do_not_disturb')
       },
       icon: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.GROUP) {
@@ -128,7 +132,7 @@ export const useMessage = () => {
 
         return [
           {
-            label: '允许消息提醒',
+            label: () => t('menu.allow_notifications'),
             icon: !item.shield && item.muteNotification === NotificationTypeEnum.RECEPTION ? 'check-small' : '',
             click: async () => {
               // 如果当前是屏蔽状态，需要先取消屏蔽
@@ -143,7 +147,7 @@ export const useMessage = () => {
             }
           },
           {
-            label: '接收消息但不提醒',
+            label: () => t('menu.receive_silently'),
             icon: !item.shield && item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'check-small' : '',
             click: async () => {
               // 如果当前是屏蔽状态，需要先取消屏蔽
@@ -158,7 +162,7 @@ export const useMessage = () => {
             }
           },
           {
-            label: '屏蔽群消息',
+            label: () => t('menu.block_group_messages'),
             icon: item.shield ? 'check-small' : '',
             click: async () => {
               await shield({
@@ -191,7 +195,7 @@ export const useMessage = () => {
 
   const specialMenuList = ref<OPT.RightMenu[]>([
     {
-      label: (item: SessionItem) => (item.shield ? '取消屏蔽消息' : '屏蔽此人消息'),
+      label: (item: SessionItem) => (item.shield ? t('menu.unblock_user_messages') : t('menu.block_user_messages')),
       icon: (item: SessionItem) => (item.shield ? 'message-success' : 'people-unknown'),
       click: async (item: SessionItem) => {
         await shield({
@@ -210,7 +214,7 @@ export const useMessage = () => {
       visible: (item: SessionItem) => item.type === RoomTypeEnum.SINGLE
     },
     {
-      label: '从消息列表中移除',
+      label: () => t('menu.remove_from_list'),
       icon: 'delete',
       click: async (item: SessionItem) => {
         await handleMsgDelete(item.roomId)
@@ -218,9 +222,9 @@ export const useMessage = () => {
     },
     {
       label: (item: SessionItem) => {
-        if (item.type === RoomTypeEnum.SINGLE) return '删除好友'
-        if (item.operate === SessionOperateEnum.DISSOLUTION_GROUP) return '解散群聊'
-        return '退出群聊'
+        if (item.type === RoomTypeEnum.SINGLE) return t('menu.delete_friend')
+        if (item.operate === SessionOperateEnum.DISSOLUTION_GROUP) return t('menu.dissolve_group')
+        return t('menu.leave_group')
       },
       icon: (item: SessionItem) => {
         if (item.type === RoomTypeEnum.SINGLE) return 'forbid'

@@ -187,7 +187,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
   const commonMenuList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.select'),
+      label: () => t('menu.select'),
       icon: 'list-checkbox',
       click: () => {
         chatStore.setMsgMultiChoose(true)
@@ -195,7 +195,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: MessageType) => !isNoticeMessage(item)
     },
     {
-      label: t('menu.add_sticker'),
+      label: () => t('menu.add_sticker'),
       icon: 'add-expression',
       click: async (item: MessageType) => {
         const imageUrl = item.message.body.url || item.message.body.content
@@ -210,7 +210,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: t('menu.forward'),
+      label: () => t('menu.forward'),
       icon: 'share',
       click: (item: MessageType) => {
         if (isMobile()) {
@@ -229,14 +229,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     //   }
     // },
     {
-      label: t('menu.reply'),
+      label: () => t('menu.reply'),
       icon: 'reply',
       click: (item: any) => {
         useMitt.emit(MittEnum.REPLY_MEG, item)
       }
     },
     {
-      label: t('menu.recall'),
+      label: () => t('menu.recall'),
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
         const msg = { ...item }
@@ -286,7 +286,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   ])
   const videoMenuList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.copy'),
+      label: () => t('menu.copy'),
       icon: 'copy',
       click: (item: MessageType) => {
         if (isMobile()) {
@@ -298,7 +298,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
     ...commonMenuList.value,
     {
-      label: t('menu.save_as'),
+      label: () => t('menu.save_as'),
       icon: 'Importing',
       click: async (item: MessageType) => {
         if (isMobile()) {
@@ -314,7 +314,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
 
     {
-      label: isMac() ? t('menu.show_in_finder') : t('menu.show_in_folder'),
+      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.show_in_folder')),
       icon: 'file2',
       click: async (item: MessageType) => {
         try {
@@ -344,7 +344,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   /** 右键消息菜单列表 */
   const menuList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.copy'),
+      label: () => t('menu.copy'),
       icon: 'copy',
       click: (item: MessageType) => {
         handleCopy(item.message.body.content, true, item.message.id)
@@ -352,7 +352,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: MessageType) => !shouldHideCopy(item)
     },
     {
-      label: t('menu.translate'),
+      label: () => t('menu.translate'),
       icon: 'translate',
       click: async (item: MessageType) => {
         const selectedText = getSelectedText(item.message.id)
@@ -385,7 +385,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         // 历史记录模式：基础菜单（复制、转发）
         const baseMenus: OPT.RightMenu[] = [
           {
-            label: t('menu.copy'),
+            label: () => t('menu.copy'),
             icon: 'copy',
             click: (item: MessageType) => {
               const content = item.message.body.url || item.message.body.content
@@ -397,14 +397,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         if (!disableHistoryActions) {
           baseMenus.push(
             {
-              label: t('menu.select'),
+              label: () => t('menu.select'),
               icon: 'list-checkbox',
               click: () => {
                 chatStore.setMsgMultiChoose(true)
               }
             },
             {
-              label: t('menu.forward'),
+              label: () => t('menu.forward'),
               icon: 'share',
               click: (item: MessageType) => {
                 handleForward(item)
@@ -429,7 +429,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             //   }
             // },
             {
-              label: t('menu.save_as'),
+              label: () => t('menu.save_as'),
               icon: 'Importing',
               click: async (item: MessageType) => {
                 if (isMobile()) {
@@ -455,7 +455,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             },
 
             {
-              label: isMac() ? t('menu.show_in_finder') : t('menu.open_folder'),
+              label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
               icon: 'file2',
               click: async (item: RightMouseMessageItem) => {
                 console.log('打开文件夹的item项：', item)
@@ -513,7 +513,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         // 正常聊天模式：只显示删除
         return [
           {
-            label: t('menu.del'),
+            label: () => t('menu.del'),
             icon: 'delete',
             click: (item: any) => {
               tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
@@ -529,7 +529,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   /** 文件类型右键菜单 */
   const fileMenuList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.preview'),
+      label: () => t('menu.preview'),
       icon: 'preview-open',
       click: (item: RightMouseMessageItem) => {
         console.log('预览文件的参数：', item)
@@ -639,7 +639,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
     ...commonMenuList.value,
     {
-      label: t('save_as'),
+      label: () => t('menu.save_as'),
       icon: 'Importing',
       click: async (item: RightMouseMessageItem) => {
         if (isMobile()) {
@@ -655,7 +655,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
 
     {
-      label: isMac() ? t('menu.show_in_finder') : t('menu.open_folder'),
+      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
       icon: 'file2',
       click: async (item: RightMouseMessageItem) => {
         console.log('打开文件夹的item项：', item)
@@ -708,7 +708,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   /** 图片类型右键菜单 */
   const imageMenuList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.copy'),
+      label: () => t('menu.copy'),
       icon: 'copy',
       click: async (item: MessageType) => {
         // 对于图片消息，优先使用 url 字段，回退到 content 字段
@@ -718,7 +718,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
     ...commonMenuList.value,
     {
-      label: t('menu.save_as'),
+      label: () => t('menu.save_as'),
       icon: 'Importing',
       click: async (item: MessageType) => {
         if (isMobile()) {
@@ -750,7 +750,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: isMac() ? t('menu.show_in_finder') : t('menu.open_folder'),
+      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
       icon: 'file2',
       click: async (item: MessageType) => {
         const fileUrl = item.message.body.url || item.message.body.content
@@ -800,7 +800,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   /** 右键用户信息菜单(群聊的时候显示) */
   const optionsList = ref<OPT.RightMenu[]>([
     {
-      label: t('menu.send_message'),
+      label: () => t('menu.send_message'),
       icon: 'message-action',
       click: (item: any) => {
         openMsgSession(item.uid || item.fromUser.uid)
@@ -816,7 +816,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: any) => (item.uid ? item.uid !== userUid.value : item.fromUser.uid !== userUid.value)
     },
     {
-      label: t('menu.get_user_info'),
+      label: () => t('menu.get_user_info'),
       icon: 'notes',
       click: (item: any, type: string) => {
         // 如果是聊天框内的资料就使用的是消息的key，如果是群聊成员的资料就使用的是uid
@@ -825,7 +825,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: t('menu.modify_group_nickname'),
+      label: () => t('menu.modify_group_nickname'),
       icon: 'edit',
       click: (item: any) => {
         const targetUid = item.uid || item.fromUser?.uid
@@ -849,7 +849,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: any) => (item.uid ? item.uid === userUid.value : item.fromUser.uid === userUid.value)
     },
     {
-      label: t('menu.add_friend'),
+      label: () => t('menu.add_friend'),
       icon: 'people-plus',
       click: async (item: any) => {
         await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
@@ -1005,7 +1005,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: t('menu.report'),
+      label: () => t('menu.report'),
       icon: 'caution',
       click: () => {}
     }

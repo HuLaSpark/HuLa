@@ -66,6 +66,10 @@ export const useReplaceMsg = () => {
    */
   const formatRecallMessage = (message: MessageType, roomType: RoomTypeEnum, userName: string) => {
     const { userUid } = useCommon()
+    const content = message.message?.body?.content
+    if (typeof content === 'string' && content.trim().length > 0) {
+      return content
+    }
 
     if (roomType === RoomTypeEnum.GROUP) {
       return `${userName}:撤回了一条消息`
