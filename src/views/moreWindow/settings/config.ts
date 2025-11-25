@@ -22,12 +22,12 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
   },
   {
     url: '/shortcut',
-    label: '快捷键管理',
+    label: t('setting.shortcut.title'),
     icon: 'enter-the-keyboard'
   },
   {
     url: '/manageStore',
-    label: '存储管理',
+    label: t('setting.storage.title'),
     icon: 'mini-sd-card'
   },
   {
@@ -37,7 +37,7 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
   },
   {
     url: '/versatile',
-    label: '超级变变变',
+    label: t('setting.theme.title'), //'超级变变变'
     icon: 'platte',
     versionStatus: 'New'
   }
@@ -46,11 +46,11 @@ const sideOptions = ref<OPT.L.SettingSide[]>([
 /** 发送按钮快捷键的选项 */
 const sendOptions = [
   {
-    label: '按 Enter 键发送消息',
+    label: t('setting.shortcut.send_message_shortcut_option', { key: 'Enter' }),
     value: 'Enter'
   },
   {
-    label: `按 ${key.value} + Enter 键发送消息`,
+    label: t('setting.shortcut.send_message_shortcut_option', { key: key.value }),
     value: `${key.value}+Enter`
   }
 ]

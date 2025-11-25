@@ -26,7 +26,7 @@
               {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(0) }}%
             </span>
             <span class="text-(12px #666)">
-              {{ showDiskUsage ? '扫描文件占比' : '扫描进度' }}
+              {{ showDiskUsage ? t('setting.storage.usage') : t('setting.storage.file_scan_progress') }}
             </span>
           </n-flex>
         </n-progress>
@@ -36,15 +36,15 @@
       <n-flex justify="center" :size="8">
         <n-flex align="center" :size="8">
           <div class="w-12px h-12px rounded-2px bg-#13987f"></div>
-          <span class="text-(11px #666)">扫描文件已用空间</span>
+          <span class="text-(11px #666)">{{ t('setting.storage.app_used_space') }}</span>
         </n-flex>
         <n-flex align="center" :size="8">
           <div class="w-12px h-12px rounded-2px bg-[--warning-text]"></div>
-          <span class="text-(11px #666)">磁盘分区已用空间</span>
+          <span class="text-(11px #666)">{{ t('setting.storage.used_space') }}</span>
         </n-flex>
         <n-flex align="center" :size="8">
           <div class="w-12px h-12px rounded-2px bg-#7db1ac50"></div>
-          <span class="text-(11px #666)">剩余可用空间</span>
+          <span class="text-(11px #666)">{{ t('setting.storage.free_space') }}</span>
         </n-flex>
       </n-flex>
 
@@ -103,7 +103,7 @@
 
     <!-- 用户目录 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">用户目录</span>
+      <span class="pl-10px">{{ t('setting.storage.directory') }}</span>
 
       <!-- 存储目录设置 -->
       <n-flex class="item" :size="16" vertical>
@@ -120,7 +120,7 @@
 
         <!-- 当前扫描目录显示 -->
         <n-flex align="center" justify="space-between">
-          <span>当前目录：</span>
+          <span>{{ t('setting.storage.curr_dir') }}</span>
           <n-flex vertical align="end" :size="8">
             <span class="text-(12px #666) max-w-300px truncate">
               {{ currentDirectory || '正在获取目录路径...' }}
@@ -146,9 +146,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { open } from '@tauri-apps/plugin-dialog'
 import { useScannerStore } from '@/stores/scanner.ts'
 import { formatBytes } from '@/utils/Formatting.ts'
+
+const { t } = useI18n()
 
 const scannerStore = useScannerStore()
 const {

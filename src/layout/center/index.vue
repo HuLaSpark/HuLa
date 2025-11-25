@@ -31,7 +31,7 @@
           id="search"
           v-model:value="searchText"
           @focus="() => handleSearchFocus()"
-          @blur="() => (searchText = '搜索')"
+          @blur="() => (searchText = t('home.search_input_placeholder'))"
           @update:value="handleSearchInputChange"
           class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
@@ -42,7 +42,7 @@
           autoCorrect="off"
           autoCapitalize="off"
           size="small"
-          :placeholder="isSearchMode ? '' : '搜索'">
+          :placeholder="isSearchMode ? '' : t('home.search_input_placeholder')">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
@@ -140,7 +140,9 @@ import { useSettingStore } from '@/stores/setting.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { options, renderLabel, renderSourceList, renderTargetList } from './model.tsx'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { createWebviewWindow } = useWindow()
 
 const chatStore = useChatStore()
@@ -164,7 +166,7 @@ const { width } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
 /** 搜索框文字 */
-const searchText = ref('搜索')
+const searchText = ref(t('home.search_input_placeholder'))
 /** 是否处于搜索模式 */
 const isSearchMode = ref(false)
 /** 添加面板是否显示 */

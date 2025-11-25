@@ -2,12 +2,12 @@
   <n-flex vertical :size="40">
     <!-- 全局快捷键总开关 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">全局快捷键</span>
+      <span class="pl-10px">{{ t('setting.shortcut.global_shortcut_title') }}</span>
 
       <n-flex class="item" align="center" justify="space-between">
         <n-flex vertical :size="8">
-          <span>启用全局快捷键</span>
-          <span class="text-(12px #909090)">关闭后下方所有快捷键将失效</span>
+          <span>{{ t('setting.shortcut.enable_global_shortcuts') }}</span>
+          <span class="text-(12px #909090)">{{ t('setting.shortcut.enable_global_shortcuts_hint') }}</span>
         </n-flex>
 
         <n-switch v-model:value="globalShortcutEnabled" @update:value="handleGlobalShortcutToggle" size="small" />
@@ -16,19 +16,20 @@
 
     <!-- 截图快捷键设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">功能快捷键</span>
+      <span class="pl-10px">{{ t('setting.shortcut.function_shortcut_title') }}</span>
 
       <n-flex class="item" :size="12" vertical>
         <!-- 截图快捷键 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
             <span>{{ shortcutConfigs.screenshot.displayName }}</span>
-            <span class="text-(12px #909090)">按下快捷键即可开始截图</span>
+            <!-- <span>{{ t('setting.shortcut.screenshot') }}</span> -->
+            <span class="text-(12px #909090)">{{ t('setting.shortcut.screenshot_hint') }}</span>
           </n-flex>
 
           <n-flex align="center" :size="12">
             <n-tag v-if="shortcutRegistered !== null" :type="shortcutRegistered ? 'success' : 'error'" size="small">
-              {{ shortcutRegistered ? '已绑定' : '未绑定' }}
+              {{ shortcutRegistered ? t('setting.shortcut.bound') : t('setting.shortcut.unbound') }}
             </n-tag>
             <n-input
               :value="screenshotShortcutDisplay"
@@ -51,7 +52,7 @@
                       <use href="#return"></use>
                     </svg>
                   </template>
-                  <span>重置</span>
+                  <span>{{ t('setting.shortcut.reset') }}</span>
                 </n-tooltip>
               </template>
             </n-input>
@@ -64,7 +65,8 @@
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
             <span>{{ shortcutConfigs.openMainPanel.displayName }}</span>
-            <span class="text-(12px #909090)">按下快捷键即可切换主面板显示状态</span>
+            <!-- <span>{{ t('setting.shortcut.panel_switch') }}</span> -->
+            <span class="text-(12px #909090)">{{ t('setting.shortcut.panel_switch_hint') }}</span>
           </n-flex>
 
           <n-flex align="center" :size="12">
@@ -72,7 +74,7 @@
               v-if="openMainPanelShortcutRegistered !== null"
               :type="openMainPanelShortcutRegistered ? 'success' : 'error'"
               size="small">
-              {{ openMainPanelShortcutRegistered ? '已绑定' : '未绑定' }}
+              {{ openMainPanelShortcutRegistered ? t('setting.shortcut.bound') : t('setting.shortcut.unbound') }}
             </n-tag>
             <n-input
               :value="openMainPanelShortcutDisplay"
@@ -95,7 +97,7 @@
                       <use href="#return"></use>
                     </svg>
                   </template>
-                  <span>重置</span>
+                  <span>{{ t('setting.shortcut.reset') }}</span>
                 </n-tooltip>
               </template>
             </n-input>
@@ -106,12 +108,12 @@
 
     <!-- 消息快捷键设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">消息快捷键</span>
+      <span class="pl-10px">{{ t('setting.shortcut.message_title') }}</span>
 
       <n-flex class="item" align="center" justify="space-between">
         <n-flex vertical :size="8">
-          <span>发送消息快捷键</span>
-          <span class="text-(12px #909090)">在聊天输入框中按下快捷键发送消息</span>
+          <span>{{ t('setting.shortcut.send_message_shortcut') }}</span>
+          <span class="text-(12px #909090)">{{ t('setting.shortcut.send_message_shortcut_hint') }}</span>
         </n-flex>
 
         <n-flex align="center" :size="12">
@@ -136,7 +138,9 @@ import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isMac } from '@/utils/PlatformConstants'
 import { sendOptions } from './config.ts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 // 快捷键配置管理
 type ShortcutConfig = {
   key: 'screenshot' | 'openMainPanel'
@@ -165,7 +169,7 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     defaultValue: getDefaultShortcuts().screenshot,
     eventName: 'shortcut-updated',
     registrationEventName: 'shortcut-registration-updated',
-    displayName: '截图快捷键'
+    displayName: t('setting.shortcut.screenshot')
   },
   openMainPanel: {
     key: 'openMainPanel',
@@ -176,7 +180,7 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     defaultValue: getDefaultShortcuts().openMainPanel,
     eventName: 'open-main-panel-shortcut-updated',
     registrationEventName: 'open-main-panel-shortcut-registration-updated',
-    displayName: '切换主面板快捷键'
+    displayName: t('setting.shortcut.panel_switch')
   }
 }
 
@@ -411,10 +415,10 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
       await emit(config.eventName, { shortcut: config.value.value })
       console.log(`📡 [Settings] ${config.eventName} 事件已发送`)
 
-      window.$message.success(`${config.displayName}已更新`)
+      window.$message.success(t('config.shortcut.shortcut_update_result', { name: config.displayName }))
     } catch (error) {
       console.error(`Failed to save ${config.key} shortcut:`, error)
-      window.$message.error(`${config.displayName}设置失败`)
+      window.$message.error(t('config.shortcut.shortcut_setting_failed', { name: config.displayName }))
 
       // 恢复原来的快捷键
       config.value.value = config.original.value
@@ -458,10 +462,10 @@ const handleGlobalShortcutToggle = async (enabled: boolean) => {
     // 通知主窗口更新全局快捷键状态
     await emit('global-shortcut-enabled-changed', { enabled })
 
-    window.$message.success(`全局快捷键已${enabled ? '开启' : '关闭'}`)
+    window.$message.success(enabled ? t('setting.shortcut.global_enable') : t('setting.shortcut.global_disable'))
   } catch (error) {
     console.error('Failed to toggle global shortcut:', error)
-    window.$message.error('全局快捷键开关设置失败')
+    window.$message.error(t('setting.shortcut.global_toggle_failed'))
 
     // 恢复原来的值
     globalShortcutEnabled.value = !enabled
@@ -474,10 +478,11 @@ const saveSendMessageShortcut = async () => {
     // 保存到 pinia store
     settingStore.setSendMessageShortcut(sendMessageShortcut.value)
 
-    window.$message.success('发送消息快捷键已更新')
+    window.$message.success(t('setting.shortcut.send_message_updated'))
   } catch (error) {
     console.error('Failed to save send message shortcut:', error)
     window.$message.error('发送消息快捷键设置失败')
+    window.$message.success(t('setting.shortcut.send_message_failed'))
 
     // 恢复原来的值
     sendMessageShortcut.value = settingStore.chat?.sendKey || 'Enter'
