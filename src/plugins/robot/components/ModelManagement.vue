@@ -150,18 +150,28 @@
 
         <n-form-item label="模型头像" path="avatar">
           <n-flex :size="12" align="center" style="width: 100%">
-            <n-avatar :key="formData.avatar" :src="formData.avatar" :size="60" round />
-            <n-upload
-              style="margin-left: 12px"
-              list-type="image-card"
-              :max="1"
-              :default-file-list="avatarDefaultFileList"
-              :on-change="handleModelAvatarUpload"
-              :on-remove="handleModelAvatarRemove">
-              点击上传
-            </n-upload>
-            <n-button v-if="formData.avatar" text type="error" size="tiny" @click="formData.avatar = ''">清除</n-button>
+            <n-avatar :key="formData.avatar" :src="formData.avatar" :size="60" round fallback-src="">
+              <Icon v-if="!formData.avatar" icon="mdi:account-circle" :size="40" />
+            </n-avatar>
+            <n-flex vertical :size="8" style="flex: 1">
+              <n-button size="small" @click="openAvatarCropper">
+                <template #icon>
+                  <Icon icon="mdi:upload" />
+                </template>
+                {{ formData.avatar ? '更换头像' : '上传头像' }}
+              </n-button>
+              <span v-if="formData.avatar" class="text-(12px #909090)">
+                已上传
+                <n-button text type="error" size="tiny" @click="formData.avatar = ''">清除</n-button>
+              </span>
+            </n-flex>
           </n-flex>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            class="hidden"
+            @change="handleFileChange" />
         </n-form-item>
 
         <n-form-item label="模型类型" path="type">
@@ -298,12 +308,15 @@
 
   <!-- API 密钥管理弹窗 -->
   <ApiKeyManagement v-model="showApiKeyManagement" @refresh="handleApiKeyManagementRefresh" />
+  <!-- 头像裁剪组件 -->
+  <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import type { FormRules, FormInst, UploadFileInfo, UploadOnChange, UploadOnRemove } from 'naive-ui'
-// 移除裁剪依赖，改为 Naive UI n-upload 简易上传
+import type { FormRules, FormInst } from 'naive-ui'
+import AvatarCropper from '@/components/common/AvatarCropper.vue'
+import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import { useUserStore } from '@/stores/user'
 import {
   modelPage,
@@ -642,41 +655,27 @@ const handleAdd = () => {
   showEditModal.value = true
 }
 
-const handleModelAvatarUpload: UploadOnChange = ({ file, fileList }) => {
-  try {
-    const current = file || fileList?.[0]
-    const rawCandidate = (current as any)?.file?.file || (current as any)?.file
-    const raw = rawCandidate as File | undefined
-    if (!raw) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      formData.value.avatar = String(reader.result || '')
-      window.$message.success('头像已读取')
-    }
-    reader.readAsDataURL(raw as File)
-  } catch (e) {
-    console.error('读取头像失败', e)
-    window.$message.error('读取头像失败')
+const {
+  fileInput,
+  localImageUrl,
+  showCropper,
+  cropperRef,
+  openAvatarCropper,
+  handleFileChange,
+  handleCrop: onCrop
+} = useAvatarUpload({
+  onSuccess: async (downloadUrl) => {
+    formData.value.avatar = ''
+    await nextTick()
+    formData.value.avatar = downloadUrl
+    await nextTick()
+    window.$message.success('头像上传成功')
   }
-}
-
-const handleModelAvatarRemove: UploadOnRemove = () => {
-  formData.value.avatar = ''
-}
-
-const avatarDefaultFileList = computed<UploadFileInfo[]>(() => {
-  const url = formData.value.avatar
-  return url
-    ? [
-        {
-          id: 'avatar-current',
-          name: '当前头像',
-          status: 'finished',
-          url
-        }
-      ]
-    : []
 })
+
+const handleCrop = async (cropBlob: Blob) => {
+  await onCrop(cropBlob)
+}
 
 // 编辑模型
 const handleEdit = (model: any) => {
