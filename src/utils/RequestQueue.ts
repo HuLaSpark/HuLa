@@ -11,7 +11,7 @@ export class RequestQueue {
 
   enqueue(resolve: (token: string) => void, priority: number = 0): void {
     if (this.queue.length >= this.maxSize) {
-      console.warn('🚫 请求队列已满，丢弃新请求')
+      console.warn('请求队列已满，丢弃新请求')
       return
     }
 
@@ -32,7 +32,7 @@ export class RequestQueue {
   }
 
   async processQueue(token: string): Promise<void> {
-    console.log(`⏳ 开始处理队列中的 ${this.queue.length} 个请求`)
+    console.log(`开始处理队列中的 ${this.queue.length} 个请求`)
 
     while (this.queue.length > 0 && this.processing < this.maxConcurrent) {
       this.processing++
@@ -40,10 +40,10 @@ export class RequestQueue {
       const request = this.queue.shift()
       if (request) {
         try {
-          console.log(`🔄 处理请求 - 剩余 ${this.queue.length} 个`)
+          console.log(`处理请求 - 剩余 ${this.queue.length} 个`)
           await request.resolve(token)
         } catch (error) {
-          console.error('❌ 请求处理失败:', error)
+          console.error('请求处理失败:', error)
         } finally {
           this.processing--
         }

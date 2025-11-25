@@ -105,13 +105,13 @@ impl WebSocketClient {
         // 获取连接锁，确保同时只有一个连接操作
         let _lock: tokio::sync::MutexGuard<'_, ()> = self.connection_mutex.lock().await;
         info!(
-            "🚀 Initializing WebSocket connection to: {}",
+            "Initializing WebSocket connection to: {}",
             config.server_url
         );
 
         // 在锁保护下再次检查连接状态
         if self.is_ws_connected.load(Ordering::SeqCst) {
-            warn!("⚠️ WebSocket already connected, ignoring duplicate connection request");
+            warn!("WebSocket already connected, ignoring duplicate connection request");
             return Ok(());
         }
 
@@ -133,7 +133,7 @@ impl WebSocketClient {
 
     /// 内部断开连接方法（不获取锁）
     pub async fn internal_disconnect(&self) {
-        info!("📡 Disconnecting WebSocket connection");
+        info!("Disconnecting WebSocket connection");
         self.should_stop.store(true, Ordering::SeqCst);
 
         // 更新连接状态
@@ -145,14 +145,14 @@ impl WebSocketClient {
         for handle in handles.drain(..) {
             handle.abort();
         }
-        info!("🛑 Cancelled {} async tasks", task_count);
+        info!("Cancelled {} async tasks", task_count);
 
         // 发送关闭信号以主动关闭 WebSocket 连接
         if let Some(close_sender) = self.close_sender.write().await.take() {
             if let Err(_) = close_sender.send(()) {
-                warn!("⚠️ Failed to send close signal, connection may already be closed");
+                warn!("Failed to send close signal, connection may already be closed");
             } else {
-                info!("📤 WebSocket close signal sent");
+                info!("WebSocket close signal sent");
             }
         }
 
@@ -168,7 +168,7 @@ impl WebSocketClient {
         self.reconnect_attempts.store(0, Ordering::SeqCst);
         self.heartbeat_active.store(false, Ordering::SeqCst);
 
-        info!("✅ WebSocket connection completely disconnected");
+        info!("WebSocket connection completely disconnected");
     }
 
     /// 发送消息
@@ -185,10 +185,10 @@ impl WebSocketClient {
                     sender.send(message.clone()).map_err(|e| {
                         anyhow::anyhow!("Failed to queue message for sending: {}", e)
                     })?;
-                    info!("📤 Message sent {:?}", message);
+                    info!("Message sent {:?}", message);
                     Ok(())
                 } else {
-                    warn!("📤 Connection state is Connected but sender not ready, message queued");
+                    warn!("Connection state is Connected but sender not ready, message queued");
                     // 连接未完全建立，将消息加入待发队列
                     let mut pending = self.pending_messages.write().await;
                     pending.push(data);
@@ -196,7 +196,7 @@ impl WebSocketClient {
                     // 限制队列长度
                     if pending.len() > 100 {
                         pending.remove(0);
-                        warn!("📤 Pending queue full, dropping oldest message");
+                        warn!("Pending queue full, dropping oldest message");
                     }
 
                     // 返回错误，让上层知道消息没有立即发送
@@ -210,23 +210,20 @@ impl WebSocketClient {
                 let mut pending = self.pending_messages.write().await;
                 pending.push(data);
                 warn!(
-                    "📤 正在连接中，消息已加入待发队列 (队列长度: {})",
+                    "正在连接中，消息已加入待发队列 (队列长度: {})",
                     pending.len()
                 );
 
                 // 限制队列长度
                 if pending.len() > 100 {
                     pending.remove(0);
-                    warn!("📤 Pending queue full, dropping oldest message");
+                    warn!("Pending queue full, dropping oldest message");
                 }
 
                 Err(anyhow::anyhow!("WebSocket is connecting, message queued"))
             }
             _ => {
-                warn!(
-                    "📤 WebSocket 未连接 (状态: {:?})，无法发送消息",
-                    current_state
-                );
+                warn!("WebSocket 未连接 (状态: {:?})，无法发送消息", current_state);
                 Err(anyhow::anyhow!(
                     "WebSocket not connected (state: {:?})",
                     current_state
@@ -262,7 +259,7 @@ impl WebSocketClient {
 
     /// 强制重连
     pub async fn force_reconnect(&self) -> Result<()> {
-        info!("🔄 Force reconnecting");
+        info!("Force reconnecting");
 
         // 获取连接锁
         let _lock = self.connection_mutex.lock().await;
@@ -288,13 +285,13 @@ impl WebSocketClient {
         loop {
             // 检查是否应该停止
             if self.should_stop.load(Ordering::SeqCst) {
-                info!("🛑 Received stop signal, exiting connection loop");
+                info!("Received stop signal, exiting connection loop");
                 break;
             }
 
             match self.try_connect().await {
                 Ok(_) => {
-                    info!("✅ WebSocket connection established");
+                    info!("WebSocket connection established");
                     self.reconnect_attempts.store(0, Ordering::SeqCst);
                     self.is_reconnecting.store(false, Ordering::SeqCst);
 
@@ -305,7 +302,7 @@ impl WebSocketClient {
                         sleep(Duration::from_millis(100)).await;
                     }
 
-                    info!("🔄 Connection disconnected, preparing to reconnect...");
+                    info!("Connection disconnected, preparing to reconnect...");
                     self.is_reconnecting.store(true, Ordering::SeqCst);
                     self.update_state(ConnectionState::Reconnecting, true).await;
                     // 清理当前连接状态
@@ -318,7 +315,7 @@ impl WebSocketClient {
                     let config = self.config.read().await;
 
                     error!(
-                        "❌ WebSocket connection failed (attempt {}/{}): {}",
+                        " WebSocket connection failed (attempt {}/{}): {}",
                         attempts, config.max_reconnect_attempts, e
                     );
 
@@ -342,7 +339,7 @@ impl WebSocketClient {
                         15000, // 最大15秒
                     );
 
-                    info!("🔄 Retrying connection in {}ms...", delay);
+                    info!("Retrying connection in {}ms...", delay);
                     self.update_state(ConnectionState::Reconnecting, true).await;
                     sleep(Duration::from_millis(delay)).await;
                 }
@@ -365,7 +362,7 @@ impl WebSocketClient {
         // 重置连接状态
         self.is_ws_connected.store(false, Ordering::SeqCst);
 
-        info!("🧹 Connection state cleaned up");
+        info!("Connection state cleaned up");
     }
 
     /// 尝试建立连接
@@ -384,7 +381,7 @@ impl WebSocketClient {
         }
 
         let url_str = url.as_str();
-        info!("🔗 Connecting to WebSocket: {}", url_str);
+        info!("Connecting to WebSocket: {}", url_str);
         self.update_state(ConnectionState::Connecting, false).await;
 
         // 建立连接
@@ -427,17 +424,17 @@ impl WebSocketClient {
                     tokio::select! {
                         Some(message) = msg_receiver.recv() => {
                             if let Err(e) = ws_sender.send(message).await {
-                                error!("❌ Failed to send message: {}", e);
+                                error!(" Failed to send message: {}", e);
                                 is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
                             }
                         }
                         Some(_) = close_receiver.recv() => {
-                            info!("🔒 Received close signal, actively closing WebSocket connection");
+                            info!("Received close signal, actively closing WebSocket connection");
                             if let Err(e) = ws_sender.close().await {
-                                warn!("⚠️ Error closing WebSocket connection: {}", e);
+                                warn!("Error closing WebSocket connection: {}", e);
                             } else {
-                                info!("✅ WebSocket connection actively closed");
+                                info!("WebSocket connection actively closed");
                             }
                             break;
                         }
@@ -478,12 +475,12 @@ impl WebSocketClient {
                             }
                         }
                         Ok(Message::Close(_)) => {
-                            info!("📡 WebSocket connection closed");
+                            info!("WebSocket connection closed");
                             is_ws_connected.store(false, Ordering::SeqCst);
                             break;
                         }
                         Err(e) => {
-                            error!("❌ WebSocket message receive error: {}", e);
+                            error!(" WebSocket message receive error: {}", e);
                             is_ws_connected.store(false, Ordering::SeqCst);
                             break;
                         }
@@ -502,17 +499,17 @@ impl WebSocketClient {
             // 等待任务完成或停止信号
             tokio::select! {
                 _ = message_sender_task => {
-                    info!("📤 Message sending task ended");
+                    info!("Message sending task ended");
                 }
                 _ = message_receiver_task => {
-                    info!("📥 Message receiving task ended");
+                    info!("Message receiving task ended");
                 }
                 _ = async {
                     while !should_stop.load(Ordering::SeqCst) {
                         sleep(Duration::from_millis(100)).await;
                     }
                 } => {
-                    info!("🛑 Received stop signal");
+                    info!("Received stop signal");
                 }
             }
 
@@ -525,7 +522,7 @@ impl WebSocketClient {
         let mut handles = self.task_handles.write().await;
         handles.push(monitor_task);
 
-        info!("✅ WebSocket connection and background tasks started");
+        info!("WebSocket connection and background tasks started");
         Ok(())
     }
 
@@ -536,7 +533,7 @@ impl WebSocketClient {
         last_pong_time: &Arc<AtomicU64>,
         consecutive_failures: &Arc<AtomicU32>,
     ) {
-        info!("📥 Received message: {}", text);
+        info!("Received message: {}", text);
 
         // 尝试解析心跳响应
         if let Ok(ws_msg) = serde_json::from_str::<WsMessage>(&text) {
@@ -546,7 +543,7 @@ impl WebSocketClient {
                     last_pong_time.store(now, Ordering::SeqCst);
                     consecutive_failures.store(0, Ordering::SeqCst);
 
-                    info!("💓 Received heartbeat response");
+                    info!("Received heartbeat response");
 
                     let health = ConnectionHealth {
                         is_healthy: true,
@@ -604,7 +601,7 @@ impl WebSocketClient {
             match self.send_message(ack_json.clone()).await {
                 Ok(_) => {
                     info!(
-                        "✅ Sent ACK for message {} (attempt: {})",
+                        "Sent ACK for message {} (attempt: {})",
                         message_id,
                         retry_count + 1
                     );
@@ -614,14 +611,14 @@ impl WebSocketClient {
                     retry_count += 1;
                     if retry_count >= max_retries {
                         error!(
-                            "❌ Failed to send ACK for message {} after {} attempts: {}",
+                            " Failed to send ACK for message {} after {} attempts: {}",
                             message_id, max_retries, e
                         );
                         return Err(e);
                     }
 
                     warn!(
-                        "⚠️ Failed to send ACK for message {} (attempt {}), retrying...: {}",
+                        "Failed to send ACK for message {} (attempt {}), retrying...: {}",
                         message_id, retry_count, e
                     );
 
@@ -643,27 +640,27 @@ impl WebSocketClient {
         // 提取消息数据
         let data = message.get("data");
 
-        debug!("🔍 Processing business message type: {}", message_type);
+        debug!("Processing business message type: {}", message_type);
 
         // 根据消息类型进行处理并发送对应的事件
         match message_type {
             // 登录相关
             "loginQrCode" => {
-                info!("📱 Getting login QR code");
+                info!("Getting login QR code");
                 let _ = app_handle.emit("ws-login-qr-code", data);
             }
             "waitingAuthorize" => {
-                info!("⏳ Waiting for authorization");
+                info!("Waiting for authorization");
                 let _ = app_handle.emit("ws-waiting-authorize", data);
             }
             "loginSuccess" => {
-                info!("✅ Login successful");
+                info!("Login successful");
                 let _ = app_handle.emit_to("home", "ws-login-success", data);
             }
 
             // 消息相关 TODO 暂时只实现聊天消息的ack
             "receiveMessage" => {
-                info!("💬 Received message");
+                info!("Received message");
 
                 let client_container = get_websocket_client_container();
                 let client_guard = client_container.read().await;
@@ -674,22 +671,19 @@ impl WebSocketClient {
                         .and_then(|m| m.get("id"))
                         .and_then(|id| id.as_str())
                     {
-                        info!("📨 回执 ACK: {}", message_id);
+                        info!("回执 ACK: {}", message_id);
 
                         if let Some(client) = client_guard.as_ref() {
                             match client.send_ack(message_id).await {
                                 Ok(_) => {
-                                    info!("✅ ACK sent successfully for message {}", message_id);
+                                    info!("ACK sent successfully for message {}", message_id);
                                 }
                                 Err(e) => {
-                                    error!(
-                                        "❌ Failed to send ACK for message {}: {}",
-                                        message_id, e
-                                    );
+                                    error!(" Failed to send ACK for message {}: {}", message_id, e);
                                 }
                             };
                         } else {
-                            error!("❌ 回执失败");
+                            error!(" 回执失败");
                         }
                     }
                 }
@@ -697,30 +691,30 @@ impl WebSocketClient {
                 let _ = app_handle.emit_to("home", "ws-receive-message", data);
             }
             "msgRecall" => {
-                info!("🔄 Message recalled");
+                info!("Message recalled");
                 let _ = app_handle.emit_to("home", "ws-msg-recall", data);
             }
             "msgMarkItem" => {
-                info!("👍 Message liked/disliked");
+                info!("Message liked/disliked");
                 let _ = app_handle.emit_to("home", "ws-msg-mark-item", data);
             }
 
             // 用户状态相关
             "online" => {
-                info!("🟢 User online");
+                info!("User online");
                 let _ = app_handle.emit_to("home", "ws-online", data);
             }
             "offline" => {
-                info!("🔴 User offline");
+                info!("User offline");
                 let _ = app_handle.emit_to("home", "ws-offline", data);
             }
             "userStateChange" => {
-                info!("🔄 User state changed");
+                info!("User state changed");
                 let _ = app_handle.emit_to("home", "ws-user-state-change", data);
             }
             // 通知总线
             "notifyEvent" => {
-                info!("👥 新的notifyEvent");
+                info!("新的notifyEvent");
                 let _ = app_handle.emit_to("home", "ws-request-notify-event", data);
             }
             "groupSetAdmin" => {
@@ -728,29 +722,29 @@ impl WebSocketClient {
             }
             // 好友相关
             "newApply" => {
-                info!("👥 New apply request");
+                info!("New apply request");
                 let _ = app_handle.emit_to("home", "ws-request-new-apply", data);
             }
             "requestApprovalFriend" => {
-                info!("✅ Friend request approved");
+                info!("Friend request approved");
                 let _ = app_handle.emit_to("home", "ws-request-approval-friend", data);
             }
             "memberChange" => {
-                info!("🔄 Member change");
+                info!("Member change");
                 let _ = app_handle.emit_to("home", "ws-member-change", data);
             }
 
             // 房间/群聊相关
             "roomInfoChange" => {
-                info!("🏠 Room info changed");
+                info!("Room info changed");
                 let _ = app_handle.emit_to("home", "ws-room-info-change", data);
             }
             "myRoomInfoChange" => {
-                info!("👤 My room info changed");
+                info!("My room info changed");
                 let _ = app_handle.emit_to("home", "ws-my-room-info-change", data);
             }
             "roomGroupNoticeMsg" => {
-                info!("📢 Group notice published");
+                info!("Group notice published");
                 let _ = app_handle.emit_to("home", "ws-room-group-notice-msg", data);
             }
             "roomEditGroupNoticeMsg" => {
@@ -758,82 +752,82 @@ impl WebSocketClient {
                 let _ = app_handle.emit_to("home", "ws-room-edit-group-notice-msg", data);
             }
             "roomDissolution" => {
-                info!("💥 Room dissolved");
+                info!("Room dissolved");
                 let _ = app_handle.emit_to("home", "ws-room-dissolution", data);
             }
 
             // 视频通话相关
             "VideoCallRequest" => {
-                info!("📞 Received call request");
+                info!("Received call request");
                 let _ = app_handle.emit("ws-video-call-request", data);
             }
             "CallAccepted" => {
-                info!("✅ Call accepted");
+                info!("Call accepted");
                 let _ = app_handle.emit("ws-call-accepted", data);
             }
             "CallRejected" => {
-                info!("❌ Call rejected");
+                info!(" Call rejected");
                 let _ = app_handle.emit("ws-call-rejected", data);
             }
             "RoomClosed" => {
-                info!("🏠 Room closed");
+                info!("Room closed");
                 let _ = app_handle.emit("ws-room-closed", data);
             }
             "WEBRTC_SIGNAL" => {
-                info!("📡 Signaling message");
+                info!("Signaling message");
                 let _ = app_handle.emit("ws-webrtc-signal", data);
             }
             "JoinVideo" => {
-                info!("📹 User joined video");
+                info!("User joined video");
                 let _ = app_handle.emit("ws-join-video", data);
             }
             "LeaveVideo" => {
-                info!("📹 User left video");
+                info!("User left video");
                 let _ = app_handle.emit("ws-leave-video", data);
             }
             "DROPPED" => {
-                info!("📞 Call dropped");
+                info!("Call dropped");
                 let _ = app_handle.emit("ws-dropped", data);
             }
 
             "CANCEL" => {
-                info!("📞 Call cancelled");
+                info!("Call cancelled");
                 let _ = app_handle.emit("ws-cancel", data);
             }
 
             "TIMEOUT" => {
-                info!("📞 Call timeout");
+                info!("Call timeout");
                 let _ = app_handle.emit("ws-timeout", data);
             }
 
             // 系统相关
             "tokenExpired" => {
-                warn!("🔑 Token expired");
+                warn!("Token expired");
                 let _ = app_handle.emit("ws-token-expired", data);
             }
             "invalidUser" => {
-                warn!("🚫 Invalid user");
+                warn!("Invalid user");
                 let _ = app_handle.emit("ws-invalid-user", data);
             }
 
             "deleteFriend" => {
-                warn!("🚫 Delete Friend");
+                warn!("Delete Friend");
                 let _ = app_handle.emit("ws-delete-friend", data);
             }
 
             // 朋友圈相关
             "feedSendMsg" => {
-                info!("🎉 Feed message received");
+                info!("Feed message received");
                 let _ = app_handle.emit_to("home", "ws-feed-send-msg", data);
             }
             "feedNotify" => {
-                info!("📢 Feed notification received (like/comment)");
+                info!("Feed notification received (like/comment)");
                 let _ = app_handle.emit_to("home", "ws-feed-notify", data);
             }
 
             // 未知消息类型
             _ => {
-                warn!("❓ Received unhandled message type: {}", message_type);
+                warn!("Received unhandled message type: {}", message_type);
                 // 发送通用的未知消息事件
                 let _ = app_handle.emit("ws-unknown-message", message);
             }
@@ -874,11 +868,11 @@ impl WebSocketClient {
                         if let Some(sender) = sender.as_ref() {
                             let message = Message::Text(json.to_string().into());
                             if let Err(e) = sender.send(message) {
-                                error!("❌ Failed to send heartbeat: {}", e);
+                                error!(" Failed to send heartbeat: {}", e);
                                 break;
                             }
                         } else {
-                            warn!("❌ Heartbeat send failed: connection not established");
+                            warn!("Heartbeat send failed: connection not established");
                             break;
                         }
                     }
@@ -906,7 +900,7 @@ impl WebSocketClient {
                             };
 
                             warn!(
-                                "⚠️ Heartbeat timeout ({} mode, consecutive failures: {}, last heartbeat {}ms ago)",
+                                "Heartbeat timeout ({} mode, consecutive failures: {}, last heartbeat {}ms ago)",
                                 if is_background {
                                     "background"
                                 } else {
@@ -919,9 +913,7 @@ impl WebSocketClient {
                             // 后台模式下更宽松的重连策略
                             let max_failures = if is_background { 5 } else { 3 };
                             if failures >= max_failures {
-                                error!(
-                                    "💔 Consecutive heartbeat timeouts, triggering reconnection"
-                                );
+                                error!("Consecutive heartbeat timeouts, triggering reconnection");
                                 // 心跳失败时标记连接断开
                                 is_ws_connected.store(false, Ordering::SeqCst);
                                 break;
@@ -930,7 +922,7 @@ impl WebSocketClient {
                     }
                 }
 
-                info!("💓 Heartbeat task ended");
+                info!("Heartbeat task ended");
             })
         };
 
@@ -948,7 +940,7 @@ impl WebSocketClient {
                 return Ok(());
             }
 
-            info!("📤 Preparing to send {} pending messages", pending.len());
+            info!("Preparing to send {} pending messages", pending.len());
             pending.drain(..).collect::<Vec<_>>()
         };
 
@@ -961,7 +953,7 @@ impl WebSocketClient {
             for message in messages_to_send {
                 let text_message = Message::Text(message.to_string().into());
                 if let Err(e) = sender.send(text_message) {
-                    error!("❌ Failed to send pending message: {}", e);
+                    error!(" Failed to send pending message: {}", e);
                     failed_messages.push(message);
                 }
             }
@@ -975,14 +967,14 @@ impl WebSocketClient {
                 return Err(anyhow::anyhow!("Some pending messages failed to send"));
             }
 
-            info!("✅ All pending messages sent");
+            info!("All pending messages sent");
         } else {
             // 发送器未就绪，将消息重新加入队列
             let mut pending = self.pending_messages.write().await;
             for msg in messages_to_send.into_iter().rev() {
                 pending.insert(0, msg);
             }
-            warn!("⚠️ Sender not ready, messages re-queued");
+            warn!("Sender not ready, messages re-queued");
             return Err(anyhow::anyhow!("Message sender not ready"));
         }
 
@@ -996,7 +988,7 @@ impl WebSocketClient {
             *state = new_state.clone();
             drop(state);
 
-            info!("🔄 Connection state changed: {:?}", new_state);
+            info!("Connection state changed: {:?}", new_state);
             self.emit_event(WebSocketEvent::ConnectionStateChanged {
                 state: new_state,
                 is_reconnection,
@@ -1008,7 +1000,7 @@ impl WebSocketClient {
     /// 发送事件到前端
     async fn emit_event(&self, event: WebSocketEvent) {
         if let Err(e) = self.app_handle.emit("websocket-event", &event) {
-            error!("❌ Failed to emit WebSocket event: {}", e);
+            error!(" Failed to emit WebSocket event: {}", e);
         }
     }
 
@@ -1039,14 +1031,14 @@ impl WebSocketClient {
             .swap(is_background, Ordering::SeqCst);
 
         if is_background && !was_background {
-            info!("📱 App entered background mode");
+            info!("App entered background mode");
             // 重置后台心跳失败计数
             self.background_heartbeat_failures
                 .store(0, Ordering::SeqCst);
         } else if !is_background && was_background {
             let now = chrono::Utc::now().timestamp_millis() as u64;
             self.last_foreground_time.store(now, Ordering::SeqCst);
-            info!("📱 App resumed from background to foreground");
+            info!("App resumed from background to foreground");
 
             // 检查是否需要重连
             tokio::spawn({
@@ -1065,7 +1057,7 @@ impl WebSocketClient {
         let now = chrono::Utc::now().timestamp_millis() as u64;
 
         info!(
-            "🔍 Checking connection state: {:?}, last heartbeat: {}ms ago",
+            "Checking connection state: {:?}, last heartbeat: {}ms ago",
             current_state,
             if last_pong > 0 { now - last_pong } else { 0 }
         );
@@ -1075,9 +1067,9 @@ impl WebSocketClient {
                 // 检查心跳是否过期
                 if last_pong > 0 && now - last_pong > 60000 {
                     // 60秒无心跳
-                    warn!("💔 Connection may be lost, forcing reconnection");
+                    warn!("Connection may be lost, forcing reconnection");
                     if let Err(e) = self.force_reconnect().await {
-                        warn!("💔 Auto-reconnection failed: {}", e);
+                        warn!("Auto-reconnection failed: {}", e);
                         // 通知前端需要重连
                         if let Err(emit_err) = self.app_handle.emit(
                             "ws-connection-lost",
@@ -1096,9 +1088,9 @@ impl WebSocketClient {
                 }
             }
             ConnectionState::Disconnected | ConnectionState::Error => {
-                info!("🔄 Connection disconnected, attempting to reconnect");
+                info!("Connection disconnected, attempting to reconnect");
                 if let Err(e) = self.force_reconnect().await {
-                    warn!("💔 Auto-reconnection failed: {}", e);
+                    warn!("Auto-reconnection failed: {}", e);
                     // 通知前端需要重连
                     if let Err(emit_err) = self.app_handle.emit(
                         "ws-connection-lost",
@@ -1114,7 +1106,7 @@ impl WebSocketClient {
             }
             _ => {
                 info!(
-                    "🔄 Connection state: {:?}, waiting for connection to complete",
+                    "Connection state: {:?}, waiting for connection to complete",
                     current_state
                 );
             }
@@ -1127,10 +1119,10 @@ impl WebSocketClient {
         if let Ok(json) = serde_json::to_value(&heartbeat_msg) {
             match self.send_message(json).await {
                 Ok(_) => {
-                    info!("💓 Test heartbeat sent successfully");
+                    info!("Test heartbeat sent successfully");
                 }
                 Err(e) => {
-                    warn!("💔 Test heartbeat failed: {}", e);
+                    warn!("Test heartbeat failed: {}", e);
                     // 通过事件通知前端需要重连
                     if let Err(emit_err) = self.app_handle.emit(
                         "ws-connection-lost",

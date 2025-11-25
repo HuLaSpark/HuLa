@@ -316,7 +316,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     drawConfig.value.undoStack = []
     drawConfig.value.isDrawing = false
     currentTool.value = ''
-    console.log('🔄 绘图状态已重置，历史记录已清除')
+    console.log('绘图状态已重置，历史记录已清除')
   }
 
   // 停止当前绘图操作
@@ -324,13 +324,13 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     drawConfig.value.isDrawing = false
     currentTool.value = ''
     closeListen()
-    console.log('⏹️ 绘图操作已停止')
+    console.log('绘图操作已停止')
   }
 
   // 清除事件监听
   const clearEvents = () => {
     closeListen()
-    console.log('🧹 绘图事件监听已清除')
+    console.log('绘图事件监听已清除')
   }
 
   const startListen = () => {

@@ -107,7 +107,7 @@ export async function invokeWithRetry<T = any>(
       lastError = error
 
       if (attempt < maxRetries) {
-        console.log(`🔄 重试 ${command} 命令 (${attempt}/${maxRetries})...`)
+        console.log(`重试 ${command} 命令 (${attempt}/${maxRetries})...`)
         await new Promise((resolve) => setTimeout(resolve, retryDelay))
       }
     }

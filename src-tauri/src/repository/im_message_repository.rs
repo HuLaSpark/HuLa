@@ -764,7 +764,7 @@ pub async fn update_message_recall_status(
     login_uid: &str,
 ) -> Result<(), CommonError> {
     info!(
-        "🔄 [RECALL] Updating message recall status in database, message_id: {}",
+        "[RECALL] Updating message recall status in database, message_id: {}",
         message_id
     );
 
@@ -794,7 +794,7 @@ pub async fn update_message_recall_status(
         .map_err(|e| anyhow::anyhow!("Failed to update message recall status: {}", e))?;
 
     info!(
-        "✅ [RECALL] Successfully updated message recall status in database, message_id: {}",
+        "[RECALL] Successfully updated message recall status in database, message_id: {}",
         message_id
     );
     Ok(())

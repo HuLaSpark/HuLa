@@ -31,26 +31,26 @@ initMarkdownRenderer()
 
 // 监听打开角色管理事件
 useMitt.on('open-role-management', () => {
-  console.log('📝 打开角色管理')
+  console.log('打开角色管理')
   showRoleManagement.value = true
 })
 
 // 监听打开模型管理事件
 useMitt.on('open-model-management', () => {
-  console.log('🤖 打开模型管理')
+  console.log('打开模型管理')
   showModelManagement.value = true
 })
 
 // 角色管理刷新后的回调
 const handleRoleManagementRefresh = () => {
-  console.log('🔄 角色管理刷新')
+  console.log('角色管理刷新')
   // 通知其他组件刷新角色列表
   useMitt.emit('refresh-role-list')
 }
 
 // 模型管理刷新后的回调
 const handleModelManagementRefresh = () => {
-  console.log('🔄 模型管理刷新')
+  console.log('模型管理刷新')
   // 通知其他组件刷新模型列表
   useMitt.emit('refresh-model-list')
 }

@@ -721,9 +721,9 @@ export const useChatStore = defineStore(
               errorType: ErrorType.Client
             }
           )
-          info(`✅ [RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
+          info(`[RECALL] Successfully updated message recall status in database, message_id: ${msgId}`)
         } catch (error) {
-          console.error(`❌ [RECALL] Failed to update message recall status in database:`, error)
+          console.error(`[RECALL] Failed to update message recall status in database:`, error)
         }
       }
 
@@ -806,7 +806,7 @@ export const useChatStore = defineStore(
           msg.message.body = body
         }
         if (uploadProgress !== undefined) {
-          console.log(`📱 更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
+          console.log(`更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
           // 确保响应式更新，创建新的消息对象
           const updatedMsg = { ...msg, uploadProgress }
           if (currentMessageMap.value) {

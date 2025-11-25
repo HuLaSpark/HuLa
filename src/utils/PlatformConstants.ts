@@ -30,7 +30,7 @@ class PlatformDetector {
       PlatformDetector._platformType = PlatformDetector.isDesktopOS(PlatformDetector._osType) ? 'desktop' : 'mobile'
 
       if (import.meta.env.DEV) {
-        console.log(`🖥️ Platform detected: ${PlatformDetector._osType} (${PlatformDetector._platformType})`)
+        console.log(`Platform detected: ${PlatformDetector._osType} (${PlatformDetector._platformType})`)
       }
     } catch (error) {
       console.warn('Failed to detect platform type, defaulting to desktop:', error)

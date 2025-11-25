@@ -131,7 +131,7 @@ const selectedNotification = ref<any>(null)
 watch(
   () => feednotificationStore.notifications.length,
   (newLength) => {
-    console.log('📢 通知列表变化，当前通知数:', newLength)
+    console.log('通知列表变化，当前通知数:', newLength)
   }
 )
 

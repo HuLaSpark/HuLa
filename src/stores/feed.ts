@@ -427,7 +427,7 @@ export const useFeedStore = defineStore(
     const getFeedDetail = async (feedId: string) => {
       try {
         const result = await getFeedDetailApi({ feedId })
-        console.log('✅ 获取朋友圈详情成功:', result)
+        console.log('获取朋友圈详情成功:', result)
         return result
       } catch (error) {
         console.error('获取朋友圈详情失败:', error)
@@ -447,7 +447,7 @@ export const useFeedStore = defineStore(
       // 同时更新总未读数
       increaseUnreadCount(1)
 
-      console.log('📢 朋友圈通知已处理，未读数:', feedUnreadStatus.unreadCount)
+      console.log('朋友圈通知已处理，未读数:', feedUnreadStatus.unreadCount)
     }
 
     /**

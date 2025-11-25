@@ -109,7 +109,7 @@ const handleCreateNewChat = async () => {
       useMitt.emit('return-chat')
     }
   } catch (error) {
-    console.error('❌ 创建会话失败:', error)
+    console.error('创建会话失败:', error)
     window.$message.error('创建会话失败')
   }
 }
@@ -120,7 +120,7 @@ onMounted(() => {
 
   // 监听角色列表刷新事件
   useMitt.on('refresh-role-list', () => {
-    console.log('🔄 Welcome 页面收到角色列表刷新事件')
+    console.log('Welcome 页面收到角色列表刷新事件')
     loadRoleList()
   })
 })

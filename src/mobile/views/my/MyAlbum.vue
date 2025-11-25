@@ -76,23 +76,23 @@ const getAllImages = async () => {
     // 检查 roomFilesMap 是否为空，如果为空则扫描本地文件
     if (Object.keys(fileStore.roomFilesMap).length === 0) {
       if (globalStore.currentSessionRoomId) {
-        console.log('🔍 [MyAlbum Debug] 扫描本地文件，roomId:', globalStore.currentSessionRoomId)
+        console.log('[MyAlbum Debug] 扫描本地文件，roomId:', globalStore.currentSessionRoomId)
         await fileStore.scanLocalFiles(globalStore.currentSessionRoomId)
       }
     }
 
     const roomFilesMap = fileStore.roomFilesMap
-    console.log('🔍 [MyAlbum Debug] roomFilesMap:', roomFilesMap)
+    console.log('[MyAlbum Debug] roomFilesMap:', roomFilesMap)
     const imagesList: Array<{ displayUrl: string; originalUrl: string; id: string; roomId: string }> = []
 
     // 遍历所有房间
     for (const roomId in roomFilesMap) {
       const files = await fileStore.getRoomFilesForDisplay(roomId)
-      console.log('🔍 [MyAlbum Debug] roomId:', roomId, 'files:', files)
+      console.log('[MyAlbum Debug] roomId:', roomId, 'files:', files)
 
       // 只获取图片类型的文件
       const images = files.filter((file) => file.type === 'image')
-      console.log('🔍 [MyAlbum Debug] roomId:', roomId, 'images:', images)
+      console.log('[MyAlbum Debug] roomId:', roomId, 'images:', images)
 
       imagesList.push(
         ...images.map((img) => ({
@@ -104,7 +104,7 @@ const getAllImages = async () => {
       )
     }
 
-    console.log('🔍 [MyAlbum Debug] 最终图片列表:', imagesList)
+    console.log('[MyAlbum Debug] 最终图片列表:', imagesList)
     allImages.value = imagesList
   } catch (error) {
     console.error('获取图片失败:', error)
@@ -120,13 +120,13 @@ const getAllImages = async () => {
  * 处理图片点击
  */
 const handleImageClick = (image: { displayUrl: string; originalUrl: string; id: string; roomId: string }) => {
-  console.log('🔍 [MyAlbum Debug] 点击图片:', image)
+  console.log('[MyAlbum Debug] 点击图片:', image)
   activeImageUrl.value = image.displayUrl
   showImagePreviewRef.value = true
 }
 
 onMounted(() => {
-  console.log('🔍 [MyAlbum Debug] MyAlbum 组件已挂载')
+  console.log('[MyAlbum Debug] MyAlbum 组件已挂载')
   getAllImages()
 })
 </script>

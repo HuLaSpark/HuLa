@@ -28,14 +28,14 @@ impl MessageProcessor {
     pub fn process_message(&self, message: &Value) -> ProcessResult {
         // 尝试解析消息类型
         if let Some(msg_type) = self.extract_message_type(message) {
-            debug!("📥 Processing message type: {}", msg_type);
+            debug!("Processing message type: {}", msg_type);
 
             // 查找对应的处理器
             if let Some(handler) = self.message_handlers.get(&msg_type) {
                 handler(message);
                 return ProcessResult::Handled;
             } else {
-                debug!("🔍 No handler found for message type {}", msg_type);
+                debug!("No handler found for message type {}", msg_type);
             }
         }
 
@@ -98,39 +98,39 @@ impl MessageProcessor {
     fn register_default_handlers(&mut self) {
         // 登录相关消息
         self.register_handler("1".to_string(), |msg| {
-            debug!("🔑 Processing login-related message: {:?}", msg);
+            debug!("Processing login-related message: {:?}", msg);
         });
 
         // 心跳消息
         self.register_handler("2".to_string(), |_msg| {
-            debug!("💓 Received heartbeat message");
+            debug!("Received heartbeat message");
         });
 
         self.register_handler("3".to_string(), |_msg| {
-            debug!("💓 Received heartbeat response");
+            debug!("Received heartbeat response");
         });
 
         // 普通聊天消息
         self.register_handler("RECEIVE_MESSAGE".to_string(), |msg| {
-            debug!("💬 Received chat message: {:?}", msg);
+            debug!("Received chat message: {:?}", msg);
         });
 
         // 用户状态变化
         self.register_handler("USER_STATE_CHANGE".to_string(), |msg| {
-            debug!("👤 User status changed: {:?}", msg);
+            debug!("User status changed: {:?}", msg);
         });
 
         // 视频通话相关
         self.register_handler("VideoCallRequest".to_string(), |msg| {
-            debug!("📹 Received video call request: {:?}", msg);
+            debug!("Received video call request: {:?}", msg);
         });
 
         self.register_handler("CallAccepted".to_string(), |msg| {
-            debug!("✅ Call accepted: {:?}", msg);
+            debug!("Call accepted: {:?}", msg);
         });
 
         self.register_handler("CallRejected".to_string(), |msg| {
-            debug!("❌ Call rejected: {:?}", msg);
+            debug!(" Call rejected: {:?}", msg);
         });
     }
 }

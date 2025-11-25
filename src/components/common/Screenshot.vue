@@ -195,7 +195,7 @@ const restoreWindowState = async () => {
  */
 const drawImgCanvas = (type: string) => {
   if (!drawTools) {
-    console.warn('🚫 绘图工具未初始化')
+    console.warn('绘图工具未初始化')
     return
   }
 
@@ -228,9 +228,9 @@ const drawImgCanvas = (type: string) => {
     // 调用绘图方法，确保绘图工具被正确激活
     try {
       drawTools.draw(type)
-      console.log(`🎨 绘图工具已激活: ${type}`)
+      console.log(`绘图工具已激活: ${type}`)
     } catch (error) {
-      console.error(`🚫 绘图工具激活失败: ${type}`, error)
+      console.error(`绘图工具激活失败: ${type}`, error)
       currentDrawTool.value = null
       // 激活失败时也要禁用事件
       if (drawCanvas.value) {
@@ -250,14 +250,14 @@ const drawImgCanvas = (type: string) => {
       drawCanvas.value.style.pointerEvents = 'none'
       drawCanvas.value.style.zIndex = '5'
     }
-    console.log('🧹 已清空全部涂鸦 (通过重做按钮)')
+    console.log('已清空全部涂鸦 (通过重做按钮)')
   } else if (type === 'undo') {
     // 没有可撤回的内容时直接忽略点击
     if (!canUndo.value) return
     // 先停止可能正在进行的绘制，确保一次点击立即生效
     drawTools.stopDrawing && drawTools.stopDrawing()
     drawTools.undo && drawTools.undo()
-    console.log('↩️ 执行撤销')
+    console.log('执行撤销')
   }
 }
 
@@ -276,7 +276,7 @@ const resetDrawTools = () => {
   // 清除绘图canvas的内容
   if (drawCtx.value && drawCanvas.value) {
     drawCtx.value.clearRect(0, 0, drawCanvas.value.width, drawCanvas.value.height)
-    console.log('🧹 绘图内容已清除')
+    console.log('绘图内容已清除')
   }
 
   // 重置时禁用绘图canvas事件，让事件穿透到选区
@@ -285,7 +285,7 @@ const resetDrawTools = () => {
     drawCanvas.value.style.zIndex = '5'
   }
 
-  console.log('🔄 绘图工具已重置')
+  console.log('绘图工具已重置')
 }
 
 /**
@@ -337,7 +337,7 @@ const initCanvas = async () => {
     // 清除绘图canvas的内容
     if (drawCtx.value) {
       drawCtx.value.clearRect(0, 0, canvasWidth, canvasHeight)
-      console.log('🧹 绘图canvas已清除')
+      console.log('绘图canvas已清除')
     }
 
     // 获取屏幕缩放比例
@@ -373,7 +373,7 @@ const initCanvas = async () => {
             if (drawTools?.canUndo) {
               watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true })
             }
-            console.log('🎨 绘图工具初始化完成 (备用方式)')
+            console.log('绘图工具初始化完成 (备用方式)')
           }
           isImageLoaded = true
         } catch (error) {
@@ -419,7 +419,7 @@ const initCanvas = async () => {
           if (drawTools?.canUndo) {
             watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true })
           }
-          console.log('🎨 绘图工具初始化完成')
+          console.log('绘图工具初始化完成')
         }
         isImageLoaded = true
       } catch (error) {
@@ -782,7 +782,7 @@ const handleSelectionDragStart = (event: MouseEvent) => {
   document.addEventListener('mousemove', handleSelectionDragMove)
   document.addEventListener('mouseup', handleSelectionDragEnd)
 
-  console.log('🎯 开始拖动，隐藏按钮组')
+  console.log('开始拖动，隐藏按钮组')
 }
 
 // 选区拖动移动
@@ -841,7 +841,7 @@ const handleSelectionDragEnd = () => {
     updateButtonGroupPosition()
   })
 
-  console.log('🎯 拖动结束，显示按钮组')
+  console.log('拖动结束，显示按钮组')
 }
 
 // resize开始

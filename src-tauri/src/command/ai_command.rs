@@ -37,7 +37,7 @@ pub async fn ai_message_send_stream(
     on_event: Channel<SseStreamEvent>,
 ) -> Result<(), String> {
     info!(
-        "🤖 开始发送 AI 流式消息请求, conversation_id: {}, request_id: {}",
+        "开始发送 AI 流式消息请求, conversation_id: {}, request_id: {}",
         body.conversation_id, request_id
     );
 
@@ -49,7 +49,7 @@ pub async fn ai_message_send_stream(
         rc.request_stream(method, path, Some(body), None::<serde_json::Value>)
             .await
             .map_err(|e| {
-                error!("❌ 发送流式请求失败: {}", e);
+                error!("发送流式请求失败: {}", e);
                 let error_event = SseStreamEvent {
                     event_type: "error".to_string(),
                     data: None,
@@ -61,7 +61,7 @@ pub async fn ai_message_send_stream(
             })?
     }; // 锁在这里释放
 
-    info!("✅ SSE 连接已建立，开始监听流式数据...");
+    info!("SSE 连接已建立，开始监听流式数据...");
 
     // 在后台任务中处理 SSE 事件流
     let request_id_clone = request_id.clone();
@@ -76,7 +76,7 @@ pub async fn ai_message_send_stream(
                 Ok(chunk) => {
                     // 将字节转换为字符串
                     if let Ok(text) = String::from_utf8(chunk.to_vec()) {
-                        info!("🔍 收到原始数据块 (长度: {}): {:?}", text.len(), text);
+                        info!("收到原始数据块 (长度: {}): {:?}", text.len(), text);
                         buffer.push_str(&text);
 
                         // 处理 SSE 格式的数据
@@ -85,14 +85,14 @@ pub async fn ai_message_send_stream(
                             let message = buffer[..pos].to_string();
                             buffer = buffer[pos + 2..].to_string();
 
-                            info!("📦 处理SSE消息: {:?}", message);
+                            info!("处理SSE消息: {:?}", message);
 
                             // 解析 SSE 消息
                             for line in message.lines() {
-                                info!("📝 处理行: {:?}", line);
+                                info!("处理行: {:?}", line);
 
                                 if let Some(data) = line.strip_prefix("data: ") {
-                                    info!("📨 收到 SSE 数据: {}", data);
+                                    info!("收到 SSE 数据: {}", data);
 
                                     // 累积内容
                                     full_content.push_str(data);
@@ -106,12 +106,12 @@ pub async fn ai_message_send_stream(
                                     };
 
                                     if let Err(e) = on_event.send(chunk_event) {
-                                        error!("❌ 发送 chunk 事件失败: {}", e);
+                                        error!("发送 chunk 事件失败: {}", e);
                                     }
                                 } else if line.starts_with("data:") {
                                     // 处理没有空格的情况: data:<content>
                                     let data = &line[5..];
-                                    info!("📨 收到 SSE 数据 (无空格): {}", data);
+                                    info!("收到 SSE 数据 (无空格): {}", data);
 
                                     // 累积内容
                                     full_content.push_str(data);
@@ -125,17 +125,17 @@ pub async fn ai_message_send_stream(
                                     };
 
                                     if let Err(e) = on_event.send(chunk_event) {
-                                        error!("❌ 发送 chunk 事件失败: {}", e);
+                                        error!("发送 chunk 事件失败: {}", e);
                                     }
                                 }
                             }
                         }
                     } else {
-                        error!("❌ 无法将字节转换为UTF-8字符串");
+                        error!("无法将字节转换为UTF-8字符串");
                     }
                 }
                 Err(e) => {
-                    error!("❌ 读取流数据失败: {}", e);
+                    error!("读取流数据失败: {}", e);
                     let error_event = SseStreamEvent {
                         event_type: "error".to_string(),
                         data: None,
@@ -144,7 +144,7 @@ pub async fn ai_message_send_stream(
                     };
 
                     if let Err(e) = on_event.send(error_event) {
-                        error!("❌ 发送 error 事件失败: {}", e);
+                        error!("发送 error 事件失败: {}", e);
                     }
                     break;
                 }
@@ -152,7 +152,7 @@ pub async fn ai_message_send_stream(
         }
 
         // 流结束，发送完成事件
-        info!("✅ SSE 流正常结束，总内容长度: {}", full_content.len());
+        info!("SSE 流正常结束，总内容长度: {}", full_content.len());
         let done_event = SseStreamEvent {
             event_type: "done".to_string(),
             data: Some(full_content),
@@ -161,10 +161,10 @@ pub async fn ai_message_send_stream(
         };
 
         if let Err(e) = on_event.send(done_event) {
-            error!("❌ 发送 done 事件失败: {}", e);
+            error!("发送 done 事件失败: {}", e);
         }
 
-        info!("🏁 SSE 流处理完成");
+        info!("SSE 流处理完成");
     });
 
     Ok(())

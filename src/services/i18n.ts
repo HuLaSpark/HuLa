@@ -48,14 +48,6 @@ const locales = Object.entries(import.meta.glob('../../locales/**/*.json'))
 
 export const availableLocales = Object.keys(locales)
 
-export function setI18nLanguage(lang: Locale) {
-  i18n.global.locale.value = lang
-  if (typeof document !== 'undefined') {
-    document.querySelector('html')?.setAttribute('lang', lang)
-  }
-  return lang
-}
-
 const loadedLanguages: Locale[] = []
 
 // Obtain language prefix
@@ -63,6 +55,48 @@ function getLangPrefix(lang: string) {
   const normalized = lang.replace('_', '-').trim()
   const parts = normalized.split('-')
   return parts[0].toLowerCase()
+}
+
+// 统一的前缀映射表，后续需要支持其他语言时只需在此添加映射
+const PREFIX_LANG_MAP: Record<string, Locale> = {
+  zh: 'zh-CN',
+  en: 'en'
+}
+
+// 根据语言前缀映射受支持的 locale，未匹配则回退中文
+const mapByPrefix = (lang: string): Locale => {
+  return PREFIX_LANG_MAP[getLangPrefix(lang)] ?? 'zh-CN'
+}
+
+// AUTO 语言解析：使用映射表限定支持的前缀，其他一律回退中文
+const resolveAutoLanguage = (): Locale => {
+  if (typeof navigator !== 'undefined') {
+    return mapByPrefix(navigator.language)
+  }
+  return 'zh-CN'
+}
+
+// 归一化语言值：优先显式支持的语言，其次按前缀映射，最后回退中文
+const normalizeLang = (lang: string): Locale => {
+  if (lang === 'AUTO') {
+    return resolveAutoLanguage()
+  }
+
+  if (availableLocales.includes(lang)) {
+    return lang as Locale
+  }
+
+  return mapByPrefix(lang)
+}
+
+// 应用语言到 i18n 和 html 标签
+export function setI18nLanguage(lang: Locale) {
+  const resolved = normalizeLang(lang)
+  i18n.global.locale.value = resolved
+  if (typeof document !== 'undefined') {
+    document.querySelector('html')?.setAttribute('lang', resolved)
+  }
+  return resolved
 }
 
 function findLocales(lang: string) {
@@ -75,18 +109,20 @@ function findLocales(lang: string) {
   return locales[like ?? 'zh-CN']
 }
 
+// 加载语言包并切换语言，确保 lang 被归一化后再加载
 export async function loadLanguage(lang: Locale) {
-  if (i18n.global.locale.value === lang) {
-    return setI18nLanguage(lang)
+  const resolvedLang = normalizeLang(lang)
+  if (i18n.global.locale.value === resolvedLang) {
+    return setI18nLanguage(resolvedLang)
   }
 
-  if (loadedLanguages.includes(lang)) {
-    return setI18nLanguage(lang)
+  if (loadedLanguages.includes(resolvedLang)) {
+    return setI18nLanguage(resolvedLang)
   }
 
-  const messageParts = findLocales(lang)
+  const messageParts = findLocales(resolvedLang)
   if (!messageParts) {
-    console.warn(`No locale data found for: ${lang}`)
+    console.warn(`No locale data found for: ${resolvedLang}`)
     return
   }
 
@@ -104,11 +140,11 @@ export async function loadLanguage(lang: Locale) {
   const messages = Object.fromEntries(modules)
 
   // 设置语言包
-  i18n.global.setLocaleMessage(lang, messages)
+  i18n.global.setLocaleMessage(resolvedLang, messages)
 
-  loadedLanguages.push(lang)
+  loadedLanguages.push(resolvedLang)
 
-  return setI18nLanguage(lang)
+  return setI18nLanguage(resolvedLang)
 }
 
 /**

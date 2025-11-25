@@ -393,8 +393,8 @@ useMitt.on(WsResponseMessageType.FEED_SEND_MSG, (data: { uid: string }) => {
 // 朋友圈通知监听（全局）- 处理点赞和评论通知
 useMitt.on(WsResponseMessageType.FEED_NOTIFY, async (data: any) => {
   try {
-    console.log('📢 收到朋友圈通知:', JSON.stringify(data, null, 2))
-    console.log('📢 通知类型判断 - isUnlike:', data.isUnlike, 'hasComment:', !!data.comment)
+    console.log('收到朋友圈通知:', JSON.stringify(data, null, 2))
+    console.log('通知类型判断 - isUnlike:', data.isUnlike, 'hasComment:', !!data.comment)
 
     // 获取朋友圈内容用于通知显示
     const feed = feedStore.feedList.find((f) => f.id === data.feedId)

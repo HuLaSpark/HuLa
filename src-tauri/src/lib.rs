@@ -214,12 +214,10 @@ pub async fn build_request_client() -> Result<reqwest::Client, CommonError> {
 /// - 优雅地处理窗口关闭过程中的错误
 #[cfg(desktop)]
 pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
-    tracing::info!(
-        "🚪 [LOGOUT] Starting to close windows and preserve capture/checkupdate windows"
-    );
+    tracing::info!("[LOGOUT] Starting to close windows and preserve capture/checkupdate windows");
 
     let all_windows = app_handle.webview_windows();
-    tracing::info!("📋 [LOGOUT] Found {} windows", all_windows.len());
+    tracing::info!("[LOGOUT] Found {} windows", all_windows.len());
 
     // 收集需要关闭的窗口和需要隐藏的窗口
     let mut windows_to_close = Vec::new();
@@ -229,16 +227,16 @@ pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
         match label.as_str() {
             // 这些窗口完全不处理
             "login" | "tray" => {
-                tracing::info!("⏭️ [LOGOUT] Skipping window: {}", label);
+                tracing::info!("[LOGOUT] Skipping window: {}", label);
             }
             // 这些窗口只隐藏，不销毁
             "capture" | "checkupdate" => {
-                tracing::info!("💾 [LOGOUT] Marking window for preservation: {}", label);
+                tracing::info!("[LOGOUT] Marking window for preservation: {}", label);
                 windows_to_hide.push((label, window));
             }
             // 其他窗口需要关闭
             _ => {
-                tracing::info!("🗑️ [LOGOUT] Marking window for closure: {}", label);
+                tracing::info!("[LOGOUT] Marking window for closure: {}", label);
                 windows_to_close.push((label, window));
             }
         }
@@ -246,15 +244,15 @@ pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
 
     // 先隐藏需要保持的窗口
     for (label, window) in windows_to_hide {
-        tracing::info!("👁️ [LOGOUT] Hiding window (preserving): {}", label);
+        tracing::info!("[LOGOUT] Hiding window (preserving): {}", label);
         if let Err(e) = window.hide() {
-            tracing::warn!("⚠️ [LOGOUT] Failed to hide window {}: {}", label, e);
+            tracing::warn!("[LOGOUT] Failed to hide window {}: {}", label, e);
         }
     }
 
     // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
     for (label, window) in windows_to_close {
-        tracing::info!("🔄 [LOGOUT] Closing window: {}", label);
+        tracing::info!("[LOGOUT] Closing window: {}", label);
 
         // 先隐藏窗口，减少用户感知的延迟
         let _ = window.hide();
@@ -264,18 +262,18 @@ pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
 
         match window.destroy() {
             Ok(_) => {
-                tracing::info!("✅ [LOGOUT] Successfully closed window: {}", label);
+                tracing::info!("[LOGOUT] Successfully closed window: {}", label);
             }
             Err(error) => {
                 // 检查窗口是否还存在
                 if app_handle.get_webview_window(&label).is_none() {
                     tracing::info!(
-                        "ℹ️ [LOGOUT] Window {} no longer exists, skipping closure",
+                        "[LOGOUT] Window {} no longer exists, skipping closure",
                         label
                     );
                 } else {
                     tracing::warn!(
-                        "⚠️ [LOGOUT] Warning when closing window {}: {} (this is usually normal)",
+                        "[LOGOUT] Warning when closing window {}: {} (this is usually normal)",
                         label,
                         error
                     );
@@ -285,7 +283,7 @@ pub async fn handle_logout_windows(app_handle: &tauri::AppHandle) {
     }
 
     tracing::info!(
-        "🎉 [LOGOUT] Logout completed - windows closed and capture/checkupdate windows preserved"
+        "[LOGOUT] Logout completed - windows closed and capture/checkupdate windows preserved"
     );
 }
 

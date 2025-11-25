@@ -1368,7 +1368,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
         throw uploadError
       }
     } catch (error) {
-      console.error('🎤 语音消息发送失败:', error)
+      console.error('语音消息发送失败:', error)
     }
   }
 

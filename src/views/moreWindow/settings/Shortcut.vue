@@ -371,14 +371,14 @@ const createFocusHandler = (config: ShortcutConfig) => {
 
     config.isCapturing.value = true
     config.original.value = config.value.value
-    console.log(`🎯 开始编辑${config.displayName}`)
+    console.log(`开始编辑${config.displayName}`)
   }
 }
 
 const createBlurHandler = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
   return async () => {
     config.isCapturing.value = false
-    console.log(`✅ 结束编辑${config.displayName}`)
+    console.log(`结束编辑${config.displayName}`)
 
     // 如果快捷键有变化，则保存
     if (config.value.value !== config.original.value) {
@@ -404,7 +404,7 @@ const handleSendMessageBlur = async () => {
 const createSaveShortcutFunction = (config: ShortcutConfig) => {
   return async () => {
     try {
-      console.log(`💾 [Settings] 开始保存${config.displayName}: ${config.value.value}`)
+      console.log(`[Settings] 开始保存${config.displayName}: ${config.value.value}`)
 
       // 根据快捷键类型调用对应的store方法
       if (config.key === 'screenshot') {
@@ -414,12 +414,12 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
       }
 
       config.original.value = config.value.value
-      console.log(`💾 [Settings] 已保存到 Pinia store`)
+      console.log(`[Settings] 已保存到 Pinia store`)
 
       // 通知主窗口更新快捷键（跨窗口事件）
-      console.log(`📡 [Settings] 发送 ${config.eventName} 事件到主窗口`)
+      console.log(`[Settings] 发送 ${config.eventName} 事件到主窗口`)
       await emit(config.eventName, { shortcut: config.value.value })
-      console.log(`📡 [Settings] ${config.eventName} 事件已发送`)
+      console.log(`[Settings] ${config.eventName} 事件已发送`)
 
       window.$message.success(t('config.shortcut.shortcut_update_result', { name: config.displayName }))
     } catch (error) {
@@ -460,7 +460,7 @@ const handleOpenMainPanelBlur = createBlurHandler(shortcutConfigs.openMainPanel,
 // 处理全局快捷键开关切换
 const handleGlobalShortcutToggle = async (enabled: boolean) => {
   try {
-    console.log(`🔧 [Settings] 全局快捷键开关切换为: ${enabled ? '开启' : '关闭'}`)
+    console.log(`[Settings] 全局快捷键开关切换为: ${enabled ? '开启' : '关闭'}`)
 
     // 保存到 store
     settingStore.setGlobalShortcutEnabled(enabled)
@@ -499,14 +499,14 @@ const saveSendMessageShortcut = async () => {
 const createRegistrationListener = (config: ShortcutConfig) => {
   return listen(config.registrationEventName, (event: any) => {
     const { shortcut, registered } = event.payload
-    console.log(`📡 [Settings] 收到${config.displayName}状态更新: ${shortcut} -> ${registered ? '已绑定' : '未绑定'}`)
+    console.log(`[Settings] 收到${config.displayName}状态更新: ${shortcut} -> ${registered ? '已绑定' : '未绑定'}`)
 
     // 只有当前快捷键匹配时才更新状态
     if (shortcut === config.value.value) {
-      console.log(`📡 [Settings] ${config.displayName}匹配，更新状态为: ${registered ? '已绑定' : '未绑定'}`)
+      console.log(`[Settings] ${config.displayName}匹配，更新状态为: ${registered ? '已绑定' : '未绑定'}`)
       config.isRegistered.value = registered
     } else {
-      console.log(`📡 [Settings] ${config.displayName}不匹配，忽略状态更新`)
+      console.log(`[Settings] ${config.displayName}不匹配，忽略状态更新`)
     }
   })
 }

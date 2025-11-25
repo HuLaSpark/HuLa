@@ -640,7 +640,7 @@
                 <div style="font-size: 12px; color: #666">
                   <div v-if="isUploadingVideoImage" style="color: #18a058">⏳ 正在上传到七牛云...</div>
                   <div v-else>
-                    {{ videoImagePreview ? '✅ 已上传到七牛云，点击按钮可重新上传' : '上传参考图片用于图生视频' }}
+                    {{ videoImagePreview ? '已上传到七牛云，点击按钮可重新上传' : '上传参考图片用于图生视频' }}
                     <br />
                     支持格式: JPG、PNG、WEBP
                     <br />
@@ -1272,13 +1272,13 @@ const handleVideoImageUpload = async (options: { file: UploadFileInfo; onFinish:
     if (qiniuUrl) {
       videoParams.value.image = qiniuUrl
       videoImagePreview.value = qiniuUrl
-      console.log('✅ 视频参考图片上传成功，七牛云URL:', qiniuUrl)
+      console.log('视频参考图片上传成功，七牛云URL:', qiniuUrl)
       options.onFinish()
     } else {
       throw new Error('未获取到图片URL')
     }
   } catch (error) {
-    console.error('❌ 图片上传失败:', error)
+    console.error('图片上传失败:', error)
     options.onError()
   } finally {
     isUploadingVideoImage.value = false
@@ -1301,7 +1301,7 @@ const pollingTasks = new Map<number, { timerId: number; conversationId: string }
 const stopAllPolling = () => {
   pollingTasks.forEach(({ timerId }) => window.clearInterval(timerId))
   pollingTasks.clear()
-  console.log('🛑 已停止所有轮询任务')
+  console.log('已停止所有轮询任务')
 }
 
 // 停止特定会话的轮询任务
@@ -1315,7 +1315,7 @@ const stopConversationPolling = (conversationId: string) => {
   })
   tasksToStop.forEach((id) => pollingTasks.delete(id))
   if (tasksToStop.length > 0) {
-    console.log(`🛑 已停止会话 ${conversationId} 的 ${tasksToStop.length} 个轮询任务`)
+    console.log(`已停止会话 ${conversationId} 的 ${tasksToStop.length} 个轮询任务`)
   }
 }
 
@@ -1377,7 +1377,7 @@ const sendAIMessage = async (content: string, model: any) => {
     }
     window.$message.loading('AI思考中...', { duration: 0 })
 
-    console.log('🚀 开始发送AI消息:', {
+    console.log('开始发送AI消息:', {
       内容: content,
       模型: model.name,
       会话ID: currentChat.value.id
@@ -1449,7 +1449,7 @@ const sendAIMessage = async (content: string, model: any) => {
               scrollToBottom()
             }
           } catch (e) {
-            console.error('❌ 解析JSON失败:', e, '原始数据:', chunk)
+            console.error('解析JSON失败:', e, '原始数据:', chunk)
           }
         },
         onDone: () => {
@@ -1483,7 +1483,7 @@ const sendAIMessage = async (content: string, model: any) => {
           }
         },
         onError: (error: string) => {
-          console.error('❌ AI流式响应错误:', error)
+          console.error('AI流式响应错误:', error)
           messageList.value[aiMessageIndex].content = '抱歉，发生了错误：' + error
         }
       }
@@ -1496,7 +1496,7 @@ const sendAIMessage = async (content: string, model: any) => {
 
     // 更新消息计数
   } catch (error) {
-    console.error('❌ AI消息发送失败:', error)
+    console.error('AI消息发送失败:', error)
     window.$message.error('发送失败，请检查网络连接')
   } finally {
     window.$message.destroyAll()
@@ -1530,7 +1530,7 @@ const generateImage = async (prompt: string, model: any) => {
 
     scrollToBottom()
 
-    console.log('🎨 开始生成图片:', {
+    console.log('开始生成图片:', {
       提示词: prompt,
       模型: model.name,
       尺寸: imageParams.value.size
@@ -1555,11 +1555,11 @@ const generateImage = async (prompt: string, model: any) => {
       MsgInputRef.value.clearInput()
     }
   } catch (error: any) {
-    console.error('❌ 图片生成失败:', error)
+    console.error('图片生成失败:', error)
     // 更新为错误消息
     const lastMessage = messageList.value[messageList.value.length - 1]
     if (lastMessage && lastMessage.isGenerating) {
-      lastMessage.content = `❌ 图片生成失败: ${error.message || '未知错误'}`
+      lastMessage.content = `图片生成失败: ${error.message || '未知错误'}`
       lastMessage.isGenerating = false
     }
     window.$message.error('图片生成失败，请检查网络连接')
@@ -1587,7 +1587,7 @@ const pollImageStatus = async (
       const imageList = await imageMyListByIds({ ids: imageId.toString() })
 
       if (!imageList || !Array.isArray(imageList) || imageList.length === 0) {
-        messageList.value[messageIndex].content = '❌ 图片生成失败: 记录不存在'
+        messageList.value[messageIndex].content = '图片生成失败: 记录不存在'
         messageList.value[messageIndex].isGenerating = false
         pollingTasks.delete(imageId)
         return
@@ -1619,7 +1619,7 @@ const pollImageStatus = async (
         return
       } else if (image.status === 30) {
         // 生成失败
-        messageList.value[messageIndex].content = `❌ 图片生成失败: ${image.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].content = `图片生成失败: ${image.errorMessage || '未知错误'}`
         messageList.value[messageIndex].isGenerating = false
         window.$message.error('图片生成失败')
         pollingTasks.delete(imageId)
@@ -1627,10 +1627,10 @@ const pollImageStatus = async (
       }
 
       // 状态=10 (进行中), 继续轮询
-      console.log('⏳ 图片生成中，继续轮询...')
+      console.log('图片生成中，继续轮询...')
     } catch (error: any) {
-      console.error('❌ 轮询图片状态失败:', error)
-      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      console.error('轮询图片状态失败:', error)
+      messageList.value[messageIndex].content = `查询状态失败: ${error.message || '未知错误'}`
       messageList.value[messageIndex].isGenerating = false
       pollingTasks.delete(imageId)
     }
@@ -1671,7 +1671,7 @@ const generateVideo = async (prompt: string, model: any) => {
 
     scrollToBottom()
 
-    console.log('🎬 开始生成视频:', {
+    console.log('开始生成视频:', {
       提示词: prompt,
       模型: model.name,
       尺寸: videoParams.value.size,
@@ -1710,11 +1710,11 @@ const generateVideo = async (prompt: string, model: any) => {
     }
     clearVideoImage()
   } catch (error: any) {
-    console.error('❌ 视频生成失败:', error)
+    console.error('视频生成失败:', error)
     // 更新为错误消息
     const lastMessage = messageList.value[messageList.value.length - 1]
     if (lastMessage && lastMessage.isGenerating) {
-      lastMessage.content = `❌ 视频生成失败: ${error.message || '未知错误'}`
+      lastMessage.content = `视频生成失败: ${error.message || '未知错误'}`
       lastMessage.isGenerating = false
     }
     window.$message.error('视频生成失败，请检查网络连接')
@@ -1744,7 +1744,7 @@ const pollVideoStatus = async (
       const videoList = await videoMyListByIds({ ids: videoId.toString() })
 
       if (!videoList || !Array.isArray(videoList) || videoList.length === 0) {
-        messageList.value[messageIndex].content = '❌ 视频生成失败: 记录不存在'
+        messageList.value[messageIndex].content = '视频生成失败: 记录不存在'
         messageList.value[messageIndex].isGenerating = false
         pollingTasks.delete(videoId)
         return
@@ -1776,7 +1776,7 @@ const pollVideoStatus = async (
         return
       } else if (video.status === 30) {
         // 生成失败
-        messageList.value[messageIndex].content = `❌ 视频生成失败: ${video.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].content = `视频生成失败: ${video.errorMessage || '未知错误'}`
         messageList.value[messageIndex].isGenerating = false
         window.$message.error('视频生成失败')
         pollingTasks.delete(videoId)
@@ -1785,8 +1785,8 @@ const pollVideoStatus = async (
 
       // 状态=10 (进行中), 继续轮询
     } catch (error: any) {
-      console.error('❌ 轮询视频状态失败:', error)
-      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      console.error('轮询视频状态失败:', error)
+      messageList.value[messageIndex].content = `查询状态失败: ${error.message || '未知错误'}`
       messageList.value[messageIndex].isGenerating = false
       pollingTasks.delete(videoId)
     }
@@ -1827,7 +1827,7 @@ const generateAudio = async (prompt: string, model: any) => {
 
     scrollToBottom()
 
-    console.log('🎵 开始生成音频:', {
+    console.log('开始生成音频:', {
       提示词: prompt,
       模型: model.name,
       语音: audioParams.value.voice,
@@ -1850,10 +1850,10 @@ const generateAudio = async (prompt: string, model: any) => {
       MsgInputRef.value.clearInput()
     }
   } catch (error: any) {
-    console.error('❌ 音频生成失败:', error)
+    console.error('音频生成失败:', error)
     const lastMessage = messageList.value[messageList.value.length - 1]
     if (lastMessage && lastMessage.isGenerating) {
-      lastMessage.content = `❌ 音频生成失败: ${error.message || '未知错误'}`
+      lastMessage.content = `音频生成失败: ${error.message || '未知错误'}`
       lastMessage.isGenerating = false
     }
     window.$message.error('音频生成失败，请检查网络连接')
@@ -1874,7 +1874,7 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
       const audioList = await audioMyListByIds({ ids: audioId.toString() })
 
       if (!audioList || !Array.isArray(audioList) || audioList.length === 0) {
-        messageList.value[messageIndex].content = '❌ 音频生成失败: 记录不存在'
+        messageList.value[messageIndex].content = '音频生成失败: 记录不存在'
         messageList.value[messageIndex].isGenerating = false
         pollingTasks.delete(audioId)
         return
@@ -1905,7 +1905,7 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
         pollingTasks.delete(audioId)
         return
       } else if (audio.status === 30) {
-        messageList.value[messageIndex].content = `❌ 音频生成失败: ${audio.errorMessage || '未知错误'}`
+        messageList.value[messageIndex].content = `音频生成失败: ${audio.errorMessage || '未知错误'}`
         messageList.value[messageIndex].isGenerating = false
         window.$message.error('音频生成失败')
         pollingTasks.delete(audioId)
@@ -1913,7 +1913,7 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
       }
     } catch (error: any) {
       // 轮询失败
-      messageList.value[messageIndex].content = `❌ 查询状态失败: ${error.message || '未知错误'}`
+      messageList.value[messageIndex].content = `查询状态失败: ${error.message || '未知错误'}`
       messageList.value[messageIndex].isGenerating = false
       pollingTasks.delete(audioId)
     }
@@ -2124,7 +2124,7 @@ const handleBlur = async () => {
 
     useMitt.emit('update-chat-title', { title: currentChat.value.title, id: currentChat.value.id })
   } catch (error) {
-    console.error('❌ 更新会话标题失败:', error)
+    console.error('更新会话标题失败:', error)
     window.$message.error('重命名失败')
     currentChat.value.title = originalTitle.value
   }
@@ -2141,7 +2141,7 @@ const handleEdit = () => {
 // 加载会话的历史消息
 const loadMessages = async (conversationId: string) => {
   if (!conversationId || conversationId === '0') {
-    console.log('⚠️ 会话ID无效，跳过加载消息')
+    console.log('会话ID无效，跳过加载消息')
     return
   }
 
@@ -2183,7 +2183,7 @@ const loadMessages = async (conversationId: string) => {
       messageList.value = []
     }
   } catch (error) {
-    console.error('❌ 加载消息失败:', error)
+    console.error('加载消息失败:', error)
     window.$message.error('加载消息失败')
     messageList.value = []
   } finally {
@@ -2203,7 +2203,7 @@ const handleCreateNewChat = async () => {
     if (data) {
       window.$message.success('会话创建成功')
 
-      // ✅ 直接通知左侧列表添加新会话，不需要刷新整个列表
+      // 直接通知左侧列表添加新会话，不需要刷新整个列表
       const rawCreateTime = Number(data.createTime)
       const newChat = {
         id: data.id || data,
@@ -2221,7 +2221,7 @@ const handleCreateNewChat = async () => {
       router.push('/chat')
     }
   } catch (error) {
-    console.error('❌ 创建会话失败:', error)
+    console.error('创建会话失败:', error)
     window.$message.error('创建会话失败')
   }
 }
@@ -2249,7 +2249,7 @@ const handleDeleteMessage = async (messageId: string, index: number) => {
       createTime: latestTimestamp
     })
   } catch (error) {
-    console.error('❌ 删除消息失败:', error)
+    console.error('删除消息失败:', error)
     window.$message.error('删除消息失败')
   }
 }
@@ -2267,7 +2267,7 @@ const handleDeleteChat = async () => {
       try {
         await messageDeleteByConversationId({ conversationIdList: [currentChat.value.id] })
       } catch (error) {
-        console.error('❌ 删除会话消息失败:', error)
+        console.error('删除会话消息失败:', error)
       }
     }
 
@@ -2292,7 +2292,7 @@ const handleDeleteChat = async () => {
     await router.push('/welcome')
     useMitt.emit('refresh-conversations')
   } catch (error) {
-    console.error('❌ 删除会话失败:', error)
+    console.error('删除会话失败:', error)
     window.$message.error('删除会话失败')
     showDeleteChatConfirm.value = false
   }
@@ -2415,7 +2415,7 @@ const handlePreviewVideo = (item: any) => {
 
 // 事件处理函数(定义在顶层作用域,以便在 onUnmounted 中移除)
 const handleRefreshRoleList = () => {
-  console.log('🔄 收到角色列表刷新事件')
+  console.log('收到角色列表刷新事件')
   loadRoleList()
 }
 
@@ -2430,12 +2430,12 @@ const handleRefreshModelList = async () => {
       const oldType = selectedModel.value.type
       // 更新为新的模型对象
       selectedModel.value = { ...updatedModel }
-      console.log('✅ 已更新 selectedModel:', selectedModel.value)
+      console.log('已更新 selectedModel:', selectedModel.value)
 
       // 如果模型类型从 8 改为其他类型，清空参考图片
       if (oldType === 8 && updatedModel.type !== 8) {
         clearVideoImage()
-        console.log('🗑️ 模型类型已改变，已清空参考图片')
+        console.log('模型类型已改变，已清空参考图片')
       }
     }
   }

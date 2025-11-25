@@ -553,16 +553,16 @@ export const useUpload = () => {
         await onStart.trigger(fileInfo)
 
         // 判断是否使用分片上传
-        console.log(`📏 uploadFile - 文件大小检查: ${file.size} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
+        console.log(`uploadFile - 文件大小检查: ${file.size} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
         if (file.size > CHUNK_THRESHOLD) {
-          console.log('✅ uploadFile - 使用分片上传方式')
+          console.log('uploadFile - 使用分片上传方式')
           const result = (await uploadToQiniuWithChunks(file, qiniuConfig, QINIU_CHUNK_SIZE)) as any
           if (result && result.downloadUrl) {
             fileInfo.value = { ...info, downloadUrl: result.downloadUrl }
           }
           return result
         } else {
-          console.log('✅ uploadFile - 使用默认的普通上传方式')
+          console.log('uploadFile - 使用默认的普通上传方式')
           const result = await uploadToQiniu(
             file,
             options?.scene || UploadSceneEnum.CHAT,
@@ -671,9 +671,9 @@ export const useUpload = () => {
         })
 
         // 判断是否使用分片上传
-        console.log(`📏 文件大小检查: ${file.length} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
+        console.log(`文件大小检查: ${file.length} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
         if (file.length > CHUNK_THRESHOLD) {
-          console.log('✅ 使用分片上传方式')
+          console.log('使用分片上传方式')
 
           // 执行分片上传
           const chunkSize = QINIU_CHUNK_SIZE
@@ -736,7 +736,7 @@ export const useUpload = () => {
             progressInfo.uploadedChunks++
 
             progress.value = Math.floor((progressInfo.uploadedChunks / progressInfo.totalChunks) * 100)
-            console.log(`⬆️ 分片上传触发进度事件: ${progress.value}%`)
+            console.log(`分片上传触发进度事件: ${progress.value}%`)
             trigger('progress') // 触发进度事件
 
             console.log(`上传分片 ${progressInfo.uploadedChunks}/${progressInfo.totalChunks} 成功:`, {
@@ -778,7 +778,7 @@ export const useUpload = () => {
           trigger('success')
           return qiniuUrl
         } else {
-          console.log('✅ uploadFile - 使用七牛普通上传方式')
+          console.log('uploadFile - 使用七牛普通上传方式')
           // 使用普通上传方式
           // 创建FormData对象
           const formData = new FormData()

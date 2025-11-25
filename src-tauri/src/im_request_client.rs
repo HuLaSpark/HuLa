@@ -67,7 +67,7 @@ impl ImRequestClient {
         extra_headers: Option<Vec<(&str, &str)>>,
     ) -> reqwest::RequestBuilder {
         let url = format!("{}/{}", self.base_url, path);
-        info!("📡 Request URL: {}, Method: {}", &url, method);
+        info!("Request URL: {}, Method: {}", &url, method);
 
         let mut request_builder = self.client.request(method, &url);
 
@@ -128,14 +128,14 @@ impl ImRequestClient {
                         return Err(anyhow::anyhow!("token过期，刷新token失败"));
                     }
 
-                    error!("🔄 Token expired, starting token refresh");
+                    error!("Token expired, starting token refresh");
                     self.start_refresh_token().await?;
                     retry_count += 1;
                     continue;
                 }
                 Some(401) => {
                     error!(
-                        "❌ {}; 方法: {}; 失败信息: {}",
+                        "{}; 方法: {}; 失败信息: {}",
                         &url,
                         method,
                         result.msg.clone().unwrap_or_default()
@@ -143,16 +143,12 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!(
-                        "✅ Request successful: {}, Method: {}",
-                        &url,
-                        method.clone()
-                    );
+                    info!("Request successful: {}, Method: {}", &url, method.clone());
                     return Ok(result);
                 }
                 _ => {
                     error!(
-                        "❌ {}; 方法: {}; 失败信息: {}",
+                        "{}; 方法: {}; 失败信息: {}",
                         &url,
                         method,
                         result.msg.clone().unwrap_or_default()
@@ -203,16 +199,16 @@ impl ImRequestClient {
         let status = response.status();
         if !status.is_success() {
             let url = format!("{}/{}", self.base_url, path);
-            error!("❌ 流式请求失败，URL: {}, 状态码: {}", url, status);
+            error!("流式请求失败，URL: {}, 状态码: {}", url, status);
 
             // 根据状态码返回不同的错误信息
             match status.as_u16() {
                 406 => {
-                    error!("🔄 Token expired in stream request");
+                    error!("Token expired in stream request");
                     return Err(anyhow::anyhow!("token过期，请刷新后重试"));
                 }
                 401 => {
-                    error!("🔐 Unauthorized in stream request");
+                    error!("Unauthorized in stream request");
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 _ => {
@@ -221,12 +217,12 @@ impl ImRequestClient {
             }
         }
 
-        info!("✅ 流式请求成功，开始接收流式数据");
+        info!("流式请求成功，开始接收流式数据");
         Ok(response)
     }
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
-        info!("🔄 Starting token refresh");
+        info!("Starting token refresh");
         let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url().1);
 
         let body = json!({
@@ -238,10 +234,7 @@ impl ImRequestClient {
         let result: ApiResult<serde_json::Value> = response.json().await?;
 
         if !result.success {
-            error!(
-                "❌ 刷新token失败: {}",
-                result.msg.clone().unwrap_or_default()
-            );
+            error!("刷新token失败: {}", result.msg.clone().unwrap_or_default());
             return Err(anyhow::anyhow!(
                 "刷新token失败: {}",
                 result.msg.clone().unwrap_or_default()

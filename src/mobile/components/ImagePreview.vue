@@ -158,7 +158,7 @@ const handleSave = async () => {
           suffix: fileName.split('.').pop()?.toLowerCase()
         }
         fileStore.addFile(fileInfo)
-        console.log('🔍 [ImagePreview Debug] 保存文件信息到 fileStore:', fileInfo)
+        console.log('[ImagePreview Debug] 保存文件信息到 fileStore:', fileInfo)
       }
     }
   } catch (e) {

@@ -220,7 +220,7 @@ const loadPlatformList = async () => {
         value: item.platform
       }))
     } else {
-      console.warn('⚠️ 平台列表数据格式不正确:', data)
+      console.warn('平台列表数据格式不正确:', data)
       platformOptions.value = []
     }
   } catch (error) {
