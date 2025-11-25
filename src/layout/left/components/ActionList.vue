@@ -261,7 +261,7 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useFeedStore } from '@/stores/feed.ts'
-import { itemsBottom, moreList } from '../config.tsx'
+import { itemsBottom, useMoreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
 
@@ -279,6 +279,7 @@ const unReadMark = computed(() => globalStore.unReadMark)
 // const actionListRef = useTemplateRef('actionList')
 //const { } = toRefs(getCurrentInstance) // 所有菜单的外层div
 const menuShow = ref(false)
+const moreList = useMoreList()
 // 显示在菜单的插件
 const activePlugins = computed(() => {
   return plugins.value.filter((i) => i.isAdd)

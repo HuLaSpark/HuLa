@@ -14,7 +14,7 @@ import type { Locale } from 'vue-i18n'
 import { useSettingStore } from '../stores/setting'
 
 const i18n = createI18n({
-  legacy: true,
+  legacy: false,
   locale: ''
 })
 
@@ -49,7 +49,7 @@ const locales = Object.entries(import.meta.glob('../../locales/**/*.json'))
 export const availableLocales = Object.keys(locales)
 
 export function setI18nLanguage(lang: Locale) {
-  i18n.global.locale = lang
+  i18n.global.locale.value = lang
   if (typeof document !== 'undefined') {
     document.querySelector('html')?.setAttribute('lang', lang)
   }
@@ -76,7 +76,7 @@ function findLocales(lang: string) {
 }
 
 export async function loadLanguage(lang: Locale) {
-  if (i18n.global.locale === lang) {
+  if (i18n.global.locale.value === lang) {
     return setI18nLanguage(lang)
   }
 

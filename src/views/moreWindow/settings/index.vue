@@ -4,7 +4,7 @@
     <section class="left-bar" data-tauri-drag-region>
       <div class="menu-list relative">
         <div v-for="(item, index) in sideOptions" :key="index">
-          <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url, item.label)">
+          <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url)">
             <n-flex align="center">
               <svg><use :href="`#${item.icon}`"></use></svg>
               {{ item.label }}
@@ -64,24 +64,39 @@ import router from '@/router'
 import { useScannerStore } from '@/stores/scanner.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import Foot from '@/views/moreWindow/settings/Foot.vue'
-import { sideOptions } from './config.ts'
+import { useSideOptions } from './config.ts'
 
 const settingStore = useSettingStore()
 const scannerStore = useScannerStore()
 const skeleton = ref(true)
 const { page } = storeToRefs(settingStore)
+const sideOptions = useSideOptions()
 /**当前选中的元素 默认选中itemsTop的第一项*/
-const activeItem = ref<string>(sideOptions.value[0].url)
-const title = ref<string>(sideOptions.value[0].label)
+const activeItem = ref<string>('/general')
+const title = ref<string>('')
+
+watch(
+  sideOptions,
+  (options) => {
+    if (!options.length) return
+    const current = options.find((item) => item.url === activeItem.value) ?? options[0]
+    activeItem.value = current.url
+    title.value = current.label
+  },
+  { immediate: true }
+)
 
 /**
  * 统一跳转路由方法
  * @param url 跳转的路由
  * @param label 页面的标题
  * */
-const pageJumps = (url: string, label: string) => {
-  activeItem.value = url
-  title.value = label
+const pageJumps = (url: string) => {
+  const matched = sideOptions.value.find((item) => item.url === url)
+  if (matched) {
+    activeItem.value = matched.url
+    title.value = matched.label
+  }
   router.push(url)
 }
 
@@ -94,7 +109,7 @@ onMounted(async () => {
   setTimeout(() => {
     skeleton.value = false
   }, 300)
-  pageJumps(activeItem.value, title.value)
+  pageJumps(activeItem.value)
 })
 
 // 设置窗口关闭时清理扫描器资源

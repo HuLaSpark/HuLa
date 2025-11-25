@@ -236,7 +236,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
-import { sendOptions } from '@/views/moreWindow/settings/config.ts'
+import { useSendOptions } from '@/views/moreWindow/settings/config.ts'
 import { useGroupStore } from '@/stores/group'
 import { MobilePanelStateEnum } from '@/enums'
 import { useI18n, I18nT } from 'vue-i18n'
@@ -254,6 +254,7 @@ const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const { handlePaste, processFiles } = useCommon()
+const sendOptions = useSendOptions()
 /** 发送按钮旁的箭头 */
 const arrow = ref(false)
 /** 输入框dom元素 */

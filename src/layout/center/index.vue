@@ -31,7 +31,7 @@
           id="search"
           v-model:value="searchText"
           @focus="() => handleSearchFocus()"
-          @blur="() => (searchText = t('home.search_input_placeholder'))"
+          @blur="resetSearchPlaceholder"
           @update:value="handleSearchInputChange"
           class="rounded-6px w-full relative text-12px"
           style="background: var(--search-bg-color)"
@@ -42,7 +42,7 @@
           autoCorrect="off"
           autoCapitalize="off"
           size="small"
-          :placeholder="isSearchMode ? '' : t('home.search_input_placeholder')">
+          :placeholder="isSearchMode ? '' : searchPlaceholder">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
@@ -165,8 +165,10 @@ const initWidth = ref(250)
 const { width } = useWindowSize()
 /** 是否拖拽 */
 const isDrag = ref(true)
+/** 搜索框 placeholder 文案 */
+const searchPlaceholder = computed(() => t('home.search_input_placeholder'))
 /** 搜索框文字 */
-const searchText = ref(t('home.search_input_placeholder'))
+const searchText = ref(searchPlaceholder.value)
 /** 是否处于搜索模式 */
 const isSearchMode = ref(false)
 /** 添加面板是否显示 */
@@ -191,6 +193,18 @@ const addPanels = ref({
       }
     }
   ]
+})
+
+const resetSearchPlaceholder = () => {
+  if (isSearchMode.value) return
+  searchText.value = searchPlaceholder.value
+}
+
+watch(searchPlaceholder, (next, prev) => {
+  // 非搜索模式且当前值为空或等于旧文案时，同步到最新语言
+  if (!isSearchMode.value && (searchText.value === '' || searchText.value === prev)) {
+    searchText.value = next
+  }
 })
 
 const LEFT_MIN_WIDTH = 64

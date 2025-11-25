@@ -1,16 +1,11 @@
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useSettingStore } from '@/stores/setting'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
-import { useI18nGlobal } from '~/src/services/i18n'
-
-const { createWebviewWindow } = useWindow()
-const settingStore = useSettingStore()
-const { login } = storeToRefs(settingStore)
-const { logout, resetLoginState } = useLogin()
-const { t } = useI18nGlobal()
 
 /**
  * 这里的顶部的操作栏使用pinia写入了localstorage中
@@ -61,57 +56,62 @@ const itemsBottom: OPT.L.Common[] = [
   }
 ]
 /** 设置列表菜单项 */
-const moreList = ref<OPT.L.MoreList[]>([
-  {
-    label: t('menu.check_update'),
-    icon: 'arrow-circle-up',
-    click: () => {
-      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
-        type: ModalEnum.CHECK_UPDATE
-      })
-    }
-  },
-  {
-    label: t('menu.lock_screen'),
-    icon: 'lock',
-    click: () => {
-      useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
-        type: ModalEnum.LOCK_SCREEN
-      })
-    }
-  },
-  {
-    label: t('menu.settings'),
-    icon: 'settings',
-    click: async () => {
-      await createWebviewWindow('设置', 'settings', 840, 840)
-    }
-  },
-  {
-    label: t('menu.about'),
-    icon: 'info',
-    click: async () => {
-      await createWebviewWindow('关于', 'about', 360, 480)
-    }
-  },
-  {
-    label: t('menu.sign_out'),
-    icon: 'power',
-    click: async () => {
-      try {
-        // 1. 先调用后端退出接口
-        await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
-        // 2. 重置登录状态
-        await resetLoginState()
-        // 3. 最后调用登出方法(这会创建登录窗口)
-        await logout()
-      } catch (error) {
-        console.error('退出登录失败:', error)
-        window.$message.error('退出登录失败，请重试')
+const useMoreList = () => {
+  const { t } = useI18n()
+  const { createWebviewWindow } = useWindow()
+  const settingStore = useSettingStore()
+  const { login } = storeToRefs(settingStore)
+  const { logout, resetLoginState } = useLogin()
+
+  return computed<OPT.L.MoreList[]>(() => [
+    {
+      label: t('menu.check_update'),
+      icon: 'arrow-circle-up',
+      click: () => {
+        useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+          type: ModalEnum.CHECK_UPDATE
+        })
+      }
+    },
+    {
+      label: t('menu.lock_screen'),
+      icon: 'lock',
+      click: () => {
+        useMitt.emit(MittEnum.LEFT_MODAL_SHOW, {
+          type: ModalEnum.LOCK_SCREEN
+        })
+      }
+    },
+    {
+      label: t('menu.settings'),
+      icon: 'settings',
+      click: async () => {
+        await createWebviewWindow('设置', 'settings', 840, 840)
+      }
+    },
+    {
+      label: t('menu.about'),
+      icon: 'info',
+      click: async () => {
+        await createWebviewWindow('关于', 'about', 360, 480)
+      }
+    },
+    {
+      label: t('menu.sign_out'),
+      icon: 'power',
+      click: async () => {
+        try {
+          await ImRequestUtils.logout({ autoLogin: login.value.autoLogin })
+          await resetLoginState()
+          await logout()
+        } catch (error) {
+          console.error('退出登录失败:', error)
+          window.$message.error('退出登录失败，请重试')
+        }
       }
     }
-  }
-])
+  ])
+}
 
 /** 插件列表 */
 const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
@@ -219,4 +219,4 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
   // }
 ])
 
-export { itemsBottom, moreList, pluginsList }
+export { itemsBottom, useMoreList, pluginsList }
