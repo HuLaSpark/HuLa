@@ -85,8 +85,6 @@ export async function loadLanguage(lang: Locale) {
   }
 
   const messageParts = findLocales(lang)
-  if (!locales[lang]) {
-  }
   if (!messageParts) {
     console.warn(`No locale data found for: ${lang}`)
     return
