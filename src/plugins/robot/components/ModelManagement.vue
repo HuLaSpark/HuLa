@@ -148,6 +148,22 @@
           <n-input v-model:value="formData.platform" placeholder="根据API密钥自动设置" disabled />
         </n-form-item>
 
+        <n-form-item label="模型头像" path="avatar">
+          <n-flex :size="12" align="center" style="width: 100%">
+            <n-avatar :key="formData.avatar" :src="formData.avatar" :size="60" round />
+            <n-upload
+              style="margin-left: 12px"
+              list-type="image-card"
+              :max="1"
+              :default-file-list="avatarDefaultFileList"
+              :on-change="handleModelAvatarUpload"
+              :on-remove="handleModelAvatarRemove">
+              点击上传
+            </n-upload>
+            <n-button v-if="formData.avatar" text type="error" size="tiny" @click="formData.avatar = ''">清除</n-button>
+          </n-flex>
+        </n-form-item>
+
         <n-form-item label="模型类型" path="type">
           <n-flex :size="8" style="flex-wrap: wrap">
             <n-button :type="formData.type === 1 ? 'primary' : 'default'" size="small" @click="formData.type = 1">
@@ -286,7 +302,8 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue'
-import type { FormRules, FormInst } from 'naive-ui'
+import type { FormRules, FormInst, UploadFileInfo, UploadOnChange, UploadOnRemove } from 'naive-ui'
+// 移除裁剪依赖，改为 Naive UI n-upload 简易上传
 import { useUserStore } from '@/stores/user'
 import {
   modelPage,
@@ -336,13 +353,14 @@ const formData = ref({
   name: '',
   model: '',
   platform: '',
+  avatar: '',
   type: 1,
   sort: 0,
   status: 0,
   temperature: 0.8,
   maxTokens: 4096,
   maxContexts: 10,
-  publicStatus: 0 // 0=公开，1=私有
+  publicStatus: 1 // 0=公开，1=私有
 })
 
 // 平台选项和模型信息
@@ -612,16 +630,53 @@ const handleAdd = () => {
     name: '',
     model: '',
     platform: '',
+    avatar: '',
     type: 1,
     sort: 0,
     status: 0,
     temperature: 0.8,
     maxTokens: 4096,
     maxContexts: 10,
-    publicStatus: 0 // 0=公开，1=私有
+    publicStatus: 1 // 0=公开，1=私有
   }
   showEditModal.value = true
 }
+
+const handleModelAvatarUpload: UploadOnChange = ({ file, fileList }) => {
+  try {
+    const current = file || fileList?.[0]
+    const rawCandidate = (current as any)?.file?.file || (current as any)?.file
+    const raw = rawCandidate as File | undefined
+    if (!raw) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      formData.value.avatar = String(reader.result || '')
+      window.$message.success('头像已读取')
+    }
+    reader.readAsDataURL(raw as File)
+  } catch (e) {
+    console.error('读取头像失败', e)
+    window.$message.error('读取头像失败')
+  }
+}
+
+const handleModelAvatarRemove: UploadOnRemove = () => {
+  formData.value.avatar = ''
+}
+
+const avatarDefaultFileList = computed<UploadFileInfo[]>(() => {
+  const url = formData.value.avatar
+  return url
+    ? [
+        {
+          id: 'avatar-current',
+          name: '当前头像',
+          status: 'finished',
+          url
+        }
+      ]
+    : []
+})
 
 // 编辑模型
 const handleEdit = (model: any) => {
@@ -631,6 +686,7 @@ const handleEdit = (model: any) => {
     name: model.name,
     model: model.model,
     platform: model.platform,
+    avatar: model.avatar || '',
     type: model.type ?? 1,
     sort: model.sort ?? 0,
     status: model.status ?? 0,
@@ -653,6 +709,7 @@ const handleSubmit = async () => {
       name: formData.value.name,
       model: formData.value.model,
       platform: formData.value.platform,
+      avatar: formData.value.avatar,
       type: formData.value.type,
       sort: formData.value.sort,
       status: formData.value.status,

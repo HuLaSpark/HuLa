@@ -805,7 +805,7 @@ export interface StreamCallbacks {
  * @returns Promise，在流结束后 resolve 完整内容
  */
 export async function messageSendStream(
-  body: { conversationId: string; content: string; useContext?: boolean },
+  body: { conversationId: string; content: string; useContext?: boolean; reasoningEnabled?: boolean },
   callbacks?: StreamCallbacks
 ): Promise<string> {
   const { invoke, Channel } = await import('@tauri-apps/api/core')
@@ -973,6 +973,7 @@ export async function modelUpdate(body: {
   id?: string
   keyId: string
   name: string
+  avatar?: string
   model: string
   platform: string
   type: number
@@ -981,7 +982,7 @@ export async function modelUpdate(body: {
   temperature?: number
   maxTokens?: number
   maxContexts?: number
-  publicStatus?: boolean
+  publicStatus?: number
 }) {
   return await imRequest({
     url: body.id ? ImUrlEnum.MODEL_UPDATE : ImUrlEnum.MODEL_CREATE,

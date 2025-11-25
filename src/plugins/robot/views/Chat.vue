@@ -43,6 +43,8 @@
                   <Icon icon="mdi:robot" class="text-14px" />
                 </template>
               </n-tag>
+              <n-tag v-if="selectedModel && selectedModel.publicStatus === 0" size="small" type="info">官网模型</n-tag>
+              <n-tag v-else-if="selectedModel" size="small" type="warning">自建模型</n-tag>
               <n-tag v-if="selectedModel && selectedModel.type === 1" size="small" type="info">文字</n-tag>
               <n-tag v-if="selectedModel && selectedModel.type === 2" size="small" type="success">图片</n-tag>
               <n-tag v-if="selectedModel && selectedModel.type === 3" size="small" type="info">音频</n-tag>
@@ -422,39 +424,85 @@
                   </div>
 
                   <div v-else class="models-container">
-                    <div
-                      v-for="model in filteredModels"
-                      :key="model.id"
-                      :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
-                      @click="selectModel(model)">
-                      <n-avatar
-                        round
-                        :size="40"
-                        :src="getModelAvatar(model)"
-                        :fallback-src="getDefaultAvatar()"
-                        class="mr-12px flex-shrink-0" />
-
-                      <div class="model-info">
-                        <div class="model-name">
-                          {{ model.name }}
-                          <n-tag v-if="model.type === 1" size="tiny" type="info" class="ml-4px">文字</n-tag>
-                          <n-tag v-else-if="model.type === 2" size="tiny" type="success" class="ml-4px">图片</n-tag>
-                          <n-tag v-else-if="model.type === 3" size="tiny" type="primary" class="ml-4px">音频</n-tag>
-                          <n-tag v-else-if="model.type === 4" size="tiny" type="warning" class="ml-4px">视频</n-tag>
-                          <n-tag v-else-if="model.type === 5" size="tiny" type="default" class="ml-4px">向量</n-tag>
-                          <n-tag v-else-if="model.type === 6" size="tiny" type="default" class="ml-4px">重排序</n-tag>
-                          <n-tag v-else-if="model.type === 7" size="tiny" type="warning" class="ml-4px">文生视频</n-tag>
-                          <n-tag v-else-if="model.type === 8" size="tiny" type="error" class="ml-4px">图生视频</n-tag>
+                    <div v-if="officialModels.length > 0">
+                      <div class="model-section-title">官方模型</div>
+                      <div
+                        v-for="model in officialModels"
+                        :key="model.id"
+                        :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
+                        @click="selectModel(model)">
+                        <n-avatar
+                          round
+                          :size="40"
+                          :src="getModelAvatar(model)"
+                          :fallback-src="getDefaultAvatar()"
+                          class="mr-12px flex-shrink-0" />
+                        <div class="model-info">
+                          <div class="model-name">
+                            {{ model.name }}
+                            <n-tag v-if="model.type === 1" size="tiny" type="info" class="ml-4px">文字</n-tag>
+                            <n-tag v-else-if="model.type === 2" size="tiny" type="success" class="ml-4px">图片</n-tag>
+                            <n-tag v-else-if="model.type === 3" size="tiny" type="primary" class="ml-4px">音频</n-tag>
+                            <n-tag v-else-if="model.type === 4" size="tiny" type="warning" class="ml-4px">视频</n-tag>
+                            <n-tag v-else-if="model.type === 5" size="tiny" type="default" class="ml-4px">向量</n-tag>
+                            <n-tag v-else-if="model.type === 6" size="tiny" type="default" class="ml-4px">重排序</n-tag>
+                            <n-tag v-else-if="model.type === 7" size="tiny" type="warning" class="ml-4px">
+                              文生视频
+                            </n-tag>
+                            <n-tag v-else-if="model.type === 8" size="tiny" type="error" class="ml-4px">图生视频</n-tag>
+                          </div>
+                          <div class="model-description">{{ model.description || '暂无描述' }}</div>
+                          <div class="model-meta">
+                            <span class="model-provider">{{ model.platform }}</span>
+                            <span class="model-version">v{{ model.model }}</span>
+                          </div>
                         </div>
-                        <div class="model-description">{{ model.description || '暂无描述' }}</div>
-                        <div class="model-meta">
-                          <span class="model-provider">{{ model.platform }}</span>
-                          <span class="model-version">v{{ model.model }}</span>
+                        <div class="model-status">
+                          <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
+                          <n-tag v-else type="error" size="small">不可用</n-tag>
                         </div>
                       </div>
-                      <div class="model-status">
-                        <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
-                        <n-tag v-else type="error" size="small">不可用</n-tag>
+                    </div>
+
+                    <div v-if="officialModels.length > 0 && userModels.length > 0" class="model-divider"></div>
+
+                    <div v-if="userModels.length > 0">
+                      <div class="model-section-title">自建模型</div>
+                      <div
+                        v-for="model in userModels"
+                        :key="model.id"
+                        :class="['model-item', { 'model-item-active': selectedModel?.id === model.id }]"
+                        @click="selectModel(model)">
+                        <n-avatar
+                          round
+                          :size="40"
+                          :src="getModelAvatar(model)"
+                          :fallback-src="getDefaultAvatar()"
+                          class="mr-12px flex-shrink-0" />
+                        <div class="model-info">
+                          <div class="model-name">
+                            {{ model.name }}
+                            <n-tag v-if="model.type === 1" size="tiny" type="info" class="ml-4px">文字</n-tag>
+                            <n-tag v-else-if="model.type === 2" size="tiny" type="success" class="ml-4px">图片</n-tag>
+                            <n-tag v-else-if="model.type === 3" size="tiny" type="primary" class="ml-4px">音频</n-tag>
+                            <n-tag v-else-if="model.type === 4" size="tiny" type="warning" class="ml-4px">视频</n-tag>
+                            <n-tag v-else-if="model.type === 5" size="tiny" type="default" class="ml-4px">向量</n-tag>
+                            <n-tag v-else-if="model.type === 6" size="tiny" type="default" class="ml-4px">重排序</n-tag>
+                            <n-tag v-else-if="model.type === 7" size="tiny" type="warning" class="ml-4px">
+                              文生视频
+                            </n-tag>
+                            <n-tag v-else-if="model.type === 8" size="tiny" type="error" class="ml-4px">图生视频</n-tag>
+                          </div>
+                          <div class="model-description">{{ model.description || '暂无描述' }}</div>
+                          <div class="model-meta">
+                            <span class="model-provider">{{ model.platform }}</span>
+                            <span class="model-version">v{{ model.model }}</span>
+                          </div>
+                        </div>
+                        <div class="model-status">
+                          <n-tag v-if="model.status === 0" type="success" size="small">可用</n-tag>
+                          <n-tag v-else type="error" size="small">不可用</n-tag>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -619,7 +667,24 @@
 
             <div class="flex items-center gap-6px bg-[--chat-hover-color] rounded-50px w-fit h-fit p-[4px_6px]">
               <svg style="width: 22px; height: 22px; outline: none; cursor: pointer"><use href="#explosion"></use></svg>
-              <p class="text-(12px #707070) cursor-default select-none pr-6px">使用0</p>
+              <n-popover trigger="hover" :show-arrow="false" placement="top">
+                <template #trigger>
+                  <p class="text-(12px #707070) cursor-default select-none pr-6px">
+                    历史问答对 {{ contextPairs }} / {{ selectedModel?.maxContexts || 0 }} 对
+                  </p>
+                </template>
+                <span>按问答对（user+assistant）计数，超过上限不再携带上下文</span>
+              </n-popover>
+              <n-popover trigger="hover" :show-arrow="false" placement="top">
+                <template #trigger>
+                  <n-switch v-model:value="reasoningEnabled" size="small" :disabled="!supportsReasoning">
+                    <template #checked>思考模式</template>
+                    <template #unchecked>关闭</template>
+                  </n-switch>
+                </template>
+                <span v-if="supportsReasoning">开启后将优先展示思考过程</span>
+                <span v-else>该模型不支持思考模式</span>
+              </n-popover>
             </div>
           </n-flex>
 
@@ -773,6 +838,7 @@
 </template>
 <script setup lang="ts">
 import { type InputInst, UploadFileInfo } from 'naive-ui'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -912,6 +978,38 @@ const messageContentRef = ref<HTMLElement | null>(null)
 const shouldAutoStickBottom = ref(true)
 const showScrollbar = ref(true)
 const loadingMessages = ref(false) // 消息加载状态
+const contextPairs = computed(() => {
+  let pairs = 0
+  for (let i = messageList.value.length - 1; i >= 0; i--) {
+    const assistant = messageList.value[i]
+    if (!assistant || assistant.type !== 'assistant') continue
+    const user = messageList.value[i - 1]
+    if (!user || user.type !== 'user') continue
+    if (!assistant.content) continue
+    pairs++
+    i--
+  }
+  return pairs
+})
+const estimateTokens = (text: string) => {
+  if (!text) return 0
+  const chars = Array.from(text)
+  const asciiChars = chars.filter((ch) => (ch.codePointAt(0) as number) <= 0x7f)
+  const ascii = asciiChars.join('')
+  const nonAsciiCount = chars.length - asciiChars.length
+  const asciiWords = ascii.trim().split(/\s+/).filter(Boolean)
+  const asciiTokens = asciiWords.reduce((acc, w) => acc + Math.ceil(w.length / 4), 0)
+  const nonAsciiTokens = nonAsciiCount
+  return asciiTokens + nonAsciiTokens
+}
+const estimateMessageTokens = (m: Message) => {
+  const base = estimateTokens(m.content || '')
+  const reasoning = estimateTokens(m.reasoningContent || '')
+  return base + reasoning
+}
+const conversationTokens = computed(() => {
+  return messageList.value.reduce((sum, m) => sum + estimateMessageTokens(m), 0)
+})
 
 const getMessageBubbleClass = (message: Message) => {
   if (message.type === 'assistant' && message.msgType === AiMsgContentTypeEnum.IMAGE) {
@@ -1006,6 +1104,8 @@ const showModelPopover = ref(false)
 const modelLoading = ref(false)
 const modelSearch = ref('')
 const selectedModel = ref<any>(null)
+const reasoningEnabled = ref(false)
+const supportsReasoning = computed(() => Boolean(selectedModel.value?.supportsReasoning))
 
 // 模型分页数据
 const modelPagination = ref({
@@ -1019,17 +1119,29 @@ const modelList = ref<any[]>([])
 
 // 过滤后的模型列表
 const filteredModels = computed(() => {
-  if (!modelSearch.value) {
-    return modelList.value
-  }
-  const search = modelSearch.value.toLowerCase()
-  return modelList.value.filter(
-    (model) =>
-      model.name.toLowerCase().includes(search) ||
-      model.description?.toLowerCase().includes(search) ||
-      model.provider?.toLowerCase().includes(search)
-  )
+  const list = modelList.value.slice()
+  const search = modelSearch.value?.toLowerCase() || ''
+  const filtered = search
+    ? list.filter(
+        (model) =>
+          model.name?.toLowerCase().includes(search) ||
+          model.description?.toLowerCase().includes(search) ||
+          model.platform?.toLowerCase().includes(search)
+      )
+    : list
+  return filtered.sort((a: any, b: any) => {
+    const ao = a.publicStatus === 0
+    const bo = b.publicStatus === 0
+    if (ao !== bo) return ao ? -1 : 1
+    const as = a.sort ?? 0
+    const bs = b.sort ?? 0
+    if (as !== bs) return as - bs
+    return String(a.name || '').localeCompare(String(b.name || ''))
+  })
 })
+
+const officialModels = computed(() => filteredModels.value.filter((m: any) => m.publicStatus === 0))
+const userModels = computed(() => filteredModels.value.filter((m: any) => m.publicStatus !== 0))
 
 // 图片生成参数
 const imageParams = ref({
@@ -1269,6 +1381,16 @@ const handleSendAI = (data: { content: string }) => {
 // AI消息发送实现
 const sendAIMessage = async (content: string, model: any) => {
   try {
+    const ctxLimit = Number(model?.maxContexts || 0)
+    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
+      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+      return
+    }
+    const tokenBudget = Number(model?.maxTokens || 0)
+    if (tokenBudget > 0 && conversationTokens.value >= tokenBudget) {
+      window.$message.warning(`本会话 Token 已用完（${tokenBudget}），请新建会话或更换模型`)
+      return
+    }
     window.$message.loading('AI思考中...', { duration: 0 })
 
     console.log('🚀 开始发送AI消息:', {
@@ -1312,7 +1434,8 @@ const sendAIMessage = async (content: string, model: any) => {
       {
         conversationId: currentChat.value.id,
         content: content,
-        useContext: true
+        useContext: true,
+        reasoningEnabled: reasoningEnabled.value && supportsReasoning.value
       },
       {
         onChunk: (chunk: string) => {
@@ -1349,6 +1472,7 @@ const sendAIMessage = async (content: string, model: any) => {
           scrollToBottom()
           const latestEntry = messageList.value[messageList.value.length - 1]
           const latestTimestamp = latestEntry?.createTime ?? currentChat.value.createTime ?? Date.now()
+
           notifyConversationMetaChange({
             createTime: latestTimestamp
           })
@@ -1377,6 +1501,11 @@ const sendAIMessage = async (content: string, model: any) => {
 // 图片生成实现
 const generateImage = async (prompt: string, model: any) => {
   try {
+    const ctxLimit = Number(model?.maxContexts || 0)
+    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
+      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+      return
+    }
     messageList.value.push({
       type: 'user',
       content: prompt,
@@ -1479,6 +1608,7 @@ const pollImageStatus = async (
         }
 
         window.$message.success('图片生成成功')
+
         scrollToBottom()
         pollingTasks.delete(imageId)
         return
@@ -1512,6 +1642,11 @@ const pollImageStatus = async (
 // 视频生成实现
 const generateVideo = async (prompt: string, model: any) => {
   try {
+    const ctxLimit = Number(model?.maxContexts || 0)
+    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
+      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+      return
+    }
     messageList.value.push({
       type: 'user',
       msgType: 3, // 3=VIDEO
@@ -1630,6 +1765,7 @@ const pollVideoStatus = async (
         }
 
         window.$message.success('视频生成成功')
+
         scrollToBottom()
         pollingTasks.delete(videoId)
         return
@@ -1662,6 +1798,11 @@ const pollVideoStatus = async (
 // 音频生成实现：添加用户消息
 const generateAudio = async (prompt: string, model: any) => {
   try {
+    const ctxLimit = Number(model?.maxContexts || 0)
+    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
+      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+      return
+    }
     messageList.value.push({
       type: 'user',
       msgType: 4, // 4=AUDIO
@@ -1754,6 +1895,7 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
         }
 
         window.$message.success('音频生成成功')
+
         scrollToBottom()
         pollingTasks.delete(audioId)
         return
@@ -2543,6 +2685,16 @@ watch(
     }
 
     .models-container {
+      .model-section-title {
+        font-size: 12px;
+        color: #707070;
+        padding: 4px 8px;
+      }
+      .model-divider {
+        height: 1px;
+        background: var(--line-color);
+        margin: 6px 0;
+      }
       .model-item {
         display: flex;
         align-items: center;
