@@ -670,20 +670,20 @@
               <n-popover trigger="hover" :show-arrow="false" placement="top">
                 <template #trigger>
                   <p class="text-(12px #707070) cursor-default select-none pr-6px">
-                    历史问答对 {{ contextPairs }} / {{ selectedModel?.maxContexts || 0 }} 对
+                    Token 使用 {{ serverTokenUsage ?? conversationTokens }} / {{ selectedModel?.maxTokens || 0 }}
                   </p>
                 </template>
-                <span>按问答对（user+assistant）计数，超过上限不再携带上下文</span>
+                <span>按会话累计 Token 进行限制，达到上限后将拒绝继续生成</span>
               </n-popover>
               <n-popover trigger="hover" :show-arrow="false" placement="top">
                 <template #trigger>
                   <n-switch v-model:value="reasoningEnabled" size="small" :disabled="!supportsReasoning">
-                    <template #checked>思考模式</template>
+                    <template #checked>深度思考</template>
                     <template #unchecked>关闭</template>
                   </n-switch>
                 </template>
                 <span v-if="supportsReasoning">开启后将优先展示思考过程</span>
-                <span v-else>该模型不支持思考模式</span>
+                <span v-else>该模型不支持深度思考</span>
               </n-popover>
             </div>
           </n-flex>
@@ -870,6 +870,7 @@ import {
   audioGetVoices
 } from '@/utils/ImRequestUtils'
 import { messageSendStream } from '@/utils/ImRequestUtils'
+import { conversationGetMy } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import router from '@/router'
 import { storeToRefs } from 'pinia'
@@ -978,19 +979,6 @@ const messageContentRef = ref<HTMLElement | null>(null)
 const shouldAutoStickBottom = ref(true)
 const showScrollbar = ref(true)
 const loadingMessages = ref(false) // 消息加载状态
-const contextPairs = computed(() => {
-  let pairs = 0
-  for (let i = messageList.value.length - 1; i >= 0; i--) {
-    const assistant = messageList.value[i]
-    if (!assistant || assistant.type !== 'assistant') continue
-    const user = messageList.value[i - 1]
-    if (!user || user.type !== 'user') continue
-    if (!assistant.content) continue
-    pairs++
-    i--
-  }
-  return pairs
-})
 const estimateTokens = (text: string) => {
   if (!text) return 0
   const chars = Array.from(text)
@@ -1010,6 +998,7 @@ const estimateMessageTokens = (m: Message) => {
 const conversationTokens = computed(() => {
   return messageList.value.reduce((sum, m) => sum + estimateMessageTokens(m), 0)
 })
+const serverTokenUsage = ref<number | null>(null)
 
 const getMessageBubbleClass = (message: Message) => {
   if (message.type === 'assistant' && message.msgType === AiMsgContentTypeEnum.IMAGE) {
@@ -1381,11 +1370,6 @@ const handleSendAI = (data: { content: string }) => {
 // AI消息发送实现
 const sendAIMessage = async (content: string, model: any) => {
   try {
-    const ctxLimit = Number(model?.maxContexts || 0)
-    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
-      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
-      return
-    }
     const tokenBudget = Number(model?.maxTokens || 0)
     if (tokenBudget > 0 && conversationTokens.value >= tokenBudget) {
       window.$message.warning(`本会话 Token 已用完（${tokenBudget}），请新建会话或更换模型`)
@@ -1476,6 +1460,27 @@ const sendAIMessage = async (content: string, model: any) => {
           notifyConversationMetaChange({
             createTime: latestTimestamp
           })
+          if (currentChat.value.id && currentChat.value.id !== '0') {
+            conversationGetMy({ id: currentChat.value.id })
+              .then((conv: any) => {
+                if (conv && typeof conv.tokenUsage === 'number') {
+                  serverTokenUsage.value = conv.tokenUsage
+                }
+              })
+              .catch(() => {})
+            if (!messageList.value[aiMessageIndex].reasoningContent) {
+              messageListByConversationId({ conversationId: currentChat.value.id, pageNo: 1, pageSize: 100 })
+                .then((list: any[]) => {
+                  if (Array.isArray(list) && list.length > 0) {
+                    const last = list[list.length - 1]
+                    if (last && last.type === 'assistant' && last.reasoningContent) {
+                      messageList.value[aiMessageIndex].reasoningContent = last.reasoningContent
+                    }
+                  }
+                })
+                .catch(() => {})
+            }
+          }
         },
         onError: (error: string) => {
           console.error('❌ AI流式响应错误:', error)
@@ -1501,9 +1506,9 @@ const sendAIMessage = async (content: string, model: any) => {
 // 图片生成实现
 const generateImage = async (prompt: string, model: any) => {
   try {
-    const ctxLimit = Number(model?.maxContexts || 0)
-    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
-      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+    const tokenBudget = Number(model?.maxTokens || 0)
+    if (tokenBudget > 0 && conversationTokens.value >= tokenBudget) {
+      window.$message.warning(`本会话 Token 已用完（${tokenBudget}），请新建会话或更换模型`)
       return
     }
     messageList.value.push({
@@ -1642,9 +1647,9 @@ const pollImageStatus = async (
 // 视频生成实现
 const generateVideo = async (prompt: string, model: any) => {
   try {
-    const ctxLimit = Number(model?.maxContexts || 0)
-    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
-      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+    const tokenBudget = Number(model?.maxTokens || 0)
+    if (tokenBudget > 0 && conversationTokens.value >= tokenBudget) {
+      window.$message.warning(`本会话 Token 已用完（${tokenBudget}），请新建会话或更换模型`)
       return
     }
     messageList.value.push({
@@ -1798,9 +1803,9 @@ const pollVideoStatus = async (
 // 音频生成实现：添加用户消息
 const generateAudio = async (prompt: string, model: any) => {
   try {
-    const ctxLimit = Number(model?.maxContexts || 0)
-    if (ctxLimit > 0 && contextPairs.value >= ctxLimit) {
-      window.$message.warning(`上下文已达上限（${ctxLimit}），请清理或开启新会话`)
+    const tokenBudget = Number(model?.maxTokens || 0)
+    if (tokenBudget > 0 && conversationTokens.value >= tokenBudget) {
+      window.$message.warning(`本会话 Token 已用完（${tokenBudget}），请新建会话或更换模型`)
       return
     }
     messageList.value.push({
@@ -2168,6 +2173,12 @@ const loadMessages = async (conversationId: string) => {
       nextTick(() => {
         scrollToBottom()
       })
+      try {
+        const conv = await conversationGetMy({ id: conversationId })
+        if (conv && typeof conv.tokenUsage === 'number') {
+          serverTokenUsage.value = conv.tokenUsage
+        }
+      } catch {}
     } else {
       messageList.value = []
     }
