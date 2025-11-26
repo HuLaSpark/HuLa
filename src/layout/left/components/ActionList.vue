@@ -152,10 +152,10 @@
               <use href="#settings"></use>
             </svg>
             <!-- <span class="select-none">插件管理</span> -->
-            插件管理
+            {{ t('home.action.plugin_manage') }}
           </n-flex>
         </n-popover>
-        <p v-if="showMode === ShowModeEnum.TEXT" class="text-(10px center)">插件</p>
+        <p v-if="showMode === ShowModeEnum.TEXT" class="text-(10px center)">{{ t('home.action.plugin') }}</p>
       </div>
     </header>
 
@@ -214,7 +214,7 @@
       </div>
 
       <!--  更多选项面板  -->
-      <div title="更多" :class="{ 'bottom-action py-4px': showMode === ShowModeEnum.TEXT }">
+      <div :title="t('home.action.more')" :class="{ 'bottom-action py-4px': showMode === ShowModeEnum.TEXT }">
         <n-popover
           v-model:show="settingShow"
           style="padding: 0; background: transparent; user-select: none"
@@ -244,7 +244,7 @@
             </div>
           </div>
         </n-popover>
-        <p v-if="showMode === ShowModeEnum.TEXT" class="text-(10px center)">更多</p>
+        <p v-if="showMode === ShowModeEnum.TEXT" class="text-(10px center)">{{ t('home.action.more') }}</p>
       </div>
     </footer>
   </div>
@@ -261,9 +261,11 @@ import { useMenuTopStore } from '@/stores/menuTop.ts'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useFeedStore } from '@/stores/feed.ts'
-import { itemsBottom, useMoreList } from '../config.tsx'
+import { useItemsBottom, useMoreList } from '../config.tsx'
 import { leftHook } from '../hook.ts'
 import DefinePlugins from './definePlugins/index.vue'
+import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 
 const appWindow = WebviewWindow.getCurrent()
 const { addListener } = useTauriListener()
@@ -271,9 +273,11 @@ const globalStore = useGlobalStore()
 const pluginsStore = usePluginsStore()
 const feedStore = useFeedStore()
 const { showMode } = storeToRefs(useSettingStore())
-const { menuTop } = useMenuTopStore()
+const { menuTop } = storeToRefs(useMenuTopStore())
+const itemsBottom = useItemsBottom()
 const { plugins } = storeToRefs(pluginsStore)
 const { unreadCount: feedUnreadCount } = storeToRefs(feedStore)
+const { t } = useI18n()
 const unReadMark = computed(() => globalStore.unReadMark)
 // const headerRef = useTemplateRef('header')
 // const actionListRef = useTemplateRef('actionList')
@@ -318,8 +322,10 @@ const handleResize = async (e: Event) => {
   const staticMenuNum = 2
   const menuNum = Math.floor(
     (windowHeight -
-      (menuTop.length + noMiniShowPlugins.value.length + itemsBottom.length + staticMenuNum) * menuDivHeight -
-      (menuTop.length + noMiniShowPlugins.value.length + itemsBottom.length + staticMenuNum - 1) * spaceHeight -
+      (menuTop.value.length + noMiniShowPlugins.value.length + itemsBottom.value.length + staticMenuNum) *
+        menuDivHeight -
+      (menuTop.value.length + noMiniShowPlugins.value.length + itemsBottom.value.length + staticMenuNum - 1) *
+        spaceHeight -
       headerTopHeight -
       bottomPadding -
       randomHeight) /
@@ -376,7 +382,7 @@ onMounted(async () => {
   )
 
   if (tipShow.value) {
-    menuTop.filter((item) => {
+    menuTop.value.filter((item) => {
       if (item.state !== PluginEnum.BUILTIN) {
         item.dot = true
       }

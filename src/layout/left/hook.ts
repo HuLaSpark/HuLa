@@ -12,18 +12,19 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useUserStatusStore } from '@/stores/userStatus.ts'
 import { ModifyUserInfo, setUserBadge } from '@/utils/ImRequestUtils'
+import { storeToRefs } from 'pinia'
 
 export const leftHook = () => {
   const prefers = matchMedia('(prefers-color-scheme: dark)')
   const { createWebviewWindow } = useWindow()
   const settingStore = useSettingStore()
-  const { menuTop } = useMenuTopStore()
+  const { menuTop } = storeToRefs(useMenuTopStore())
   const loginHistoriesStore = useLoginHistoriesStore()
   const userStore = useUserStore()
   const { themes } = settingStore
   const userStatusStore = useUserStatusStore()
   const { currentState } = storeToRefs(userStatusStore)
-  const activeUrl = ref<string>(menuTop[0].url)
+  const activeUrl = ref<string>(menuTop.value?.[0]?.url || 'message')
   const settingShow = ref(false)
   const shrinkStatus = ref(false)
   const groupStore = useGroupStore()

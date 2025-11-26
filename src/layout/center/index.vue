@@ -67,7 +67,7 @@
               <div v-for="(item, index) in addPanels.list" :key="index">
                 <div class="menu-item" @click="() => item.click()">
                   <svg><use :href="`#${item.icon}`"></use></svg>
-                  {{ item.label }}
+                  {{ t(item.label) }}
                 </div>
               </div>
             </div>
@@ -98,7 +98,9 @@
             </svg>
           </div>
 
-          <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">创建群聊</n-flex>
+          <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">
+            {{ t('home.create_group.title') }}
+          </n-flex>
 
           <svg
             v-if="isWindows()"
@@ -114,11 +116,20 @@
             v-model:value="selectedValue"
             :options="options"
             :render-source-list="renderSourceList(isFromChatbox ? preSelectedFriendId : '', isFromChatbox)"
-            :render-target-list="renderTargetList(isFromChatbox ? preSelectedFriendId : '', isFromChatbox)"
+            :render-target-list="
+              renderTargetList(
+                isFromChatbox ? preSelectedFriendId : '',
+                isFromChatbox,
+                '',
+                t('home.create_group.required_tag')
+              )
+            "
             :render-target-label="renderLabel" />
 
           <n-flex align="center" justify="center" class="p-16px">
-            <n-button :disabled="selectedValue.length < 2" color="#13987f" @click="handleCreateGroup">创建</n-button>
+            <n-button :disabled="selectedValue.length < 2" color="#13987f" @click="handleCreateGroup">
+              {{ t('home.create_group.action') }}
+            </n-button>
           </n-flex>
         </n-flex>
       </div>
@@ -176,7 +187,7 @@ const addPanels = ref({
   show: false,
   list: [
     {
-      label: '发起群聊',
+      label: 'home.action.start_group_chat',
       icon: 'launch',
       click: () => {
         isFromChatbox.value = false
@@ -186,10 +197,10 @@ const addPanels = ref({
       }
     },
     {
-      label: '加好友/群',
+      label: 'home.action.add_friend_or_group',
       icon: 'people-plus',
       click: async () => {
-        await createWebviewWindow('添加好友/群', 'searchFriend', 500, 580)
+        await createWebviewWindow(t('home.action.add_friend_or_group'), 'searchFriend', 500, 580)
       }
     }
   ]
@@ -353,9 +364,9 @@ const handleCreateGroup = async () => {
     }
 
     resetCreateGroupState()
-    window.$message.success('创建群聊成功')
+    window.$message.success(t('home.create_group.success'))
   } catch (error) {
-    window.$message.error('创建群聊失败')
+    window.$message.error(t('home.create_group.fail'))
   }
 }
 

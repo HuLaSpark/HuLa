@@ -27,13 +27,15 @@
     <div v-if="isGroup && !isCollapsed">
       <!-- 群公告 -->
       <n-flex vertical :size="14" class="px-4px py-10px">
-        <n-flex
-          align="center"
-          justify="space-between"
-          class="cursor-pointer"
-          @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
-          <p class="text-(14px --text-color)">群公告须知</p>
-          <svg class="size-16px rotate-270 color-[--text-color]">
+        <n-flex align="center" justify="space-between" :size="8" class="cursor-pointer">
+          <p
+            class="text-(14px --text-color) truncate flex-1 min-w-0"
+            @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
+            {{ t('home.chat_sidebar.announcement.title') }}
+          </p>
+          <svg
+            class="size-16px rotate-270 color-[--text-color] shrink-0"
+            @click="handleOpenAnnoun(announNum === 0 && isAddAnnoun)">
             <use v-if="announNum === 0 && isAddAnnoun" href="#plus"></use>
             <use v-else href="#down"></use>
           </svg>
@@ -42,15 +44,17 @@
         <!-- 公告加载失败提示 -->
         <n-flex v-if="announError" class="h-74px" align="center" justify="center">
           <div class="text-center">
-            <p class="text-(12px #909090) mb-8px">公告加载失败，请重试</p>
-            <n-button size="tiny" @click="announcementStore.loadGroupAnnouncements()">重试</n-button>
+            <p class="text-(12px #909090) mb-8px">{{ t('home.chat_sidebar.announcement.load_failed') }}</p>
+            <n-button size="tiny" @click="announcementStore.loadGroupAnnouncements()">
+              {{ t('home.chat_sidebar.actions.retry') }}
+            </n-button>
           </div>
         </n-flex>
 
         <!-- 公告内容 -->
         <n-scrollbar v-else class="h-74px">
           <p class="text-(12px #909090) leading-6 line-clamp-4 max-w-99%" v-if="announNum === 0">
-            请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。
+            {{ t('home.chat_sidebar.announcement.default') }}
           </p>
           <p
             v-else
@@ -73,7 +77,7 @@
       </n-flex>
 
       <n-flex v-if="!isSearch" align="center" justify="space-between" class="pr-8px pl-8px h-42px">
-        <span class="text-14px">在线成员&nbsp;{{ onlineCountDisplay }}</span>
+        <span class="text-14px">{{ t('home.chat_sidebar.online_members', { count: onlineCountDisplay }) }}</span>
         <svg @click="handleSelect" class="size-14px">
           <use href="#search"></use>
         </svg>
@@ -86,7 +90,7 @@
           ref="inputInstRef"
           v-model:value="searchRef"
           clearable
-          placeholder="搜索"
+          :placeholder="t('home.chat_sidebar.search.placeholder')"
           type="text"
           size="tiny"
           spellCheck="false"
@@ -164,12 +168,12 @@
                   <div
                     v-if="item.roleId === RoleEnum.LORD"
                     class="flex px-4px bg-#d5304f30 py-3px rounded-4px size-fit select-none">
-                    <p class="text-(10px #d5304f)">群主</p>
+                    <p class="text-(10px #d5304f)">{{ t('home.chat_sidebar.roles.owner') }}</p>
                   </div>
                   <div
                     v-if="item.roleId === RoleEnum.ADMIN"
                     class="flex px-4px bg-#1a7d6b30 py-3px rounded-4px size-fit select-none">
-                    <p class="text-(10px #008080)">管理员</p>
+                    <p class="text-(10px #008080)">{{ t('home.chat_sidebar.roles.admin') }}</p>
                   </div>
                 </n-flex>
               </ContextMenu>
@@ -183,6 +187,7 @@
   </main>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
 import type { InputInst } from 'naive-ui'
@@ -203,6 +208,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getUserByIds } from '@/utils/ImRequestUtils'
 import { useAnnouncementStore } from '@/stores/announcement'
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const emit = defineEmits<(e: 'ready') => void>()
 const { createWebviewWindow } = useWindow()
@@ -354,7 +360,12 @@ const handleSelect = () => {
 const handleOpenAnnoun = (isAdd: boolean) => {
   nextTick(async () => {
     const roomId = globalStore.currentSessionRoomId
-    await createWebviewWindow(isAdd ? '新增群公告' : '查看群公告', `announList/${roomId}/${isAdd ? 0 : 1}`, 420, 620)
+    await createWebviewWindow(
+      isAdd ? t('home.chat_sidebar.announcement.window.add') : t('home.chat_sidebar.announcement.window.view'),
+      `announList/${roomId}/${isAdd ? 0 : 1}`,
+      420,
+      620
+    )
   })
 }
 

@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { PluginEnum, StoresEnum } from '@/enums'
-import { pluginsList } from '@/layout/left/config.tsx'
+import { usePluginsList } from '@/layout/left/config.tsx'
 
 export const usePluginsStore = defineStore(
   StoresEnum.PLUGINS,
   () => {
+    const pluginsList = usePluginsList()
     /** 插件内容 */
     const plugins = ref(pluginsList.value.filter((p) => p.state === PluginEnum.BUILTIN) as STO.Plugins<PluginEnum>[])
     /** 插件查看模式 */
@@ -16,7 +17,7 @@ export const usePluginsStore = defineStore(
      * @param newPlugin 插件数据
      */
     const addPlugin = (newPlugin: STO.Plugins<PluginEnum>) => {
-      const index = plugins.value.findIndex((i) => i.title === newPlugin.title)
+      const index = plugins.value.findIndex((i) => i.url === newPlugin.url)
       index === -1 && plugins.value.push(newPlugin)
     }
 
@@ -26,7 +27,7 @@ export const usePluginsStore = defineStore(
      * @param p 插件数据
      */
     const removePlugin = (p: STO.Plugins<PluginEnum>) => {
-      const index = plugins.value.findIndex((i: STO.Plugins<PluginEnum>) => i.title === p.title)
+      const index = plugins.value.findIndex((i: STO.Plugins<PluginEnum>) => i.url === p.url)
       plugins.value.splice(index, 1)
     }
 
@@ -35,9 +36,24 @@ export const usePluginsStore = defineStore(
      * @param p 插件
      */
     const updatePlugin = (p: STO.Plugins<PluginEnum>) => {
-      const index = plugins.value.findIndex((i) => i.title === p.title)
+      const index = plugins.value.findIndex((i) => i.url === p.url)
       index !== -1 && (plugins.value[index] = p)
     }
+
+    const syncPluginsWithLocale = (latest: STO.Plugins<PluginEnum>[]) => {
+      plugins.value = plugins.value.map((plugin) => {
+        const updated = latest.find((p) => p.url === plugin.url)
+        return updated
+          ? {
+              ...plugin,
+              title: updated.title,
+              shortTitle: updated.shortTitle
+            }
+          : plugin
+      })
+    }
+
+    watch(pluginsList, (latest) => syncPluginsWithLocale(latest), { immediate: true })
 
     onBeforeMount(() => {
       // 读取本地存储的插件数据
@@ -46,6 +62,7 @@ export const usePluginsStore = defineStore(
         JSON.parse(localStorage.getItem(StoresEnum.PLUGINS)!)['plugins']?.map((item: STO.Plugins<PluginEnum>) =>
           plugins.value.push(item)
         )
+        syncPluginsWithLocale(pluginsList.value)
       }
     })
 

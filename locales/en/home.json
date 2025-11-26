@@ -7,9 +7,230 @@
   "search_input_placeholder": "Search",
   "clear_search_history": "Clear",
   "action": {
-    "message": "Hula",
-    "message_short_title": "Messages",
-    "contact": "Contacts",
-    "contact_short_title": "Contacts"
+    "message": "Messages",
+    "message_short_title": "Msg",
+    "contact": "Friend",
+    "contact_short_title": "Friend",
+    "file_manager": "File Manager",
+    "file_manager_short_title": "Files",
+    "favorite": "Favorites",
+    "favorite_short_title": "Favorites",
+    "plugin": "Plugins",
+    "plugin_manage": "Plugin Management",
+    "more": "More",
+    "start_group_chat": "Start group chat",
+    "add_friend_or_group": "Add friend/group"
+  },
+  "plugins": {
+    "dynamic": "Moments",
+    "dynamic_short_title": "Moments",
+    "chatbot": "ChatBot",
+    "chatbot_short_title": "ChatBot"
+  },
+  "search_window": {
+    "title": "Global Search",
+    "tabs": {
+      "recommend": "Recommend",
+      "user": "Find Friends",
+      "group": "Find Groups"
+    },
+    "placeholder": {
+      "recommend": "Enter keywords to explore",
+      "user": "Search nickname to add friends",
+      "group": "Enter group ID to find groups"
+    },
+    "labels": {
+      "account": "Account: {account}"
+    },
+    "tooltip": {
+      "copy_account": "Copy account"
+    },
+    "empty": {
+      "no_result": "No matching result",
+      "prompt": "Enter keywords to search"
+    },
+    "notification": {
+      "copy_success": "Copied {account}",
+      "search_fail": "Search failed"
+    },
+    "buttons": {
+      "add": "Add",
+      "message": "Message",
+      "edit_profile": "Edit profile"
+    },
+    "modal": {
+      "add_friend": "Add friend request",
+      "add_group": "Join group request"
+    }
+  },
+  "chat_details": {
+    "single": {
+      "empty_signature": "This user hasn't left any bio yet",
+      "region": "Region: {place}",
+      "unknown": "Unknown",
+      "badge_label": "Badges:",
+      "call_only_single": "Audio/video calls are available only in direct chats",
+      "friend_info_missing": "Unable to load friend info",
+      "footer": {
+        "audio_call": "Voice call",
+        "video_call": "Video call"
+      }
+    },
+    "group": {
+      "official_badge": "Official group",
+      "id": "Group ID {account}",
+      "copy": "Copy",
+      "copy_success": "Copied {account}",
+      "info_missing": "Unable to load group info",
+      "remark": {
+        "label": "Group remark",
+        "placeholder": "Enter a remark",
+        "empty": "Set group remark",
+        "success": "Group remark updated",
+        "fail": "Failed to update group remark"
+      },
+      "nickname": {
+        "label": "My nickname",
+        "placeholder": "Enter nickname",
+        "empty": "Not set",
+        "success": "Nickname updated",
+        "fail": "Failed to update nickname"
+      },
+      "announcement": {
+        "label": "Announcements",
+        "empty": "Not set",
+        "window_title": "View announcements"
+      },
+      "members": {
+        "count": "Members ({count})",
+        "online": "Online {count}"
+      }
+    },
+    "actions": {
+      "message": "Message"
+    },
+    "window": {
+      "image_viewer": "Image viewer"
+    }
+  },
+  "chat_header": {
+    "bot_tag": "Assistant",
+    "status_abnormal": "Friend status unavailable",
+    "toolbar": {
+      "audio_call": "Voice call",
+      "video_call": "Video call",
+      "screen_share": "Screen share",
+      "remote_assist": "Remote assist",
+      "invite_to_group": "Invite to group",
+      "start_group_chat": "Start group chat"
+    },
+    "sidebar": {
+      "single": {
+        "pin": "Pin to top",
+        "mute": "Mute notifications",
+        "shield": "Block user",
+        "delete_history": "Delete chat history",
+        "delete_friend": "Remove friend",
+        "report": "Harassed? Report this user"
+      },
+      "group": {
+        "name_placeholder": "Enter group name (max 12 chars)",
+        "official_badge": "Official group",
+        "copy": "Copy",
+        "qr": "QR",
+        "members": "Group members",
+        "channel_members": "Channel members",
+        "my_name": "My nickname",
+        "remark": "Group remark",
+        "remark_desc": "(Only visible to you)",
+        "settings": {
+          "title": "Group settings",
+          "pin": "Pin to top",
+          "mute": "Mute notifications",
+          "scan": "Allow QR join"
+        },
+        "message_settings": {
+          "title": "Message settings"
+        },
+        "manage_members": "Manage members",
+        "delete_history": "Delete chat history",
+        "dissolve": "Disband group",
+        "exit": "Leave group",
+        "report": "Harassed? Report this group"
+      }
+    },
+    "message_setting": {
+      "receive_no_alert": "Receive without alerts",
+      "shield": "Block messages"
+    },
+    "modal": {
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "invite_friends": "Invite friends",
+      "tips": {
+        "delete_friend": "Delete this friend?",
+        "dissolve_group": "Disband this group?",
+        "exit_group": "Leave this group?",
+        "rename_group": "Rename group to {name} ?",
+        "update_info": "Save changes to group info?",
+        "delete_history": "Delete local chat history?"
+      }
+    },
+    "qr": {
+      "tip": "Scan the code to join"
+    },
+    "toast": {
+      "copy_success": "Copied {account}",
+      "group_info_updated": "Group info updated",
+      "group_info_update_failed": "Failed to update group info",
+      "todo": "Coming soon",
+      "pin_on": "Pinned",
+      "pin_off": "Unpinned",
+      "pin_failed": "Pin failed",
+      "mute_on": "Muted without alerts",
+      "mute_off": "Notifications restored",
+      "shield_on": "Messages blocked",
+      "shield_off": "Messages unblocked",
+      "action_failed": "Operation failed",
+      "group_name_empty": "Group name cannot be empty",
+      "group_name_too_long": "Group name cannot exceed 12 characters",
+      "delete_history_success": "Chat history deleted",
+      "delete_history_failed": "Failed to delete chat history",
+      "delete_friend_success": "Friend removed",
+      "dissolve_not_allowed": "Cannot disband channel",
+      "dissolve_success": "Group disbanded",
+      "exit_not_allowed": "Cannot leave channel",
+      "exit_success": "Left group",
+      "group_name_update_failed": "Failed to rename group"
+    }
+  },
+  "chat_sidebar": {
+    "announcement": {
+      "title": "Group announcement",
+      "load_failed": "Failed to load announcement, please retry",
+      "default": "Please avoid sharing sensitive information. Follow internet regulations or the message will be removed.",
+      "window": {
+        "add": "Add announcement",
+        "view": "View announcement"
+      }
+    },
+    "actions": {
+      "retry": "Retry"
+    },
+    "online_members": "Online members {count}",
+    "search": {
+      "placeholder": "Search"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin"
+    }
+  },
+  "create_group": {
+    "title": "Start group chat",
+    "action": "Create",
+    "success": "Group chat created",
+    "fail": "Failed to create group chat",
+    "required_tag": "Required"
   }
 }

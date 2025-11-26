@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { MittEnum, ModalEnum, PluginEnum } from '@/enums'
 import { useLogin } from '@/hooks/useLogin.ts'
@@ -11,24 +11,8 @@ import * as ImRequestUtils from '@/utils/ImRequestUtils'
  * 这里的顶部的操作栏使用pinia写入了localstorage中
  */
 /** 下半部分操作栏配置 */
-const itemsBottom: OPT.L.Common[] = [
-  // {
-  //   title: '邮件列表',
-  //   shortTitle: '邮件',
-  //   url: 'mail',
-  //   icon: 'mail',
-  //   iconAction: 'mail-action',
-  //   size: {
-  //     width: 840,
-  //     height: 600
-  //   },
-  //   window: {
-  //     resizable: true
-  //   }
-  // },
+const baseItemsBottom: Array<Omit<OPT.L.Common, 'title' | 'shortTitle'>> = [
   {
-    title: '文件管理器',
-    shortTitle: '文件',
     url: 'fileManager',
     icon: 'file',
     iconAction: 'file-action',
@@ -41,8 +25,6 @@ const itemsBottom: OPT.L.Common[] = [
     }
   },
   {
-    title: '收藏列表',
-    shortTitle: '收藏',
     url: 'mail',
     icon: 'collect',
     iconAction: 'collect-action',
@@ -55,6 +37,23 @@ const itemsBottom: OPT.L.Common[] = [
     }
   }
 ]
+
+const useItemsBottom = () =>
+  (() => {
+    const { t } = useI18n()
+    return computed<OPT.L.Common[]>(() => [
+      {
+        ...baseItemsBottom[0],
+        title: t('home.action.file_manager'),
+        shortTitle: t('home.action.file_manager_short_title')
+      },
+      {
+        ...baseItemsBottom[1],
+        title: t('home.action.favorite'),
+        shortTitle: t('home.action.favorite_short_title')
+      }
+    ])
+  })()
 /** 设置列表菜单项 */
 const useMoreList = () => {
   const { t } = useI18n()
@@ -114,12 +113,10 @@ const useMoreList = () => {
 }
 
 /** 插件列表 */
-const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
+const basePluginsList: Array<Omit<STO.Plugins<PluginEnum>, 'title' | 'shortTitle'>> = [
   {
     url: 'dynamic',
     icon: 'fire',
-    title: '动态列表',
-    shortTitle: '动态',
     iconAction: 'fire-action',
     state: PluginEnum.BUILTIN,
     isAdd: true,
@@ -138,8 +135,6 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
     icon: 'robot',
     iconAction: 'GPT',
     url: 'robot',
-    title: 'ChatBot',
-    shortTitle: 'ChatBot',
     state: PluginEnum.BUILTIN,
     isAdd: true,
     dot: false,
@@ -217,6 +212,23 @@ const pluginsList = ref<STO.Plugins<PluginEnum>[]>([
   //   },
   //   miniShow: false
   // }
-])
+]
 
-export { itemsBottom, useMoreList, pluginsList }
+const usePluginsList = () =>
+  (() => {
+    const { t } = useI18n()
+    return computed<STO.Plugins<PluginEnum>[]>(() => [
+      {
+        ...basePluginsList[0],
+        title: t('home.plugins.dynamic'),
+        shortTitle: t('home.plugins.dynamic_short_title')
+      },
+      {
+        ...basePluginsList[1],
+        title: t('home.plugins.chatbot'),
+        shortTitle: t('home.plugins.chatbot_short_title')
+      }
+    ])
+  })()
+
+export { useItemsBottom, useMoreList, usePluginsList }

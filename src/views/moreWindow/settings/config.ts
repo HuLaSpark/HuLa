@@ -36,7 +36,7 @@ const useSideOptions = () => {
       url: '/versatile',
       label: t('setting.theme.title'),
       icon: 'platte',
-      versionStatus: 'New'
+      versionStatus: 'setting.common.tag_new'
     }
   ])
 }
@@ -61,28 +61,34 @@ const useSendOptions = () => {
 }
 
 /** 翻译提供商的选项 */
-const translateOptions = [
-  {
-    label: '腾讯云翻译',
-    value: 'tencent'
-  },
-  {
-    label: '有道云翻译',
-    value: 'youdao'
-  }
-]
+const useTranslateOptions = () => {
+  const { t } = useI18n()
+  return computed(() => [
+    {
+      label: t('setting.general.chat.translate_options.tencent'),
+      value: 'tencent'
+    },
+    {
+      label: t('setting.general.chat.translate_options.youdao'),
+      value: 'youdao'
+    }
+  ])
+}
 
 /** 字体 */
-const fontOptions = [
-  {
-    label: '苹方',
-    value: 'PingFang'
-  },
-  {
-    label: '阿里妈妈方圆体',
-    value: 'AliFangYuan'
-  }
-]
+const useFontOptions = () => {
+  const { t } = useI18n()
+  return computed(() => [
+    {
+      label: t('setting.general.ui.font_options.PingFang'),
+      value: 'PingFang'
+    },
+    {
+      label: t('setting.general.ui.font_options.AliFangYuan'),
+      value: 'AliFangYuan'
+    }
+  ])
+}
 
 const langOptions = [
   {
@@ -99,4 +105,4 @@ const langOptions = [
   }
 ]
 
-export { useSideOptions, useSendOptions, fontOptions, translateOptions, langOptions }
+export { useSideOptions, useSendOptions, useFontOptions, useTranslateOptions, langOptions }

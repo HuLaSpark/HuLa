@@ -18,8 +18,8 @@
 
     <n-flex vertical align="start" :size="20" class="variation-item">
       <n-flex :size="20" align="end">
-        <p class="text-(16px [--text-color])">变出活力色彩</p>
-        <p class="text-(12px #999)">感受色彩的魅力，创造属于你的色彩世界</p>
+        <p class="text-(16px [--text-color])">{{ t('setting.theme.versatile.title') }}</p>
+        <p class="text-(12px #999)">{{ t('setting.theme.versatile.description') }}</p>
       </n-flex>
 
       <n-flex align="center" :size="20">
@@ -28,7 +28,7 @@
           :class="{ 'outline outline-2 outline-[--border-active-color] outline-offset': themes.versatile === 'simple' }"
           class="w-108px h-84px flex-col-center gap-10px cursor-pointer rounded-8px bg-#f1f1f1">
           <img class="size-34px" src="../../../assets/img/hula_bg_l.png" alt="" />
-          <p class="text-(12px [--chat-text-color])">极简素雅</p>
+          <p class="text-(12px [--chat-text-color])">{{ t('setting.theme.versatile.simple') }}</p>
         </div>
       </n-flex>
     </n-flex>

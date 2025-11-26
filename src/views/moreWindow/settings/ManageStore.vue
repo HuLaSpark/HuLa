@@ -21,11 +21,11 @@
           :offset-degree="180"
           style="width: 160px; height: 160px"
           :stroke-width="16">
-          <n-flex vertical align="center" justify="center" :size="4">
-            <span class="text-(18px [--text-color])">
+          <n-flex vertical align="center" justify="center" :size="4" class="text-center">
+            <span class="text-(18px [--text-color] center)">
               {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(0) }}%
             </span>
-            <span class="text-(12px #666)">
+            <span class="text-(12px #666 center)">
               {{ showDiskUsage ? t('setting.storage.usage') : t('setting.storage.file_scan_progress') }}
             </span>
           </n-flex>
@@ -51,52 +51,56 @@
       <!-- 详细信息 -->
       <n-flex vertical :size="8">
         <n-flex v-if="scanning" justify="space-between">
-          <span class="text-(12px #666)">当前文件:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.current_file') }}:</span>
           <span class="text-(12px #666) max-w-300px truncate">
             {{ scanProgress.current_path }}
           </span>
         </n-flex>
 
         <n-flex v-if="scanning" justify="space-between">
-          <span class="text-(12px #666)">扫描进度:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.scanning_progress') }}:</span>
           <span class="text-(12px #666)">{{ scanningProgress.toFixed(2) }}%</span>
         </n-flex>
 
         <n-flex justify="space-between">
-          <span class="text-(12px #666)">已处理文件:</span>
-          <span class="text-(12px #666)">{{ scanProgress.files_processed }} 个</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.processed_files') }}:</span>
+          <span class="text-(12px #666)">
+            {{ t('setting.storage.processed_files_unit', { count: scanProgress.files_processed }) }}
+          </span>
         </n-flex>
 
         <n-flex justify="space-between">
-          <span class="text-(12px #666)">累计大小:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.total_size') }}:</span>
           <span class="text-(12px #666)">{{ formatBytes(scanProgress.total_size) }}</span>
         </n-flex>
 
         <n-flex v-if="diskInfo" justify="space-between">
-          <span class="text-(12px #666)">挂载点:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.mount_point') }}:</span>
           <span class="text-(12px #666)">{{ diskInfo.disk_mount_point }}</span>
         </n-flex>
 
         <n-flex v-if="diskInfo" justify="space-between">
-          <span class="text-(12px #666)">磁盘分区总容量:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.disk_total') }}:</span>
           <span class="text-(12px #666)">{{ formatBytes(diskInfo.disk_total_space) }}</span>
         </n-flex>
 
         <n-flex v-if="diskInfo" justify="space-between">
-          <span class="text-(12px #666)">磁盘分区已用空间:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.disk_used') }}:</span>
           <span class="text-(12px #666)">{{ formatBytes(diskInfo.disk_used_space) }}</span>
         </n-flex>
 
         <n-flex v-if="diskInfo" justify="space-between">
-          <span class="text-(12px #666)">磁盘已用空间占比:</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.disk_usage_percent') }}:</span>
           <span class="text-(12px #666)" :style="{ color: getUsageColor(diskInfo.disk_usage_percentage) }">
             {{ diskInfo.disk_usage_percentage.toFixed(2) }}%
           </span>
         </n-flex>
 
         <n-flex justify="space-between">
-          <span class="text-(12px #666)">耗时:</span>
-          <span class="text-(12px #666)">{{ scanProgress.elapsed_seconds.toFixed(2) }} 秒</span>
+          <span class="text-(12px #666)">{{ t('setting.storage.elapsed') }}:</span>
+          <span class="text-(12px #666)">
+            {{ t('setting.storage.elapsed_unit', { seconds: scanProgress.elapsed_seconds.toFixed(2) }) }}
+          </span>
         </n-flex>
       </n-flex>
     </n-flex>
@@ -109,10 +113,10 @@
       <n-flex class="item" :size="16" vertical>
         <!-- 路径类型选择 -->
         <n-flex align="center" justify="space-between">
-          <span>扫描目录类型</span>
+          <span>{{ t('setting.storage.path_type') }}</span>
           <n-radio-group v-model:value="pathType">
-            <n-radio value="default">默认目录</n-radio>
-            <n-radio value="custom">自定义目录</n-radio>
+            <n-radio value="default">{{ t('setting.storage.path_type_default') }}</n-radio>
+            <n-radio value="custom">{{ t('setting.storage.path_type_custom') }}</n-radio>
           </n-radio-group>
         </n-flex>
 
@@ -123,7 +127,7 @@
           <span>{{ t('setting.storage.curr_dir') }}</span>
           <n-flex vertical align="end" :size="8">
             <span class="text-(12px #666) max-w-300px truncate">
-              {{ currentDirectory || '正在获取目录路径...' }}
+              {{ currentDirectory || t('setting.storage.fetching_directory') }}
             </span>
             <n-flex :size="8">
               <n-button
@@ -132,10 +136,10 @@
                 size="small"
                 @click="selectCustomDirectory"
                 :disabled="scanning">
-                {{ scanning ? '扫描中...' : '选择目录' }}
+                {{ scanning ? t('setting.storage.scanning') : t('setting.storage.select_directory') }}
               </n-button>
               <n-button size="small" color="#13987f" @click="startScan" :disabled="scanning || !currentDirectory">
-                {{ scanning ? '扫描中...' : '开始扫描' }}
+                {{ scanning ? t('setting.storage.scanning') : t('setting.storage.start_scan') }}
               </n-button>
             </n-flex>
           </n-flex>

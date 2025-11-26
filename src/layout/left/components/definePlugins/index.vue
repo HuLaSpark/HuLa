@@ -31,9 +31,12 @@
       </div>
 
       <n-flex justify="space-between" align="center">
-        <n-flex :size="4" align="center" class="p-18px">
-          <p class="text-(16px [--text-color])">插件管理</p>
-          <div class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-8px text-(12px [--bate-color] center)">
+        <n-flex :size="4" align="center" class="p-18px truncate flex-1 min-w-0">
+          <p class="text-(16px [--text-color]) leading-loose truncate flex-1 min-w-0">
+            {{ t('home.action.plugin_manage') }}
+          </p>
+          <div
+            class="ml-6px p-[4px_8px] size-fit bg-[--bate-bg] rounded-8px text-(12px [--bate-color] center) flex-shrink-0">
             Beta
           </div>
         </n-flex>
@@ -41,7 +44,7 @@
         <n-tabs
           :value="viewMode"
           :on-update:value="(v: any) => (viewMode = v)"
-          class="w-76px h-28px mr-22px"
+          class="w-76px h-28px mr-22px flex-shrink-0"
           type="segment"
           animated>
           <n-tab name="card">
@@ -69,10 +72,12 @@ import { usePluginsStore } from '@/stores/plugins.ts'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import Card from './Card.vue'
 import List from './List.vue'
+import { useI18n } from 'vue-i18n'
 
 /** 是否展示插件管理弹窗 */
 const isShow = defineModel() as unknown as boolean
 const { viewMode } = storeToRefs(usePluginsStore())
+const { t } = useI18n()
 </script>
 
 <style scoped lang="scss">

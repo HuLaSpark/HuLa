@@ -144,7 +144,7 @@ import { NSwitch } from 'naive-ui'
 import { CloseBxEnum, ShowModeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isWindows } from '@/utils/PlatformConstants'
-import { fontOptions, translateOptions, langOptions } from './config.ts'
+import { useFontOptions, useTranslateOptions, langOptions } from './config.ts'
 import { useTopicsList } from './model.tsx'
 import { useI18n } from 'vue-i18n'
 
@@ -155,6 +155,8 @@ const { themes, tips, chat, page } = settingStore
 const { showMode, escClose } = storeToRefs(settingStore)
 const activeItem = ref<string>(themes.pattern)
 const topicsList = useTopicsList()
+const translateOptions = useTranslateOptions()
+const fontOptions = useFontOptions()
 
 const showText = computed({
   get: () => showMode.value === ShowModeEnum.TEXT,

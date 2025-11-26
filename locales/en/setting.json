@@ -1,4 +1,22 @@
 {
+  "common": {
+    "provider_label": "Provider",
+    "provider_name": "HuLa",
+    "tag_new": "New"
+  },
+  "footer": {
+    "like_product": "Like this product? On",
+    "star_cta": "GitHub give us a star",
+    "share_joiner": "and",
+    "share_cta": "share your valuable ideas",
+    "star_popover_title": "Star us on GitHub",
+    "star_popover_desc": "If you enjoy HuLa and want to support us, could you star the repo on GitHub? This tiny action means a lot and keeps us shipping great features.",
+    "later": "Later",
+    "star_button": "Give a Star",
+    "issue_popover_title": "Share feedback on GitHub",
+    "issue_popover_desc": "Every idea matters. We’d love to hear from you—feel free to tell us what feature or experience you’d like to improve!",
+    "issue_button": "Submit feedback"
+  },
   "general": {
     "title": "General",
     "appearance": {
@@ -11,7 +29,11 @@
     },
     "chat": {
       "title": "Chat",
-      "translate_service": "Translation Service"
+      "translate_service": "Translation Service",
+      "translate_options": {
+        "tencent": "Tencent Cloud Translate",
+        "youdao": "Youdao Translate"
+      }
     },
     "ui": {
       "title": "UI",
@@ -19,7 +41,11 @@
       "blur": "Gaussian blur",
       "shadow": "Enable Shadow",
       "font": "Font Family",
-      "menu_name": "Menu Name"
+      "menu_name": "Menu Name",
+      "font_options": {
+        "PingFang": "PingFang",
+        "AliFangYuan": "Alibaba Rounded"
+      }
     }
   },
   "login": {
@@ -88,11 +114,37 @@
     "app_used_space": "Hula Data",
     "free_space": "Free Space",
     "directory": "Directory",
-    "curr_dir": "Current directory"
+    "curr_dir": "Current directory",
+    "current_file": "Current file",
+    "scanning_progress": "Scanning progress",
+    "processed_files": "Processed files",
+    "processed_files_unit": "{count} files",
+    "total_size": "Total size",
+    "mount_point": "Mount point",
+    "disk_total": "Disk total",
+    "disk_used": "Disk used",
+    "disk_usage_percent": "Disk usage %",
+    "elapsed": "Elapsed",
+    "elapsed_unit": "{seconds}s",
+    "path_type": "Scan directory type",
+    "path_type_default": "Default",
+    "path_type_custom": "Custom",
+    "fetching_directory": "Fetching directory...",
+    "select_directory": "Choose directory",
+    "start_scan": "Start scan",
+    "scanning": "Scanning...",
+    "select_directory_title": "Select a directory to scan",
+    "select_directory_failed": "Failed to choose directory",
+    "select_directory_error": "Select directory failed"
   },
   "theme": {
     "title": "Theme",
-    "restore_default": "Restore"
+    "restore_default": "Restore",
+    "versatile": {
+      "title": "Vivid palette",
+      "description": "Feel the charm of colors and craft your own palette",
+      "simple": "Minimal grace"
+    }
   },
   "unknow": "Unknow"
 }

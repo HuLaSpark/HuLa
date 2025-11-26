@@ -130,17 +130,32 @@
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { cloneDeep } from 'es-toolkit'
+import { storeToRefs } from 'pinia'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { PluginEnum } from '@/enums'
-import { pluginsList } from '@/layout/left/config.tsx'
+import { usePluginsList } from '@/layout/left/config.tsx'
 import { usePluginsStore } from '@/stores/plugins.ts'
 
 const appWindow = WebviewWindow.getCurrent()
 const pluginsStore = usePluginsStore()
+const pluginsList = usePluginsList()
 const { plugins } = storeToRefs(pluginsStore)
 const isCurrently = ref(-1)
 const allPlugins = ref([] as STO.Plugins<PluginEnum>[])
 const pluginsLists = ref<STO.Plugins<PluginEnum>[]>(cloneDeep(pluginsList.value))
+
+// 同步插件状态
+const syncPlugins = (list: STO.Plugins<PluginEnum>[]) =>
+  list.map((item: STO.Plugins<PluginEnum>) => {
+    const matched = plugins.value.find((z: STO.Plugins<PluginEnum>) => z.url === item.url)
+    return matched
+      ? {
+          ...item,
+          state: matched.state,
+          isAdd: matched.isAdd
+        }
+      : item
+  })
 
 const handleState = (plugin: STO.Plugins<PluginEnum>) => {
   if (plugin.state === PluginEnum.INSTALLED) return
@@ -168,7 +183,7 @@ const handleUnload = (plugin: STO.Plugins<PluginEnum>) => {
 }
 
 const handleDelete = (p: STO.Plugins<PluginEnum>) => {
-  const plugin = plugins.value.find((i) => i.title === p.title)
+  const plugin = plugins.value.find((i) => i.url === p.url)
   if (plugin) {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: false })
@@ -179,7 +194,7 @@ const handleDelete = (p: STO.Plugins<PluginEnum>) => {
 }
 
 const handleAdd = (p: STO.Plugins<PluginEnum>) => {
-  const plugin = plugins.value.find((i) => i.title === p.title)
+  const plugin = plugins.value.find((i) => i.url === p.url)
   if (plugin) {
     setTimeout(() => {
       pluginsStore.updatePlugin({ ...plugin, isAdd: true })
@@ -196,17 +211,17 @@ const closeMenu = (event: Event) => {
   }
 }
 
+watch(
+  pluginsList,
+  (latest) => {
+    pluginsLists.value = cloneDeep(latest)
+    allPlugins.value = syncPlugins(pluginsLists.value)
+  },
+  { immediate: false }
+)
+
 onMounted(() => {
-  allPlugins.value = pluginsLists.value.map((i) => {
-    const p = plugins.value.find((z) => z.title === i.title)
-    return p
-      ? {
-          ...i,
-          state: p.state,
-          isAdd: p.isAdd
-        }
-      : i
-  })
+  allPlugins.value = syncPlugins(pluginsLists.value)
   window.addEventListener('click', closeMenu, true)
 })
 

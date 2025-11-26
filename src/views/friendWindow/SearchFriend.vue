@@ -11,7 +11,7 @@
     <p
       class="absolute-x-center h-fit pt-6px text-(13px [--text-color]) select-none cursor-default"
       data-tauri-drag-region>
-      全网搜索
+      {{ t('home.search_window.title') }}
     </p>
 
     <!-- 主要内容 -->
@@ -80,7 +80,9 @@
                         </template>
                       </n-space>
                       <n-flex align="center" :size="10">
-                        <span class="text-(12px [--chat-text-color])">{{ `账号：${item.account}` }}</span>
+                        <span class="text-(12px [--chat-text-color])">
+                          {{ t('home.search_window.labels.account', { account: item.account }) }}
+                        </span>
                         <n-tooltip trigger="hover">
                           <template #trigger>
                             <svg
@@ -89,7 +91,7 @@
                               <use href="#copy"></use>
                             </svg>
                           </template>
-                          <span>复制账号</span>
+                          <span>{{ t('home.search_window.tooltip.copy_account') }}</span>
                         </n-tooltip>
                       </n-flex>
                     </n-flex>
@@ -119,7 +121,7 @@
             <n-empty
               class="flex-center"
               style="height: calc(100vh / var(--page-scale, 1) - 200px)"
-              description="未找到相关结果" />
+              :description="t('home.search_window.empty.no_result')" />
           </template>
 
           <!-- 默认空状态 -->
@@ -127,7 +129,7 @@
             <n-empty
               style="height: calc(100vh / var(--page-scale, 1) - 200px)"
               class="flex-center"
-              description="输入关键词搜索">
+              :description="t('home.search_window.empty.prompt')">
               <template #icon>
                 <n-icon>
                   <svg><use href="#explosion"></use></svg>
@@ -145,6 +147,7 @@
 import { emitTo } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 import FloatBlockList from '@/components/common/FloatBlockList.vue'
 import { ThemeEnum } from '@/enums'
 import { RoomTypeEnum } from '@/enums/index.ts'
@@ -168,19 +171,20 @@ const cachedStore = useCachedStore()
 const { themes } = storeToRefs(settingStore)
 
 // 定义标签页
-const tabs = ref([
-  { name: 'recommend', label: '推荐' },
-  { name: 'user', label: '找好友' },
-  { name: 'group', label: '找群聊' }
+const { t } = useI18n()
+const tabs = computed(() => [
+  { name: 'recommend', label: t('home.search_window.tabs.recommend') },
+  { name: 'user', label: t('home.search_window.tabs.user') },
+  { name: 'group', label: t('home.search_window.tabs.group') }
 ])
 // 搜索类型
 const searchType = ref<'recommend' | 'user' | 'group'>('recommend')
 // 搜索类型对应的placeholder映射
-const searchPlaceholder = {
-  recommend: '输入推荐关键词',
-  user: '输入昵称搜索好友',
-  group: '输入群号搜索群聊'
-}
+const searchPlaceholder = computed(() => ({
+  recommend: t('home.search_window.placeholder.recommend'),
+  user: t('home.search_window.placeholder.user'),
+  group: t('home.search_window.placeholder.group')
+}))
 // 搜索值
 const searchValue = ref('')
 // 搜索结果
@@ -226,7 +230,7 @@ const clearSearchResults = () => {
 // 处理复制账号
 const handleCopy = (account: string) => {
   navigator.clipboard.writeText(account)
-  window.$message.success(`复制成功 ${account}`)
+  window.$message.success(t('home.search_window.notification.copy_success', { account }))
 }
 
 // 处理清空按钮点击
@@ -284,7 +288,7 @@ const handleSearch = useDebounceFn(async () => {
     // 通用排序函数
     searchResults.value = sortSearchResults(searchResults.value, searchType.value)
   } catch (error) {
-    window.$message.error('搜索失败')
+    window.$message.error(t('home.search_window.notification.search_fail'))
     searchResults.value = []
   } finally {
     loading.value = false
@@ -352,12 +356,12 @@ const isCurrentUser = (uid: string) => {
 const getButtonText = (uid: string, roomId: string) => {
   // 群聊逻辑
   if (searchType.value === 'group') {
-    return isInGroup(roomId) ? '发消息' : '添加'
+    return isInGroup(roomId) ? t('home.search_window.buttons.message') : t('home.search_window.buttons.add')
   }
   // 用户逻辑
-  if (isCurrentUser(uid)) return '编辑资料'
-  if (isFriend(uid)) return '发消息'
-  return '添加'
+  if (isCurrentUser(uid)) return t('home.search_window.buttons.edit_profile')
+  if (isFriend(uid)) return t('home.search_window.buttons.message')
+  return t('home.search_window.buttons.add')
 }
 
 // 获取按钮类型
@@ -396,11 +400,20 @@ const handleButtonClick = (item: any) => {
 // 处理添加好友或群聊
 const handleAddFriend = async (item: any) => {
   if (searchType.value === 'user' || searchType.value === 'recommend') {
-    await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
+    await createWebviewWindow(
+      t('home.search_window.modal.add_friend'),
+      'addFriendVerify',
+      380,
+      300,
+      '',
+      false,
+      380,
+      300
+    )
     globalStore.addFriendModalInfo.show = true
     globalStore.addFriendModalInfo.uid = item.uid
   } else {
-    await createWebviewWindow('申请加群', 'addGroupVerify', 380, 400, '', false, 380, 400)
+    await createWebviewWindow(t('home.search_window.modal.add_group'), 'addGroupVerify', 380, 400, '', false, 380, 400)
     globalStore.addGroupModalInfo.show = true
     globalStore.addGroupModalInfo.account = item.account
     globalStore.addGroupModalInfo.name = item.name

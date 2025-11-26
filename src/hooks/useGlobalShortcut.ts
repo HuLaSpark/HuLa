@@ -100,7 +100,7 @@ export const useGlobalShortcut = () => {
       await captureWindow.setFocus()
       await captureWindow.emit('capture', true)
 
-      console.log('📷 截图窗口已启动')
+      console.log('截图窗口已启动')
     } catch (error) {
       console.error('Failed to open screenshot window:', error)
     }

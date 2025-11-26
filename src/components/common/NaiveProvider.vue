@@ -2,8 +2,8 @@
   <n-config-provider
     :theme-overrides="themes.content === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
     :theme="globalTheme"
-    :locale="zhCN"
-    :date-locale="dateZhCN">
+    :locale="currentNaiveLocale"
+    :date-locale="currentNaiveDateLocale">
     <n-loading-bar-provider>
       <n-dialog-provider>
         <n-notification-provider :max="notificMax">
@@ -21,7 +21,18 @@
 
 <script setup lang="ts">
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { darkTheme, dateZhCN, type GlobalThemeOverrides, lightTheme, zhCN } from 'naive-ui'
+import {
+  darkTheme,
+  dateEnUS,
+  dateZhCN,
+  enUS,
+  type GlobalThemeOverrides,
+  type NDateLocale,
+  type NLocale,
+  lightTheme,
+  zhCN
+} from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
 
@@ -32,6 +43,24 @@ const { notificMax, messageMax } = defineProps<{
 defineOptions({ name: 'NaiveProvider' })
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
+const { locale } = useI18n()
+
+type NaiveLocalePack = {
+  locale: NLocale
+  dateLocale: NDateLocale
+}
+
+const naiveLocaleMap: Record<string, NaiveLocalePack> = {
+  'zh-CN': { locale: zhCN, dateLocale: dateZhCN },
+  zh: { locale: zhCN, dateLocale: dateZhCN },
+  'en-US': { locale: enUS, dateLocale: dateEnUS },
+  en: { locale: enUS, dateLocale: dateEnUS }
+}
+
+const defaultNaiveLocalePack = naiveLocaleMap['zh-CN']
+const resolveNaiveLocale = (lang: string): NaiveLocalePack => naiveLocaleMap[lang] ?? defaultNaiveLocalePack
+const currentNaiveLocale = computed(() => resolveNaiveLocale(locale.value).locale)
+const currentNaiveDateLocale = computed(() => resolveNaiveLocale(locale.value).dateLocale)
 /**监听深色主题颜色变化*/
 const globalTheme = ref<any>(themes.value.content)
 const prefers = matchMedia('(prefers-color-scheme: dark)')

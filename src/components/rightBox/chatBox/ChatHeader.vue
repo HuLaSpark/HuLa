@@ -27,7 +27,7 @@
             <div
               v-if="isBotUser"
               class="dark:bg-[#13987f40] bg-[#e8f4f1] dark:border-(1px solid #13987f) border-(1px solid #13987f) flex-center px-8px py-4px rounded-6px">
-              <p class="text-(11px #13987f)">助手</p>
+              <p class="text-(11px #13987f)">{{ t('home.chat_header.bot_tag') }}</p>
             </div>
           </label>
           <svg
@@ -54,7 +54,7 @@
                 <svg class="size-16px color-#d03553">
                   <use href="#close"></use>
                 </svg>
-                <p class="text-(12px [--text-color])">好友状态异常</p>
+                <p class="text-(12px [--text-color])">{{ t('home.chat_header.status_abnormal') }}</p>
               </n-flex>
             </template>
           </n-flex>
@@ -70,7 +70,7 @@
               <use href="#phone-telephone"></use>
             </svg>
           </template>
-          <span>语音通话</span>
+          <span>{{ t('home.chat_header.toolbar.audio_call') }}</span>
         </n-popover>
       </div>
 
@@ -81,7 +81,7 @@
               <use href="#video-one"></use>
             </svg>
           </template>
-          <span>视频通话</span>
+          <span>{{ t('home.chat_header.toolbar.video_call') }}</span>
         </n-popover>
       </div>
 
@@ -92,7 +92,7 @@
               <use href="#screen-sharing"></use>
             </svg>
           </template>
-          <span>屏幕共享</span>
+          <span>{{ t('home.chat_header.toolbar.screen_share') }}</span>
         </n-popover>
       </div>
 
@@ -103,7 +103,7 @@
               <use href="#remote-control"></use>
             </svg>
           </template>
-          <span>远程协助</span>
+          <span>{{ t('home.chat_header.toolbar.remote_assist') }}</span>
         </n-popover>
       </div>
 
@@ -117,8 +117,10 @@
               <use href="#launch"></use>
             </svg>
           </template>
-          <span v-if="activeItem?.type === RoomTypeEnum.GROUP">邀请进群</span>
-          <span v-else>发起群聊</span>
+          <span v-if="activeItem?.type === RoomTypeEnum.GROUP">
+            {{ t('home.chat_header.toolbar.invite_to_group') }}
+          </span>
+          <span v-else>{{ t('home.chat_header.toolbar.start_group_chat') }}</span>
         </n-popover>
       </div>
 
@@ -137,12 +139,12 @@
           <template v-if="!chatStore.isGroup">
             <div class="box-item flex-col-y-center">
               <div class="flex-between-center">
-                <p>设为置顶</p>
+                <p>{{ t('home.chat_header.sidebar.single.pin') }}</p>
                 <n-switch size="small" :value="activeItem?.top" @update:value="handleTop" />
               </div>
               <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
               <div class="flex-between-center">
-                <p>消息免打扰</p>
+                <p>{{ t('home.chat_header.sidebar.single.mute') }}</p>
                 <n-switch
                   size="small"
                   :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
@@ -152,24 +154,24 @@
 
             <div class="box-item">
               <div class="flex-between-center">
-                <p>屏蔽此人</p>
+                <p>{{ t('home.chat_header.sidebar.single.shield') }}</p>
                 <n-switch size="small" :value="activeItem?.shield" @update:value="handleShield" />
               </div>
             </div>
 
             <div class="box-item cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
-              <p>删除聊天记录</p>
+              <p>{{ t('home.chat_header.sidebar.single.delete_history') }}</p>
             </div>
 
             <div
               v-if="!isBotUser"
               class="box-item flex-x-center cursor-pointer"
               @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
-              <p class="color-#d03553">删除好友</p>
+              <p class="color-#d03553">{{ t('home.chat_header.sidebar.single.delete_friend') }}</p>
             </div>
 
             <p v-if="!isBotUser" class="m-[0_auto] text-(12px #13987f center) mt-20px cursor-pointer">
-              被骚扰了?&nbsp;&nbsp;举报该用户
+              {{ t('home.chat_header.sidebar.single.report') }}
             </p>
           </template>
 
@@ -212,7 +214,7 @@
                         autoCorrect="off"
                         autoCapitalize="off"
                         class="border-(solid 1px [--line-color])"
-                        placeholder="请输入群名称(最多12字)" />
+                        :placeholder="t('home.chat_header.sidebar.group.name_placeholder')" />
                     </div>
                     <div
                       v-else
@@ -232,7 +234,7 @@
                           <use href="#auth"></use>
                         </svg>
                       </template>
-                      <span>官方群聊认证</span>
+                      <span>{{ t('home.chat_header.sidebar.group.official_badge') }}</span>
                     </n-popover>
                   </n-flex>
 
@@ -251,7 +253,7 @@
                           <use href="#copy"></use>
                         </svg>
                       </template>
-                      <span>复制</span>
+                      <span>{{ t('home.chat_header.sidebar.group.copy') }}</span>
                     </n-tooltip>
                   </n-flex>
                 </n-flex>
@@ -261,7 +263,7 @@
                   class="flex-center cursor-pointer bg-#e3e3e380 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
                   @click="showQRCodeModal = true">
                   <svg class="size-16px"><use href="#pay-code-one"></use></svg>
-                  <p class="text-(12px [--chat-text-color])">二维码</p>
+                  <p class="text-(12px [--chat-text-color])">{{ t('home.chat_header.sidebar.group.qr') }}</p>
                 </div>
               </n-flex>
             </div>
@@ -270,7 +272,11 @@
             <div class="box-item cursor-default">
               <n-flex vertical justify="center" :size="16">
                 <p class="text-(14px --text-color)">
-                  {{ activeItem?.hotFlag !== IsAllUserEnum.Yes ? '群成员' : '频道成员' }}
+                  {{
+                    activeItem?.hotFlag !== IsAllUserEnum.Yes
+                      ? t('home.chat_header.sidebar.group.members')
+                      : t('home.chat_header.sidebar.group.channel_members')
+                  }}
                 </p>
 
                 <n-flex align="center" justify="start" :size="[24, 20]">
@@ -286,7 +292,9 @@
             </div>
 
             <!-- 我本群的昵称 -->
-            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">我本群的昵称</p>
+            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">
+              {{ t('home.chat_header.sidebar.group.my_name') }}
+            </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
               spellCheck="false"
@@ -299,8 +307,8 @@
               @blur.stop="handleGroupInfoChange" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
-              群备注
-              <span class="text-(10px #909090)">(群备注仅自己可见)</span>
+              {{ t('home.chat_header.sidebar.group.remark') }}
+              <span class="text-(10px #909090)">{{ t('home.chat_header.sidebar.group.remark_desc') }}</span>
             </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
@@ -315,17 +323,17 @@
             <!-- 群设置选项 -->
             <div class="box-item cursor-default">
               <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">群设置</p>
+                <p class="text-(12px #909090) pb-14px">{{ t('home.chat_header.sidebar.group.settings.title') }}</p>
 
                 <div class="flex-between-center">
-                  <p>设为置顶</p>
+                  <p>{{ t('home.chat_header.sidebar.group.settings.pin') }}</p>
                   <n-switch size="small" :value="activeItem?.top" @update:value="handleTop" />
                 </div>
 
                 <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
 
                 <div class="flex-between-center">
-                  <p>消息免打扰</p>
+                  <p>{{ t('home.chat_header.sidebar.group.settings.mute') }}</p>
                   <n-switch
                     size="small"
                     :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
@@ -335,7 +343,7 @@
                   <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
 
                   <div class="flex-between-center">
-                    <p>允许扫码进群</p>
+                    <p>{{ t('home.chat_header.sidebar.group.settings.scan') }}</p>
                     <n-switch
                       size="small"
                       :value="groupStore.countInfo!.allowScanEnter"
@@ -357,7 +365,9 @@
               v-if="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
               class="box-item cursor-default">
               <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">群消息设置</p>
+                <p class="text-(12px #909090) pb-14px">
+                  {{ t('home.chat_header.sidebar.group.message_settings.title') }}
+                </p>
 
                 <div class="flex-between-center">
                   <n-select
@@ -375,11 +385,11 @@
               "
               class="box-item cursor-pointer mb-20px"
               @click="handleManageGroupMember">
-              <p>管理群成员</p>
+              <p>{{ t('home.chat_header.sidebar.group.manage_members') }}</p>
             </div>
 
             <div class="box-item cursor-pointer mb-20px" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
-              <p>删除聊天记录</p>
+              <p>{{ t('home.chat_header.sidebar.group.delete_history') }}</p>
             </div>
 
             <div
@@ -393,14 +403,18 @@
                 )
               ">
               <p class="color-#d03553">
-                {{ activeItem?.operate === SessionOperateEnum.DISSOLUTION_GROUP ? '解散群聊' : '退出群聊' }}
+                {{
+                  activeItem?.operate === SessionOperateEnum.DISSOLUTION_GROUP
+                    ? t('home.chat_header.sidebar.group.dissolve')
+                    : t('home.chat_header.sidebar.group.exit')
+                }}
               </p>
             </div>
 
             <p
               v-if="activeItem?.hotFlag !== IsAllUserEnum.Yes"
               class="text-(12px #13987f center) my-20px cursor-pointer">
-              被骚扰了?&nbsp;&nbsp;举报该群
+              {{ t('home.chat_header.sidebar.group.report') }}
             </p>
           </template>
         </n-scrollbar>
@@ -427,8 +441,10 @@
         <span class="text-14px">{{ tips }}</span>
 
         <n-flex justify="end">
-          <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
-          <n-button @click="handleCancel" class="w-78px" secondary>取消</n-button>
+          <n-button @click="handleConfirm" class="w-78px" color="#13987f">
+            {{ t('home.chat_header.modal.confirm') }}
+          </n-button>
+          <n-button @click="handleCancel" class="w-78px" secondary>{{ t('home.chat_header.modal.cancel') }}</n-button>
         </n-flex>
       </div>
     </div>
@@ -462,7 +478,7 @@
 
           <div class="text-center">
             <p class="text-(16px [--text-color]) font-bold pb-24px">{{ activeItem?.name }}</p>
-            <p class="text-(12px [--chat-text-color])">扫描二维码加入群聊</p>
+            <p class="text-(12px [--chat-text-color])">{{ t('home.chat_header.qr.tip') }}</p>
           </div>
         </div>
       </div>
@@ -505,6 +521,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { ErrorType } from '@/common/exception'
 import { useDisplayMedia } from '@vueuse/core'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
@@ -539,6 +556,7 @@ import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImR
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
+const { t } = useI18n()
 const { createModalWindow, startRtcCall } = useWindow()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, stop } = useDisplayMedia()
@@ -632,9 +650,9 @@ const messageSettingType = computed(() => {
   // 非免打扰模式下，默认返回 notification
   return 'notification'
 })
-const messageSettingOptions = ref([
-  { label: '接收消息但不提醒', value: 'notification' },
-  { label: '屏蔽消息', value: 'shield' }
+const messageSettingOptions = computed(() => [
+  { label: t('home.chat_header.message_setting.receive_no_alert'), value: 'notification' },
+  { label: t('home.chat_header.message_setting.shield'), value: 'shield' }
 ])
 
 const chatTargetUid = computed(() => {
@@ -712,7 +730,7 @@ const handleCopy = () => {
   const session = activeItem.value
   if (!session?.account) return
   navigator.clipboard.writeText(session.account)
-  window.$message.success(`复制成功 ${session.account}`)
+  window.$message.success(t('home.chat_header.toast.copy_success', { account: session.account }))
 }
 
 /** 处理创建群聊或邀请进群 */
@@ -738,7 +756,7 @@ const handleInvite = async () => {
   const session = activeItem.value
   if (!session) return
   // 使用封装后的createModalWindow方法创建模态窗口，并传递当前会话的 roomId
-  await createModalWindow('邀请好友进群', 'modal-invite', 600, 500, 'home', {
+  await createModalWindow(t('home.chat_header.modal.invite_friends'), 'modal-invite', 600, 500, 'home', {
     roomId: session.roomId,
     type: session.type
   })
@@ -774,20 +792,20 @@ const saveGroupInfo = async () => {
     })
     localRemark.value = remark
 
-    window.$message.success('群聊信息已更新')
+    window.$message.success(t('home.chat_header.toast.group_info_updated'))
     pendingGroupInfo.value = null
   } catch (error) {
     console.error('更新群聊信息失败:', error)
-    window.$message.error('群聊信息更新失败')
+    window.$message.error(t('home.chat_header.toast.group_info_update_failed'))
   }
 }
 
 const handleAssist = () => {
-  window.$message.warning('暂未实现')
+  window.$message.warning(t('home.chat_header.toast.todo'))
 }
 
 const handleMedia = () => {
-  window.$message.warning('暂未实现')
+  window.$message.warning(t('home.chat_header.toast.todo'))
 }
 
 /** 置顶 */
@@ -798,10 +816,10 @@ const handleTop = (value: boolean) => {
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(session.roomId, { top: value })
-      window.$message.success(value ? '已置顶' : '已取消置顶')
+      window.$message.success(value ? t('home.chat_header.toast.pin_on') : t('home.chat_header.toast.pin_off'))
     })
     .catch(() => {
-      window.$message.error('置顶失败')
+      window.$message.error(t('home.chat_header.toast.pin_failed'))
     })
 }
 
@@ -834,10 +852,10 @@ const handleNotification = (value: boolean) => {
         chatStore.updateTotalUnreadCount()
       }
 
-      window.$message.success(value ? '已设置接收消息但不提醒' : '已允许消息提醒')
+      window.$message.success(value ? t('home.chat_header.toast.mute_on') : t('home.chat_header.toast.mute_off'))
     })
     .catch(() => {
-      window.$message.error('设置失败')
+      window.$message.error(t('home.chat_header.toast.action_failed'))
     })
 }
 
@@ -863,10 +881,10 @@ const handleShield = (value: boolean) => {
         globalStore.updateCurrentSessionRoomId(tempRoomId)
       })
 
-      window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')
+      window.$message.success(value ? t('home.chat_header.toast.shield_on') : t('home.chat_header.toast.shield_off'))
     })
     .catch(() => {
-      window.$message.error('设置失败')
+      window.$message.error(t('home.chat_header.toast.action_failed'))
     })
 }
 
@@ -896,11 +914,11 @@ const handleGroupNameChange = () => {
   if (trimmedName !== session.name) {
     // 检查名称是否为空或超过12个字符
     if (trimmedName === '') {
-      window.$message.warning('群名称不能为空')
+      window.$message.warning(t('home.chat_header.toast.group_name_empty'))
       return
     }
     if (trimmedName.length > 12) {
-      window.$message.warning('群名称不能超过12个字符')
+      window.$message.warning(t('home.chat_header.toast.group_name_too_long'))
       return
     }
 
@@ -936,13 +954,13 @@ const deleteRoomMessages = async (roomId: string) => {
       TauriCommand.DELETE_ROOM_MESSAGES,
       { roomId },
       {
-        customErrorMessage: '删除聊天记录失败',
+        customErrorMessage: t('home.chat_header.toast.delete_history_failed'),
         errorType: ErrorType.Client
       }
     )
     chatStore.clearRoomMessages(roomId)
     useMitt.emit(MittEnum.UPDATE_SESSION_LAST_MSG, { roomId })
-    window.$message?.success('聊天记录已删除')
+    window.$message?.success(t('home.chat_header.toast.delete_history_success'))
     modalShow.value = false
     sidebarShow.value = false
   } catch (error) {
@@ -955,17 +973,19 @@ const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
   optionsType.value = label
   if (label === RoomActEnum.DELETE_FRIEND) {
-    tips.value = '确定删除该好友吗?'
+    tips.value = t('home.chat_header.modal.tips.delete_friend')
   } else if (label === RoomActEnum.DISSOLUTION_GROUP) {
-    tips.value = '确定解散该群聊?'
+    tips.value = t('home.chat_header.modal.tips.dissolve_group')
   } else if (label === RoomActEnum.EXIT_GROUP) {
-    tips.value = '确定退出该群聊?'
+    tips.value = t('home.chat_header.modal.tips.exit_group')
   } else if (label === RoomActEnum.UPDATE_GROUP_NAME) {
-    tips.value = `确定将群名称修改为"${pendingGroupInfo.value?.groupName}"吗？`
+    tips.value = t('home.chat_header.modal.tips.rename_group', {
+      name: pendingGroupInfo.value?.groupName ?? ''
+    })
   } else if (label === RoomActEnum.UPDATE_GROUP_INFO) {
-    tips.value = '确定保存群信息修改吗？'
+    tips.value = t('home.chat_header.modal.tips.update_info')
   } else {
-    tips.value = '确定后将删除本地聊天记录'
+    tips.value = t('home.chat_header.modal.tips.delete_history')
     optionsType.value = RoomActEnum.DELETE_RECORD
   }
 }
@@ -981,7 +1001,7 @@ const handleConfirm = async () => {
     try {
       await contactStore.onDeleteFriend(targetDetailId)
       useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
-      window.$message.success('已删除好友')
+      window.$message.success(t('home.chat_header.toast.delete_friend_success'))
       modalShow.value = false
       sidebarShow.value = false
     } catch (error) {
@@ -989,14 +1009,14 @@ const handleConfirm = async () => {
     }
   } else if (currentOption === RoomActEnum.DISSOLUTION_GROUP) {
     if (targetRoomId === '1') {
-      window.$message.warning('无法解散频道')
+      window.$message.warning(t('home.chat_header.toast.dissolve_not_allowed'))
       modalShow.value = false
       return
     }
 
     try {
       await groupStore.exitGroup(targetRoomId)
-      window.$message.success('已解散群聊')
+      window.$message.success(t('home.chat_header.toast.dissolve_success'))
       // 删除当前的会话
       useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
       modalShow.value = false
@@ -1006,14 +1026,14 @@ const handleConfirm = async () => {
     }
   } else if (currentOption === RoomActEnum.EXIT_GROUP) {
     if (targetRoomId === '1') {
-      window.$message.warning('无法退出频道')
+      window.$message.warning(t('home.chat_header.toast.exit_not_allowed'))
       modalShow.value = false
       return
     }
 
     try {
       await groupStore.exitGroup(targetRoomId)
-      window.$message.success('已退出群聊')
+      window.$message.success(t('home.chat_header.toast.exit_success'))
       // 删除当前的会话
       useMitt.emit(MittEnum.DELETE_SESSION, targetRoomId)
       modalShow.value = false
@@ -1085,7 +1105,7 @@ const saveGroupName = async () => {
     // 清空待保存的群信息
     pendingGroupInfo.value = null
   } catch (error) {
-    window.$message.error('群名称更新失败')
+    window.$message.error(t('home.chat_header.toast.group_name_update_failed'))
     console.error('更新群名称失败:', error)
   }
 }

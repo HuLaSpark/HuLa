@@ -1,4 +1,22 @@
 {
+  "common": {
+    "provider_label": "提供者",
+    "provider_name": "HuLa",
+    "tag_new": "新"
+  },
+  "footer": {
+    "like_product": "喜欢这款产品？ 在",
+    "star_cta": "GitHub 给我们加星",
+    "share_joiner": "并",
+    "share_cta": "分享您宝贵的建议",
+    "star_popover_title": "在 GitHub 为我们点亮星标",
+    "star_popover_desc": "如果您喜爱我们的产品，并希望支持我们，可以去 GitHub 给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。",
+    "later": "稍后",
+    "star_button": "点亮星标",
+    "issue_popover_title": "在 GitHub 分享您宝贵的反馈",
+    "issue_popover_desc": "您的每一个想法和建议对我们来说都弥足珍贵，我们迫不及待地想知道您的看法！欢迎联系我们提供产品功能和使用体验反馈。",
+    "issue_button": "提出建议"
+  },
   "general": {
     "title": "通用",
     "appearance": {
@@ -11,7 +29,11 @@
     },
     "chat": {
       "title": "聊天",
-      "translate_service": "翻译服务"
+      "translate_service": "翻译服务",
+      "translate_options": {
+        "tencent": "腾讯云翻译",
+        "youdao": "有道云翻译"
+      }
     },
     "ui": {
       "title": "界面",
@@ -19,7 +41,11 @@
       "blur": "高斯模糊",
       "shadow": "启用阴影",
       "font": "字体",
-      "menu_name": "菜单名称"
+      "menu_name": "菜单名称",
+      "font_options": {
+        "PingFang": "苹方",
+        "AliFangYuan": "阿里妈妈方圆体"
+      }
     }
   },
   "login": {
@@ -88,11 +114,37 @@
     "app_used_space": "Hula 数据",
     "free_space": "可用空间",
     "directory": "目录",
-    "curr_dir": "当前目录"
+    "curr_dir": "当前目录",
+    "current_file": "当前文件",
+    "scanning_progress": "扫描进度",
+    "processed_files": "已处理文件",
+    "processed_files_unit": "{count} 个",
+    "total_size": "累计大小",
+    "mount_point": "挂载点",
+    "disk_total": "磁盘分区总容量",
+    "disk_used": "磁盘分区已用空间",
+    "disk_usage_percent": "磁盘已用空间占比",
+    "elapsed": "耗时",
+    "elapsed_unit": "{seconds} 秒",
+    "path_type": "扫描目录类型",
+    "path_type_default": "默认目录",
+    "path_type_custom": "自定义目录",
+    "fetching_directory": "正在获取目录路径...",
+    "select_directory": "选择目录",
+    "start_scan": "开始扫描",
+    "scanning": "扫描中...",
+    "select_directory_title": "选择要扫描的目录",
+    "select_directory_failed": "选择目录失败",
+    "select_directory_error": "选择目录失败"
   },
   "theme": {
     "title": "主题",
-    "restore_default": "恢复默认"
+    "restore_default": "恢复默认",
+    "versatile": {
+      "title": "变出活力色彩",
+      "description": "感受色彩的魅力，创造属于你的色彩世界",
+      "simple": "极简素雅"
+    }
   },
   "unknow": "未知"
 }

@@ -36,8 +36,6 @@ export const options = computed(() => {
 export const getDisabledOptions = () => {
   // 当前选中的房间id
   const currentRoomId = globalStore.currentSessionRoomId
-  console.log(currentRoomId)
-  console.log(groupStore.userList)
 
   if (!currentRoomId || !groupStore.userList.length) return []
 
@@ -73,7 +71,11 @@ export const getFilteredOptions = () => {
 }
 
 // 统一的源列表渲染函数，通过参数控制是否使用过滤后的选项
-export const renderSourceList = (preSelectedFriendId = '', enablePreSelection = true): TransferRenderSourceList => {
+export const renderSourceList = (
+  preSelectedFriendId = '',
+  enablePreSelection = true,
+  placeholder = ''
+): TransferRenderSourceList => {
   return ({ onCheck, checkedOptions, pattern }) => {
     // 使用过滤后的选项列表，确保已在群内的好友被正确标记为禁用
     const baseOptions = getFilteredOptions()
@@ -85,6 +87,7 @@ export const renderSourceList = (preSelectedFriendId = '', enablePreSelection = 
 
     return (
       <div class="select-none">
+        {placeholder && <div class="text-(12px [--chat-text-color]) pb-6px">{placeholder}</div>}
         {displayOptions.map((option: any) => {
           // 判断是否是预选中的好友（仅在启用预选中时生效）
           const isPreSelected = enablePreSelection && option.value === preSelectedFriendId
@@ -163,7 +166,12 @@ export const renderLabel: TransferRenderTargetLabel = ({ option }: { option: any
 }
 
 // 创建自定义的目标列表渲染函数
-export const renderTargetList = (preSelectedFriendId = '', enablePreSelection = true) => {
+export const renderTargetList = (
+  preSelectedFriendId = '',
+  enablePreSelection = true,
+  placeholder = '',
+  requiredTag = ''
+) => {
   return ({
     onCheck,
     checkedOptions,
@@ -182,6 +190,7 @@ export const renderTargetList = (preSelectedFriendId = '', enablePreSelection = 
 
     return (
       <div>
+        {placeholder && <div class="text-(12px [--chat-text-color]) pb-6px">{placeholder}</div>}
         {displayOptions.map((option: any) => {
           const isPreSelected = enablePreSelection && option.value === preSelectedFriendId
 
@@ -227,14 +236,14 @@ export const renderTargetList = (preSelectedFriendId = '', enablePreSelection = 
                 </svg>
               )}
 
-              {isPreSelected && (
+              {isPreSelected && requiredTag && (
                 <div
                   style={{
                     fontSize: '10px',
                     color: '#909090',
                     marginLeft: '8px'
                   }}>
-                  必选
+                  {requiredTag}
                 </div>
               )}
             </div>

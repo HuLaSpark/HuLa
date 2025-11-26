@@ -13,7 +13,7 @@
               <div
                 v-if="item.versionStatus && activeItem !== item.url"
                 class="bg-[--danger-bg] p-[2px_6px] rounded-6px text-(12px [--danger-text])">
-                {{ item.versionStatus }}
+                {{ t(item.versionStatus) }}
               </div>
             </Transition>
           </div>
@@ -21,13 +21,13 @@
       </div>
 
       <div class="absolute bottom-20px left-60px select-none cursor-default flex items-center gap-10px">
-        <p class="text-(12px #666)">提供者:</p>
+        <p class="text-(12px #666)">{{ t('setting.common.provider_label') }}:</p>
         <a
           target="_blank"
           rel="noopener noreferrer"
           href="https://github.com/HuLaSpark/HuLa"
           class="text-(12px #13987f) cursor-pointer no-underline">
-          HuLa
+          {{ t('setting.common.provider_name') }}
         </a>
       </div>
     </section>
@@ -65,12 +65,14 @@ import { useScannerStore } from '@/stores/scanner.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import Foot from '@/views/moreWindow/settings/Foot.vue'
 import { useSideOptions } from './config.ts'
+import { useI18n } from 'vue-i18n'
 
 const settingStore = useSettingStore()
 const scannerStore = useScannerStore()
 const skeleton = ref(true)
 const { page } = storeToRefs(settingStore)
 const sideOptions = useSideOptions()
+const { t } = useI18n()
 /**当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>('/general')
 const title = ref<string>('')

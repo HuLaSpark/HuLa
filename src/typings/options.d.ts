@@ -54,7 +54,7 @@ declare namespace OPT {
       url: string
       label: string
       icon: string
-      versionStatus?: 'Beta' | 'New' | 'alpha'
+      versionStatus?: 'Beta' | 'New' | 'alpha' | string
     }
   }
 

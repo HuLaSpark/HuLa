@@ -7,9 +7,229 @@
   "search_input_placeholder": "搜索",
   "clear_search_history": "清空",
   "action": {
-    "message": "Hula",
+    "message": "消息列表",
     "message_short_title": "消息",
     "contact": "好友列表",
-    "contact_short_title": "好友"
+    "contact_short_title": "好友",
+    "file_manager": "文件管理器",
+    "file_manager_short_title": "文件",
+    "favorite": "收藏列表",
+    "favorite_short_title": "收藏",
+    "plugin": "插件",
+    "plugin_manage": "插件管理",
+    "more": "更多",
+    "start_group_chat": "发起群聊",
+    "add_friend_or_group": "加好友/群"
+  },
+  "plugins": {
+    "dynamic": "动态列表",
+    "dynamic_short_title": "动态",
+    "chatbot": "ChatBot",
+    "chatbot_short_title": "ChatBot"
+  },
+  "search_window": {
+    "title": "全网搜索",
+    "tabs": {
+      "recommend": "推荐",
+      "user": "找好友",
+      "group": "找群聊"
+    },
+    "placeholder": {
+      "recommend": "输入推荐关键词",
+      "user": "输入昵称搜索好友",
+      "group": "输入群号搜索群聊"
+    },
+    "labels": {
+      "account": "账号：{account}"
+    },
+    "tooltip": {
+      "copy_account": "复制账号"
+    },
+    "empty": {
+      "no_result": "未找到相关结果",
+      "prompt": "输入关键词搜索"
+    },
+    "notification": {
+      "copy_success": "复制成功 {account}",
+      "search_fail": "搜索失败"
+    },
+    "buttons": {
+      "add": "添加",
+      "message": "发消息",
+      "edit_profile": "编辑资料"
+    },
+    "modal": {
+      "add_friend": "申请加好友",
+      "add_group": "申请加群"
+    }
+  },
+  "chat_details": {
+    "single": {
+      "empty_signature": "这个人很高冷，暂时没有留下什么",
+      "region": "地区：{place}",
+      "unknown": "未知",
+      "badge_label": "徽章：",
+      "call_only_single": "仅单聊支持发起音视频通话",
+      "friend_info_missing": "无法获取好友信息",
+      "footer": {
+        "audio_call": "打电话",
+        "video_call": "打视频"
+      }
+    },
+    "group": {
+      "official_badge": "官方群聊认证",
+      "id": "群号 {account}",
+      "copy": "复制",
+      "copy_success": "复制成功 {account}",
+      "info_missing": "无法获取群聊信息",
+      "remark": {
+        "label": "群备注",
+        "placeholder": "请输入群聊备注",
+        "empty": "设置群聊备注",
+        "success": "群备注更新成功",
+        "fail": "群备注更新失败"
+      },
+      "nickname": {
+        "label": "我的本群昵称",
+        "placeholder": "请输入本群昵称",
+        "empty": "未设置",
+        "success": "本群昵称更新成功",
+        "fail": "本群昵称更新失败"
+      },
+      "announcement": {
+        "label": "群公告",
+        "empty": "未设置",
+        "window_title": "查看群公告"
+      },
+      "members": {
+        "count": "群成员（{count}人）",
+        "online": "在线 {count} 人"
+      }
+    },
+    "actions": {
+      "message": "发信息"
+    },
+    "window": {
+      "image_viewer": "图片查看"
+    }
+  },
+  "chat_header": {
+    "bot_tag": "助手",
+    "status_abnormal": "好友状态异常",
+    "toolbar": {
+      "audio_call": "语音通话",
+      "video_call": "视频通话",
+      "screen_share": "屏幕共享",
+      "remote_assist": "远程协助",
+      "invite_to_group": "邀请进群",
+      "start_group_chat": "发起群聊"
+    },
+    "sidebar": {
+      "single": {
+        "pin": "设为置顶",
+        "mute": "消息免打扰",
+        "shield": "屏蔽此人",
+        "delete_history": "删除聊天记录",
+        "delete_friend": "删除好友",
+        "report": "被骚扰了？举报该用户"
+      },
+      "group": {
+        "name_placeholder": "请输入群名称(最多12字)",
+        "official_badge": "官方群聊认证",
+        "copy": "复制",
+        "qr": "二维码",
+        "members": "群成员",
+        "channel_members": "频道成员",
+        "my_name": "我本群的昵称",
+        "remark": "群备注",
+        "remark_desc": "(群备注仅自己可见)",
+        "settings": {
+          "title": "群设置",
+          "pin": "设为置顶",
+          "mute": "消息免打扰",
+          "scan": "允许扫码进群"
+        },
+        "message_settings": {
+          "title": "群消息设置"
+        },
+        "manage_members": "管理群成员",
+        "delete_history": "删除聊天记录",
+        "dissolve": "解散群聊",
+        "exit": "退出群聊",
+        "report": "被骚扰了？举报该群"
+      }
+    },
+    "message_setting": {
+      "receive_no_alert": "接收消息但不提醒",
+      "shield": "屏蔽消息"
+    },
+    "modal": {
+      "confirm": "确定",
+      "cancel": "取消",
+      "invite_friends": "邀请好友进群",
+      "tips": {
+        "delete_friend": "确定删除该好友吗?",
+        "dissolve_group": "确定解散该群聊?",
+        "exit_group": "确定退出该群聊?",
+        "rename_group": "确定将群名称修改为 {name} 吗？",
+        "update_info": "确定保存群信息修改吗？",
+        "delete_history": "确定后将删除本地聊天记录"
+      }
+    },
+    "qr": {
+      "tip": "扫描二维码加入群聊"
+    },
+    "toast": {
+      "copy_success": "复制成功 {account}",
+      "group_info_updated": "群聊信息已更新",
+      "group_info_update_failed": "群聊信息更新失败",
+      "todo": "暂未实现",
+      "pin_on": "已置顶",
+      "pin_off": "已取消置顶",
+      "pin_failed": "置顶失败",
+      "mute_on": "已设置接收消息但不提醒",
+      "mute_off": "已允许消息提醒",
+      "shield_on": "已屏蔽消息",
+      "shield_off": "已取消屏蔽",
+      "action_failed": "设置失败",
+      "group_name_empty": "群名称不能为空",
+      "group_name_too_long": "群名称不能超过12个字符",
+      "delete_history_success": "聊天记录已删除",
+      "delete_friend_success": "已删除好友",
+      "dissolve_not_allowed": "无法解散频道",
+      "dissolve_success": "已解散群聊",
+      "exit_not_allowed": "无法退出频道",
+      "exit_success": "已退出群聊",
+      "group_name_update_failed": "群名称更新失败"
+    }
+  },
+  "chat_sidebar": {
+    "announcement": {
+      "title": "群公告须知",
+      "load_failed": "公告加载失败，请重试",
+      "default": "请不要把重要信息发到该群，网络不是法外之地，请遵守网络规范，否则直接删除。",
+      "window": {
+        "add": "新增群公告",
+        "view": "查看群公告"
+      }
+    },
+    "actions": {
+      "retry": "重试"
+    },
+    "online_members": "在线成员 {count}",
+    "search": {
+      "placeholder": "搜索"
+    },
+    "roles": {
+      "owner": "群主",
+      "admin": "管理员"
+    }
+  },
+  "create_group": {
+    "title": "创建群聊",
+    "action": "创建",
+    "success": "创建群聊成功",
+    "fail": "创建群聊失败",
+    "required_tag": "必选"
   }
 }

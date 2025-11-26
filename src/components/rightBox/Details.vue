@@ -16,12 +16,18 @@
     <span class="text-(20px [--text-color])">{{ item.name }}</span>
 
     <template v-if="!isBotUser">
-      <span class="text-(14px #909090)">这个人很高冷,暂时没有留下什么</span>
+      <span class="text-(14px #909090)">{{ t('home.chat_details.single.empty_signature') }}</span>
 
       <n-flex align="center" justify="space-between" :size="30" class="text-#606060 select-none cursor-default">
-        <span>地区：{{ item.locPlace || '未知' }}</span>
+        <span>
+          {{
+            t('home.chat_details.single.region', {
+              place: item.locPlace || t('home.chat_details.single.unknown')
+            })
+          }}
+        </span>
         <n-flex align="center">
-          <span>徽章：</span>
+          <span>{{ t('home.chat_details.single.badge_label') }}</span>
           <template v-for="badge in item.itemIds" :key="badge">
             <n-popover trigger="hover">
               <template #trigger>
@@ -83,18 +89,18 @@
                   <use href="#auth"></use>
                 </svg>
               </template>
-              <span>官方群聊认证</span>
+              <span>{{ t('home.chat_details.group.official_badge') }}</span>
             </n-popover>
           </n-flex>
           <n-flex align="center" :size="12">
-            <span class="text-(14px #909090)">群号 {{ item.account }}</span>
+            <span class="text-(14px #909090)">{{ t('home.chat_details.group.id', { account: item.account }) }}</span>
             <n-tooltip trigger="hover">
               <template #trigger>
                 <svg class="size-12px cursor-pointer color-#909090" @click="handleCopy(item.account)">
                   <use href="#copy"></use>
                 </svg>
               </template>
-              <span>复制</span>
+              <span>{{ t('home.chat_details.group.copy') }}</span>
             </n-tooltip>
           </n-flex>
         </n-flex>
@@ -118,14 +124,14 @@
         align="center"
         justify="space-between"
         class="py-6px h-26px pr-4px border-b text-(14px [--chat-text-color])">
-        <span>群备注</span>
+        <span>{{ t('home.chat_details.group.remark.label') }}</span>
         <div v-if="isEditingRemark" class="flex items-center">
           <n-input
             ref="remarkInputRef"
             v-model:value="item.remark"
             size="tiny"
             class="border-(1px solid #90909080)"
-            placeholder="请输入群聊备注"
+            :placeholder="t('home.chat_details.group.remark.placeholder')"
             clearable
             spellCheck="false"
             autoComplete="off"
@@ -135,7 +141,7 @@
             @keydown.enter="handleRemarkUpdate" />
         </div>
         <span v-else class="cursor-pointer" @click="startEditRemark">
-          {{ item.remark || '设置群聊备注' }}
+          {{ item.remark || t('home.chat_details.group.remark.empty') }}
         </span>
       </n-flex>
 
@@ -144,14 +150,14 @@
         justify="space-between"
         :class="{ 'pr-4px': item.myName }"
         class="py-6px border-b h-26px text-(14px [--chat-text-color])">
-        <span>我的本群昵称</span>
+        <span>{{ t('home.chat_details.group.nickname.label') }}</span>
         <div v-if="isEditingNickname" class="flex items-center">
           <n-input
             ref="nicknameInputRef"
             v-model:value="nicknameValue"
             size="tiny"
             class="border-(1px solid #90909080)"
-            placeholder="请输入本群昵称"
+            :placeholder="t('home.chat_details.group.nickname.placeholder')"
             clearable
             spellCheck="false"
             autoComplete="off"
@@ -161,7 +167,7 @@
             @keydown.enter="handleNicknameUpdate" />
         </div>
         <span v-else class="flex items-center cursor-pointer" @click="startEditNickname">
-          <p class="text-#909090">{{ displayNickname || '未设置' }}</p>
+          <p class="text-#909090">{{ displayNickname || t('home.chat_details.group.nickname.empty') }}</p>
           <n-icon v-if="!item.myName" size="16" class="ml-1">
             <svg><use href="#right"></use></svg>
           </n-icon>
@@ -169,10 +175,12 @@
       </n-flex>
 
       <n-flex align="center" justify="space-between" class="py-12px border-b text-(14px [--chat-text-color])">
-        <span>群公告</span>
+        <span>{{ t('home.chat_details.group.announcement.label') }}</span>
         <span class="flex items-center cursor-pointer gap-4px" @click="handleOpenAnnouncement">
-          <p class="text-#909090 max-w-200px truncate leading-tight" :title="announcementContent || '未设置'">
-            {{ announcementContent || '未设置' }}
+          <p
+            class="text-#909090 max-w-200px truncate leading-tight"
+            :title="announcementContent || t('home.chat_details.group.announcement.empty')">
+            {{ announcementContent || t('home.chat_details.group.announcement.empty') }}
           </p>
           <n-icon size="16">
             <svg><use href="#right"></use></svg>
@@ -184,8 +192,10 @@
     <!-- 群成员 -->
     <n-flex vertical :size="10" class="px-30px box-border">
       <n-flex align="center" justify="space-between" class="text-(14px [--chat-text-color])">
-        <span>({{ item.memberNum }}人)</span>
-        <span class="flex items-center">在线 {{ item.onlineNum }}人</span>
+        <span>{{ t('home.chat_details.group.members.count', { count: item.memberNum }) }}</span>
+        <span class="flex items-center">
+          {{ t('home.chat_details.group.members.online', { count: item.onlineNum }) }}
+        </span>
       </n-flex>
 
       <n-flex class="pt-16px">
@@ -199,6 +209,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { CallTypeEnum, RoomTypeEnum, UserType } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMyRoomInfoUpdater } from '@/hooks/useMyRoomInfoUpdater'
@@ -211,6 +222,7 @@ import { useGlobalStore } from '@/stores/global'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getGroupDetail } from '@/utils/ImRequestUtils'
 
+const { t } = useI18n()
 const { openMsgSession } = useCommon()
 const { createWebviewWindow, startRtcCall } = useWindow()
 const globalStore = useGlobalStore()
@@ -261,7 +273,12 @@ const loadAnnouncement = async (roomId: string) => {
 
 const handleOpenAnnouncement = async () => {
   if (!item.value?.roomId) return
-  await createWebviewWindow('查看群公告', `announList/${item.value.roomId}/1`, 420, 620)
+  await createWebviewWindow(
+    t('home.chat_details.group.announcement.window_title'),
+    `announList/${item.value.roomId}/1`,
+    420,
+    620
+  )
 }
 
 const displayNickname = computed(() =>
@@ -333,10 +350,10 @@ const handleRemarkUpdate = async () => {
       remark: nextRemark
     })
     remarkSnapshot.value = nextRemark
-    window.$message.success('群备注更新成功')
+    window.$message.success(t('home.chat_details.group.remark.success'))
   } catch (error) {
     item.value.remark = previousRemark
-    window.$message.error('群备注更新失败')
+    window.$message.error(t('home.chat_details.group.remark.fail'))
   } finally {
     isEditingRemark.value = false
   }
@@ -381,7 +398,7 @@ const handleNicknameUpdate = async () => {
     const resolvedNickname = resolveMyRoomNickname({ roomId: item.value.roomId, myName: nextNickname })
     nicknameValue.value = resolvedNickname
     nicknameSnapshot.value = resolvedNickname
-    window.$message.success('本群昵称更新成功')
+    window.$message.success(t('home.chat_details.group.nickname.success'))
   } catch (error) {
     item.value.myName = originalStoredNickname
     const fallbackNickname = resolveMyRoomNickname({
@@ -390,7 +407,7 @@ const handleNicknameUpdate = async () => {
     })
     nicknameValue.value = fallbackNickname || previousNickname
     nicknameSnapshot.value = fallbackNickname || previousNickname
-    window.$message.error('本群昵称更新失败')
+    window.$message.error(t('home.chat_details.group.nickname.fail'))
   } finally {
     isEditingNickname.value = false
   }
@@ -400,7 +417,7 @@ const handleNicknameUpdate = async () => {
 const handleCopy = (account: string) => {
   if (account) {
     navigator.clipboard.writeText(account)
-    window.$message.success(`复制成功 ${account}`)
+    window.$message.success(t('home.chat_details.group.copy_success', { account }))
   }
 }
 
@@ -425,13 +442,13 @@ const fetchGroupMembers = async (roomId: string) => {
 
 const handleStartCall = async (callType: CallTypeEnum) => {
   if (content.type !== RoomTypeEnum.SINGLE) {
-    window.$message.warning('仅单聊支持发起音视频通话')
+    window.$message.warning(t('home.chat_details.single.call_only_single'))
     return
   }
 
   const targetUid = item.value?.uid
   if (!targetUid) {
-    window.$message.error('无法获取好友信息')
+    window.$message.error(t('home.chat_details.single.friend_info_missing'))
     return
   }
 
@@ -449,19 +466,19 @@ const footerOptions = computed<OPT.Details[]>(() => {
   return [
     {
       url: 'message',
-      title: '发信息',
+      title: t('home.chat_details.actions.message'),
       click: () => {
         if (sessionType === RoomTypeEnum.GROUP) {
           const roomId = item.value?.roomId
           if (!roomId) {
-            window.$message.error('无法获取群聊信息')
+            window.$message.error(t('home.chat_details.group.info_missing'))
             return
           }
           openMsgSession(roomId, sessionType)
         } else {
           const uid = item.value?.uid
           if (!uid) {
-            window.$message.error('无法获取好友信息')
+            window.$message.error(t('home.chat_details.single.friend_info_missing'))
             return
           }
           openMsgSession(uid, sessionType)
@@ -472,12 +489,12 @@ const footerOptions = computed<OPT.Details[]>(() => {
       ? [
           {
             url: 'phone-telephone',
-            title: '打电话',
+            title: t('home.chat_details.single.footer.audio_call'),
             click: () => handleStartCall(CallTypeEnum.AUDIO)
           },
           {
             url: 'video-one',
-            title: '打视频',
+            title: t('home.chat_details.single.footer.video_call'),
             click: () => handleStartCall(CallTypeEnum.VIDEO)
           }
         ]
@@ -493,7 +510,16 @@ const openImageViewer = async () => {
     imageViewerStore.setSingleImage(AvatarUtils.getAvatarUrl(item.value.avatar))
 
     // 创建窗口，使用计算后的尺寸
-    await createWebviewWindow('图片查看', 'imageViewer', IMAGEWIDTH, IMAGEHEIGHT, '', true, IMAGEWIDTH, IMAGEHEIGHT)
+    await createWebviewWindow(
+      t('home.chat_details.window.image_viewer'),
+      'imageViewer',
+      IMAGEWIDTH,
+      IMAGEHEIGHT,
+      '',
+      true,
+      IMAGEWIDTH,
+      IMAGEHEIGHT
+    )
   } catch (error) {
     console.error('打开图片查看器失败:', error)
   }
