@@ -196,9 +196,11 @@ const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const cachedStore = useCachedStore()
 const { stateList } = storeToRefs(userStatusStore)
+
+const resolvedUserInfo = computed(() => groupStore.getUserInfo(uid) ?? null)
 /** 头像加载状态 */
 const badgeLoadedMap = ref<Record<string, boolean>>({})
-const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(groupStore.getUserInfo(uid)?.avatar as string))
+const avatarSrc = computed(() => AvatarUtils.getAvatarUrl((resolvedUserInfo.value?.avatar as string) || ''))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
 /** 是否是我的好友 */
@@ -220,13 +222,12 @@ const groupNickname = computed(() => {
 })
 // 显示的在线状态
 const displayActiveStatus = computed(() => {
-  return groupStore.getUserInfo(uid)?.activeStatus ?? OnlineEnum.OFFLINE
+  return resolvedUserInfo.value?.activeStatus ?? OnlineEnum.OFFLINE
 })
 
 // 计算当前用户状态图标
 const statusIcon = computed(() => {
-  const userInfo = groupStore.getUserInfo(uid)!
-  const userStateId = userInfo.userStateId
+  const userStateId = resolvedUserInfo.value?.userStateId
 
   // 如果在线且有特殊状态
   if (userStateId && userStateId !== '1') {
@@ -240,8 +241,7 @@ const statusIcon = computed(() => {
 
 // 计算当前状态的标题
 const currentStateTitle = computed(() => {
-  const userInfo = groupStore.getUserInfo(uid)!
-  const userStateId = userInfo.userStateId
+  const userStateId = resolvedUserInfo.value?.userStateId
 
   if (userStateId && userStateId !== '1') {
     const state = stateList.value.find((s: { id: string }) => s.id === userStateId)

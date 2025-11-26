@@ -151,7 +151,8 @@
           <ContextMenu
             v-on-long-press="[(e) => handleLongPress(e, handleItemType(message.message.type)), longPressOption]"
             :content="message"
-            @contextmenu="handleMacSelect"
+            @mousedown.right="recordSelectionBeforeContext"
+            @contextmenu="handleContextMenuSelection"
             @mouseenter="() => (hoverMsgId = message.message.id)"
             @mouseleave="() => (hoverMsgId = '')"
             class="w-fit relative flex flex-col chat-message-max-width"
@@ -313,7 +314,8 @@ import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { useChatStore } from '@/stores/chat'
 import { useUserStore } from '@/stores/user'
 import { markMsg } from '@/utils/ImRequestUtils'
-import { isMac, isMobile } from '@/utils/PlatformConstants'
+import { createMacContextSelectionGuard } from '@/utils/MacSelectionGuard'
+import { isMobile } from '@/utils/PlatformConstants'
 import Announcement from './Announcement.vue'
 import AudioCall from './AudioCall.vue'
 import Emoji from './Emoji.vue'
@@ -373,6 +375,10 @@ const bubbleMaxWidth = computed(() => {
     return '70vw'
   }
   return props.isGroup ? '32vw' : '50vw'
+})
+
+const { recordSelectionBeforeContext, handleContextMenuSelection } = createMacContextSelectionGuard({
+  lockSelector: '.chat-message-max-width'
 })
 
 const handleAvatarClick = (uid: string, msgId: string) => {
@@ -534,18 +540,6 @@ const isMe = computed(() => {
 })
 
 // 解决mac右键会选中文本的问题
-const handleMacSelect = (event: Event): void => {
-  if (!isMac()) return
-
-  const target = event.target as HTMLElement | null
-  if (!target) return
-
-  target.classList.add('select-none')
-  requestAnimationFrame(() => {
-    target.classList.remove('select-none')
-  })
-}
-
 const closeMenu = (event: any) => {
   if (!event.target.matches('.bubble', 'bubble-oneself')) {
     activeBubble.value = ''
