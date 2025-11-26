@@ -1,12 +1,19 @@
 import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import weekday from 'dayjs/plugin/weekday'
-import 'dayjs/locale/zh-cn' // 导入中文语言包
 import type { ConfigType, Dayjs, OpUnitType } from 'dayjs'
+import 'dayjs/locale/zh-cn'
+import 'dayjs/locale/en'
+import { useI18nGlobal } from '@/services/i18n'
 
-// 全局使用语言包
-dayjs.locale('zh-cn')
-// 设置一周起始位周一
+export const setDayjsLocale = (lang: string) => {
+  const mapped = lang.toLowerCase().includes('zh') ? 'zh-cn' : 'en'
+  dayjs.locale(mapped)
+}
+
+dayjs.extend(relativeTime)
 dayjs.extend(weekday)
+setDayjsLocale('zh-CN')
 
 // 时间格式化为相对文本，仿微信风格
 export const timeToStr = (time: number) => {
@@ -17,7 +24,7 @@ export const timeToStr = (time: number) => {
   const isLastWeek = gapDay >= 7
   // 今天显示时分, 昨天的显示 `昨天 时分`, 今天往前一周内，显示`周几 时分`， 再前面显示日期 `年月日 时分`
   return gapDay < 2
-    ? `${gapDay === 1 ? '昨天 ' : ''}${sendTime.format('HH:mm')}`
+    ? `${gapDay === 1 ? `${useI18nGlobal().t('menu.yesterday')} ` : ''}${sendTime.format('HH:mm')}`
     : isLastWeek
       ? sendTime.format('YYYY-MM-DD HH:mm')
       : dayjs(sendTime).format('dddd HH:mm')
@@ -48,7 +55,11 @@ export const formatTimestamp = (timestamp: number, isDetail = false): string => 
     return date.format(`${isDetail ? 'HH:mm:ss' : 'HH:mm'}`)
   } else {
     if (isDetail) return date.format('MM-DD HH:mm:ss')
-    return gapDay === 1 ? '昨天' : isLastWeek ? date.format('MM-DD') : dayjs(date).format('dddd')
+    return gapDay === 1
+      ? useI18nGlobal().t('menu.yesterday')
+      : isLastWeek
+        ? date.format('MM-DD')
+        : dayjs(date).format('dddd')
   }
 }
 
@@ -80,12 +91,23 @@ export const isDiffNow10Min = (time: ConfigType): boolean => {
 export const formatDateGroupLabel = (timestamp: number): string => {
   const date = dayjs(timestamp)
   const now = dayjs()
+  const i18n = useI18nGlobal()
 
   if (now.isSame(date, 'day')) {
-    return '今天'
+    return i18n.t('menu.today')
   } else if (now.subtract(1, 'day').isSame(date, 'day')) {
-    return '昨天'
+    return i18n.t('menu.yesterday')
   } else {
     return date.format('MM-DD')
   }
+}
+
+/** 相对时间(前) */
+export const handRelativeTime = (time: string) => {
+  return dayjs(time).fromNow()
+}
+
+/** 获取指定日期的星期 */
+export const getWeekday = (time: string) => {
+  return dayjs(time).format('ddd')
 }

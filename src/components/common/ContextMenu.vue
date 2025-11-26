@@ -570,7 +570,7 @@ const shouldShowArrow = (item: any) => {
   }
   .menu-list {
     @include menu-list();
-    min-width: 180px;
+    width: max-content;
     .menu-item-disabled {
       @include menu-item();
       color: var(--disabled-color);
@@ -626,14 +626,17 @@ const shouldShowArrow = (item: any) => {
 
 .menu-item {
   .menu-item-content {
-    gap: 10px;
-    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    width: max-content;
     position: relative;
     svg {
       flex-shrink: 0;
+      min-width: 16px;
     }
     p {
-      flex: 1;
       min-width: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -641,8 +644,8 @@ const shouldShowArrow = (item: any) => {
     }
 
     .arrow-icon {
-      position: absolute;
-      right: -4px;
+      position: static;
+      justify-self: end;
       width: 12px;
       height: 12px;
       color: var(--text-color);

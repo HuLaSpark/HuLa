@@ -12,6 +12,7 @@ import { App } from 'vue'
 import { createI18n } from 'vue-i18n'
 import type { Locale } from 'vue-i18n'
 import { useSettingStore } from '../stores/setting'
+import { setDayjsLocale } from '@/utils/ComputedTime'
 
 const i18n = createI18n({
   legacy: false,
@@ -93,6 +94,7 @@ const normalizeLang = (lang: string): Locale => {
 export function setI18nLanguage(lang: Locale) {
   const resolved = normalizeLang(lang)
   i18n.global.locale.value = resolved
+  setDayjsLocale(resolved)
   if (typeof document !== 'undefined') {
     document.querySelector('html')?.setAttribute('lang', resolved)
   }

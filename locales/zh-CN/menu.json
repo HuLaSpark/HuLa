@@ -35,8 +35,10 @@
   "unblock_group_messages": "取消屏蔽群消息",
   "block_user_messages": "屏蔽此人消息",
   "unblock_user_messages": "取消屏蔽消息",
-  "remove_from_list": "从消息列表中移除",
+  "remove_from_list": "删除会话",
   "delete_friend": "删除好友",
   "dissolve_group": "解散群聊",
-  "leave_group": "退出群聊"
+  "leave_group": "退出群聊",
+  "today": "今天",
+  "yesterday": "昨天"
 }

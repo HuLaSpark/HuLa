@@ -16,7 +16,7 @@ import {
 } from 'naive-ui'
 import { emit } from '@tauri-apps/api/event'
 import { EventEnum } from '@/enums'
-import { handRelativeTime } from '@/utils/Day.ts'
+import { handRelativeTime } from '@/utils/ComputedTime'
 import './style.scss'
 import { getVersion } from '@tauri-apps/api/app'
 import { confirm } from '@tauri-apps/plugin-dialog'

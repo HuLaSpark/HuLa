@@ -38,5 +38,7 @@
   "remove_from_list": "Remove chat",
   "delete_friend": "Remove friend",
   "dissolve_group": "Disband group",
-  "leave_group": "Leave Group"
+  "leave_group": "Leave Group",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }

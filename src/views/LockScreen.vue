@@ -121,7 +121,7 @@ import { useLogin } from '@/hooks/useLogin.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { getWeekday } from '@/utils/Day.ts'
+import { getWeekday } from '@/utils/ComputedTime'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()

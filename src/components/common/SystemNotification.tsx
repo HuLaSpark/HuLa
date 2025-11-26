@@ -1,6 +1,6 @@
 import { NAvatar, NButton } from 'naive-ui'
 import { useNoticeStore } from '@/stores/notice.ts'
-import { handRelativeTime } from '@/utils/Day.ts'
+import { handRelativeTime } from '@/utils/ComputedTime'
 
 const { systemNotice } = storeToRefs(useNoticeStore())
 const SysNTF = null

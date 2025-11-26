@@ -110,7 +110,7 @@ import { confirm } from '@tauri-apps/plugin-dialog'
 import { check } from '@tauri-apps/plugin-updater'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useSettingStore } from '@/stores/setting.ts'
-import { handRelativeTime } from '@/utils/Day.ts'
+import { handRelativeTime } from '@/utils/ComputedTime'
 import { isMac } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler.ts'
 
