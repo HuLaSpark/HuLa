@@ -27,7 +27,7 @@
             <div
               v-if="isBotUser"
               class="dark:bg-[#13987f40] bg-[#e8f4f1] dark:border-(1px solid #13987f) border-(1px solid #13987f) flex-center px-8px py-4px rounded-6px">
-              <p class="text-(11px #13987f)">助手</p>
+              <p class="text-(11px #13987f)">{{ t('chat.group.bot_user_alias') }}</p>
             </div>
           </label>
           <svg
@@ -232,7 +232,7 @@
                           <use href="#auth"></use>
                         </svg>
                       </template>
-                      <span>官方群聊认证</span>
+                      <span>{{ t('chat.group.official_group_verification') }}</span>
                     </n-popover>
                   </n-flex>
 
@@ -251,7 +251,7 @@
                           <use href="#copy"></use>
                         </svg>
                       </template>
-                      <span>复制</span>
+                      <span>{{ t('chat.group.copy') }}</span>
                     </n-tooltip>
                   </n-flex>
                 </n-flex>
@@ -261,7 +261,7 @@
                   class="flex-center cursor-pointer bg-#e3e3e380 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
                   @click="showQRCodeModal = true">
                   <svg class="size-16px"><use href="#pay-code-one"></use></svg>
-                  <p class="text-(12px [--chat-text-color])">二维码</p>
+                  <p class="text-(12px [--chat-text-color])">{{ t('chat.group.share_qr_code') }}</p>
                 </div>
               </n-flex>
             </div>
@@ -270,7 +270,11 @@
             <div class="box-item cursor-default">
               <n-flex vertical justify="center" :size="16">
                 <p class="text-(14px --text-color)">
-                  {{ activeItem?.hotFlag !== IsAllUserEnum.Yes ? '群成员' : '频道成员' }}
+                  {{
+                    activeItem?.hotFlag !== IsAllUserEnum.Yes
+                      ? t('chat.group.group_member')
+                      : t('chat.group.channel_member')
+                  }}
                 </p>
 
                 <n-flex align="center" justify="start" :size="[24, 20]">
@@ -286,7 +290,7 @@
             </div>
 
             <!-- 我本群的昵称 -->
-            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">我本群的昵称</p>
+            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">{{ t('chat.group.user_alias') }}</p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
               spellCheck="false"
@@ -299,8 +303,8 @@
               @blur.stop="handleGroupInfoChange" />
             <!-- 群备注 -->
             <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
-              群备注
-              <span class="text-(10px #909090)">(群备注仅自己可见)</span>
+              {{ t('chat.group.remark') }}
+              <span class="text-(10px #909090)">{{ t('chat.group.remark_desc') }}</span>
             </p>
             <n-input
               class="border-(solid 1px [--line-color]) custom-shadow"
@@ -315,17 +319,17 @@
             <!-- 群设置选项 -->
             <div class="box-item cursor-default">
               <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">群设置</p>
+                <p class="text-(12px #909090) pb-14px">{{ t('chat.group.settings') }}</p>
 
                 <div class="flex-between-center">
-                  <p>设为置顶</p>
+                  <p>{{ t('chat.group.sticky') }}</p>
                   <n-switch size="small" :value="activeItem?.top" @update:value="handleTop" />
                 </div>
 
                 <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
 
                 <div class="flex-between-center">
-                  <p>消息免打扰</p>
+                  <p>{{ t('chat.group.mute_msg') }}</p>
                   <n-switch
                     size="small"
                     :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
@@ -357,7 +361,7 @@
               v-if="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
               class="box-item cursor-default">
               <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">群消息设置</p>
+                <p class="text-(12px #909090) pb-14px">{{ t('chat.group.message_settings_title') }}</p>
 
                 <div class="flex-between-center">
                   <n-select
@@ -379,7 +383,7 @@
             </div>
 
             <div class="box-item cursor-pointer mb-20px" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
-              <p>删除聊天记录</p>
+              <p>{{ t('chat.clear_chat_history') }}</p>
             </div>
 
             <div
@@ -427,8 +431,8 @@
         <span class="text-14px">{{ tips }}</span>
 
         <n-flex justify="end">
-          <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
-          <n-button @click="handleCancel" class="w-78px" secondary>取消</n-button>
+          <n-button @click="handleConfirm" class="w-78px" color="#13987f">{{ t('global.confirm') }}</n-button>
+          <n-button @click="handleCancel" class="w-78px" secondary>{{ t('global.cancel') }}</n-button>
         </n-flex>
       </div>
     </div>
@@ -462,7 +466,7 @@
 
           <div class="text-center">
             <p class="text-(16px [--text-color]) font-bold pb-24px">{{ activeItem?.name }}</p>
-            <p class="text-(12px [--chat-text-color])">扫描二维码加入群聊</p>
+            <p class="text-(12px [--chat-text-color])">{{ t('chat.group.scan_to_join_desc') }}</p>
           </div>
         </div>
       </div>
@@ -538,7 +542,9 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { createModalWindow, startRtcCall } = useWindow()
 // 使用useDisplayMedia获取屏幕共享的媒体流
 const { stream, stop } = useDisplayMedia()
@@ -632,9 +638,10 @@ const messageSettingType = computed(() => {
   // 非免打扰模式下，默认返回 notification
   return 'notification'
 })
+
 const messageSettingOptions = ref([
-  { label: '接收消息但不提醒', value: 'notification' },
-  { label: '屏蔽消息', value: 'shield' }
+  { label: () => t('chat.group.notice_silent'), value: 'notification' },
+  { label: () => t('chat.group.notice_block'), value: 'shield' }
 ])
 
 const chatTargetUid = computed(() => {
@@ -955,17 +962,17 @@ const handleDelete = (label: RoomActEnum) => {
   modalShow.value = true
   optionsType.value = label
   if (label === RoomActEnum.DELETE_FRIEND) {
-    tips.value = '确定删除该好友吗?'
+    tips.value = t('chat.friend_confirm_delete')
   } else if (label === RoomActEnum.DISSOLUTION_GROUP) {
-    tips.value = '确定解散该群聊?'
+    tips.value = t('chat.group_confirm_disband')
   } else if (label === RoomActEnum.EXIT_GROUP) {
-    tips.value = '确定退出该群聊?'
+    tips.value = t('chat.group_confirm_leave')
   } else if (label === RoomActEnum.UPDATE_GROUP_NAME) {
-    tips.value = `确定将群名称修改为"${pendingGroupInfo.value?.groupName}"吗？`
+    tips.value = t('chat.group_confirm_rename', { name: pendingGroupInfo.value?.groupName })
   } else if (label === RoomActEnum.UPDATE_GROUP_INFO) {
-    tips.value = '确定保存群信息修改吗？'
+    tips.value = t('chat.group_confirm_save_changes')
   } else {
-    tips.value = '确定后将删除本地聊天记录'
+    tips.value = t('chat.delete_local_history_notice')
     optionsType.value = RoomActEnum.DELETE_RECORD
   }
 }

@@ -1,0 +1,28 @@
+{
+  "group": {
+    "user_alias": "我的本群昵称",
+    "bot_user_alias": "Bot",
+    "share_qr_code": "二维码",
+    "official_group_verification": "官方群认证",
+    "copy": "复制",
+    "group_member": "群成员",
+    "channel_member": "频道成员",
+    "remark": "群备注",
+    "remark_desc": "（群备注仅自己可见）",
+    "settings": "群设置",
+    "sticky": "置顶",
+    "mute_msg": "消息免打扰",
+    "message_settings_title": "群消息设置",
+    "notice_silent": "静默",
+    "notice_block": "屏蔽",
+    "scan_to_join_desc": "扫码加入群聊",
+    "alias_input_placeholder": "输入你的群昵称"
+  },
+  "clear_chat_history": "清空聊天记录",
+  "friend_confirm_delete": "确定删除该好友吗？",
+  "group_confirm_disband": "确定解散该群聊吗？",
+  "group_confirm_leave": "确定退出该群聊吗？",
+  "group_confirm_rename": "确定将群名称修改为 {name} 吗？",
+  "group_confirm_save_changes": "确定保存群信息修改吗？",
+  "delete_local_history_notice": "确定后将删除本地聊天记录"
+}

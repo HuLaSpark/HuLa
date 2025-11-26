@@ -1,0 +1,28 @@
+{
+  "group": {
+    "user_alias": "My Alias in Group",
+    "bot_user_alias": "Bot",
+    "share_qr_code": "QR Code",
+    "official_group_verification": "Official Group",
+    "copy": "Copy",
+    "group_member": "Group members",
+    "channel_member": "Channel Members",
+    "remark": "Group Remark",
+    "remark_desc": "(The name is only visible to you.)",
+    "settings": "Group Settings",
+    "sticky": "Sticky",
+    "mute_msg": "Mute Notifications",
+    "message_settings_title": "Group message settings",
+    "notice_silent": "Silent",
+    "notice_block": "Block",
+    "scan_to_join_desc": "Scan to join the group",
+    "alias_input_placeholder": "Enter your alias"
+  },
+  "clear_chat_history": "Clear Chat History",
+  "friend_confirm_delete": "Are you sure you want to delete this friend?",
+  "group_confirm_disband": "Are you sure you want to disband this group?",
+  "group_confirm_leave": "Are you sure you want to leave this group?",
+  "group_confirm_rename": "Are you sure you want to change the group name to {name}?",
+  "group_confirm_save_changes": "Are you sure you want to save the changes to the group information?",
+  "delete_local_history_notice": "Proceeding will delete the local chat history."
+}
