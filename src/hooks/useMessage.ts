@@ -5,6 +5,8 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 import { exitGroup, notification, setSessionTop, shield, markMsgRead } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { useI18n } from 'vue-i18n'
@@ -18,6 +20,8 @@ export const useMessage = () => {
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   const contactStore = useContactStore()
+  const groupStore = useGroupStore()
+  const userStore = useUserStore()
   const BOT_ALLOWED_MENU_INDEXES = new Set([0, 1, 2, 3])
   /** 监听独立窗口关闭事件 */
   watchEffect(() => {
@@ -26,11 +30,30 @@ export const useMessage = () => {
     })
   })
 
-  /** 处理点击选中消息 */
-  const handleMsgClick = (item: SessionItem) => {
+  /**
+   * 处理点击选中消息
+   * 如果本地缓存中找不到自己，说明尚未同步服务端数据，此时强制刷新群成员信息。
+   */
+  const ensureGroupMembersSynced = async (roomId: string, sessionType: RoomTypeEnum) => {
+    if (sessionType !== RoomTypeEnum.GROUP) return
+
+    const currentUid = userStore.userInfo?.uid
+    if (!currentUid) return
+
+    const memberList = groupStore.getUserListByRoomId(roomId)
+    const alreadyHasCurrentUser = memberList.some((member) => member.uid === currentUid)
+
+    if (!alreadyHasCurrentUser) {
+      await groupStore.getGroupUserList(roomId, true)
+    }
+  }
+
+  const handleMsgClick = async (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
     globalStore.updateCurrentSessionRoomId(item.roomId)
+    // 先更新会话，再根据是否存在自身成员做一次兜底刷新，防止批量切换账号后看到旧数据
+    await ensureGroupMembersSynced(item.roomId, item.type)
     if (item.unreadCount && item.unreadCount > 0) {
       markMsgRead(item.roomId)
       chatStore.markSessionRead(item.roomId)
@@ -73,7 +96,7 @@ export const useMessage = () => {
     const nextIndex = Math.min(currentIndex, updatedSessions.length - 1)
     const nextSession = updatedSessions[nextIndex]
     if (nextSession) {
-      handleMsgClick(nextSession)
+      await handleMsgClick(nextSession)
     }
   }
 

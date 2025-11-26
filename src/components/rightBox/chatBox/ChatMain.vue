@@ -9,7 +9,7 @@
       <svg class="size-16px">
         <use href="#cloudError"></use>
       </svg>
-      当前网络不可用，请检查你的网络设置
+      {{ t('home.chat_main.network_offline') }}
     </n-flex>
 
     <!-- 置顶公告提示 -->
@@ -34,7 +34,7 @@
               </div>
             </n-flex>
             <div class="flex-shrink-0 w-60px select-none" @click="handleViewAnnouncement">
-              <p class="text-(12px #13987f) cursor-pointer">查看全部</p>
+              <p class="text-(12px #13987f) cursor-pointer">{{ t('home.chat_main.announcement.view_all') }}</p>
             </div>
           </n-flex>
         </div>
@@ -58,7 +58,7 @@
           <div
             v-show="chatStore.shouldShowNoMoreMessage"
             class="flex-center gap-6px h-32px flex-shrink-0 cursor-default select-none">
-            <p class="text-(12px #909090)">没有更多消息</p>
+            <p class="text-(12px #909090)">{{ t('home.chat_main.no_more') }}</p>
           </div>
           <n-flex
             v-for="(item, index) in chatStore.chatMessageList"
@@ -116,7 +116,7 @@
             v-if="currentNewMsgCount?.count && currentNewMsgCount.count > 0"
             class="text-12px"
             :class="{ 'color-#ce304f': currentNewMsgCount?.count > 99 }">
-            {{ currentNewMsgCount?.count > 99 ? '99+' : currentNewMsgCount?.count }}条新消息
+            {{ t('home.chat_main.new_messages', { count: newMsgCountLabel }) }}
           </span>
         </n-flex>
       </div>
@@ -145,8 +145,8 @@
         <span class="text-14px">{{ tips }}</span>
 
         <n-flex justify="end">
-          <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
-          <n-button @click="modalShow = false" class="w-78px" secondary>取消</n-button>
+          <n-button @click="handleConfirm" class="w-78px" color="#13987f">{{ t('home.chat_main.confirm') }}</n-button>
+          <n-button @click="modalShow = false" class="w-78px" secondary>{{ t('home.chat_main.cancel') }}</n-button>
         </n-flex>
       </div>
     </div>
@@ -170,10 +170,10 @@
         <use href="#close"></use>
       </svg>
       <div class="flex flex-col gap-20px p-[22px_10px_10px_22px] select-none">
-        <span class="text-(16px [--text-color]) font-500">修改群昵称</span>
+        <span class="text-(16px [--text-color]) font-500">{{ t('home.chat_main.group_nickname.title') }}</span>
         <n-input
           v-model:value="groupNicknameValue"
-          placeholder="请输入群昵称"
+          :placeholder="t('home.chat_main.group_nickname.placeholder')"
           :maxlength="12"
           class="border-(1px solid #90909080)"
           :disabled="groupNicknameSubmitting"
@@ -182,10 +182,10 @@
         <p v-if="groupNicknameError" class="text-(12px #d03553)">{{ groupNicknameError }}</p>
         <n-flex justify="end" :size="12">
           <n-button @click="groupNicknameModalVisible = false" :disabled="groupNicknameSubmitting" secondary>
-            取消
+            {{ t('home.chat_main.cancel') }}
           </n-button>
           <n-button color="#13987f" :loading="groupNicknameSubmitting" @click="handleGroupNicknameConfirm">
-            确定
+            {{ t('home.chat_main.confirm') }}
           </n-button>
         </n-flex>
       </div>
@@ -194,9 +194,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, useTemplateRef, watch, watchPostEffect } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn, useEventListener, useTimeoutFn } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
 import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
@@ -215,6 +217,7 @@ import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import FileUploadProgress from '@/components/rightBox/FileUploadProgress.vue'
 
 const selfEmit = defineEmits(['scroll'])
+const { t } = useI18n()
 
 type AnnouncementData = {
   content: string
@@ -262,6 +265,10 @@ const scrollIntent = ref<ScrollIntentEnum>(ScrollIntentEnum.NONE)
 const isGroup = computed<boolean>(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid || '')
 const currentNewMsgCount = computed(() => chatStore.currentNewMsgCount || null)
+const newMsgCountLabel = computed(() => {
+  if (!currentNewMsgCount.value?.count || currentNewMsgCount.value.count <= 0) return '0'
+  return currentNewMsgCount.value.count > 99 ? '99+' : String(currentNewMsgCount.value.count)
+})
 const currentRoomId = computed(() => globalStore.currentSessionRoomId ?? null)
 const computeMsgHover = computed(() => (item: MessageType) => {
   if (!chatStore.isMsgMultiChoose || !isMessageMultiSelectEnabled(item.message.type)) {

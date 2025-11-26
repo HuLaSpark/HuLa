@@ -4,7 +4,7 @@
     align="center"
     justify="space-between"
     class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
-    <div class="text-(14px [--text-color])">好友通知</div>
+    <div class="text-(14px [--text-color])">{{ t('home.friends_list.notice.friend') }}</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newFriendUnreadCount" :max="15" />
       <!-- <n-badge v-if="globalStore.unReadMark.newFriendUnreadCount > 0" dot color="#d5304f" /> -->
@@ -17,7 +17,7 @@
     align="center"
     justify="space-between"
     class="my-10px p-12px hover:(bg-[--list-hover-color] cursor-pointer)">
-    <div class="text-(14px [--text-color])">群通知</div>
+    <div class="text-(14px [--text-color])">{{ t('home.friends_list.notice.group') }}</div>
     <n-flex align="center" :size="4">
       <n-badge :value="globalStore.unReadMark.newGroupUnreadCount" :max="15" />
       <!-- <n-badge v-if="globalStore.unReadMark.newGroupUnreadCount === 0" dot color="#d5304f" /> -->
@@ -25,10 +25,10 @@
     </n-flex>
   </n-flex>
   <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
-    <n-tab-pane name="1" tab="好友">
+    <n-tab-pane name="1" :tab="t('home.friends_list.tabs.friend')">
       <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
         <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
-          <n-collapse-item title="我的好友" name="1">
+          <n-collapse-item :title="t('home.friends_list.collapse.friend')" name="1">
             <template #header-extra>
               <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
             </template>
@@ -60,14 +60,18 @@
 
                       <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
                         [
-                        <template v-if="isBotUser(item.uid)">助手</template>
+                        <template v-if="isBotUser(item.uid)">{{ t('home.friends_list.bot_tag') }}</template>
                         <template v-else-if="getUserState(item.uid)">
                           <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
                           {{ getUserState(item.uid)?.title }}
                         </template>
                         <template v-else>
                           <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                          {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                          {{
+                            item.activeStatus === OnlineEnum.ONLINE
+                              ? t('home.friends_list.status.online')
+                              : t('home.friends_list.status.offline')
+                          }}
                         </template>
                         ]
                       </div>
@@ -80,9 +84,9 @@
         </ContextMenu>
       </n-collapse>
     </n-tab-pane>
-    <n-tab-pane name="2" tab="群聊">
+    <n-tab-pane name="2" :tab="t('home.friends_list.tabs.group')">
       <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
-        <n-collapse-item title="我的群聊" name="1">
+        <n-collapse-item :title="t('home.friends_list.collapse.group')" name="1">
           <template #header-extra>
             <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
           </template>
@@ -113,8 +117,10 @@
   </n-tabs>
 </template>
 <script setup lang="ts" name="friendsList">
+import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { MittEnum, OnlineEnum, RoomTypeEnum, ThemeEnum, UserType } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { DetailsContent } from '@/services/types'
@@ -127,10 +133,11 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 
 const route = useRoute()
-const menuList = ref([
-  { label: '添加分组', icon: 'plus' },
-  { label: '重命名该组', icon: 'edit' },
-  { label: '删除分组', icon: 'delete' }
+const { t } = useI18n()
+const menuList = computed(() => [
+  { label: t('home.friends_list.menu.add_group'), icon: 'plus' },
+  { label: t('home.friends_list.menu.rename_group'), icon: 'edit' },
+  { label: t('home.friends_list.menu.delete_group'), icon: 'delete' }
 ])
 /** 建议把此状态存入localStorage中 */
 const activeItem = ref('')

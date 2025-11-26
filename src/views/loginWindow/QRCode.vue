@@ -35,7 +35,7 @@
           <svg class="size-42px animate-pulse">
             <use :href="`#${scanStatus.icon}`"></use>
           </svg>
-          <span class="text-(14px #e3e3e3)">{{ scanStatus.text }}</span>
+          <span class="text-(14px #e3e3e3)">{{ scanStatusText }}</span>
         </n-flex>
 
         <n-flex
@@ -46,7 +46,7 @@
           class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           style="pointer-events: none">
           <n-spin size="small" />
-          <span class="text-(16px #e3e3e3)">刷新中</span>
+          <span class="text-(16px #e3e3e3)">{{ t('login.qr.overlay.refreshing') }}</span>
         </n-flex>
       </div>
     </n-flex>
@@ -57,10 +57,14 @@
 
     <!-- 底部操作栏 -->
     <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
-      <div class="color-#13987f cursor-pointer" @click="router.push('/login')">账密登录</div>
+      <div class="color-#13987f cursor-pointer" @click="router.push('/login')">
+        {{ t('login.qr.actions.account_login') }}
+      </div>
       <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
-      <div class="color-#13987f cursor-pointer" @click="createWebviewWindow('注册', 'register', 600, 600)">
-        注册账号
+      <div
+        class="color-#13987f cursor-pointer"
+        @click="createWebviewWindow(t('login.qr.actions.register_title'), 'register', 600, 600)">
+        {{ t('login.qr.actions.register') }}
       </div>
     </n-flex>
   </n-config-provider>
@@ -69,6 +73,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { darkTheme, lightTheme } from 'naive-ui'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
@@ -84,8 +89,12 @@ const { themes } = storeToRefs(settingStore)
 const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 const { createWebviewWindow } = useWindow()
 const { isTrayMenuShow } = storeToRefs(globalStore)
+const { t } = useI18n()
+type LoadTextKey = 'loading' | 'refreshing' | 'scan_hint' | 'login' | 'retry' | 'auth_pending'
+type ScanStatusTextKey = 'success' | 'error' | 'auth' | 'expired' | 'fetch_failed' | 'generate_fail' | 'general_error'
+const loadTextKey = ref<LoadTextKey>('loading')
+const loadText = computed(() => t(`login.qr.load_text.${loadTextKey.value}`))
 const loading = ref(true)
-const loadText = ref('加载中...')
 const refreshing = ref(false) // 是否正在刷新
 const qrCodeValue = ref('')
 const qrCodeResp = ref()
@@ -101,9 +110,13 @@ const confirmedHandled = ref(false)
 const scanStatus = ref<{
   status: 'error' | 'success' | 'auth'
   icon: 'cloudError' | 'success' | 'Security'
-  text: string
+  textKey: ScanStatusTextKey | ''
   show: boolean
-}>({ status: 'success', icon: 'success', text: '扫码失败', show: false })
+}>({ status: 'success', icon: 'success', textKey: '', show: false })
+
+const scanStatusText = computed(() =>
+  scanStatus.value.textKey ? t(`login.qr.overlay.${scanStatus.value.textKey}`) : ''
+)
 
 /** 刷新二维码 */
 const refreshQRCode = () => {
@@ -112,12 +125,12 @@ const refreshQRCode = () => {
   }
 
   refreshing.value = true
-  loadText.value = '刷新中...'
+  loadTextKey.value = 'refreshing'
 
   scanStatus.value = {
     status: 'success',
     icon: 'success',
-    text: '',
+    textKey: '',
     show: false
   }
 
@@ -155,19 +168,18 @@ const handleConfirmed = async (res: any) => {
     })
 
     await loginCommand({ uid: res.data.uid }, true).then(() => {
-      scanStatus.value.show = true
       scanStatus.value = {
         status: 'success',
         icon: 'success',
-        text: '登录成功',
+        textKey: 'success',
         show: true
       }
-      loadText.value = '登录中...'
+      loadTextKey.value = 'login'
     })
   } catch (error) {
     console.error('获取用户详情失败:', error)
     confirmedHandled.value = false
-    handleError('登录成功，但获取用户信息失败')
+    handleError('fetch_failed')
   }
 }
 
@@ -200,7 +212,7 @@ const startPolling = () => {
           break
         case 'EXPIRED':
           clearPolling()
-          handleError('二维码已过期')
+          handleError('expired')
           break
         default:
           break
@@ -222,12 +234,13 @@ const handleQRCodeLogin = async () => {
   try {
     qrCodeResp.value = await generateQRCode()
     qrCodeValue.value = JSON.stringify({ type: 'login', qrId: qrCodeResp.value.qrId })
-    loadText.value = '请使用 HuLa App 扫码登录'
+    loadTextKey.value = 'scan_hint'
     loading.value = false
     refreshing.value = false
 
     if (scanStatus.value.show) {
       scanStatus.value.show = false
+      scanStatus.value.textKey = ''
     }
 
     // 启动轮询
@@ -235,20 +248,20 @@ const handleQRCodeLogin = async () => {
     pollingRequesting.value = false
     startPolling()
   } catch (error) {
-    handleError('生成二维码失败')
+    handleError('generate_fail')
   }
 }
 
 /** 处理失败场景 */
-const handleError = (e: any) => {
+const handleError = (key: ScanStatusTextKey = 'general_error') => {
   loading.value = false
   scanStatus.value = {
     status: 'error',
     icon: 'cloudError',
-    text: typeof e === 'string' ? e : '发生错误',
+    textKey: key,
     show: true
   }
-  loadText.value = '请稍后再试'
+  loadTextKey.value = 'retry'
 }
 
 onUnmounted(() => {
@@ -262,10 +275,10 @@ const handleAuth = () => {
   scanStatus.value = {
     status: 'auth',
     icon: 'Security',
-    text: '扫码成功,等待授权',
+    textKey: 'auth',
     show: true
   }
-  loadText.value = '等待授权...'
+  loadTextKey.value = 'auth_pending'
 }
 
 onMounted(async () => {

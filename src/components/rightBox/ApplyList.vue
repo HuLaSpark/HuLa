@@ -1,7 +1,9 @@
 <template>
   <n-flex vertical class="select-none">
     <n-flex align="center" justify="space-between" class="color-[--text-color] px-20px py-10px">
-      <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
+      <p class="text-16px">
+        {{ t(props.type === 'friend' ? 'home.apply_list.friend_notice' : 'home.apply_list.group_notice') }}
+      </p>
     </n-flex>
 
     <n-virtual-list
@@ -16,9 +18,9 @@
           <n-flex
             align="center"
             justify="space-between"
-            :size="0"
+            :size="10"
             class="bg-[--center-bg-color] rounded-10px p-20px box-border border-(1px solid [--bg-popover])">
-            <n-flex align="center" :size="10">
+            <n-flex align="center" :size="10" class="min-w-0 flex-1">
               <n-avatar
                 round
                 size="large"
@@ -28,43 +30,53 @@
                     : avatarSrc(groupDetailsMap[item.roomId]?.avatar || '/default-group-avatar.png')
                 "
                 class="mr-10px" />
-              <n-flex vertical :size="12">
-                <n-flex align="center" :size="10">
+              <n-flex vertical :size="12" class="min-w-0 flex-1">
+                <n-flex align="center" :size="10" class="min-w-0 flex-1 gap-10px">
                   <p
                     @click="
                       isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)
                     "
-                    class="text-(14px #13987f) cursor-pointer">
+                    class="text-(14px #13987f) cursor-pointer shrink-0 max-w-150px truncate">
                     {{
                       item.eventType === NoticeType.GROUP_MEMBER_DELETE && item.operateId == item.receiverId
-                        ? '你'
-                        : getUserInfo(item)?.name || '未知用户'
+                        ? t('home.apply_list.you')
+                        : getUserInfo(item)?.name || t('home.apply_list.unknown_user')
                     }}
                   </p>
 
-                  <p class="text-(14px [--text-color])">
-                    {{ applyMsg(item) }}
-                  </p>
+                  <div class="flex items-center min-w-0 flex-1 gap-6px">
+                    <p class="text-(14px [--text-color]) min-w-0 truncate whitespace-nowrap">
+                      {{ applyMsg(item) }}
+                    </p>
 
-                  <p class="text-(10px #909090)">{{ formatTimestamp(item.createTime) }}</p>
+                    <p class="text-(10px #909090) shrink-0 whitespace-nowrap">{{ formatTimestamp(item.createTime) }}</p>
+                  </div>
                 </n-flex>
-                <n-performant-ellipsis
+                <p
+                  :title="t('home.apply_list.message_label') + item.content"
                   v-if="isFriendApplyOrGroupInvite(item)"
-                  class="text-(12px [--text-color]) w-340px truncate">
-                  留言：{{ item.content }}
-                </n-performant-ellipsis>
+                  class="text-(12px [--text-color]) cursor-default w-340px truncate">
+                  {{ t('home.apply_list.message_label') }}{{ item.content }}
+                </p>
                 <p v-else class="text-(12px [--text-color])">
-                  处理人：{{ groupStore.getUserInfo(item.senderId)?.name || '未知用户' }}
+                  {{
+                    t('home.apply_list.handler_label', {
+                      name: groupStore.getUserInfo(item.senderId)?.name || t('home.apply_list.unknown_user')
+                    })
+                  }}
                 </p>
               </n-flex>
             </n-flex>
 
-            <div v-if="isFriendApplyOrGroupInvite(item)">
+            <div v-if="isFriendApplyOrGroupInvite(item)" class="shrink-0 flex items-center gap-10px">
               <n-flex
                 align="center"
                 :size="10"
+                class="shrink-0"
                 v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
-                <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item)">接受</n-button>
+                <n-button secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item)">
+                  {{ t('home.apply_list.accept') }}
+                </n-button>
                 <n-dropdown
                   trigger="click"
                   :options="dropdownOptions"
@@ -77,13 +89,13 @@
                 </n-dropdown>
               </n-flex>
               <span class="text-(12px #64a29c)" v-else-if="item.status === RequestNoticeAgreeStatus.ACCEPTED">
-                已同意
+                {{ t('home.apply_list.status.accepted') }}
               </span>
               <span class="text-(12px #c14053)" v-else-if="item.status === RequestNoticeAgreeStatus.REJECTED">
-                已拒绝
+                {{ t('home.apply_list.status.rejected') }}
               </span>
               <span class="text-(12px #909090)" v-else-if="item.status === RequestNoticeAgreeStatus.IGNORE">
-                已忽略
+                {{ t('home.apply_list.status.ignored') }}
               </span>
               <span
                 class="text-(12px #64a29c)"
@@ -91,10 +103,10 @@
                 v-else-if="isCurrentUser(item.senderId)">
                 {{
                   isAccepted(item)
-                    ? '已同意'
+                    ? t('home.apply_list.status.accepted')
                     : item.status === RequestNoticeAgreeStatus.REJECTED
-                      ? '对方已拒绝'
-                      : '等待验证'
+                      ? t('home.apply_list.status.rejected_by_other')
+                      : t('home.apply_list.status.pending')
                 }}
               </span>
             </div>
@@ -105,11 +117,13 @@
 
     <!-- 空数据提示 -->
     <n-flex v-if="applyList.length === 0" vertical justify="center" align="center" class="py-40px">
-      <n-empty :description="props.type === 'friend' ? '暂无好友申请' : '暂无群通知'" />
+      <n-empty
+        :description="t(props.type === 'friend' ? 'home.apply_list.empty_friend' : 'home.apply_list.empty_group')" />
     </n-flex>
   </n-flex>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { uniq } from 'es-toolkit'
 import type { NoticeItem } from '@/services/types.ts'
 import { NoticeType, RequestNoticeAgreeStatus } from '@/services/types.ts'
@@ -123,6 +137,7 @@ import { getGroupInfo } from '@/utils/ImRequestUtils'
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
+const { t } = useI18n()
 const currentUserId = ref('0')
 const loadingMap = ref<Record<string, boolean>>({})
 const virtualListRef = ref()
@@ -182,49 +197,66 @@ const getGroupDetail = async (roomId: string) => {
 }
 
 // 异步获取群组信息的计算属性
-const applyMsg = computed(() => (item: any) => {
+const applyMsg = computed(() => (item: NoticeItem) => {
   if (props.type === 'friend') {
-    return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
-  } else {
-    const groupDetail = groupDetailsMap.value[item.roomId]
-    if (!groupDetail) {
-      if (item.roomId && !loadingGroups.value.has(item.roomId)) {
-        getGroupDetail(item.roomId)
-      }
-      return '加载中...'
-    }
-
-    if (item.eventType === NoticeType.GROUP_APPLY) {
-      return '申请加入 [' + groupDetail.name + ']'
-    } else if (item.eventType === NoticeType.GROUP_INVITE) {
-      const inviter = groupStore.getUserInfo(item.operateId)?.name || '未知用户'
-      return '邀请' + inviter + '加入 [' + groupDetail.name + ']'
-    } else if (isFriendApplyOrGroupInvite(item)) {
-      return isCurrentUser(item.senderId)
-        ? '已同意加入 [' + groupDetail.name + ']'
-        : '邀请你加入 [' + groupDetail.name + ']'
-    } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      const operator = groupStore.getUserInfo(item.senderId)?.name || '未知用户'
-      return '已被' + operator + '踢出 [' + groupDetail.name + ']'
-    } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为 [' + groupDetail.name + '] 的管理员'
-    } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消 [' + groupDetail.name + '] 的管理员权限'
-    }
+    return isCurrentUser(item.senderId)
+      ? isAccepted(item)
+        ? t('home.apply_list.friend.accepted_you')
+        : t('home.apply_list.friend.pending')
+      : t('home.apply_list.friend.request')
   }
+
+  const groupDetail = groupDetailsMap.value[item.roomId]
+  if (!groupDetail) {
+    if (item.roomId && !loadingGroups.value.has(item.roomId)) {
+      void getGroupDetail(item.roomId)
+    }
+    return t('home.apply_list.group.loading')
+  }
+
+  const groupName = groupDetail.name?.toString() ?? ''
+  if (item.eventType === NoticeType.GROUP_APPLY) {
+    return t('home.apply_list.group.apply', { group: groupName })
+  }
+  if (item.eventType === NoticeType.GROUP_INVITE) {
+    const inviterName = item.operateId ? groupStore.getUserInfo(item.operateId)?.name : undefined
+    return t('home.apply_list.group.invite', {
+      name: inviterName ?? t('home.apply_list.unknown_user'),
+      group: groupName
+    })
+  }
+  if (isFriendApplyOrGroupInvite(item)) {
+    return isCurrentUser(item.senderId)
+      ? t('home.apply_list.group.invite_confirmed', { group: groupName })
+      : t('home.apply_list.group.invite_you', { group: groupName })
+  }
+  if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
+    const operatorName = item.senderId ? groupStore.getUserInfo(item.senderId)?.name : undefined
+    return t('home.apply_list.group.kicked', {
+      operator: operatorName ?? t('home.apply_list.unknown_user'),
+      group: groupName
+    })
+  }
+  if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
+    return t('home.apply_list.group.set_admin', { group: groupName })
+  }
+  if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
+    return t('home.apply_list.group.remove_admin', { group: groupName })
+  }
+  return ''
 })
 
 // 下拉菜单选项
-const dropdownOptions = [
+const dropdownOptions = computed(() => [
   {
-    label: '拒绝',
+    label: t('home.apply_list.dropdown.reject'),
     key: 'reject'
   },
   {
-    label: '忽略',
+    label: t('home.apply_list.dropdown.ignore'),
     key: 'ignore'
   }
-]
+])
 
 const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
 

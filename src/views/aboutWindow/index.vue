@@ -17,11 +17,17 @@
       </div>
 
       <n-flex vertical align="center" :size="20" class="cursor-default" data-tauri-drag-region>
-        <span class="text-(15px #707070)">版本：{{ _pkg.version }}({{ osArch }})</span>
-        <span class="text-(15px #707070)">当前设备：{{ osType }}{{ osVersion }}</span>
+        <span class="text-(15px #707070)">
+          {{ t('home.about.version', { version: _pkg.version, arch: osArch || '' }) }}
+        </span>
+        <span class="text-(15px #707070)">
+          {{ t('home.about.device', { type: osType || '', version: osVersion || '' }) }}
+        </span>
         <n-flex vertical class="text-(12px #909090)" :size="8" align="center">
-          <span>Copyright © {{ currentYear - 1 }}-{{ currentYear }} HuLaSpark</span>
-          <span>All Rights Reserved.</span>
+          <span>
+            {{ t('home.about.copyright', { start: currentYear - 1, end: currentYear }) }}
+          </span>
+          <span>{{ t('home.about.rights') }}</span>
         </n-flex>
       </n-flex>
     </n-flex>
@@ -29,11 +35,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { arch, version } from '@tauri-apps/plugin-os'
 import dayjs from 'dayjs'
 import { getOSType, isWindows } from '@/utils/PlatformConstants'
 import pkg from '~/package.json'
+
+const { t } = useI18n()
 
 const _pkg = reactive({
   version: pkg.version

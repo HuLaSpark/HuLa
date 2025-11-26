@@ -63,6 +63,22 @@
       "add_group": "申请加群"
     }
   },
+  "chat_reaction": {
+    "like": "好赞",
+    "unsatisfied": "不满",
+    "heart": "爱心",
+    "angry": "愤怒",
+    "party": "礼炮",
+    "rocket": "火箭",
+    "lol": "笑哭",
+    "clap": "鼓掌",
+    "flower": "鲜花",
+    "bomb": "炸弹",
+    "question": "疑问",
+    "victory": "胜利",
+    "light": "灯光",
+    "red_envelope": "红包"
+  },
   "chat_details": {
     "single": {
       "empty_signature": "这个人很高冷，暂时没有留下什么",
@@ -223,6 +239,91 @@
     "roles": {
       "owner": "群主",
       "admin": "管理员"
+    }
+  },
+  "about": {
+    "version": "版本：{version} ({arch})",
+    "device": "当前设备：{type}{version}",
+    "copyright": "Copyright © {start}-{end} HuLaSpark",
+    "rights": "All Rights Reserved."
+  },
+  "apply_list": {
+    "friend_notice": "好友通知",
+    "group_notice": "群通知",
+    "you": "你",
+    "unknown_user": "未知用户",
+    "message_label": "留言：",
+    "handler_label": "处理人：{name}",
+    "accept": "接受",
+    "status": {
+      "accepted": "已同意",
+      "rejected": "已拒绝",
+      "ignored": "已忽略",
+      "rejected_by_other": "对方已拒绝",
+      "pending": "等待验证"
+    },
+    "friend": {
+      "accepted_you": "已同意你的请求",
+      "pending": "正在验证你的邀请",
+      "request": "请求加为好友"
+    },
+    "group": {
+      "loading": "加载中...",
+      "apply": "申请加入 [{group}]",
+      "invite": "邀请{name}加入 [{group}]",
+      "invite_confirmed": "已同意加入 [{group}]",
+      "invite_you": "邀请你加入 [{group}]",
+      "kicked": "已被{operator}踢出 [{group}]",
+      "set_admin": "已被群主设置为 [{group}] 的管理员",
+      "remove_admin": "已被群主取消 [{group}] 的管理员权限"
+    },
+    "dropdown": {
+      "reject": "拒绝",
+      "ignore": "忽略"
+    },
+    "empty_friend": "暂无好友申请",
+    "empty_group": "暂无群通知"
+  },
+  "chat_main": {
+    "network_offline": "当前网络不可用，请检查你的网络设置",
+    "announcement": {
+      "view_all": "查看全部"
+    },
+    "no_more": "没有更多消息",
+    "new_messages": "{count} 条新消息",
+    "confirm": "确定",
+    "cancel": "取消",
+    "group_nickname": {
+      "title": "修改群昵称",
+      "placeholder": "请输入群昵称"
+    },
+    "toast": {
+      "searching": "正在查找消息...",
+      "not_found": "加载历史消息失败，请稍后重试"
+    }
+  },
+  "friends_list": {
+    "notice": {
+      "friend": "好友通知",
+      "group": "群通知"
+    },
+    "tabs": {
+      "friend": "好友",
+      "group": "群聊"
+    },
+    "collapse": {
+      "friend": "我的好友",
+      "group": "我的群聊"
+    },
+    "bot_tag": "助手",
+    "status": {
+      "online": "在线",
+      "offline": "离线"
+    },
+    "menu": {
+      "add_group": "添加分组",
+      "rename_group": "重命名该组",
+      "delete_group": "删除分组"
     }
   },
   "create_group": {

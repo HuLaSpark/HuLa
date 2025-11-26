@@ -270,13 +270,13 @@ export const useLogin = () => {
     auto: boolean = settingStore.login.autoLogin
   ) => {
     loading.value = true
-    loginText.value = '登录中...'
+    loginText.value = t('login.status.logging_in')
     loginDisabled.value = true
     const hasStoredUserInfo = !!userStore.userInfo && !!userStore.userInfo.account
     if (auto && !hasStoredUserInfo) {
       loading.value = false
       loginDisabled.value = false
-      loginText.value = isOnline.value ? '登录' : '网络异常'
+      loginText.value = isOnline.value ? t('login.button.login.default') : t('login.button.login.network_error')
       uiState.value = 'manual'
       settingStore.setAutoLogin(false)
       logInfo('自动登录信息已失效，请手动登录')
@@ -321,7 +321,7 @@ export const useLogin = () => {
       .then(async (_: any) => {
         loginDisabled.value = true
         loading.value = false
-        loginText.value = '登录成功正在跳转...'
+        loginText.value = t('login.status.success_redirect')
 
         // 仅在移动端的首次手动登录时，才默认打开自动登录开关
         if (!auto && isMobile()) {
@@ -342,12 +342,12 @@ export const useLogin = () => {
         window.$message.error(e)
         loading.value = false
         loginDisabled.value = false
-        loginText.value = '登录'
+        loginText.value = t('login.button.login.default')
         // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
         if (auto) {
           uiState.value = 'manual'
           loginDisabled.value = false
-          loginText.value = '登录'
+          loginText.value = t('login.button.login.default')
           // 取消自动登录
           settingStore.setAutoLogin(false)
           // 自动填充之前尝试登录的账号信息到手动登录表单

@@ -132,13 +132,13 @@
             <div
               v-if="groupStore.isCurrentLord(fromUser.uid)"
               class="flex px-4px py-3px rounded-4px bg-#d5304f30 size-fit select-none">
-              <span class="text-(9px #d5304f)">群主</span>
+              <span class="text-(9px #d5304f)">{{ t('home.chat_sidebar.roles.owner') }}</span>
             </div>
             <!-- 管理员 -->
             <div
               v-if="groupStore.isAdmin(fromUser.uid)"
               class="flex px-4px py-3px rounded-4px bg-#1a7d6b30 size-fit select-none">
-              <span class="text-(9px #008080)">管理员</span>
+              <span class="text-(9px #008080)">{{ t('home.chat_sidebar.roles.admin') }}</span>
             </div>
             <!-- 信息时间(群聊) -->
             <Transition name="fade-group">
@@ -299,6 +299,7 @@
 </template>
 <script setup lang="ts">
 import type { Component } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { MessageStatusEnum, MittEnum, MsgEnum, ThemeEnum } from '@/enums'
 import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain'
 import { useMitt } from '@/hooks/useMitt'
@@ -352,6 +353,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits(['jump2Reply'])
+const { t } = useI18n()
 const globalStore = useGlobalStore()
 const selectKey = ref(props.fromUser!.uid)
 const infoPopoverRefs = reactive<Record<string, any>>({})

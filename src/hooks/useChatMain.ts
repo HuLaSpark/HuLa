@@ -4,7 +4,7 @@ import { save } from '@tauri-apps/plugin-dialog'
 import { BaseDirectory } from '@tauri-apps/plugin-fs'
 import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import type { FileTypeResult } from 'file-type'
-import { onUnmounted, type InjectionKey } from 'vue'
+import { computed, onUnmounted, type InjectionKey } from 'vue'
 import { ErrorType } from '@/common/exception'
 import {
   MergeMessageType,
@@ -859,7 +859,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       visible: (item: any) => !checkFriendRelation(item.uid || item.fromUser.uid, 'all')
     },
     {
-      label: '设为管理员',
+      label: () => t('menu.set_admin'),
       icon: 'people-safe',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
@@ -868,9 +868,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
         try {
           await groupStore.addAdmin([targetUid])
-          window.$message.success('设置管理员成功')
+          window.$message.success(t('menu.set_admin_success'))
         } catch (_error) {
-          window.$message.error('设置管理员失败')
+          window.$message.error(t('menu.set_admin_fail'))
         }
       },
       visible: (item: any) => {
@@ -904,7 +904,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: '撤销管理员',
+      label: () => t('menu.revoke_admin'),
       icon: 'reduce-user',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
@@ -913,9 +913,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
         try {
           await groupStore.revokeAdmin([targetUid])
-          window.$message.success('撤销管理员成功')
+          window.$message.success(t('menu.revoke_admin_success'))
         } catch (_error) {
-          window.$message.error('撤销管理员失败')
+          window.$message.error(t('menu.revoke_admin_fail'))
         }
       },
       visible: (item: any) => {
@@ -952,7 +952,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   /** 举报选项 */
   const report = ref([
     {
-      label: '移出本群',
+      label: () => t('menu.remove_from_group'),
       icon: 'people-delete-one',
       click: async (item: any) => {
         const targetUid = item.uid || item.fromUser.uid
@@ -963,9 +963,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           await removeGroupMember({ roomId, uidList: [targetUid] })
           // 从群成员列表中移除该用户
           groupStore.removeUserItem(targetUid, roomId)
-          window.$message.success('移出群聊成功')
+          window.$message.success(t('menu.remove_from_group_success'))
         } catch (_error) {
-          window.$message.error('移出群聊失败')
+          window.$message.error(t('menu.remove_from_group_fail'))
         }
       },
       visible: (item: any) => {
@@ -1011,76 +1011,76 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     }
   ])
   /** emoji表情菜单 */
-  const emojiList = ref([
+  const emojiList = computed(() => [
     {
       url: '/msgAction/like.png',
       value: 1,
-      title: '好赞'
+      title: t('home.chat_reaction.like')
     },
     {
       url: '/msgAction/slightly-frowning-face.png',
       value: 2,
-      title: '不满'
+      title: t('home.chat_reaction.unsatisfied')
     },
     {
       url: '/msgAction/heart-on-fire.png',
       value: 3,
-      title: '爱心'
+      title: t('home.chat_reaction.heart')
     },
     {
       url: '/msgAction/enraged-face.png',
       value: 4,
-      title: '愤怒'
+      title: t('home.chat_reaction.angry')
     },
     {
       url: '/emoji/party-popper.webp',
       value: 5,
-      title: '礼炮'
+      title: t('home.chat_reaction.party')
     },
     {
       url: '/emoji/rocket.webp',
       value: 6,
-      title: '火箭'
+      title: t('home.chat_reaction.rocket')
     },
     {
       url: '/msgAction/face-with-tears-of-joy.png',
       value: 7,
-      title: '笑哭'
+      title: t('home.chat_reaction.lol')
     },
     {
       url: '/msgAction/clapping.png',
       value: 8,
-      title: '鼓掌'
+      title: t('home.chat_reaction.clap')
     },
     {
       url: '/msgAction/rose.png',
       value: 9,
-      title: '鲜花'
+      title: t('home.chat_reaction.flower')
     },
     {
       url: '/msgAction/bomb.png',
       value: 10,
-      title: '炸弹'
+      title: t('home.chat_reaction.bomb')
     },
     {
       url: '/msgAction/exploding-head.png',
       value: 11,
-      title: '疑问'
+      title: t('home.chat_reaction.question')
     },
     {
       url: '/msgAction/victory-hand.png',
       value: 12,
-      title: '胜利'
+      title: t('home.chat_reaction.victory')
     },
     {
       url: '/msgAction/flashlight.png',
       value: 13,
-      title: '灯光'
+      title: t('home.chat_reaction.light')
     },
     {
       url: '/msgAction/pocket-money.png',
       value: 14,
-      title: '红包'
+      title: t('home.chat_reaction.red_envelope')
     }
   ])
 

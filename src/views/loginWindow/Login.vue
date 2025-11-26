@@ -221,48 +221,6 @@ import { useLogin } from '@/hooks/useLogin'
 import { formatBottomText } from '@/utils/Formatting'
 import { ThemeEnum } from '@/enums'
 
-// 定义引导步骤配置
-const driverSteps: DriverStepConfig[] = [
-  {
-    element: '.welcome',
-    popover: {
-      title: '🎉 欢迎使用HuLa',
-      description: 'HuLa是一款基于Tauri的聊天软件，支持Windows、macOS、Linux、IOS、Android',
-      side: 'bottom',
-      align: 'center'
-    }
-  },
-  {
-    element: '.agreement',
-    popover: {
-      title: '🤔 关于 隐私条款 和 服务协议',
-      description: '或许您需要查看 HuLa 的隐私条款和服务协议',
-      onNextClick: () => {
-        if (isMac()) {
-          moreShow.value = true
-        }
-      }
-    }
-  },
-  {
-    element: '.network',
-    popover: {
-      title: '⚙️ 关于网络设置',
-      description: 'HuLa 支持自定义服务设置，您可以替换官方的服务地址',
-      onNextClick: () => {
-        moreShow.value = true
-      }
-    }
-  },
-  {
-    element: '.register',
-    popover: {
-      title: '🤓 如何登录HuLa',
-      description: '在使用HuLa之前您需要注册一个帐号'
-    }
-  }
-]
-
 const { t } = useI18n()
 
 const settingStore = useSettingStore()
@@ -273,7 +231,6 @@ const globalStore = useGlobalStore()
 const guideStore = useGuideStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const { isGuideCompleted } = storeToRefs(guideStore)
-const { startTour } = useDriver(driverSteps)
 /** 网络连接是否正常 */
 const { isOnline } = useNetwork()
 const loginHistoriesStore = useLoginHistoriesStore()
@@ -287,6 +244,63 @@ const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
 const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
+const driverSteps = computed<DriverStepConfig[]>(() => [
+  {
+    element: '.welcome',
+    popover: {
+      title: t('login.guide.welcome.title'),
+      description: t('login.guide.welcome.desc'),
+      side: 'bottom',
+      align: 'center'
+    }
+  },
+  {
+    element: '.agreement',
+    popover: {
+      title: t('login.guide.privacy.title'),
+      description: t('login.guide.privacy.desc'),
+      onNextClick: () => {
+        if (isMac()) {
+          moreShow.value = true
+        }
+      }
+    }
+  },
+  {
+    element: '.network',
+    popover: {
+      title: t('login.guide.network.title'),
+      description: t('login.guide.network.desc'),
+      onNextClick: () => {
+        moreShow.value = true
+      }
+    }
+  },
+  {
+    element: '.register',
+    popover: {
+      title: t('login.guide.register.title'),
+      description: t('login.guide.register.desc')
+    }
+  }
+])
+
+const driverConfig = computed(() => ({
+  nextBtnText: t('login.guide.actions.next'),
+  prevBtnText: t('login.guide.actions.prev'),
+  doneBtnText: t('login.guide.actions.done'),
+  progressText: t('login.guide.actions.progress', {
+    current: '{{current}}',
+    total: '{{total}}'
+  })
+}))
+
+const { startTour, reinitialize } = useDriver(driverSteps.value, driverConfig.value)
+
+watch([driverSteps, driverConfig], ([steps, config]) => {
+  reinitialize(steps, config)
+})
+
 // 输入框占位符
 const accountPH = ref(t('login.input.account.placeholder'))
 const passwordPH = ref(t('login.input.pass.placeholder'))
@@ -295,7 +309,7 @@ const passwordPH = ref(t('login.input.pass.placeholder'))
 const MAX_BOTTOM_TEXT_LEN = 6
 const qrCodeText = computed(() => t('login.button.qr_code'))
 const moreText = computed(() => t('login.option.more'))
-const removeAccountText = computed(() => '移除账号')
+const removeAccountText = computed(() => t('login.button.remove_account'))
 const qrCodeLabel = computed(() => formatBottomText(qrCodeText.value, MAX_BOTTOM_TEXT_LEN))
 const moreLabel = computed(() => formatBottomText(moreText.value, MAX_BOTTOM_TEXT_LEN))
 const removeAccountLabel = computed(() => formatBottomText(removeAccountText.value, MAX_BOTTOM_TEXT_LEN))
@@ -330,7 +344,7 @@ watchEffect(() => {
 
 watch(isOnline, (v) => {
   loginDisabled.value = !v
-  loginText.value = v ? '登录' : '网络异常'
+  loginText.value = v ? t('login.button.login.default') : t('login.button.login.network_error')
 })
 
 // 监听账号输入
@@ -478,7 +492,7 @@ onMounted(async () => {
 
   useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
     loginDisabled.value = true
-    loginText.value = '服务异常断开'
+    loginText.value = t('login.status.service_disconnected')
   })
 
   // 自动登录时显示自动登录界面并触发登录

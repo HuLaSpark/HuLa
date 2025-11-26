@@ -4,7 +4,8 @@
       "default": "Login",
       "network_error": "Network Error"
     },
-    "qr_code": "QR Code"
+    "qr_code": "QR Code",
+    "remove_account": "Remove Account"
   },
   "input": {
     "account": {
@@ -41,8 +42,61 @@
   "wait_auth_hint": "Waiting for authorization...",
   "login_success": "Login successful",
   "fetch_user_fail": "Failed to fetch user information",
-  "loggingin": "Logging in...",
   "refreshing": "Refreshing...",
   "loading": "Loading...",
-  "scan_qr_code_fail": "QR code scan failed"
+  "scan_qr_code_fail": "QR code scan failed",
+  "status": {
+    "logging_in": "Logging in...",
+    "success_redirect": "Login successful, redirecting...",
+    "service_disconnected": "Service disconnected"
+  },
+  "qr": {
+    "overlay": {
+      "success": "Login successful",
+      "error": "QR scan failed",
+      "auth": "Scanned, waiting for authorization",
+      "expired": "QR code expired",
+      "fetch_failed": "Login succeeded, but failed to fetch user info",
+      "generate_fail": "Failed to generate QR code",
+      "general_error": "Something went wrong",
+      "refreshing": "Refreshing..."
+    },
+    "load_text": {
+      "loading": "Loading...",
+      "refreshing": "Refreshing...",
+      "scan_hint": "Scan with the HuLa App",
+      "login": "Signing in...",
+      "retry": "Please try again later",
+      "auth_pending": "Waiting for authorization..."
+    },
+    "actions": {
+      "account_login": "Pwd Login",
+      "register": "Register",
+      "register_title": "Register"
+    }
+  },
+  "guide": {
+    "welcome": {
+      "title": "🎉 Welcome to HuLa",
+      "desc": "HuLa is built with Tauri and supports Windows, macOS, Linux, iOS, Android"
+    },
+    "privacy": {
+      "title": "🤔 Privacy & Service Terms",
+      "desc": "Please review HuLa's privacy policy and terms first"
+    },
+    "network": {
+      "title": "⚙️ Network Settings",
+      "desc": "HuLa allows custom service endpoints to replace the official one"
+    },
+    "register": {
+      "title": "🤓 How to sign in",
+      "desc": "Register an account and complete your profile before using HuLa"
+    },
+    "actions": {
+      "next": "Next",
+      "prev": "Back",
+      "done": "Done",
+      "progress": "{current}/{total}"
+    }
+  }
 }

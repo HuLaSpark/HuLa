@@ -4,7 +4,8 @@
       "default": "登录",
       "network_error": "网络异常"
     },
-    "qr_code": "扫码登录"
+    "qr_code": "扫码登录",
+    "remove_account": "移除账号"
   },
   "input": {
     "account": {
@@ -41,8 +42,61 @@
   "wait_auth_hint": "等待授权...",
   "login_success": "登录成功",
   "fetch_user_fail": "获取用户信息失败",
-  "loggingin": "登录中...",
   "refreshing": "刷新中...",
   "loading": "加载中...",
-  "scan_qr_code_fail": "扫码失败"
+  "scan_qr_code_fail": "扫码失败",
+  "status": {
+    "logging_in": "登录中...",
+    "success_redirect": "登录成功，正在跳转...",
+    "service_disconnected": "服务异常断开"
+  },
+  "qr": {
+    "overlay": {
+      "success": "登录成功",
+      "error": "扫码失败",
+      "auth": "扫码成功，等待授权",
+      "expired": "二维码已过期",
+      "fetch_failed": "登录成功，但获取用户信息失败",
+      "generate_fail": "生成二维码失败",
+      "general_error": "发生错误",
+      "refreshing": "刷新中..."
+    },
+    "load_text": {
+      "loading": "加载中...",
+      "refreshing": "刷新中...",
+      "scan_hint": "请使用 HuLa App 扫码登录",
+      "login": "登录中...",
+      "retry": "请稍后再试",
+      "auth_pending": "等待授权..."
+    },
+    "actions": {
+      "account_login": "账密登录",
+      "register": "注册账号",
+      "register_title": "注册"
+    }
+  },
+  "guide": {
+    "welcome": {
+      "title": "🎉 欢迎使用 HuLa",
+      "desc": "HuLa 基于 Tauri 构建，支持 Windows、macOS、Linux、iOS、Android"
+    },
+    "privacy": {
+      "title": "🤔 隐私条款与服务协议",
+      "desc": "请先阅读 HuLa 的隐私条款与服务协议"
+    },
+    "network": {
+      "title": "⚙️ 网络设置",
+      "desc": "HuLa 支持自定义服务地址，可替换官方入口"
+    },
+    "register": {
+      "title": "🤓 如何登录 HuLa",
+      "desc": "使用前请先注册并完善账号信息"
+    },
+    "actions": {
+      "next": "下一步",
+      "prev": "上一步",
+      "done": "完成",
+      "progress": "{current}/{total}"
+    }
+  }
 }

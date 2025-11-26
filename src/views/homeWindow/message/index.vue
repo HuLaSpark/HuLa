@@ -147,7 +147,7 @@
 </template>
 <script lang="ts" setup name="message">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { MittEnum, RoomTypeEnum, ThemeEnum, UserType } from '@/enums'
+import { MittEnum, RoomTypeEnum, ThemeEnum, UserType, MsgEnum } from '@/enums'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -229,6 +229,14 @@ const sessionList = computed(() => {
             )
             // 获取纯文本消息内容（不包含 @我 标记）
             displayMsg = formatMessageContent(lastMsg, item.type, senderName, item.roomId)
+
+            // 如果是群系统消息（如成员加入），不再前置发送者昵称
+            if (item.type === RoomTypeEnum.GROUP && lastMsg.message?.type === MsgEnum.SYSTEM && displayMsg) {
+              const separatorIndex = displayMsg.indexOf(':')
+              if (separatorIndex > -1) {
+                displayMsg = displayMsg.slice(separatorIndex + 1)
+              }
+            }
 
             // 更新缓存（只缓存纯文本消息内容）
             sessionMsgCache[cacheKey] = {

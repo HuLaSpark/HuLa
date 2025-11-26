@@ -113,6 +113,22 @@
       "image_viewer": "Image viewer"
     }
   },
+  "chat_reaction": {
+    "like": "Like",
+    "unsatisfied": "Unsatisfied",
+    "heart": "Heart",
+    "angry": "Angry",
+    "party": "Celebrate",
+    "rocket": "Rocket",
+    "lol": "Haha",
+    "clap": "Clap",
+    "flower": "Flower",
+    "bomb": "Bomb",
+    "question": "Confused",
+    "victory": "Victory",
+    "light": "Light",
+    "red_envelope": "Lucky money"
+  },
   "chat_header": {
     "bot_tag": "Assistant",
     "status_abnormal": "Friend status unavailable",
@@ -226,8 +242,93 @@
       "admin": "Admin"
     }
   },
+  "about": {
+    "version": "Version: {version} ({arch})",
+    "device": "Device: {type}{version}",
+    "copyright": "Copyright © {start}-{end} HuLaSpark",
+    "rights": "All Rights Reserved."
+  },
+  "apply_list": {
+    "friend_notice": "Friend Requests",
+    "group_notice": "Group Notifications",
+    "you": "You",
+    "unknown_user": "Unknown user",
+    "message_label": "Message: ",
+    "handler_label": "Handled by: {name}",
+    "accept": "Accept",
+    "status": {
+      "accepted": "Approved",
+      "rejected": "Rejected",
+      "ignored": "Ignored",
+      "rejected_by_other": "Rejected by recipient",
+      "pending": "Pending verification"
+    },
+    "friend": {
+      "accepted_you": "Request approved",
+      "pending": "Waiting for verification",
+      "request": "Wants to add you as a friend"
+    },
+    "group": {
+      "loading": "Loading...",
+      "apply": "Request to join [{group}]",
+      "invite": "Invite {name} to join [{group}]",
+      "invite_confirmed": "Joined [{group}]",
+      "invite_you": "Invites you to join [{group}]",
+      "kicked": "Removed by {operator} from [{group}]",
+      "set_admin": "Set as admin of [{group}]",
+      "remove_admin": "Admin role removed from [{group}]"
+    },
+    "dropdown": {
+      "reject": "Reject",
+      "ignore": "Ignore"
+    },
+    "empty_friend": "No friend requests",
+    "empty_group": "No group notifications"
+  },
+  "chat_main": {
+    "network_offline": "Network unavailable, please check your settings",
+    "announcement": {
+      "view_all": "View all"
+    },
+    "no_more": "No more messages",
+    "new_messages": "{count} new messages",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "group_nickname": {
+      "title": "Edit group nickname",
+      "placeholder": "Enter a group nickname"
+    },
+    "toast": {
+      "searching": "Searching for messages...",
+      "not_found": "Failed to load history, please try again"
+    }
+  },
+  "friends_list": {
+    "notice": {
+      "friend": "Friend Notifications",
+      "group": "Group Notifications"
+    },
+    "tabs": {
+      "friend": "Friends",
+      "group": "Groups"
+    },
+    "collapse": {
+      "friend": "My Friends",
+      "group": "My Groups"
+    },
+    "bot_tag": "Assistant",
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "menu": {
+      "add_group": "Add Category",
+      "rename_group": "Rename Category",
+      "delete_group": "Delete Category"
+    }
+  },
   "create_group": {
-    "title": "Start group chat",
+    "title": "Create Group Chat",
     "action": "Create",
     "success": "Group chat created",
     "fail": "Failed to create group chat",
