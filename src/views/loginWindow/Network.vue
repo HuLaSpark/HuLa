@@ -4,18 +4,18 @@
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex vertical :size="12" align="center" class="pt-10px">
-      <span class="text-(16px #70938c) textFont">网络设置</span>
+      <span class="text-(16px #70938c) textFont">{{ t('login.network.title') }}</span>
 
       <n-tabs type="line" animated justify-content="center" @update:value="handleTab">
-        <n-tab-pane name="api" tab="API">
+        <n-tab-pane name="api" :tab="t('login.network.tabs.api')">
           <n-flex vertical :size="10" align="center" class="pt-10px">
             <n-flex vertical :size="8" justify="center">
-              <p class="text-12px">类型</p>
+              <p class="text-12px">{{ t('login.network.fields.type') }}</p>
               <n-select class="min-w-240px" v-model:value="savedProxy.apiType" :options="apiOptions" />
 
               <n-collapse-transition :show="savedProxy.apiType === 'http' || savedProxy.apiType === 'https'">
                 <n-flex vertical :size="10" justify="center">
-                  <p class="text-12px pt-6px">IP或域名</p>
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.host') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiIp"
@@ -24,9 +24,9 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="127.0.0.1或hulaspark.com" />
+                    :placeholder="t('login.network.placeholder.host')" />
 
-                  <p class="text-12px pt-6px">端口</p>
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.port') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiPort"
@@ -35,8 +35,8 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="443" />
-                  <p class="text-12px pt-6px">后缀</p>
+                    :placeholder="t('login.network.placeholder.port')" />
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.suffix') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.apiSuffix"
@@ -45,21 +45,21 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="api" />
+                    :placeholder="t('login.network.placeholder.api_suffix')" />
                 </n-flex>
               </n-collapse-transition>
             </n-flex>
           </n-flex>
         </n-tab-pane>
-        <n-tab-pane name="ws" tab="WebSocket">
+        <n-tab-pane name="ws" :tab="t('login.network.tabs.ws')">
           <n-flex vertical :size="10" align="center" class="pt-10px">
             <n-flex vertical :size="8" justify="center">
-              <p class="text-12px">类型</p>
+              <p class="text-12px">{{ t('login.network.fields.type') }}</p>
               <n-select class="min-w-240px" v-model:value="savedProxy.wsType" :options="wsOptions" />
 
               <n-collapse-transition :show="savedProxy.wsType === 'ws' || savedProxy.wsType === 'wss'">
                 <n-flex vertical :size="10" justify="center">
-                  <p class="text-12px pt-6px">IP或域名</p>
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.host') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsIp"
@@ -68,9 +68,9 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="127.0.0.1或hulaspark.com" />
+                    :placeholder="t('login.network.placeholder.host')" />
 
-                  <p class="text-12px pt-6px">端口</p>
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.port') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsPort"
@@ -79,8 +79,8 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="443" />
-                  <p class="text-12px pt-6px">后缀</p>
+                    :placeholder="t('login.network.placeholder.port')" />
+                  <p class="text-12px pt-6px">{{ t('login.network.fields.suffix') }}</p>
                   <n-input
                     class="rounded-6px text-12px"
                     v-model:value="savedProxy.wsSuffix"
@@ -89,7 +89,7 @@
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
-                    placeholder="websocket" />
+                    :placeholder="t('login.network.placeholder.ws_suffix')" />
                 </n-flex>
               </n-collapse-transition>
             </n-flex>
@@ -98,13 +98,16 @@
       </n-tabs>
 
       <n-flex align="center" justify="center" :size="40" class="pt-10px">
-        <p @click="handleSave" class="text-(14px #13987f) cursor-pointer">保存</p>
-        <p @click="router.push('/login')" class="text-(14px #707070) cursor-pointer">返回</p>
+        <p @click="handleSave" class="text-(14px #13987f) cursor-pointer">{{ t('login.network.actions.save') }}</p>
+        <p @click="router.push('/login')" class="text-(14px #707070) cursor-pointer">
+          {{ t('login.network.actions.back') }}
+        </p>
       </n-flex>
     </n-flex>
   </n-config-provider>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { darkTheme, lightTheme } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import router from '@/router'
@@ -112,39 +115,40 @@ import { updateSettings } from '@/services/tauriCommand'
 import { useSettingStore } from '@/stores/setting'
 import type { ProxySettings } from '@/typings/global'
 
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
 
-const apiOptions = [
+const apiOptions = computed(() => [
   {
-    label: '不使用(默认为官方地址)',
+    label: t('login.network.api.options.none'),
     value: ''
   },
   {
-    label: 'HTTP',
+    label: t('login.network.api.options.http'),
     value: 'http'
   },
   {
-    label: 'HTTPS',
+    label: t('login.network.api.options.https'),
     value: 'https'
   }
-]
+])
 
-const wsOptions = [
+const wsOptions = computed(() => [
   {
-    label: '不使用(默认为官方地址)',
+    label: t('login.network.ws.options.none'),
     value: ''
   },
   {
-    label: 'WS',
+    label: t('login.network.ws.options.ws'),
     value: 'ws'
   },
   {
-    label: 'WSS',
+    label: t('login.network.ws.options.wss'),
     value: 'wss'
   }
-]
+])
 
 const proxy = ref('api')
 const savedProxy = reactive({
@@ -189,7 +193,7 @@ const handleSave = async () => {
       (savedProxy.apiType && (!savedProxy.apiIp || !savedProxy.apiPort)) ||
       (savedProxy.wsType && (!savedProxy.wsIp || !savedProxy.wsPort))
     ) {
-      window.$message.warning('请填写完整的网络设置信息')
+      window.$message.warning(t('login.network.messages.incomplete'))
       return
     }
     let proxySettings
@@ -217,9 +221,9 @@ const handleSave = async () => {
     await updateTauriSettings(proxySettings)
     console.log('settings', proxySettings)
 
-    window.$message.success('网络设置保存成功')
+    window.$message.success(t('login.network.messages.save_success'))
   } catch (error) {
-    window.$message.error('网络设置失败：' + error)
+    window.$message.error(t('login.network.messages.save_failed', { error }))
   }
 }
 
@@ -229,7 +233,7 @@ const updateTauriSettings = async (proxySettings: ProxySettings) => {
   const wsUrl = proxySettings.wsType + '://' + proxySettings.wsIp + ':' + proxySettings.wsPort + proxySettings.wsSuffix
 
   await updateSettings({ baseUrl, wsUrl }).catch((err) => {
-    window.$message.error('网络设置失败：' + err)
+    window.$message.error(t('login.network.messages.save_failed', { error: err }))
   })
 }
 </script>

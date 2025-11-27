@@ -1,0 +1,109 @@
+{
+  "common": {
+    "loading_title": "加载中...",
+    "loading_desc": "正在获取动态详情",
+    "image_alt": "图片",
+    "video_alt": "视频",
+    "unknown_user": "未知用户"
+  },
+  "page": {
+    "detail": {
+      "title": "动态详情"
+    }
+  },
+  "list": {
+    "empty": "暂无动态，快去发布第一条吧！",
+    "actions": {
+      "publish": "发布动态",
+      "refresh": "刷新",
+      "like": "赞",
+      "liked": "已赞",
+      "comment": "评论",
+      "comment_with_count": "评论 {count}"
+    },
+    "permission": {
+      "open": "公开",
+      "part_visible": "部分可见",
+      "not_anyone": "不给谁看"
+    },
+    "modal": {
+      "add_title": "发布动态",
+      "content_placeholder": "分享新鲜事...",
+      "visibility_label": "谁可以看",
+      "visibility_placeholder": "选择可见范围",
+      "select_visible": "选择可见的人",
+      "select_hidden": "选择不可见的人",
+      "select_users": "选择用户",
+      "selected_count": "选择用户 (已选 {count} 人)",
+      "user_modal_title": "选择用户",
+      "user_search_placeholder": "搜索用户...",
+      "comment_notice_title": "评论通知",
+      "comment_notice_empty_title": "暂无评论通知",
+      "comment_notice_empty_desc": "暂无评论记录呢"
+    },
+    "buttons": {
+      "cancel": "取消",
+      "publish": "发布",
+      "select_users": "选择用户",
+      "confirm": "确定",
+      "confirm_with_count": "确定 ({count})"
+    },
+    "comments": {
+      "more": "还有 {count} 条评论，点击查看全部"
+    },
+    "loading": "加载中...",
+    "load_more": "加载更多",
+    "loaded_all": "已加载全部动态"
+  },
+  "detail": {
+    "content": {
+      "view_image": "查看大图",
+      "video_tag": "视频",
+      "video_cta": "点击播放"
+    },
+    "stats": {
+      "liked_by": "赞过的人：",
+      "views": "浏览",
+      "like": "赞",
+      "liked": "已赞",
+      "comments": "评论 ({count})"
+    },
+    "actions": {
+      "comment": "评论",
+      "reply": "回复",
+      "delete": "删除"
+    },
+    "dropdown": {
+      "copy": "复制链接",
+      "report": "举报",
+      "delete": "删除动态"
+    },
+    "modal": {
+      "title": "发表评论",
+      "send": "发送",
+      "cancel": "取消",
+      "placeholder": "写下你的评论...",
+      "replying": "回复 {name}"
+    },
+    "empty": "动态不存在或已被删除"
+  },
+  "messages": {
+    "refresh_success": "刷新成功",
+    "refresh_fail": "刷新失败，请重试",
+    "publish_empty": "请输入动态内容",
+    "publish_select_visible": "请选择可见的用户",
+    "publish_select_hidden": "请选择不可见的用户",
+    "publish_success": "发布成功！",
+    "publish_fail": "发布失败，请稍后重试",
+    "delete_success": "删除成功",
+    "delete_fail": "删除失败，请重试",
+    "copy_success": "链接已复制",
+    "report_todo": "举报功能开发中",
+    "like_fail": "操作失败，请重试",
+    "comment_empty": "请输入评论内容",
+    "comment_fail": "评论失败，请重试",
+    "comment_delete_fail": "删除失败，请重试",
+    "detail_missing": "动态不存在或已被删除",
+    "detail_fetch_fail": "获取动态详情失败"
+  }
+}

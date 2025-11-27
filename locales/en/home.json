@@ -25,7 +25,17 @@
     "dynamic": "Moments",
     "dynamic_short_title": "Moments",
     "chatbot": "ChatBot",
-    "chatbot_short_title": "ChatBot"
+    "chatbot_short_title": "ChatBot",
+    "status": {
+      "builtin": "Built-in",
+      "uninstalling": "Uninstalling"
+    },
+    "actions": {
+      "install": "Install",
+      "pin": "Pin to sidebar",
+      "unpin": "Unpin",
+      "uninstall": "Uninstall"
+    }
   },
   "search_window": {
     "title": "Global Search",
@@ -218,6 +228,59 @@
       "exit_not_allowed": "Cannot leave channel",
       "exit_success": "Left group",
       "group_name_update_failed": "Failed to rename group"
+    }
+  },
+  "profile_card": {
+    "online_status": "Online status",
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "labels": {
+      "account": "Account",
+      "location": "Location",
+      "badges": "Badges",
+      "activities": "Activities"
+    },
+    "location_unknown": "Unknown",
+    "tooltip": {
+      "copy_account": "Copy account"
+    },
+    "buttons": {
+      "edit": "Edit profile",
+      "message": "Message",
+      "add_friend": "Add friend"
+    },
+    "notification": {
+      "copy_success": "Copied {account}"
+    },
+    "modal": {
+      "add_friend": "Add friend request"
+    },
+    "developer_badge": "HuLa Developer"
+  },
+  "profile_edit": {
+    "title": "Edit profile",
+    "avatar": {
+      "change": "Change avatar",
+      "tips": "Recommended size 180x180px. Supports JPG, PNG, WEBP formats and files under 500kb"
+    },
+    "badge": {
+      "current": "Current badge:",
+      "wear": "Wear"
+    },
+    "form": {
+      "nickname": {
+        "label": "Nickname",
+        "placeholder": "Enter your nickname",
+        "remaining": "Rename attempts left: {count}"
+      }
+    },
+    "actions": {
+      "save": "Save"
+    },
+    "toast": {
+      "avatar_update_success": "Avatar updated"
     }
   },
   "chat_sidebar": {

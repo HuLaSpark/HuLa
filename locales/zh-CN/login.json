@@ -98,5 +98,47 @@
       "done": "完成",
       "progress": "{current}/{total}"
     }
+  },
+  "network": {
+    "title": "网络设置",
+    "tabs": {
+      "api": "API",
+      "ws": "WebSocket"
+    },
+    "fields": {
+      "type": "类型",
+      "host": "IP或域名",
+      "port": "端口",
+      "suffix": "后缀"
+    },
+    "placeholder": {
+      "host": "127.0.0.1或hulaspark.com",
+      "port": "443",
+      "api_suffix": "api",
+      "ws_suffix": "websocket"
+    },
+    "api": {
+      "options": {
+        "none": "不使用(默认为官方地址)",
+        "http": "HTTP",
+        "https": "HTTPS"
+      }
+    },
+    "ws": {
+      "options": {
+        "none": "不使用(默认为官方地址)",
+        "ws": "WS",
+        "wss": "WSS"
+      }
+    },
+    "actions": {
+      "save": "保存",
+      "back": "返回"
+    },
+    "messages": {
+      "incomplete": "请填写完整的网络设置信息",
+      "save_success": "网络设置保存成功",
+      "save_failed": "网络设置失败：{error}"
+    }
   }
 }

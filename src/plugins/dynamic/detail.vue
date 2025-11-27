@@ -15,7 +15,7 @@
         </div>
         <div class="flex items-center gap-10px">
           <div class="w-4px h-20px bg-#13987F rounded-full"></div>
-          <span class="text-18px font-700 text-#333">动态详情</span>
+          <span class="text-18px font-700 text-#333">{{ t('dynamic.page.detail.title') }}</span>
         </div>
       </div>
     </div>
@@ -34,8 +34,8 @@
             <div class="text-40px">⏳</div>
           </div>
         </div>
-        <div class="text-15px text-#666 font-500">加载中...</div>
-        <div class="text-12px text-#999 mt-6px">正在获取动态详情</div>
+        <div class="text-15px text-#666 font-500">{{ t('dynamic.common.loading_title') }}</div>
+        <div class="text-12px text-#999 mt-6px">{{ t('dynamic.common.loading_desc') }}</div>
       </div>
     </div>
   </div>
@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { listen } from '@tauri-apps/api/event'
+import { useI18n } from 'vue-i18n'
 import DynamicDetail from '@/components/common/DynamicDetail.vue'
 import { useWindow } from '@/hooks/useWindow'
 import { useRoute } from 'vue-router'
@@ -52,6 +53,7 @@ import { useTauriListener } from '@/hooks/useTauriListener'
 const { getWindowPayload } = useWindow()
 const route = useRoute()
 const { addListener } = useTauriListener()
+const { t } = useI18n()
 
 // 动态ID
 const feedId = ref<string>('')

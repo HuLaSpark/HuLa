@@ -12,8 +12,8 @@
           </div>
         </div>
         <div class="flex flex-col items-center gap-8px">
-          <span class="text-15px text-#666 font-500">加载中...</span>
-          <span class="text-12px text-#999">正在获取动态详情</span>
+          <span class="text-15px text-#666 font-500">{{ t('dynamic.common.loading_title') }}</span>
+          <span class="text-12px text-#999">{{ t('dynamic.common.loading_desc') }}</span>
         </div>
       </div>
     </div>
@@ -60,7 +60,7 @@
           <div class="relative rounded-12px overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
             <img
               :src="feedDetail.urls[0]"
-              alt="图片"
+              :alt="t('dynamic.common.image_alt')"
               class="w-full max-w-full h-auto max-h-500px object-contain cursor-pointer bg-gradient-to-br from-#f5f5f5 to-#e5e5e5 block transform group-hover:scale-105 transition-transform duration-300"
               @click.stop="handlePreviewImage(feedDetail.urls, 0)" />
             <div
@@ -75,7 +75,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round" />
               </svg>
-              查看大图
+              {{ t('dynamic.detail.content.view_image') }}
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@
             @click.stop="handlePreviewImage(feedDetail.urls, idx)">
             <img
               :src="img"
-              alt="图片"
+              :alt="t('dynamic.common.image_alt')"
               class="w-full h-full object-cover block transform group-hover:scale-110 transition-transform duration-300" />
             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
             <!-- 图片序号 -->
@@ -112,7 +112,7 @@
         @click.stop="handleVideoPlay(feedDetail.videoUrl)">
         <img
           :src="feedDetail.videoUrl"
-          alt="视频"
+          :alt="t('dynamic.common.video_alt')"
           class="w-full max-w-full h-auto max-h-500px object-contain block transform group-hover:scale-105 transition-transform duration-300" />
         <!-- 遮罩层 -->
         <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300"></div>
@@ -133,12 +133,12 @@
             <path d="M8 20h8" />
             <path d="M12 16v4" />
           </svg>
-          视频
+          {{ t('dynamic.detail.content.video_tag') }}
         </div>
         <!-- 播放提示 -->
         <div
           class="absolute bottom-12px right-12px bg-black/60 text-white px-12px py-6px rounded-full text-12px opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-          点击播放
+          {{ t('dynamic.detail.content.video_cta') }}
         </div>
       </div>
 
@@ -147,7 +147,7 @@
         <!-- 点赞用户头像显示 - 固定高度防止闪烁 -->
         <div class="mb-16px min-h-48px flex items-center gap-8px">
           <span v-if="(feedDetail.likeList || []).length > 0" class="text-13px text-#999 font-500 flex-shrink-0">
-            赞过的人：
+            {{ t('dynamic.detail.stats.liked_by') }}
           </span>
           <div v-if="(feedDetail.likeList || []).length > 0" class="flex items-center -space-x-12px flex-wrap">
             <n-avatar
@@ -167,13 +167,13 @@
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2" />
                 <circle cx="12" cy="12" r="3" stroke-width="2" />
               </svg>
-              <span>浏览</span>
+              <span>{{ t('dynamic.detail.stats.views') }}</span>
             </div>
             <div v-if="feedDetail.likeCount" class="flex items-center gap-6px">
-              <span>👍 {{ feedDetail.likeCount }}</span>
+              <span>👍 {{ t('dynamic.detail.stats.like') }} {{ feedDetail.likeCount }}</span>
             </div>
             <div v-if="feedDetail.commentCount" class="flex items-center gap-6px">
-              <span>💬 {{ feedDetail.commentCount }}</span>
+              <span>{{ t('dynamic.detail.stats.comments', { count: feedDetail.commentCount }) }}</span>
             </div>
           </div>
         </div>
@@ -187,7 +187,9 @@
             <svg class="w-18px h-18px" :class="{ 'heart-filled': feedDetail.hasLiked }">
               <use href="#heart"></use>
             </svg>
-            <span class="text-14px font-500">{{ feedDetail.hasLiked ? '已赞' : '赞' }}</span>
+            <span class="text-14px font-500">
+              {{ feedDetail.hasLiked ? t('dynamic.detail.stats.liked') : t('dynamic.detail.stats.like') }}
+            </span>
           </div>
           <!-- 评论按钮 -->
           <div
@@ -196,7 +198,7 @@
             <svg class="w-18px h-18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
-            <span class="text-14px font-500">评论</span>
+            <span class="text-14px font-500">{{ t('dynamic.detail.actions.comment') }}</span>
           </div>
           <!-- 更多操作 -->
           <n-dropdown :options="getMoreOptions(feedDetail)" @select="handleMoreAction(feedDetail, $event)">
@@ -215,7 +217,9 @@
 
       <!-- 评论列表 -->
       <div v-if="commentList.length > 0" class="mt-20px pt-20px border-t-2 border-#f0f0f0">
-        <div class="text-14px font-600 mb-16px text-#333">评论 ({{ feedDetail.commentCount || 0 }})</div>
+        <div class="text-14px font-600 mb-16px text-#333">
+          {{ t('dynamic.detail.stats.comments', { count: feedDetail.commentCount || 0 }) }}
+        </div>
         <div class="space-y-12px">
           <div v-for="comment in commentList" :key="comment.id" class="p-12px bg-#f5f5f5 rounded-8px">
             <div class="flex items-start gap-8px">
@@ -227,17 +231,19 @@
                 </div>
                 <!-- 如果是回复评论，显示被回复人信息 -->
                 <div v-if="comment.replyUserName" class="text-12px text-#999 mb-4px">
-                  回复
+                  {{ t('dynamic.detail.actions.reply') }}
                   <span class="font-500">{{ comment.replyUserName }}</span>
                 </div>
                 <div class="text-13px text-#666 break-words">{{ comment.content }}</div>
                 <div class="flex items-center gap-12px mt-8px text-12px text-#999">
-                  <span class="cursor-pointer hover:text-#13987F" @click="handleReplyComment(comment)">回复</span>
+                  <span class="cursor-pointer hover:text-#13987F" @click="handleReplyComment(comment)">
+                    {{ t('dynamic.detail.actions.reply') }}
+                  </span>
                   <span
                     v-if="comment.uid === userStore.userInfo?.uid"
                     class="cursor-pointer hover:text-#ff6b6b"
                     @click="handleDeleteComment(comment.id)">
-                    删除
+                    {{ t('dynamic.detail.actions.delete') }}
                   </span>
                 </div>
               </div>
@@ -253,7 +259,7 @@
         <circle cx="12" cy="12" r="10" stroke-width="2" />
         <path d="M12 8v4M12 16h.01" stroke-width="2" stroke-linecap="round" />
       </svg>
-      <span class="text-15px">动态不存在或已被删除</span>
+      <span class="text-15px">{{ t('dynamic.detail.empty') }}</span>
     </div>
   </div>
 
@@ -261,21 +267,23 @@
   <n-modal
     v-model:show="showCommentInput"
     preset="dialog"
-    title="发表评论"
-    positive-text="发送"
-    negative-text="取消"
+    :title="t('dynamic.detail.modal.title')"
+    :positive-text="t('dynamic.detail.modal.send')"
+    :negative-text="t('dynamic.detail.modal.cancel')"
     :loading="commentLoading"
     @positive-click="handleSubmitComment"
     @negative-click="showCommentInput = false">
     <div class="space-y-12px">
       <div v-if="replyingComment" class="p-12px bg-#f5f5f5 rounded-8px border-l-4 border-#13987F">
-        <div class="text-12px text-#999 mb-4px">回复 {{ getCommentUserName(replyingComment) }}</div>
+        <div class="text-12px text-#999 mb-4px">
+          {{ t('dynamic.detail.modal.replying', { name: getCommentUserName(replyingComment) }) }}
+        </div>
         <div class="text-13px text-#666">{{ replyingComment.content }}</div>
       </div>
       <n-input
         v-model:value="commentContent"
         type="textarea"
-        placeholder="写下你的评论..."
+        :placeholder="t('dynamic.detail.modal.placeholder')"
         :rows="4"
         :maxlength="500"
         clearable
@@ -285,6 +293,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
 import { useGroupStore } from '@/stores/group'
@@ -305,6 +314,7 @@ const emit = defineEmits<{
   videoPlay: [url: string]
 }>()
 
+const { t } = useI18n()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
@@ -322,24 +332,24 @@ const getUserAvatar = (feed: FeedItem) => {
 }
 
 const getUserName = (feed: FeedItem) => {
-  return feed.userName || '未知用户'
+  return feed.userName || t('dynamic.common.unknown_user')
 }
 
 const getMoreOptions = (feed: FeedItem) => {
   const options = [
     {
-      label: '复制链接',
+      label: t('dynamic.detail.dropdown.copy'),
       key: 'copy'
     },
     {
-      label: '举报',
+      label: t('dynamic.detail.dropdown.report'),
       key: 'report'
     }
   ]
 
   if (feed.uid === userStore.userInfo?.uid) {
     options.unshift({
-      label: '删除动态',
+      label: t('dynamic.detail.dropdown.delete'),
       key: 'delete'
     })
   }
@@ -352,19 +362,19 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
     case 'delete':
       try {
         await feedStore.deleteFeed(feed.id)
-        window.$message.success('删除成功')
+        window.$message.success(t('dynamic.messages.delete_success'))
         window.history.back()
       } catch (error) {
         console.error('删除动态失败:', error)
-        window.$message.error('删除失败，请重试')
+        window.$message.error(t('dynamic.messages.delete_fail'))
       }
       break
     case 'copy':
       navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
-      window.$message.success('链接已复制')
+      window.$message.success(t('dynamic.messages.copy_success'))
       break
     case 'report':
-      window.$message.info('举报功能开发中')
+      window.$message.info(t('dynamic.messages.report_todo'))
       break
   }
 }
@@ -411,7 +421,7 @@ const handleToggleLike = async () => {
       feedDetail.value.hasLiked = !feedDetail.value.hasLiked
       feedDetail.value.likeCount = (feedDetail.value.likeCount || 0) + (feedDetail.value.hasLiked ? 1 : -1)
     }
-    window.$message.error('操作失败，请重试')
+    window.$message.error(t('dynamic.messages.like_fail'))
   }
 }
 
@@ -422,12 +432,12 @@ const getCommentUserAvatar = (comment: any) => {
 
 const getCommentUserName = (comment: any) => {
   const userInfo = groupStore.getUserInfo(comment.uid)
-  return userInfo?.name || comment.uid || '未知用户'
+  return userInfo?.name || comment.uid || t('dynamic.common.unknown_user')
 }
 
 const handleSubmitComment = async () => {
   if (!feedDetail.value || !commentContent.value.trim()) {
-    window.$message.warning('请输入评论内容')
+    window.$message.warning(t('dynamic.messages.comment_empty'))
     return
   }
 
@@ -449,7 +459,7 @@ const handleSubmitComment = async () => {
     if (feedDetail.value) {
       feedDetail.value.commentCount = Math.max(0, (feedDetail.value.commentCount || 1) - 1)
     }
-    window.$message.error('评论失败，请重试')
+    window.$message.error(t('dynamic.messages.comment_fail'))
   } finally {
     commentLoading.value = false
   }
@@ -467,7 +477,7 @@ const handleDeleteComment = async (commentId: string) => {
     await loadCommentList()
   } catch (error) {
     console.error('删除评论失败:', error)
-    window.$message.error('删除失败，请重试')
+    window.$message.error(t('dynamic.messages.comment_delete_fail'))
   }
 }
 
@@ -498,7 +508,7 @@ const fetchFeedDetail = async () => {
         feedDetail.value = result
       } else {
         feedDetail.value = null
-        window.$message.error('动态不存在或已被删除')
+        window.$message.error(t('dynamic.messages.detail_missing'))
       }
     }
 
@@ -507,7 +517,7 @@ const fetchFeedDetail = async () => {
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
-    window.$message.error('获取动态详情失败')
+    window.$message.error(t('dynamic.messages.detail_fetch_fail'))
     feedDetail.value = null
   } finally {
     loading.value = false

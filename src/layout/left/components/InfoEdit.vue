@@ -11,7 +11,9 @@
           </svg>
         </div>
 
-        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">编辑资料</n-flex>
+        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">
+          {{ t('home.profile_edit.title') }}
+        </n-flex>
 
         <svg
           v-if="isWindows()"
@@ -29,18 +31,18 @@
               <div class="avatar-wrapper relative" @click="openAvatarCropper">
                 <n-avatar :size="80" :src="AvatarUtils.getAvatarUrl(editInfo.content.avatar!)" round />
                 <div class="avatar-hover absolute size-full rounded-50% flex-center">
-                  <span class="text-12px color-#606060">更换头像</span>
+                  <span class="text-12px color-#606060">{{ t('home.profile_edit.avatar.change') }}</span>
                 </div>
               </div>
             </template>
             <p class="text-12px text-[--chat-text-color] w-280px leading-5 p-4px">
-              建议大小180 * 180像素，支持JPG、PNG、WEBP等格式，图片需小于500kb
+              {{ t('home.profile_edit.avatar.tips') }}
             </p>
           </n-popover>
         </n-flex>
         <!-- 当前佩戴的徽章 -->
         <n-flex v-if="currentBadge" align="center" justify="center">
-          <span class="text-(14px #707070)">当前佩戴的徽章:</span>
+          <span class="text-(14px #707070)">{{ t('home.profile_edit.badge.current') }}</span>
           <n-popover trigger="hover">
             <template #trigger>
               <img :src="currentBadge?.img" alt="" class="size-22px" />
@@ -66,15 +68,17 @@
               autoCorrect="off"
               autoCapitalize="off"
               :allow-input="noSideSpace"
-              placeholder="请输入你的昵称"
+              :placeholder="t('home.profile_edit.form.nickname.placeholder')"
               show-count
               type="text">
               <template #prefix>
-                <span class="pr-6px text-#909090">昵称</span>
+                <span class="pr-6px text-#909090">{{ t('home.profile_edit.form.nickname.label') }}</span>
               </template>
             </n-input>
           </template>
-          <span>剩余改名次数: {{ editInfo.content.modifyNameChance || 0 }}</span>
+          <span>
+            {{ t('home.profile_edit.form.nickname.remaining', { count: editInfo.content.modifyNameChance || 0 }) }}
+          </span>
         </n-popover>
 
         <!-- 徽章列表  -->
@@ -97,7 +101,7 @@
                     v-if="item.wearing === IsYesEnum.NO"
                     color="#13987f"
                     @click="toggleWarningBadge(item)">
-                    佩戴
+                    {{ t('home.profile_edit.badge.wear') }}
                   </n-button>
                 </template>
                 <n-popover trigger="hover">
@@ -119,7 +123,7 @@
           :disabled="editInfo.content.name === localUserInfo.name"
           color="#13987f"
           @click="saveEditInfo(localUserInfo as ModifyUserInfoType)">
-          保存
+          {{ t('home.profile_edit.actions.save') }}
         </n-button>
       </n-flex>
     </div>
@@ -135,6 +139,7 @@
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useI18n } from 'vue-i18n'
 import AvatarCropper from '@/components/common/AvatarCropper.vue'
 import { IsYesEnum, MittEnum } from '@/enums'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
@@ -150,6 +155,7 @@ import { getBadgeList, uploadAvatar } from '@/utils/ImRequestUtils'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 
 const appWindow = WebviewWindow.getCurrent()
+const { t } = useI18n()
 const localUserInfo = ref<Partial<ModifyUserInfoType>>({})
 const userStore = useUserStore()
 const { addListener } = useTauriListener()
@@ -179,7 +185,7 @@ const {
     loginHistoriesStore.loginHistories.filter((item) => item.uid === userStore.userInfo!.uid)[0].avatar = downloadUrl
     // 更新缓存里面的用户信息
     updateCurrentUserCache('avatar', downloadUrl)
-    window.$message.success('头像更新成功')
+    window.$message.success(t('home.profile_edit.toast.avatar_update_success'))
   }
 })
 

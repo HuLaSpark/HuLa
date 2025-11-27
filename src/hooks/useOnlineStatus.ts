@@ -1,4 +1,5 @@
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { OnlineEnum } from '@/enums'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
@@ -6,6 +7,7 @@ import { useUserStatusStore } from '@/stores/userStatus'
 
 // 在线状态管理(仅是在线和离线)
 export const useOnlineStatus = (uid?: ComputedRef<string | undefined> | Ref<string | undefined>) => {
+  const { t } = useI18n()
   const userStore = useUserStore()
   const groupStore = useGroupStore()
   const userStatusStore = useUserStatusStore()
@@ -50,9 +52,11 @@ export const useOnlineStatus = (uid?: ComputedRef<string | undefined> | Ref<stri
 
   const statusTitle = computed(() => {
     if (hasCustomState.value && userStatus.value?.title) {
-      return userStatus.value.title
+      const key = `auth.onlineStatus.states.${userStatus.value.title}`
+      const translated = t(key)
+      return translated === key ? userStatus.value.title : translated
     }
-    return isOnline.value ? '在线' : '离线'
+    return isOnline.value ? t('home.profile_card.status.online') : t('home.profile_card.status.offline')
   })
 
   const statusBgColor = computed(() => {

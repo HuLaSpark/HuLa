@@ -31,14 +31,24 @@
           <n-popover trigger="hover" placement="top" :show-arrow="false">
             <template #trigger>
               <div
-                @click="isCurrentUserUid ? openContent('在线状态', 'onlineStatus', 320, 480) : void 0"
+                @click="
+                  isCurrentUserUid
+                    ? openContent(t('home.profile_card.online_status'), 'onlineStatus', 320, 480)
+                    : void 0
+                "
                 class="z-30 absolute top-72px left-72px border-(6px solid [--avatar-border-color]) rounded-full size-18px"
                 :class="[
                   displayActiveStatus === OnlineEnum.ONLINE ? 'bg-#1ab292' : 'bg-#909090',
                   isCurrentUserUid ? 'cursor-pointer' : 'cursor-default'
                 ]"></div>
             </template>
-            <span>{{ displayActiveStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}</span>
+            <span>
+              {{
+                displayActiveStatus === OnlineEnum.ONLINE
+                  ? t('home.profile_card.status.online')
+                  : t('home.profile_card.status.offline')
+              }}
+            </span>
           </n-popover>
         </template>
 
@@ -49,7 +59,11 @@
               <div class="z-30 absolute top-72px left-72px size-26px bg-[--avatar-border-color] rounded-full">
                 <img
                   :src="statusIcon"
-                  @click="isCurrentUserUid ? openContent('在线状态', 'onlineStatus', 320, 480) : void 0"
+                  @click="
+                    isCurrentUserUid
+                      ? openContent(t('home.profile_card.online_status'), 'onlineStatus', 320, 480)
+                      : void 0
+                  "
                   class="p-4px rounded-full size-18px"
                   :class="isCurrentUserUid ? 'cursor-pointer' : 'cursor-default'"
                   alt="" />
@@ -62,7 +76,7 @@
         <div
           v-if="groupStore.getUserInfo(uid)?.wearingItemId === '6'"
           class="absolute top-72px left-142px bg-[--bate-bg] border-(1px solid [--bate-color]) text-(12px [--bate-color] center) p-8px rounded-full">
-          HuLa开发工程师
+          {{ t('home.profile_card.developer_badge') }}
         </div>
 
         <n-flex align="center" :size="8">
@@ -89,7 +103,7 @@
         <!-- 账号 -->
         <n-flex align="center" :size="10">
           <n-flex align="center" :size="12">
-            <p class="text-[--info-text-color]">账号</p>
+            <p class="text-[--info-text-color]">{{ t('home.profile_card.labels.account') }}</p>
             <span class="text-(12px [--chat-text-color])">{{ `${groupStore.getUserInfo(uid)?.account}` }}</span>
           </n-flex>
           <n-tooltip trigger="hover">
@@ -98,19 +112,21 @@
                 <use href="#copy"></use>
               </svg>
             </template>
-            <span>复制账号</span>
+            <span>{{ t('home.profile_card.tooltip.copy_account') }}</span>
           </n-tooltip>
         </n-flex>
       </n-flex>
 
       <!-- 地址 -->
       <n-flex align="center" :size="26" class="select-none">
-        <span class="text-[--info-text-color]">所在地</span>
-        <span class="text-(13px [--chat-text-color])">{{ groupStore.getUserInfo(uid)?.locPlace || '未知' }}</span>
+        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.location') }}</span>
+        <span class="text-(13px [--chat-text-color])">
+          {{ groupStore.getUserInfo(uid)?.locPlace || t('home.profile_card.location_unknown') }}
+        </span>
       </n-flex>
       <!-- 获得的徽章 -->
       <n-flex v-if="groupStore.getUserInfo(uid)?.itemIds" :size="26" class="select-none">
-        <span class="text-[--info-text-color]">获得的徽章</span>
+        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.badges') }}</span>
         <n-flex :size="8">
           <template v-for="id in groupStore.getUserInfo(uid)?.itemIds" :key="id">
             <div class="relative inline-flex flex-col items-center">
@@ -141,7 +157,7 @@
       </n-flex>
       <!-- 动态 -->
       <n-flex :size="40" class="select-none">
-        <span class="text-[--info-text-color]">动态</span>
+        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.activities') }}</span>
         <n-image-group>
           <n-flex :size="6" :wrap="false">
             <n-image
@@ -156,9 +172,13 @@
       </n-flex>
 
       <n-flex justify="center" align="center" :size="40">
-        <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo">编辑资料</n-button>
-        <n-button v-else-if="isMyFriend" secondary type="primary" @click="handleOpenMsgSession(uid)">发信息</n-button>
-        <n-button v-else secondary @click="addFriend">加好友</n-button>
+        <n-button v-if="isCurrentUserUid" secondary type="info" @click="openEditInfo">
+          {{ t('home.profile_card.buttons.edit') }}
+        </n-button>
+        <n-button v-else-if="isMyFriend" secondary type="primary" @click="handleOpenMsgSession(uid)">
+          {{ t('home.profile_card.buttons.message') }}
+        </n-button>
+        <n-button v-else secondary @click="addFriend">{{ t('home.profile_card.buttons.add_friend') }}</n-button>
       </n-flex>
     </n-flex>
   </n-flex>
@@ -166,6 +186,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { MittEnum, OnlineEnum, ThemeEnum } from '@/enums/index.ts'
 import { useCommon } from '@/hooks/useCommon.ts'
 import { useMitt } from '@/hooks/useMitt'
@@ -179,6 +200,8 @@ import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+
+const { t } = useI18n()
 
 const { uid } = defineProps<{
   uid: string
@@ -249,7 +272,9 @@ const currentStateTitle = computed(() => {
       return state.title
     }
   }
-  return displayActiveStatus.value === OnlineEnum.ONLINE ? '在线' : '离线'
+  return displayActiveStatus.value === OnlineEnum.ONLINE
+    ? t('home.profile_card.status.online')
+    : t('home.profile_card.status.offline')
 })
 
 const openEditInfo = () => {
@@ -263,12 +288,12 @@ const handleCopy = () => {
   const account = groupStore.getUserInfo(uid)?.account
   if (account) {
     navigator.clipboard.writeText(account)
-    window.$message.success(`复制成功 ${account}`)
+    window.$message.success(t('home.profile_card.notification.copy_success', { account }))
   }
 }
 
 const addFriend = async () => {
-  await createWebviewWindow('申请加好友', 'addFriendVerify', 380, 300, '', false, 380, 300)
+  await createWebviewWindow(t('home.profile_card.modal.add_friend'), 'addFriendVerify', 380, 300, '', false, 380, 300)
   globalStore.addFriendModalInfo.show = true
   globalStore.addFriendModalInfo.uid = uid
 }

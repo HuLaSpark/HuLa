@@ -38,7 +38,7 @@
                   <p class="absolute-center text-(12px #4C77BD)">{{ plugin?.progress }}%</p>
                 </div>
 
-                <p v-else class="text-(12px #4C77BD center)">安装</p>
+                <p v-else class="text-(12px #4C77BD center)">{{ t('home.plugins.actions.install') }}</p>
               </n-flex>
 
               <!-- 闪光效果 -->
@@ -71,13 +71,13 @@
               <n-flex
                 v-if="plugin.state === PluginEnum.UNINSTALLING"
                 class="relative rounded-22px border-(1px solid #c14053) bg-#f6dfe3 p-[4px_8px]">
-                <p class="text-(12px #c14053 center)">卸载中</p>
+                <p class="text-(12px #c14053 center)">{{ t('home.plugins.status.uninstalling') }}</p>
               </n-flex>
 
               <n-flex
                 v-if="plugin.state === PluginEnum.BUILTIN"
                 class="relative rounded-22px border-(1px solid #777) bg-#e3e3e3 size-fit p-[4px_8px]">
-                <p class="text-(12px #777 center)">已内置</p>
+                <p class="text-(12px #777 center)">{{ t('home.plugins.status.builtin') }}</p>
               </n-flex>
 
               <n-flex
@@ -117,19 +117,19 @@
                       <svg class="color-#4C77BD">
                         <use href="#add"></use>
                       </svg>
-                      <p class="text-#4C77BD">固定侧边栏</p>
+                      <p class="text-#4C77BD">{{ t('home.plugins.actions.pin') }}</p>
                     </div>
                     <div v-else @click="handleDelete(plugin)" class="menu-item">
                       <svg class="color-#c14053">
                         <use href="#reduce"></use>
                       </svg>
-                      <p class="text-#c14053">取消固定</p>
+                      <p class="text-#c14053">{{ t('home.plugins.actions.unpin') }}</p>
                     </div>
                     <div @click="handleUnload(plugin)" class="menu-item">
                       <svg>
                         <use href="#delete"></use>
                       </svg>
-                      <p>卸载</p>
+                      <p>{{ t('home.plugins.actions.uninstall') }}</p>
                     </div>
                   </div>
                 </div>
@@ -142,6 +142,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { emitTo } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { cloneDeep } from 'es-toolkit'
@@ -151,6 +152,7 @@ import { usePluginsList } from '@/layout/left/config.tsx'
 import { usePluginsStore } from '@/stores/plugins.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const pluginsStore = usePluginsStore()

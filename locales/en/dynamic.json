@@ -1,0 +1,103 @@
+{
+  "common": {
+    "loading_title": "Loading...",
+    "loading_desc": "Fetching feed details",
+    "image_alt": "Image",
+    "video_alt": "Video",
+    "unknown_user": "Unknown user"
+  },
+  "page": {
+    "detail": {
+      "title": "Feed detail"
+    }
+  },
+  "list": {
+    "empty": "No feeds yet, share your first moment!",
+    "actions": {
+      "publish": "Post",
+      "refresh": "Refresh",
+      "like": "Like",
+      "liked": "Liked",
+      "comment": "Comment",
+      "comment_with_count": "Comments ({count})"
+    },
+    "permission": {
+      "open": "Public",
+      "part_visible": "Visible to selected",
+      "not_anyone": "Hidden from selected"
+    },
+    "modal": {
+      "add_title": "Post a feed",
+      "content_placeholder": "Share something new...",
+      "visibility_label": "Who can view",
+      "visibility_placeholder": "Choose visibility",
+      "select_visible": "Choose who can view",
+      "select_hidden": "Choose who cannot view",
+      "select_users": "Select users",
+      "selected_count": "Select users ({count} selected)",
+      "user_modal_title": "Select users",
+      "user_search_placeholder": "Search users...",
+      "comment_notice_title": "Comment notifications",
+      "comment_notice_empty_title": "No notifications",
+      "comment_notice_empty_desc": "No comments yet"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "publish": "Post",
+      "select_users": "Select users",
+      "confirm": "Confirm",
+      "confirm_with_count": "Confirm ({count})"
+    }
+  },
+  "detail": {
+    "content": {
+      "view_image": "View full image",
+      "video_tag": "Video",
+      "video_cta": "Tap to play"
+    },
+    "stats": {
+      "liked_by": "Liked by:",
+      "views": "Views",
+      "like": "Like",
+      "liked": "Liked",
+      "comments": "Comments ({count})"
+    },
+    "actions": {
+      "comment": "Comment",
+      "reply": "Reply",
+      "delete": "Delete"
+    },
+    "dropdown": {
+      "copy": "Copy link",
+      "report": "Report",
+      "delete": "Delete feed"
+    },
+    "modal": {
+      "title": "Post a comment",
+      "send": "Send",
+      "cancel": "Cancel",
+      "placeholder": "Write your comment...",
+      "replying": "Replying to {name}"
+    },
+    "empty": "Feed not found or has been removed"
+  },
+  "messages": {
+    "refresh_success": "Refreshed",
+    "refresh_fail": "Refresh failed, please retry",
+    "publish_empty": "Please enter feed content",
+    "publish_select_visible": "Select who can view",
+    "publish_select_hidden": "Select who cannot view",
+    "publish_success": "Posted successfully!",
+    "publish_fail": "Post failed, try again later",
+    "delete_success": "Deleted",
+    "delete_fail": "Delete failed, please retry",
+    "copy_success": "Link copied",
+    "report_todo": "Report feature in development",
+    "like_fail": "Action failed, please retry",
+    "comment_empty": "Please enter your comment",
+    "comment_fail": "Comment failed, please retry",
+    "comment_delete_fail": "Delete failed, please retry",
+    "detail_missing": "Feed not found or removed",
+    "detail_fetch_fail": "Failed to fetch feed detail"
+  }
+}

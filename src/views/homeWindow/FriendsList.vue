@@ -63,7 +63,7 @@
                         <template v-if="isBotUser(item.uid)">{{ t('home.friends_list.bot_tag') }}</template>
                         <template v-else-if="getUserState(item.uid)">
                           <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
-                          {{ getUserState(item.uid)?.title }}
+                          {{ translateStateTitle(getUserState(item.uid)?.title) }}
                         </template>
                         <template v-else>
                           <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
@@ -254,6 +254,13 @@ const getUserState = (uid: string) => {
     return stateList.value.find((state: { id: string }) => state.id === userStateId)
   }
   return null
+}
+
+const translateStateTitle = (title?: string) => {
+  if (!title) return ''
+  const key = `auth.onlineStatus.states.${title}`
+  const translated = t(key)
+  return translated === key ? title : translated
 }
 
 /** 监听路由变化，当切换到消息页面时重置选中状态 */

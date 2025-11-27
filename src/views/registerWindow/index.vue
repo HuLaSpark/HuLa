@@ -11,7 +11,7 @@
       <!-- 注册菜单 -->
       <n-flex class="ma text-center w-260px pointer-events-auto" vertical :size="16">
         <n-flex justify="center" align="center">
-          <span class="text-(24px #70938c) textFont">欢迎注册</span>
+          <span class="text-(24px #70938c) textFont">{{ t('auth.register.title') }}</span>
           <img class="w-100px h-40px" src="/hula.png" alt="" />
         </n-flex>
         <n-form :model="info" :rules="rules" ref="registerForm">
@@ -30,12 +30,12 @@
                 autoCorrect="off"
                 autoCapitalize="off"
                 :allow-input="noSideSpace"
-                :placeholder="showNamePrefix ? '' : placeholders.nickName"
+                :placeholder="showNamePrefix ? '' : t('auth.register.placeholders.nickname')"
                 @focus="handleInputState($event, 'nickName')"
                 @blur="handleInputState($event, 'nickName')"
                 clearable>
                 <template #prefix v-if="showNamePrefix || info.nickName">
-                  <p class="text-12px">昵称</p>
+                  <p class="text-12px">{{ t('auth.register.labels.nickname') }}</p>
                 </template>
               </n-input>
             </n-form-item>
@@ -54,12 +54,12 @@
                 v-model:value="info.password"
                 type="password"
                 :allow-input="noSideSpace"
-                :placeholder="showPasswordPrefix ? '' : placeholders.password"
+                :placeholder="showPasswordPrefix ? '' : t('auth.register.placeholders.password')"
                 @focus="handleInputState($event, 'password')"
                 @blur="handleInputState($event, 'password')"
                 clearable>
                 <template #prefix v-if="showPasswordPrefix || info.password">
-                  <p class="text-12px">密码</p>
+                  <p class="text-12px">{{ t('auth.register.labels.password') }}</p>
                 </template>
               </n-input>
             </n-form-item>
@@ -78,12 +78,12 @@
                 v-model:value="confirmPassword"
                 type="password"
                 :allow-input="noSideSpace"
-                :placeholder="showConfirmPasswordPrefix ? '' : '二次确认密码'"
+                :placeholder="showConfirmPasswordPrefix ? '' : t('auth.register.placeholders.confirm_placeholder')"
                 @focus="handleInputState($event, 'confirmPassword')"
                 @blur="handleInputState($event, 'confirmPassword')"
                 clearable>
                 <template #prefix v-if="showConfirmPasswordPrefix || confirmPassword">
-                  <p class="text-12px">验证</p>
+                  <p class="text-12px">{{ t('auth.register.labels.confirm') }}</p>
                 </template>
               </n-input>
             </n-form-item>
@@ -92,7 +92,7 @@
               <n-auto-complete
                 size="large"
                 v-model:value="info.email"
-                :placeholder="showemailPrefix ? '' : placeholders.email"
+                :placeholder="showemailPrefix ? '' : t('auth.register.placeholders.email')"
                 :options="commonEmailDomains"
                 :get-show="getShow"
                 :append="true"
@@ -105,7 +105,7 @@
                 @focus="handleInputState($event, 'email')"
                 @blur="handleInputState($event, 'email')">
                 <template #prefix v-if="showemailPrefix || info.email">
-                  <p class="text-12px">邮箱</p>
+                  <p class="text-12px">{{ t('auth.register.labels.email') }}</p>
                 </template>
               </n-auto-complete>
             </n-form-item>
@@ -113,9 +113,18 @@
             <!-- 密码提示信息 -->
             <n-flex vertical v-if="info.password">
               <n-flex vertical :size="4">
-                <Validation :value="info.password" message="最少6位" :validator="validateMinLength" />
-                <Validation :value="info.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-                <Validation :value="info.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
+                <Validation
+                  :value="info.password"
+                  :message="t('auth.register.password_hints.min_length')"
+                  :validator="validateMinLength" />
+                <Validation
+                  :value="info.password"
+                  :message="t('auth.register.password_hints.alpha_numeric')"
+                  :validator="validateAlphaNumeric" />
+                <Validation
+                  :value="info.password"
+                  :message="t('auth.register.password_hints.special_char')"
+                  :validator="validateSpecialChar" />
               </n-flex>
             </n-flex>
 
@@ -123,10 +132,14 @@
             <n-flex align="center" justify="center" :size="6" class="mt-10px">
               <n-checkbox v-model:checked="protocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
-                <span>已阅读并同意</span>
-                <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">服务协议</span>
-                <span>和</span>
-                <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">HuLa隐私保护指引</span>
+                <span>{{ t('login.term.checkout.text1') }}</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openServiceAgreement">
+                  {{ t('login.term.checkout.text2') }}
+                </span>
+                <span>{{ t('login.term.checkout.text3') }}</span>
+                <span class="color-#13987f cursor-pointer" @click.stop="openPrivacyAgreement">
+                  {{ t('login.term.checkout.text4') }}
+                </span>
               </div>
             </n-flex>
           </div>
@@ -142,7 +155,7 @@
           {{ btnText }}
         </n-button>
         <p v-if="sendCodeCooldown > 0" class="text-(12px #13987f) ml--8px mt-6px whitespace-nowrap">
-          验证码窗口关闭？点击按钮可再次打开验证码输入框
+          {{ t('auth.register.tips.reopen_code') }}
         </p>
       </n-flex>
     </n-flex>
@@ -161,11 +174,8 @@
         <n-flex vertical class="w-full h-fit">
           <video class="w-full h-240px rounded-t-8px object-cover" src="@/assets/video/star.mp4" autoplay loop />
           <n-flex vertical :size="10" class="p-14px">
-            <p class="text-(16px #303030)">在 GitHub 为我们点亮星标</p>
-            <p class="text-(12px #808080) leading-5">
-              如果您喜爱我们的产品，并希望支持我们，可以去 GitHub
-              给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。
-            </p>
+            <p class="text-(16px #303030)">{{ t('auth.register.modal.title') }}</p>
+            <p class="text-(12px #808080) leading-5">{{ t('auth.register.modal.desc') }}</p>
 
             <n-flex :size="10" class="ml-auto">
               <a
@@ -174,7 +184,7 @@
                 @click="handleStar"
                 href="https://github.com/HuLaSpark/HuLa"
                 class="bg-#363636 cursor-pointer w-70px h-30px rounded-8px flex-center text-(12px #f1f1f1) outline-none no-underline">
-                点亮星标
+                {{ t('auth.register.modal.cta') }}
               </a>
             </n-flex>
           </n-flex>
@@ -202,9 +212,9 @@
         </svg>
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-24px">
-            <p class="text-(16px #303030) mb-10px">请输入邮箱验证码</p>
+            <p class="text-(16px #303030) mb-10px">{{ t('auth.register.email_modal.title') }}</p>
             <p class="text-(12px #808080) leading-5 mb-10px">
-              验证码已发送至 {{ info.email }}，请查收并输入验证码完成注册
+              {{ t('auth.register.email_modal.desc', { email: info.email }) }}
             </p>
 
             <!-- PIN 输入框 -->
@@ -219,7 +229,7 @@
               style="color: #fff"
               class="w-full gradient-button"
               @click="register">
-              注册
+              {{ t('auth.register.actions.submit') }}
             </n-button>
           </n-flex>
         </n-flex>
@@ -233,6 +243,7 @@ import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewW
 import dayjs from 'dayjs'
 import { darkTheme, lightTheme, type FormInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import PinInput from '@/components/common/PinInput.vue'
 import Validation from '@/components/common/Validation.vue'
 import { useWindow } from '@/hooks/useWindow'
@@ -248,6 +259,7 @@ type InputType = 'nickName' | 'email' | 'password' | 'confirmPassword'
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const naiveTheme = computed(() => (themes.value.content === 'dark' ? darkTheme : lightTheme))
+const { t } = useI18n()
 
 /** 注册信息 */
 const info = unref(
@@ -274,13 +286,6 @@ const loading = ref(false)
 const registerLoading = ref(false)
 
 // 占位符
-const placeholders: Record<InputType, string> = {
-  nickName: '输入HuLa昵称',
-  email: '输入邮箱',
-  password: '输入HuLa密码',
-  confirmPassword: '输入二次密码'
-} as const
-
 // 前缀显示状态
 const showNamePrefix = ref(false)
 const showemailPrefix = ref(false)
@@ -306,12 +311,12 @@ const timerWorker = new Worker(new URL('@/workers/timer.worker.ts', import.meta.
 /** 发送验证码按钮文本 */
 const btnText = computed(() => {
   if (loading.value) {
-    return '发送中...'
+    return t('auth.register.actions.sending')
   }
   if (sendCodeCooldown.value > 0) {
-    return `${sendCodeCooldown.value}秒后重试`
+    return t('auth.register.actions.retry_in', { seconds: sendCodeCooldown.value })
   }
-  return '发送验证码'
+  return t('auth.register.actions.send_code')
 })
 // 使用day.js获取当前年份
 const currentYear = dayjs().year()
@@ -330,7 +335,7 @@ const isEmailValid = computed(() => emailPattern.test(info.email.trim()))
 const rules = {
   nickName: {
     required: true,
-    message: '请输入昵称',
+    message: t('auth.register.form.rules.nickname_required'),
     trigger: 'blur'
   },
   email: {
@@ -339,22 +344,22 @@ const rules = {
     validator(_: unknown, value: string) {
       const email = (value || '').trim()
       if (!email) {
-        return new Error('请输入邮箱')
+        return new Error(t('auth.register.form.rules.email_required'))
       }
       if (!emailPattern.test(email)) {
-        return new Error('请输入正确的邮箱格式')
+        return new Error(t('auth.register.form.rules.email_format'))
       }
       return true
     }
   },
   password: {
     required: true,
-    message: '请输入密码',
+    message: t('auth.register.form.rules.password_required'),
     trigger: ['blur', 'input']
   },
   confirmPassword: {
     required: true,
-    message: '两次密码不一致',
+    message: t('auth.register.form.rules.confirm_mismatch'),
     trigger: 'blur',
     validator() {
       if (confirmPassword.value !== info.password) {
@@ -374,12 +379,12 @@ const getShow = (value: string) => {
 
 /** 打开服务协议窗口 */
 const openServiceAgreement = async () => {
-  await createModalWindow('服务协议', 'modal-serviceAgreement', 600, 600, 'login')
+  await createModalWindow(t('login.term.checkout.text2'), 'modal-serviceAgreement', 600, 600, 'login')
 }
 
 /** 打开隐私保护协议窗口 */
 const openPrivacyAgreement = async () => {
-  await createModalWindow('隐私保护指引', 'modal-privacyAgreement', 600, 600, 'login')
+  await createModalWindow(t('login.term.checkout.text4'), 'modal-privacyAgreement', 600, 600, 'login')
 }
 
 /** 不允许输入空格 */
@@ -452,7 +457,7 @@ const handleStepAction = async () => {
       templateCode: 'REGISTER_EMAIL'
     })
     startSendCodeCountdown()
-    window.$message.success('验证码已发送')
+    window.$message.success(t('auth.register.messages.code_sent'))
     emailCodeModal.value = true
     emailCode.value = ''
     nextTick(() => {
@@ -507,7 +512,7 @@ const register = async () => {
 
     // 注册
     await ImRequestUtils.register({ ...info })
-    window.$message.success('注册成功')
+    window.$message.success(t('auth.register.messages.register_success'))
 
     // 关闭弹窗并跳转到登录页
     emailCodeModal.value = false
@@ -518,7 +523,7 @@ const register = async () => {
       WebviewWindow.getCurrent().close()
     }, 1200)
   } catch (error) {
-    window.$message.error('注册失败，请重试')
+    window.$message.error(t('auth.register.messages.register_fail'))
   } finally {
     registerLoading.value = false
   }

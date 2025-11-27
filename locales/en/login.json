@@ -98,5 +98,47 @@
       "done": "Done",
       "progress": "{current}/{total}"
     }
+  },
+  "network": {
+    "title": "Network Settings",
+    "tabs": {
+      "api": "API",
+      "ws": "WebSocket"
+    },
+    "fields": {
+      "type": "Type",
+      "host": "IP or Domain",
+      "port": "Port",
+      "suffix": "Suffix"
+    },
+    "placeholder": {
+      "host": "127.0.0.1 or hulaspark.com",
+      "port": "443",
+      "api_suffix": "api",
+      "ws_suffix": "websocket"
+    },
+    "api": {
+      "options": {
+        "none": "Disabled (use official endpoint)",
+        "http": "HTTP",
+        "https": "HTTPS"
+      }
+    },
+    "ws": {
+      "options": {
+        "none": "Disabled (use official endpoint)",
+        "ws": "WS",
+        "wss": "WSS"
+      }
+    },
+    "actions": {
+      "save": "Save",
+      "back": "Back"
+    },
+    "messages": {
+      "incomplete": "Please complete all required network fields",
+      "save_success": "Network settings saved",
+      "save_failed": "Failed to save network settings: {error}"
+    }
   }
 }

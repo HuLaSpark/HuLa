@@ -25,7 +25,17 @@
     "dynamic": "动态列表",
     "dynamic_short_title": "动态",
     "chatbot": "ChatBot",
-    "chatbot_short_title": "ChatBot"
+    "chatbot_short_title": "ChatBot",
+    "status": {
+      "builtin": "已内置",
+      "uninstalling": "卸载中"
+    },
+    "actions": {
+      "install": "安装",
+      "pin": "固定侧边栏",
+      "unpin": "取消固定",
+      "uninstall": "卸载"
+    }
   },
   "search_window": {
     "title": "全网搜索",
@@ -217,6 +227,59 @@
       "exit_not_allowed": "无法退出频道",
       "exit_success": "已退出群聊",
       "group_name_update_failed": "群名称更新失败"
+    }
+  },
+  "profile_card": {
+    "online_status": "在线状态",
+    "status": {
+      "online": "在线",
+      "offline": "离线"
+    },
+    "labels": {
+      "account": "账号",
+      "location": "所在地",
+      "badges": "获得的徽章",
+      "activities": "动态"
+    },
+    "location_unknown": "未知",
+    "tooltip": {
+      "copy_account": "复制账号"
+    },
+    "buttons": {
+      "edit": "编辑资料",
+      "message": "发信息",
+      "add_friend": "加好友"
+    },
+    "notification": {
+      "copy_success": "复制成功 {account}"
+    },
+    "modal": {
+      "add_friend": "申请加好友"
+    },
+    "developer_badge": "HuLa开发工程师"
+  },
+  "profile_edit": {
+    "title": "编辑资料",
+    "avatar": {
+      "change": "更换头像",
+      "tips": "建议大小180 * 180像素，支持JPG、PNG、WEBP等格式，图片需小于500kb"
+    },
+    "badge": {
+      "current": "当前佩戴的徽章:",
+      "wear": "佩戴"
+    },
+    "form": {
+      "nickname": {
+        "label": "昵称",
+        "placeholder": "请输入你的昵称",
+        "remaining": "剩余改名次数: {count}"
+      }
+    },
+    "actions": {
+      "save": "保存"
+    },
+    "toast": {
+      "avatar_update_success": "头像更新成功"
     }
   },
   "chat_sidebar": {

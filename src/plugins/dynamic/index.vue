@@ -26,7 +26,7 @@
                     <use href="#plus"></use>
                   </svg>
                 </template>
-                <span>发布动态</span>
+                <span>{{ t('dynamic.list.actions.publish') }}</span>
               </n-popover>
             </div>
 
@@ -35,7 +35,7 @@
                 <template #trigger>
                   <svg class="size-20px color-white iconpark-icon"><use href="#refresh"></use></svg>
                 </template>
-                <span>刷新</span>
+                <span>{{ t('dynamic.list.actions.refresh') }}</span>
               </n-popover>
             </div>
           </div>
@@ -62,7 +62,7 @@
           mode="pc"
           :avatar-size="42"
           item-class="w-full mb-10px p-10px box-border cursor-pointer hover:bg-#f5f5f5 transition-colors duration-200"
-          empty-text="暂无动态，快去发布第一条吧！"
+          :empty-text="t('dynamic.list.empty')"
           :show-loaded-all="false"
           :single-image-size="{ width: '200px', height: '200px' }"
           :grid-image-size="{ width: '136px', height: '136px' }"
@@ -84,7 +84,7 @@
     <n-modal v-model:show="showAddFeedModal" class="w-80vw border-rd-8px">
       <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
         <div class="flex justify-between items-center mb-20px">
-          <h3 class="text-18px font-bold text-[--text-color]">发布动态</h3>
+          <h3 class="text-18px font-bold text-[--text-color]">{{ t('dynamic.list.modal.add_title') }}</h3>
           <n-button text @click="handleCloseModal">
             <template #icon>
               <n-icon>
@@ -100,7 +100,7 @@
         <n-input
           v-model:value="newFeedContent"
           type="textarea"
-          placeholder="分享新鲜事..."
+          :placeholder="t('dynamic.list.modal.content_placeholder')"
           :rows="6"
           :maxlength="500"
           show-count
@@ -108,21 +108,25 @@
 
         <!-- 权限选择 -->
         <div class="mb-15px">
-          <p class="text-14px text-[--text-color] mb-10px">谁可以看</p>
+          <p class="text-14px text-[--text-color] mb-10px">{{ t('dynamic.list.modal.visibility_label') }}</p>
           <n-select
             v-model:value="permission"
             :options="permissionOptions"
-            placeholder="选择可见范围"
+            :placeholder="t('dynamic.list.modal.visibility_placeholder')"
             @update:value="handlePermissionChange" />
         </div>
 
         <!-- 选择用户列表 -->
         <div v-if="permission === 'partVisible' || permission === 'notAnyone'" class="mb-15px">
           <p class="text-14px text-[--text-color] mb-10px">
-            {{ permission === 'partVisible' ? '选择可见的人' : '选择不可见的人' }}
+            {{
+              permission === 'partVisible'
+                ? t('dynamic.list.modal.select_visible')
+                : t('dynamic.list.modal.select_hidden')
+            }}
           </p>
           <n-button @click="showUserSelectModal = true" size="small">
-            选择用户 (已选 {{ selectedUsers.length }} 人)
+            {{ t('dynamic.list.modal.selected_count', { count: selectedUsers.length }) }}
           </n-button>
           <div v-if="enrichedSelectedUsers.length > 0" class="mt-10px">
             <n-tag
@@ -138,9 +142,9 @@
 
         <!-- 操作按钮 -->
         <n-flex justify="end" :size="10">
-          <n-button @click="handleCloseModal">取消</n-button>
+          <n-button @click="handleCloseModal">{{ t('dynamic.list.buttons.cancel') }}</n-button>
           <n-button type="primary" :loading="isPublishing" :disabled="!isPublishValid" @click="handlePublishFeed">
-            发布
+            {{ t('dynamic.list.buttons.publish') }}
           </n-button>
         </n-flex>
       </div>
@@ -150,7 +154,7 @@
     <n-modal v-model:show="showUserSelectModal" class="w-75vw border-rd-8px">
       <div class="bg-[--bg-popover] p-20px box-border flex flex-col">
         <div class="flex justify-between items-center mb-20px">
-          <h3 class="text-16px font-bold text-[--text-color]">选择用户</h3>
+          <h3 class="text-16px font-bold text-[--text-color]">{{ t('dynamic.list.modal.user_modal_title') }}</h3>
           <n-button text @click="showUserSelectModal = false">
             <template #icon>
               <n-icon>
@@ -163,7 +167,11 @@
         </div>
 
         <!-- 搜索框 -->
-        <n-input v-model:value="userSearchKeyword" placeholder="搜索用户..." class="mb-15px" clearable>
+        <n-input
+          v-model:value="userSearchKeyword"
+          :placeholder="t('dynamic.list.modal.user_search_placeholder')"
+          class="mb-15px"
+          clearable>
           <template #prefix>
             <n-icon>
               <svg>
@@ -202,8 +210,10 @@
 
         <!-- 确认按钮 -->
         <n-flex justify="end" :size="10" class="mt-15px">
-          <n-button @click="showUserSelectModal = false">取消</n-button>
-          <n-button type="primary" @click="confirmUserSelection">确定 ({{ selectedUserIds.length }})</n-button>
+          <n-button @click="showUserSelectModal = false">{{ t('dynamic.list.buttons.cancel') }}</n-button>
+          <n-button type="primary" @click="confirmUserSelection">
+            {{ t('dynamic.list.buttons.confirm_with_count', { count: selectedUserIds.length }) }}
+          </n-button>
         </n-flex>
       </div>
     </n-modal>
@@ -212,7 +222,7 @@
     <n-modal v-model:show="showCommentModal" class="w-75vw border-rd-8px">
       <div class="bg-[--bg-popover] h-full p-6px box-border flex flex-col">
         <div class="flex justify-between items-center mb-15px">
-          <h3 class="text-16px font-bold">评论通知</h3>
+          <h3 class="text-16px font-bold">{{ t('dynamic.list.modal.comment_notice_title') }}</h3>
           <n-button text @click="showCommentModal = false">
             <template #icon>
               <n-icon>
@@ -225,8 +235,8 @@
         <!-- 评论列表 -->
         <n-scrollbar style="max-height: 500px">
           <div v-if="currentComments.length === 0" class="text-center text-gray-500 py-40px">
-            <div class="text-16px mb-10px">暂无评论通知</div>
-            <div class="text-12px">暂无评论记录呢</div>
+            <div class="text-16px mb-10px">{{ t('dynamic.list.modal.comment_notice_empty_title') }}</div>
+            <div class="text-12px">{{ t('dynamic.list.modal.comment_notice_empty_desc') }}</div>
           </div>
           <div v-else>
             <n-flex
@@ -251,6 +261,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
@@ -264,6 +275,7 @@ import DynamicList from '@/components/common/DynamicList.vue'
 import { useWindow } from '@/hooks/useWindow'
 
 const { createWebviewWindow, sendWindowPayload, checkWinExist } = useWindow()
+const { t } = useI18n()
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const feedStore = useFeedStore()
@@ -284,11 +296,11 @@ const mediaType = ref(0)
 
 // 权限设置
 const permission = ref<'open' | 'partVisible' | 'notAnyone'>('open')
-const permissionOptions = [
-  { label: '公开', value: 'open' },
-  { label: '部分可见', value: 'partVisible' },
-  { label: '不给谁看', value: 'notAnyone' }
-]
+const permissionOptions = computed(() => [
+  { label: t('dynamic.list.permission.open'), value: 'open' },
+  { label: t('dynamic.list.permission.part_visible'), value: 'partVisible' },
+  { label: t('dynamic.list.permission.not_anyone'), value: 'notAnyone' }
+])
 
 // 用户选择相关
 const showUserSelectModal = ref(false)
@@ -346,7 +358,7 @@ const enrichedSelectedUsers = computed(() => {
     const userInfo = groupStore.getUserInfo(user.uid)
     return {
       ...user,
-      name: userInfo?.name || user.remark || user.uid || '未知用户'
+      name: userInfo?.name || user.remark || user.uid || t('dynamic.common.unknown_user')
     }
   })
 })
@@ -386,10 +398,10 @@ const handleRefresh = async () => {
     await feedStore.refresh()
     // 刷新后清空未读数量
     feedStore.clearUnreadCount()
-    window.$message.success('刷新成功')
+    window.$message.success(t('dynamic.messages.refresh_success'))
   } catch (error) {
     console.error('刷新动态失败:', error)
-    window.$message.error('刷新失败，请重试')
+    window.$message.error(t('dynamic.messages.refresh_fail'))
   }
 }
 
@@ -409,7 +421,7 @@ const handleItemClick = async (feedId: string) => {
 
   // 创建新的webview窗口来显示动态详情
   const webview = await createWebviewWindow(
-    '动态详情', // 窗口标题
+    t('dynamic.page.detail.title'), // 窗口标题
     windowLabel, // 窗口标签
     800, // 宽度
     900, // 高度
@@ -471,13 +483,17 @@ const resetAddFeedForm = () => {
 const handlePublishFeed = async () => {
   // 验证内容
   if (!newFeedContent.value.trim()) {
-    window.$message.warning('请输入动态内容')
+    window.$message.warning(t('dynamic.messages.publish_empty'))
     return
   }
 
   // 验证权限设置
   if ((permission.value === 'partVisible' || permission.value === 'notAnyone') && selectedUsers.value.length === 0) {
-    window.$message.warning(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
+    window.$message.warning(
+      permission.value === 'partVisible'
+        ? t('dynamic.messages.publish_select_visible')
+        : t('dynamic.messages.publish_select_hidden')
+    )
     return
   }
 
@@ -502,7 +518,7 @@ const handlePublishFeed = async () => {
     // 后端会返回生成的朋友圈ID
     console.log('发布成功，返回数据:', response)
 
-    window.$message.success('发布成功！')
+    window.$message.success(t('dynamic.messages.publish_success'))
 
     // 关闭弹窗
     showAddFeedModal.value = false
@@ -511,7 +527,7 @@ const handlePublishFeed = async () => {
     resetAddFeedForm()
   } catch (error) {
     console.error('发布动态失败:', error)
-    window.$message.error('发布失败，请稍后重试')
+    window.$message.error(t('dynamic.messages.publish_fail'))
   } finally {
     isPublishing.value = false
   }

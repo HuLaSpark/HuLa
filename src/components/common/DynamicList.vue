@@ -10,7 +10,7 @@
       <svg class="w-80px h-80px mb-16px color-#ddd">
         <use href="#empty"></use>
       </svg>
-      <p class="text-14px">{{ emptyText }}</p>
+      <p class="text-14px">{{ computedEmptyText }}</p>
     </div>
 
     <!-- 动态列表 -->
@@ -44,7 +44,7 @@
           <div v-if="item.urls.length === 1" class="inline-block max-w-full">
             <n-image
               :src="item.urls[0]"
-              alt="图片"
+              :alt="t('dynamic.common.image_alt')"
               :width="singleImageSize.width"
               :height="singleImageSize.height"
               :class="singleImageClass"
@@ -61,7 +61,7 @@
               v-for="(img, idx) in item.urls.slice(0, 9)"
               :key="idx"
               :src="img"
-              alt="图片"
+              :alt="t('dynamic.common.image_alt')"
               :width="gridImageSize.width"
               :height="gridImageSize.height"
               :class="gridImageClass"
@@ -74,7 +74,7 @@
         <div v-else-if="item.videoUrl" class="mb-12px relative rounded-8px overflow-hidden">
           <n-image
             :src="item.videoUrl"
-            alt="视频"
+            :alt="t('dynamic.common.video_alt')"
             :width="videoSize.width"
             :height="videoSize.height"
             :class="videoClass"
@@ -104,7 +104,9 @@
                 <svg class="w-16px h-16px" :class="{ 'heart-filled': item.hasLiked }">
                   <use href="#heart"></use>
                 </svg>
-                <span class="text-13px">{{ item.hasLiked ? '已赞' : '赞' }}</span>
+                <span class="text-13px">
+                  {{ item.hasLiked ? t('dynamic.detail.stats.liked') : t('dynamic.detail.stats.like') }}
+                </span>
               </div>
               <!-- 评论按钮 -->
               <div
@@ -113,7 +115,13 @@
                 <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="text-13px">{{ item.commentCount ? `评论 ${item.commentCount}` : '评论' }}</span>
+                <span class="text-13px">
+                  {{
+                    item.commentCount
+                      ? t('dynamic.list.actions.comment_with_count', { count: item.commentCount })
+                      : t('dynamic.list.actions.comment')
+                  }}
+                </span>
               </div>
               <!-- 更多操作 -->
               <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
@@ -143,7 +151,7 @@
                   <span class="font-600">{{ comment.userName }}</span>
                   <!-- 如果是回复评论，显示被回复人信息 -->
                   <span v-if="comment.replyUserName" class="text-#999">
-                    回复
+                    {{ t('dynamic.detail.actions.reply') }}
                     <span class="font-600">{{ comment.replyUserName }}</span>
                   </span>
                   <span>：</span>
@@ -151,7 +159,7 @@
                 </div>
               </div>
               <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
-                还有 {{ item.commentList.length - 3 }} 条评论，点击查看全部
+                {{ t('dynamic.list.comments.more', { count: item.commentList.length - 3 }) }}
               </div>
             </div>
           </div>
@@ -161,12 +169,14 @@
       <!-- 加载更多 -->
       <div v-if="!feedOptions.isLast" class="flex justify-center py-20px">
         <n-button :loading="feedOptions.isLoading" @click="handleLoadMore" type="primary" text>
-          {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
+          {{ feedOptions.isLoading ? t('dynamic.list.loading') : t('dynamic.list.load_more') }}
         </n-button>
       </div>
 
       <!-- 已加载全部 -->
-      <div v-else-if="showLoadedAll" class="flex justify-center py-20px text-13px text-gray-400">已加载全部动态</div>
+      <div v-else-if="showLoadedAll" class="flex justify-center py-20px text-13px text-gray-400">
+        {{ t('dynamic.list.loaded_all') }}
+      </div>
     </div>
 
     <!-- 评论输入框 Modal -->
@@ -188,19 +198,21 @@
       :mask-closable="true"
       :segmented="false">
       <template #header>
-        <div class="text-16px font-600">发表评论</div>
+        <div class="text-16px font-600">{{ t('dynamic.detail.modal.title') }}</div>
       </template>
       <div class="flex flex-col gap-12px">
         <n-input
           v-model:value="commentContent"
           type="textarea"
-          placeholder="说点什么..."
+          :placeholder="t('dynamic.detail.modal.placeholder')"
           :rows="3"
           :maxlength="500"
           show-count />
         <div class="flex gap-8px justify-end">
-          <n-button @click="showCommentInput = false">取消</n-button>
-          <n-button type="primary" :loading="commentLoading" @click="handleSubmitComment">发送</n-button>
+          <n-button @click="showCommentInput = false">{{ t('dynamic.detail.modal.cancel') }}</n-button>
+          <n-button type="primary" :loading="commentLoading" @click="handleSubmitComment">
+            {{ t('dynamic.detail.modal.send') }}
+          </n-button>
         </div>
       </div>
     </n-modal>
@@ -208,6 +220,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useFeedStore, type FeedItem } from '@/stores/feed'
 import { useUserStore } from '@/stores/user'
@@ -232,11 +246,11 @@ interface Props {
   playIconInnerSize?: string
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   mode: 'mobile',
   avatarSize: 42,
   itemClass: '',
-  emptyText: '暂无动态内容',
+  emptyText: '',
   showLoadedAll: true,
   singleImageSize: () => ({ width: undefined, height: undefined }),
   gridImageSize: () => ({ width: undefined, height: undefined }),
@@ -256,11 +270,14 @@ const emit = defineEmits<{
   itemClick: [feedId: string]
 }>()
 
+const { t } = useI18n()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
 const groupStore = useGroupStore()
 
 const { feedList, feedOptions } = storeToRefs(feedStore)
+
+const computedEmptyText = computed(() => props.emptyText || t('dynamic.list.empty'))
 
 const showCommentInput = ref(false)
 const commentContent = ref('')
@@ -284,24 +301,24 @@ const getUserName = (item: FeedItem) => {
       return userInfo.name || userInfo.myName
     }
   }
-  return '未知用户'
+  return t('dynamic.common.unknown_user')
 }
 
 const getMoreOptions = (feed: FeedItem) => {
   const options = [
     {
-      label: '复制链接',
+      label: t('dynamic.detail.dropdown.copy'),
       key: 'copy'
     },
     {
-      label: '举报',
+      label: t('dynamic.detail.dropdown.report'),
       key: 'report'
     }
   ]
 
   if (feed.uid === userStore.userInfo?.uid) {
     options.unshift({
-      label: '删除动态',
+      label: t('dynamic.detail.dropdown.delete'),
       key: 'delete'
     })
   }
@@ -314,18 +331,18 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
     case 'delete':
       try {
         await feedStore.deleteFeed(feed.id)
-        window.$message.success('删除成功')
+        window.$message.success(t('dynamic.messages.delete_success'))
       } catch (error) {
         console.error('删除动态失败:', error)
-        window.$message.error('删除失败，请重试')
+        window.$message.error(t('dynamic.messages.delete_fail'))
       }
       break
     case 'copy':
       navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
-      window.$message.success('链接已复制')
+      window.$message.success(t('dynamic.messages.copy_success'))
       break
     case 'report':
-      window.$message.info('举报功能开发中')
+      window.$message.info(t('dynamic.messages.report_todo'))
       break
   }
 }
@@ -383,7 +400,7 @@ const handleToggleLike = async (feed: FeedItem) => {
     console.error('点赞失败:', error)
     feed.hasLiked = !feed.hasLiked
     feed.likeCount = (feed.likeCount || 0) + (feed.hasLiked ? 1 : -1)
-    window.$message.error('操作失败，请重试')
+    window.$message.error(t('dynamic.messages.like_fail'))
   }
 }
 
@@ -394,7 +411,7 @@ const handleShowCommentInput = (feed: FeedItem) => {
 
 const handleSubmitComment = async () => {
   if (!currentCommentFeed.value || !commentContent.value.trim()) {
-    window.$message.warning('请输入评论内容')
+    window.$message.warning(t('dynamic.messages.comment_empty'))
     return
   }
 
@@ -420,7 +437,7 @@ const handleSubmitComment = async () => {
     currentCommentFeed.value = null
   } catch (error) {
     console.error('发表评论失败:', error)
-    window.$message.error('评论失败，请重试')
+    window.$message.error(t('dynamic.messages.comment_fail'))
   } finally {
     commentLoading.value = false
   }

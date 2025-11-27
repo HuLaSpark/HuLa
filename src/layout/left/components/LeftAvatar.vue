@@ -17,7 +17,7 @@
 
         <div
           class="bg-[--left-bg-color] text-10px rounded-50% size-12px absolute bottom--2px right--2px border-(2px solid [--left-bg-color])"
-          @click.stop="openContent('在线状态', 'onlineStatus', 320, 480)">
+          @click.stop="openContent(t('home.profile_card.online_status'), 'onlineStatus', 320, 480)">
           <img :src="statusIcon" alt="" class="rounded-50% size-full" />
         </div>
       </div>
@@ -40,12 +40,14 @@
 
           <n-flex :size="10" class="text-[--text-color]" justify="center" vertical>
             <span class="text-18px">{{ userStore.userInfo?.name }}</span>
-            <span class="text-(12px [--info-text-color])">账号 {{ userStore.userInfo?.account }}</span>
+            <span class="text-(12px [--info-text-color])">
+              {{ t('home.profile_card.labels.account') }} {{ userStore.userInfo?.account }}
+            </span>
             <n-flex
               :size="5"
               align="center"
               class="item-hover ml--4px"
-              @click="openContent('在线状态', 'onlineStatus', 320, 480)">
+              @click="openContent(t('home.profile_card.online_status'), 'onlineStatus', 320, 480)">
               <img :src="statusIcon" alt="" class="rounded-50% size-18px" />
               <span>{{ statusTitle }}</span>
             </n-flex>
@@ -59,12 +61,12 @@
       </n-flex>
       <!-- 地址 -->
       <n-flex :size="26" class="select-none">
-        <span class="text-[--info-text-color]">所在地</span>
-        <span>中国</span>
+        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.location') }}</span>
+        <span>{{ currentUserLocation || t('home.profile_card.location_unknown') }}</span>
       </n-flex>
       <!-- 动态 -->
       <n-flex :size="40" class="select-none">
-        <span class="text-[--info-text-color]">动态</span>
+        <span class="text-[--info-text-color]">{{ t('home.profile_card.labels.activities') }}</span>
         <n-image-group>
           <n-flex :class="shrinkStatus ? 'overflow-hidden w-180px' : ''" :size="6" :wrap="false">
             <n-image
@@ -79,24 +81,33 @@
       </n-flex>
 
       <n-flex :size="40" align="center" justify="center">
-        <n-button secondary @click="handleEditing">编辑资料</n-button>
+        <n-button secondary @click="handleEditing">{{ t('home.profile_card.buttons.edit') }}</n-button>
       </n-flex>
     </n-flex>
   </n-popover>
 </template>
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStore } from '@/stores/user.ts'
+import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils.ts'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus.ts'
 import { leftHook } from '../hook.ts'
 
 const userStore = useUserStore()
+const groupStore = useGroupStore()
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar as string))
+const currentUserLocation = computed(() => {
+  const uid = userStore.userInfo?.uid
+  if (!uid) return ''
+  return groupStore.getUserInfo(uid)?.locPlace ?? ''
+})
 const { shrinkStatus, infoShow, themeColor, openContent, handleEditing } = leftHook()
 const { statusIcon, statusTitle, statusBgColor } = useOnlineStatus()
 </script>

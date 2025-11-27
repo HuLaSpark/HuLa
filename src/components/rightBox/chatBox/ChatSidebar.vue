@@ -158,8 +158,10 @@
                         :size="4"
                         class="flex-1">
                         <img class="size-12px" :src="getUserState(item.userStateId)?.url" alt="" />
-                        <span class="text-10px text-[--chat-text-color] truncate">
-                          {{ getUserState(item.userStateId)?.title }}
+                        <span
+                          class="text-10px text-[--chat-text-color] flex-1 min-w-0 truncate"
+                          :title="translateStateTitle(getUserState(item.userStateId)?.title)">
+                          {{ translateStateTitle(getUserState(item.userStateId)?.title) }}
                         </span>
                       </n-flex>
                     </n-flex>
@@ -374,6 +376,13 @@ const { stateList } = storeToRefs(userStatusStore)
 
 const getUserState = (stateId: string) => {
   return stateList.value.find((state: { id: string }) => state.id === stateId)
+}
+
+const translateStateTitle = (title?: string) => {
+  if (!title) return ''
+  const key = `auth.onlineStatus.states.${title}`
+  const translated = t(key)
+  return translated === key ? title : translated
 }
 
 appWindow.listen('announcementUpdated', async (event: any) => {
