@@ -386,7 +386,7 @@ useMitt.on(WsResponseMessageType.FEED_SEND_MSG, (data: { uid: string }) => {
     // 同步更新角标
     unreadCountManager.refreshBadge(globalStore.unReadMark)
   } else {
-    console.log('🔔 [App.vue] 是自己发布的，不增加未读数')
+    console.log('[App.vue] 是自己发布的，不增加未读数')
   }
 })
 
@@ -414,7 +414,7 @@ useMitt.on(WsResponseMessageType.FEED_NOTIFY, async (data: any) => {
     }
     // 如果是点赞通知
     else if (!data.comment) {
-      console.log('➕ 处理点赞通知')
+      console.log('处理点赞通知')
       feedStore.increaseUnreadCount(1)
       const likeListResult = await feedStore.getLikeList(data.feedId)
       if (likeListResult) {
@@ -538,26 +538,47 @@ const listenMobileReLogin = async () => {
   }
 }
 
+let lastWsConnectionState: string | null = null
+
 const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
-  if (payload && payload.type === 'connectionStateChanged' && payload.state === 'CONNECTED' && payload.isReconnection) {
-    // 开始同步，显示加载状态
-    chatStore.syncLoading = true
-    try {
-      if (userStore.userInfo?.uid) {
-        await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
-      }
-      await chatStore.getSessionList(true)
-      await chatStore.setAllSessionMsgList(20)
-      if (globalStore.currentSessionRoomId) {
-        await chatStore.resetAndRefreshCurrentRoomMessages()
-        await chatStore.fetchCurrentRoomRemoteOnce(20)
-      }
-      unreadCountManager.refreshBadge(globalStore.unReadMark)
-    } finally {
-      // 同步完成，隐藏加载状态
-      chatStore.syncLoading = false
+  if (!payload || payload.type !== 'connectionStateChanged') return
+
+  const previousState = lastWsConnectionState
+  const nextState = payload.state
+  const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
+  const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
+
+  lastWsConnectionState = nextState ?? previousState
+
+  if (!(nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop))) return
+
+  // 开始同步，显示加载状态
+  chatStore.syncLoading = true
+  try {
+    if (userStore.userInfo?.uid) {
+      await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
     }
+    await chatStore.getSessionList(true)
+    await chatStore.setAllSessionMsgList(20)
+    if (globalStore.currentSessionRoomId) {
+      await chatStore.resetAndRefreshCurrentRoomMessages()
+      await chatStore.fetchCurrentRoomRemoteOnce(20)
+      const currentSession = chatStore.getSession(globalStore.currentSessionRoomId)
+      // 重连后如果当前会话仍有未读，补一次已读上报和本地清零，避免气泡卡住
+      if (currentSession?.unreadCount) {
+        try {
+          await ImRequestUtils.markMsgRead(currentSession.roomId)
+        } catch (error) {
+          console.error('[Network] 重连后上报已读失败:', error)
+        }
+        chatStore.markSessionRead(currentSession.roomId)
+      }
+    }
+    unreadCountManager.refreshBadge(globalStore.unReadMark)
+  } finally {
+    // 同步完成，隐藏加载状态
+    chatStore.syncLoading = false
   }
 }
 

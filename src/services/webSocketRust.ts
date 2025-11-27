@@ -27,6 +27,7 @@ export interface WebSocketEvent {
   type: 'ConnectionStateChanged' | 'MessageReceived' | 'HeartbeatStatusChanged' | 'Error'
   state?: ConnectionState
   isReconnection?: boolean
+  is_reconnection?: boolean
   message?: any
   health?: ConnectionHealth
   details?: Record<string, any>

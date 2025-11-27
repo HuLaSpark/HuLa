@@ -1,11 +1,15 @@
+use crate::AppData;
+use crate::command::message_command::{SyncMessagesParam, sync_messages};
 use crate::websocket::commands::get_websocket_client_container;
 
 use super::types::*;
 use anyhow::Result;
+use chrono::Utc;
 use futures_util::{sink::SinkExt, stream::StreamExt};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::{Mutex, RwLock, mpsc};
 use tokio::task::JoinHandle;
 use tokio::time::{Duration, interval, sleep};
@@ -13,9 +17,6 @@ use tokio::time::{Duration, interval, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use tracing::{debug, error, info, warn};
 use url::Url;
-
-use chrono::Utc;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -264,6 +265,9 @@ impl WebSocketClient {
         // 获取连接锁
         let _lock = self.connection_mutex.lock().await;
 
+        // 标记为重连，以便前端显示同步提示
+        self.is_reconnecting.store(true, Ordering::SeqCst);
+
         self.reconnect_attempts.store(0, Ordering::SeqCst);
 
         // 先断开当前连接
@@ -293,7 +297,6 @@ impl WebSocketClient {
                 Ok(_) => {
                     info!("WebSocket connection established");
                     self.reconnect_attempts.store(0, Ordering::SeqCst);
-                    self.is_reconnecting.store(false, Ordering::SeqCst);
 
                     // 监控连接状态，直到断开
                     while self.is_ws_connected.load(Ordering::SeqCst)
@@ -400,11 +403,13 @@ impl WebSocketClient {
         *self.close_sender.write().await = Some(close_sender);
 
         // 更新连接状态
-        self.update_state(
-            ConnectionState::Connected,
-            self.is_reconnecting.load(Ordering::SeqCst),
-        )
-        .await;
+        let was_reconnecting = self.is_reconnecting.swap(false, Ordering::SeqCst);
+        self.update_state(ConnectionState::Connected, was_reconnecting)
+            .await;
+
+        if was_reconnecting {
+            self.schedule_post_reconnect_sync();
+        }
 
         // 标记为已连接
         self.is_ws_connected.store(true, Ordering::SeqCst);
@@ -1147,5 +1152,28 @@ impl WebSocketClient {
     /// 检查 WebSocket 是否已连接
     pub fn is_connected(&self) -> bool {
         self.is_ws_connected.load(Ordering::SeqCst)
+    }
+
+    fn schedule_post_reconnect_sync(&self) {
+        let app_handle = self.app_handle.clone();
+        tokio::spawn(async move {
+            if let Err(err) = Self::run_sync_messages(&app_handle).await {
+                warn!("Post-reconnect message sync failed: {}", err);
+            } else {
+                info!("Post-reconnect message sync completed");
+            }
+        });
+    }
+
+    async fn run_sync_messages(app_handle: &AppHandle) -> Result<(), String> {
+        let state: State<'_, AppData> = app_handle.state();
+
+        let params = Some(SyncMessagesParam {
+            async_data: Some(true),
+            full_sync: Some(false),
+            uid: None,
+        });
+
+        sync_messages(params, state).await
     }
 }
