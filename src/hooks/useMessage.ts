@@ -115,10 +115,12 @@ export const useMessage = () => {
           .then(() => {
             // 更新本地会话状态
             chatStore.updateSession(item.roomId, { top: !item.top })
-            window.$message.success(item.top ? '已取消置顶' : '已置顶')
+            window.$message.success(
+              item.top ? t('message.message_menu.unpin_success') : t('message.message_menu.pin_success')
+            )
           })
           .catch(() => {
-            window.$message.error(item.top ? '取消置顶失败' : '置顶失败')
+            window.$message.error(item.top ? t('message.message_menu.unpin_fail') : t('message.message_menu.pin_fail'))
           })
       }
     },
@@ -127,7 +129,7 @@ export const useMessage = () => {
       icon: 'copy',
       click: (item: any) => {
         navigator.clipboard.writeText(item.account)
-        window.$message.success(`复制成功 ${item.account}`)
+        window.$message.success(t('message.message_menu.copy_success', { account: item.account }))
       }
     },
     {
@@ -198,7 +200,9 @@ export const useMessage = () => {
                 shield: !item.shield
               })
 
-              window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
+              window.$message.success(
+                item.shield ? t('message.message_menu.unshield_success') : t('message.message_menu.shield_success')
+              )
             }
           }
         ]
@@ -231,7 +235,9 @@ export const useMessage = () => {
           shield: !item.shield
         })
 
-        window.$message.success(item.shield ? '已取消屏蔽' : '已屏蔽消息')
+        window.$message.success(
+          item.shield ? t('message.message_menu.unshield_success') : t('message.message_menu.shield_success')
+        )
       },
       // 只在单聊时显示
       visible: (item: SessionItem) => item.type === RoomTypeEnum.SINGLE
@@ -260,14 +266,16 @@ export const useMessage = () => {
         if (item.type === RoomTypeEnum.SINGLE) {
           await contactStore.onDeleteFriend(item.detailId)
           await handleMsgDelete(item.roomId)
-          window.$message.success('已删除好友')
+          window.$message.success(t('message.message_menu.delete_friend_success'))
           return
         }
 
         // 群聊：检查是否是频道
         if (item.roomId === '1') {
           window.$message.warning(
-            item.operate === SessionOperateEnum.DISSOLUTION_GROUP ? '无法解散频道' : '无法退出频道'
+            item.operate === SessionOperateEnum.DISSOLUTION_GROUP
+              ? t('message.message_menu.cannot_dissolve_channel')
+              : t('message.message_menu.cannot_quit_channel')
           )
           return
         }
@@ -275,7 +283,11 @@ export const useMessage = () => {
         // 群聊：解散或退出
         await exitGroup({ roomId: item.roomId })
         await handleMsgDelete(item.roomId)
-        window.$message.success(item.operate === SessionOperateEnum.DISSOLUTION_GROUP ? '已解散群聊' : '已退出群聊')
+        window.$message.success(
+          item.operate === SessionOperateEnum.DISSOLUTION_GROUP
+            ? t('message.message_menu.dissolve_group_success')
+            : t('message.message_menu.quit_group_success')
+        )
       },
       visible: (item: SessionItem) => {
         // 单聊：只在operate为DELETE_FRIEND时显示
@@ -313,10 +325,10 @@ export const useMessage = () => {
     let message = ''
     switch (newType) {
       case NotificationTypeEnum.RECEPTION:
-        message = '已允许消息提醒'
+        message = t('message.message_menu.notification_allowed')
         break
       case NotificationTypeEnum.NOT_DISTURB:
-        message = '已设置接收消息但不提醒'
+        message = t('message.message_menu.notification_silent')
         // 设置免打扰时也需要更新全局未读数，因为该会话的未读数将不再计入
         chatStore.updateTotalUnreadCount()
         break

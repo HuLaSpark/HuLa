@@ -232,9 +232,13 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | 🔔   | 系统托盘通知     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
 | 📷   | 图片查看器       | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
 | ✂️   | 截图功能         | ![进行中](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🎙️   | 语音通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
+| 🎥   | 视频通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
+| ⌨️   | 全局快捷键管理   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
+| 📺   | 独立媒体查看器   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
 | 📁   | 文件上传(七牛云) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
 | 🔄   | 自动更新系统     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 🌍   | i18n 支持  | ![进行中](https://img.shields.io/badge/60%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 🌍   | i18n 支持  | ![进行中](https://img.shields.io/badge/98%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
 
 ### 🌐 跨平台支持
 
@@ -399,6 +403,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 
 | 💝 日期    | 👤 赞助者            | 💰 金额  | 🏷️ 平台                                                                                           |
 | ---------- | -------------------- | -------- | ------------------------------------------------------------------------------------------------- |
+| 2025-11-29 | **Sven**             | `¥66`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 | 2025-06-26 | **m udDy🐖**         | `¥88`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 | 2025-05-09 | **犹豫，就会败北。** | `¥88`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 | 2025-04-01 | **墨**               | `¥88.88` | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |

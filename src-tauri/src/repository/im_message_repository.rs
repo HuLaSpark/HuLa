@@ -541,27 +541,18 @@ pub async fn save_message(
         .map_err(|e| anyhow::anyhow!("Failed to delete existing message: {}", e))?;
     }
 
-    // 如果缺少，就填充time_block，以便为转发等消息类型呈现时间戳块
+    // 如果缺少，就填充time_block，使用统一的计算函数
     if record.message.time_block.is_none() {
         if let Some(current_send_time) = record.message.send_time {
-            let last_message = im_message::Entity::find()
-                .filter(im_message::Column::RoomId.eq(record.message.room_id.clone()))
-                .filter(im_message::Column::LoginUid.eq(record.message.login_uid.clone()))
-                .filter(im_message::Column::SendTime.lt(current_send_time))
-                .order_by_desc(Expr::col(im_message::Column::SendTime))
-                .order_by_desc(Expr::col(im_message::Column::Id).cast_as(Alias::new("INTEGER")))
-                .limit(1)
-                .one(db)
-                .await
-                .map_err(|e| anyhow::anyhow!("Failed to query last message: {}", e))?;
-
-            if let Some(last_message) = last_message {
-                if let Some(last_send_time) = last_message.send_time {
-                    if current_send_time - last_send_time >= 1000 * 60 * 15 {
-                        record.message.time_block = Some(current_send_time - last_send_time);
-                    }
-                }
-            }
+            // 使用统一的 time_block 计算函数
+            record.message.time_block = calculate_time_block(
+                db,
+                &record.message.room_id,
+                &record.message.id,
+                current_send_time,
+                &record.message.login_uid,
+            )
+            .await?;
         }
     }
 
@@ -685,6 +676,48 @@ pub async fn record_room_clear(
     Ok(())
 }
 
+/// 计算消息的 time_block
+/// 判断当前消息与前一条消息的时间间隔，如果超过10分钟则返回间隔值
+/// 如果是房间的第一条消息，返回 Some(1) 表示始终显示时间
+pub async fn calculate_time_block<C>(
+    db: &C,
+    room_id: &str,
+    current_msg_id: &str,
+    current_send_time: i64,
+    login_uid: &str,
+) -> Result<Option<i64>, CommonError>
+where
+    C: ConnectionTrait,
+{
+    // 查找该房间的前一条消息（按发送时间排序，排除当前消息）
+    let last_message = im_message::Entity::find()
+        .filter(im_message::Column::RoomId.eq(room_id))
+        .filter(im_message::Column::LoginUid.eq(login_uid))
+        .filter(im_message::Column::Id.ne(current_msg_id))
+        .filter(im_message::Column::SendTime.lt(current_send_time)) // 按发送时间比较
+        .order_by_desc(im_message::Column::SendTime) // 按发送时间降序
+        .limit(1)
+        .one(db)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to find last message: {}", e))?;
+
+    if let Some(last_msg) = last_message {
+        if let Some(last_send_time) = last_msg.send_time {
+            let time_diff = current_send_time - last_send_time;
+            // 时间间隔阈值：10分钟
+            const TIME_BLOCK_THRESHOLD_MS: i64 = 1000 * 60 * 10;
+            if time_diff >= TIME_BLOCK_THRESHOLD_MS {
+                return Ok(Some(time_diff));
+            }
+        }
+    } else {
+        // 房间的第一条消息，始终显示时间
+        return Ok(Some(1));
+    }
+
+    Ok(None)
+}
+
 /// 更新消息发送状态
 pub async fn update_message_status(
     db: &DatabaseConnection,
@@ -701,30 +734,18 @@ pub async fn update_message_status(
             .ok_or_else(|| CommonError::UnexpectedError(anyhow::anyhow!("Message not found")))?
             .into_active_model();
 
-    // 设置 time_block
-    if record.message.id.starts_with('T') {
-        info!("check msg sendTime");
-        // 查找该房间的最后一条消息
-        let last_message = im_message::Entity::find()
-            .filter(im_message::Column::RoomId.eq(&record.message.room_id))
-            .filter(im_message::Column::LoginUid.eq(record.message.login_uid.clone()))
-            .filter(im_message::Column::Id.ne(&record.message.id))
-            .order_by_desc(im_message::Column::Id)
-            .limit(1)
-            .one(db)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to find last message: {}", e))?;
+    // 使用统一的 time_block 计算函数
+    if let Some(send_time) = record.message.send_time {
+        let time_block = calculate_time_block(
+            db,
+            &record.message.room_id,
+            &record.message.id,
+            send_time,
+            &login_uid,
+        )
+        .await?;
 
-        if let Some(last_message) = last_message {
-            // 比较时间戳
-            if let (Some(last_send_time), Some(send_time)) =
-                (last_message.send_time, record.message.send_time)
-            {
-                if send_time - last_send_time >= 1000 * 60 * 15 {
-                    active_model.time_block = Set(Some(send_time - last_send_time));
-                }
-            }
-        }
+        active_model.time_block = Set(time_block);
     }
 
     active_model.send_status = Set(status.to_string());

@@ -1,0 +1,18 @@
+{
+  "search": {
+    "placeholder": "Search chats"
+  },
+  "tabs": {
+    "all": "All",
+    "imageVideo": "Images/Videos",
+    "file": "Files"
+  },
+  "datePicker": {
+    "placeholder": "Select date range",
+    "start": "Start date",
+    "end": "End date"
+  },
+  "empty": {
+    "noData": "No chat history yet"
+  }
+}

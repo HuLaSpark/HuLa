@@ -1,0 +1,218 @@
+{
+  "file": {
+    "unknown_file": "未知文件",
+    "unknown_error": "未知错误",
+    "status": {
+      "downloaded": "已下载",
+      "not_downloaded": "未下载"
+    },
+    "toast": {
+      "missing_local": "暂时找不到本地文件，请先下载后再试",
+      "reveal_fail": "无法在文件夹中显示该文件",
+      "open_fail_hint": "无法打开或显示文件。请手动在文件管理器中找到并打开文件。",
+      "download_open_fail": "文件下载成功，但无法打开或显示文件。请手动在文件管理器中查找下载的文件。",
+      "download_failed": "下载文件失败: {reason}"
+    }
+  },
+  "video": {
+    "unknown_video": "视频文件",
+    "uploading": "正在上传视频... {progress}%",
+    "opening": "正在打开视频..."
+  },
+  "file_upload": {
+    "title": "发送文件",
+    "cancel": "取消",
+    "send": "发送 ({count})"
+  },
+  "file_upload_progress": {
+    "uploading_with_name": "正在上传: {name}",
+    "uploading": "正在上传文件",
+    "preparing": "准备上传",
+    "completed_failed": "上传完成 ({count} 个失败)",
+    "completed": "上传完成"
+  },
+  "voice_recorder": {
+    "tap_prefix": "点击",
+    "tap_suffix": "说话",
+    "recording": "正在录音",
+    "processing": "正在处理音频",
+    "error": "录音失败"
+  },
+  "call_window": {
+    "incoming": "来电",
+    "video_call": "视频通话",
+    "voice_call": "语音通话",
+    "unknown_user": "未知用户",
+    "status": {
+      "calling": "正在呼叫",
+      "ongoing": "通话中",
+      "ended": "通话已结束",
+      "preparing": "准备中"
+    },
+    "mic_on": "麦克风已开",
+    "mic_off": "麦克风已关",
+    "speaker_on": "扬声器已开",
+    "speaker_off": "扬声器已关",
+    "camera_disable": "关闭摄像头",
+    "camera_enable": "开启摄像头",
+    "hangup": "挂断"
+  },
+  "friend_verify": {
+    "title": "申请加好友",
+    "account": "账号: {account}",
+    "placeholder": "输入几句话，对TA说些什么吧",
+    "send_btn": "添加好友",
+    "toast_success": "已发送好友申请",
+    "default_msg": "我是{name}"
+  },
+  "group_verify": {
+    "title": "申请加群",
+    "account": "群号: {account}",
+    "placeholder": "输入验证消息",
+    "send_btn": "申请加入",
+    "toast_success": "已发送群聊申请",
+    "default_msg": "我是{name}"
+  },
+  "message_list": {
+    "sync_loading": "正在同步消息",
+    "official_popover": "官方群聊认证",
+    "bot_popover": "HuLa助手",
+    "mention_tag": "[有人@我]",
+    "shield_group": "您已屏蔽群聊",
+    "shield_user": "您已屏蔽此人",
+    "empty_description": "快和朋友聊天吧！",
+    "empty_action": "寻找好友",
+    "default_last_msg": "欢迎使用HuLa"
+  },
+  "message_menu": {
+    "pin_success": "已置顶",
+    "unpin_success": "已取消置顶",
+    "pin_fail": "置顶失败",
+    "unpin_fail": "取消置顶失败",
+    "copy_success": "复制成功 {account}",
+    "shield_success": "已屏蔽消息",
+    "unshield_success": "已取消屏蔽",
+    "delete_friend_success": "已删除好友",
+    "cannot_dissolve_channel": "无法解散频道",
+    "cannot_quit_channel": "无法退出频道",
+    "dissolve_group_success": "已解散群聊",
+    "quit_group_success": "已退出群聊",
+    "notification_allowed": "已允许消息提醒",
+    "notification_silent": "已设置接收消息但不提醒"
+  },
+  "image_viewer": {
+    "zoom_out": "缩小",
+    "zoom_in": "放大",
+    "rotate_left": "向左旋转",
+    "rotate_right": "向右旋转",
+    "reset": "重置",
+    "save_as": "另存为",
+    "first_image": "这是第一张图片",
+    "last_image": "已经最后一张图片",
+    "filter_name": "图片"
+  },
+  "video_viewer": {
+    "previous_video": "上一个视频",
+    "next_video": "下一个视频",
+    "play": "播放",
+    "pause": "暂停",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "tip_playing_index": "正在播放第 {index} 个视频",
+    "tip_playing_previous": "正在播放上一个视频",
+    "tip_first": "已经是第一个视频了",
+    "tip_playing_next": "正在播放下一个视频",
+    "tip_last": "已经是最后一个视频了"
+  },
+  "screenshot": {
+    "border_radius": "圆角",
+    "redo": "重做",
+    "undo": "撤回",
+    "confirm": "确定",
+    "cancel": "取消",
+    "tool_rect": "矩形",
+    "tool_circle": "圆形",
+    "tool_arrow": "箭头",
+    "tool_mosaic": "马赛克",
+    "tooltip_drag": "拖动调整选区",
+    "tooltip_resize": "拖拽控制点调整大小",
+    "save_success": "截图已复制到剪贴板",
+    "save_failed": "截图失败，请稍后重试"
+  },
+  "lock_screen": {
+    "title": "锁定屏幕",
+    "password_label": "锁屏密码",
+    "password_placeholder": "请输入锁屏密码",
+    "confirm_button": "确定",
+    "validation_required": "请输入锁屏密码",
+    "tip_description": "这是一个开源的即时通讯(IM)应用，它采用了 Tauri、Vue3、Vite5、UnoCSS 和 TypeScript 等前沿技术。",
+    "enter_system_tooltip": "进入系统",
+    "unlocking": "解锁中",
+    "wrong_password": "密码不正确, 请再试一次",
+    "toast_empty_password": "请输入密码",
+    "return_action": "返回",
+    "logout_action": "退出登录",
+    "forgot_password": "忘记密码",
+    "enter_system_action": "进入系统"
+  },
+  "check_update": {
+    "current_version": "当前版本",
+    "new_tag": "new",
+    "new_release_date": "新版本发布日期：",
+    "release_date": "版本发布日期：",
+    "log_title": "版本更新日志",
+    "collapse": "收起",
+    "expand": "展开",
+    "ignore": "忽略更新",
+    "update_now": "立即更新",
+    "check_now": "检查更新",
+    "downloading": "正在下载...",
+    "update_success": "更新成功",
+    "confirm_update": "确定更新吗？",
+    "confirm_ignore": "忽略更新不影响登录后手动更新，后续将不再弹出此次更新提醒，确定忽略更新吗？",
+    "update_error": "检查更新错误，请稍后再试",
+    "fetch_log_failed": "获取更新日志失败，请配置token后再试",
+    "download_success_toast": "安装包下载成功，稍后将自动安装并重启",
+    "restart_failed": "重启失败，请手动重启"
+  },
+  "notify": {
+    "new_messages": "新消息",
+    "ignore_all": "忽略全部"
+  },
+  "tray": {
+    "online_status_window_title": "在线状态",
+    "more_status": "更多状态",
+    "mute_all": "关闭所有声音",
+    "unmute_all": "打开所有声音",
+    "open_main_panel": "打开主面板",
+    "exit": "退出"
+  },
+  "update_window": {
+    "updating": "更新中",
+    "fetch_commit_failed": "v{version} 版本更新内容获取失败",
+    "fetch_release_error": "获取版本更新信息失败",
+    "fetch_release_error_with_reason": "获取版本更新信息失败：{reason}"
+  },
+  "multi_choose": {
+    "search_placeholder": "搜索会话",
+    "send_to_separately": "分别发送给",
+    "leave_message_placeholder": "给朋友留言",
+    "single_forward": "逐条转发",
+    "merge_forward": "合并转发",
+    "save_to_pc": "保存至电脑",
+    "delete_action": "删除",
+    "exit_multi_select": "退出多选",
+    "cancel_button": "取消",
+    "send_button": "发送",
+    "not_implemented": "暂未实现",
+    "select_delete_prompt": "请选择需要删除的消息",
+    "delete_confirm": "删除后将不会出现在你的消息记录中，确定删除这{count}条消息吗?",
+    "room_missing": "无法确定当前会话，删除失败",
+    "delete_failed_short": "删除消息失败",
+    "delete_failed_retry": "删除消息失败，请稍后再试",
+    "delete_success": "已删除选中消息",
+    "forward_success": "消息转发成功",
+    "forward_failed": "消息转发失败",
+    "non_text_message": "［非文本消息］"
+  }
+}

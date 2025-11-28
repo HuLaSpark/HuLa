@@ -77,6 +77,7 @@ import { useContactStore } from '@/stores/contacts.ts'
 import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import UserItem from './UserItem.vue'
+import { useI18n } from 'vue-i18n'
 
 type FileManagerState = {
   activeNavigation: Ref<string>
@@ -88,6 +89,7 @@ type FileManagerState = {
   setSelectedRoom: (roomId: string) => void
 }
 
+const { t } = useI18n()
 const fileManagerState = inject<FileManagerState>('fileManagerState')!
 const { activeNavigation, selectedUser, selectedRoom, setSelectedUser, setSelectedRoom } = fileManagerState
 
@@ -126,7 +128,7 @@ const enrichedContactsList = computed(() => {
     const userInfo = groupStore.getUserInfo(item.uid)
     return {
       ...item,
-      name: userInfo?.name || item.remark || '未知用户',
+      name: userInfo?.name || item.remark || t('fileManager.common.unknownUser'),
       avatar: AvatarUtils.getAvatarUrl(userInfo?.avatar || '/logoD.png'),
       activeStatus: item.activeStatus
     }
@@ -164,13 +166,13 @@ const filteredList = computed(() => {
 const getSearchPlaceholder = () => {
   switch (activeNavigation.value) {
     case 'senders':
-      return '搜索发送人'
+      return t('fileManager.userList.searchPlaceholder.senders')
     case 'sessions':
-      return '搜索会话'
+      return t('fileManager.userList.searchPlaceholder.sessions')
     case 'groups':
-      return '搜索群聊'
+      return t('fileManager.userList.searchPlaceholder.groups')
     default:
-      return '搜索'
+      return t('fileManager.userList.searchPlaceholder.default')
   }
 }
 
@@ -179,13 +181,13 @@ const getSectionTitle = () => {
   const count = filteredList.value.length
   switch (activeNavigation.value) {
     case 'senders':
-      return `发送人 (${count})`
+      return t('fileManager.userList.sectionTitle.senders', { count })
     case 'sessions':
-      return `会话 (${count})`
+      return t('fileManager.userList.sectionTitle.sessions', { count })
     case 'groups':
-      return `群聊 (${count})`
+      return t('fileManager.userList.sectionTitle.groups', { count })
     default:
-      return `列表 (${count})`
+      return t('fileManager.userList.sectionTitle.default', { count })
   }
 }
 
@@ -193,13 +195,13 @@ const getSectionTitle = () => {
 const getAllOption = () => {
   switch (activeNavigation.value) {
     case 'senders':
-      return { id: '', name: '全部发送人', avatar: '' }
+      return { id: '', name: t('fileManager.userList.allOptions.senders'), avatar: '' }
     case 'sessions':
-      return { roomId: '', roomName: '全部会话', avatar: '' }
+      return { roomId: '', roomName: t('fileManager.userList.allOptions.sessions'), avatar: '' }
     case 'groups':
-      return { roomId: '', roomName: '全部群聊', avatar: '' }
+      return { roomId: '', roomName: t('fileManager.userList.allOptions.groups'), avatar: '' }
     default:
-      return { id: '', name: '全部', avatar: '' }
+      return { id: '', name: t('fileManager.userList.allOptions.default'), avatar: '' }
   }
 }
 
@@ -226,13 +228,13 @@ const isItemSelected = (item: any) => {
 const getEmptyMessage = () => {
   switch (activeNavigation.value) {
     case 'senders':
-      return '未找到匹配的发送人'
+      return t('fileManager.userList.empty.senders')
     case 'sessions':
-      return '未找到匹配的会话'
+      return t('fileManager.userList.empty.sessions')
     case 'groups':
-      return '未找到匹配的群聊'
+      return t('fileManager.userList.empty.groups')
     default:
-      return '未找到匹配项'
+      return t('fileManager.userList.empty.default')
   }
 }
 

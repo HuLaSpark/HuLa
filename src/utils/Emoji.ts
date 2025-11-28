@@ -1,4 +1,5 @@
 import { animalEmojis, expressionEmojis, gestureEmojis } from '@/components/rightBox/emoticon/material'
+import { useI18nGlobal } from '@/services/i18n'
 
 /**
  *
@@ -27,11 +28,12 @@ const splitEmoji = (...inputs: string[]) => {
  */
 const getAllTypeEmojis = () => {
   const emojiArr = splitEmoji(expressionEmojis, animalEmojis, gestureEmojis)
+  const { t } = useI18nGlobal()
 
   return {
-    expressionEmojis: { name: '小黄脸表情', value: emojiArr[0] },
-    animalEmojis: { name: '动物表情', value: emojiArr[1] },
-    gestureEmojis: { name: '手势表情', value: emojiArr[2] }
+    expressionEmojis: { name: t('emoticon.categories.expression'), value: emojiArr[0] },
+    animalEmojis: { name: t('emoticon.categories.animal'), value: emojiArr[1] },
+    gestureEmojis: { name: t('emoticon.categories.gesture'), value: emojiArr[2] }
   }
 }
 export { getAllTypeEmojis }

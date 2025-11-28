@@ -1,0 +1,89 @@
+{
+  "navigation": {
+    "title": "File categories",
+    "items": {
+      "myFiles": "My files",
+      "senders": "By sender",
+      "sessions": "By conversation",
+      "groups": "By group",
+      "default": "Files"
+    }
+  },
+  "search": {
+    "placeholder": {
+      "default": "Search files",
+      "myFiles": "Search my files",
+      "senders": "Search sender files",
+      "sessions": "Search conversation files",
+      "groups": "Search group files"
+    },
+    "clear": "Clear search",
+    "showAllUsers": "Show all users"
+  },
+  "header": {
+    "titles": {
+      "myFiles": "My files",
+      "senders": "Grouped by sender",
+      "sessions": "Grouped by conversation",
+      "groups": "Grouped by group",
+      "default": "File list"
+    },
+    "subtitle": {
+      "userFiles": "{name}'s files · {total} items",
+      "search": "{total} files found",
+      "total": "{total} files in total"
+    }
+  },
+  "list": {
+    "fileCount": "{count} files",
+    "meta": {
+      "from": "From:"
+    }
+  },
+  "empty": {
+    "search": "No related files",
+    "userHasNoFiles": "{name} has no files",
+    "default": "No files",
+    "senders": "No sender files",
+    "sessions": "No conversation files",
+    "groups": "No group files"
+  },
+  "notifications": {
+    "saveFileSuccess": "File saved successfully",
+    "saveFileFail": "Failed to save file",
+    "saveVideoSuccess": "Video saved successfully",
+    "saveVideoFail": "Failed to save video"
+  },
+  "common": {
+    "unknownUser": "Unknown user",
+    "unknown": "Unknown",
+    "loading": "Loading"
+  },
+  "userList": {
+    "searchPlaceholder": {
+      "default": "Search",
+      "senders": "Search senders",
+      "sessions": "Search conversations",
+      "groups": "Search groups"
+    },
+    "sectionTitle": {
+      "default": "List ({count})",
+      "senders": "Senders ({count})",
+      "sessions": "Conversations ({count})",
+      "groups": "Groups ({count})"
+    },
+    "allOptions": {
+      "default": "All",
+      "senders": "All senders",
+      "sessions": "All conversations",
+      "groups": "All groups"
+    },
+    "empty": {
+      "default": "No matching items",
+      "senders": "No matching senders",
+      "sessions": "No matching conversations",
+      "groups": "No matching groups"
+    },
+    "memberCount": "{count} members"
+  }
+}

@@ -22,11 +22,14 @@
     <!-- 用户信息和状态 -->
     <div class="flex-1 min-w-0">
       <div class="text-15px font-semibold text-gray-900 dark:text-white mb-12px truncate">
-        {{ remoteUserInfo?.name || '未知用户' }}
+        {{ remoteUserInfo?.name || t('message.call_window.unknown_user') }}
       </div>
       <div class="text-12px text-gray-500 dark:text-gray-400 flex items-center">
         <div class="w-6px h-6px rounded-full bg-#13987f mr-6px animate-pulse"></div>
-        来电 · {{ callType === CallTypeEnum.VIDEO ? '视频通话' : '语音通话' }}
+        {{ t('message.call_window.incoming') }} ·
+        {{
+          callType === CallTypeEnum.VIDEO ? t('message.call_window.video_call') : t('message.call_window.voice_call')
+        }}
       </div>
     </div>
 
@@ -239,7 +242,9 @@
               <use :href="!isMuted ? '#voice' : '#voice-off'"></use>
             </svg>
           </div>
-          <div class="text-12px text-gray-400 text-center">{{ !isMuted ? '麦克风已开' : '麦克风已关' }}</div>
+          <div class="text-12px text-gray-400 text-center">
+            {{ !isMuted ? t('message.call_window.mic_on') : t('message.call_window.mic_off') }}
+          </div>
         </div>
 
         <!-- 扬声器按钮 -->
@@ -252,7 +257,9 @@
               <use :href="isSpeakerOn ? '#volume-notice' : '#volume-mute'"></use>
             </svg>
           </div>
-          <div class="text-12px text-gray-400 text-center">{{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}</div>
+          <div class="text-12px text-gray-400 text-center">
+            {{ isSpeakerOn ? t('message.call_window.speaker_on') : t('message.call_window.speaker_off') }}
+          </div>
         </div>
 
         <!-- 摄像头按钮 -->
@@ -266,7 +273,7 @@
             </svg>
           </div>
           <div class="text-12px text-gray-400 text-center">
-            {{ isVideoEnabled ? '关闭摄像头' : '开启摄像头' }}
+            {{ isVideoEnabled ? t('message.call_window.camera_disable') : t('message.call_window.camera_enable') }}
           </div>
         </div>
 
@@ -279,7 +286,7 @@
               <use href="#PhoneHangup"></use>
             </svg>
           </div>
-          <div class="text-12px text-gray-400 text-center">挂断</div>
+          <div class="text-12px text-gray-400 text-center">{{ t('message.call_window.hangup') }}</div>
         </div>
       </div>
     </div>
@@ -300,7 +307,7 @@
               </svg>
             </div>
             <div v-if="!isMobileDevice" class="text-12px text-gray-400 text-center">
-              {{ !isMuted ? '麦克风已开' : '麦克风已关' }}
+              {{ !isMuted ? t('message.call_window.mic_on') : t('message.call_window.mic_off') }}
             </div>
           </div>
 
@@ -315,7 +322,7 @@
               </svg>
             </div>
             <div v-if="!isMobileDevice" class="text-12px text-gray-400 text-center">
-              {{ isSpeakerOn ? '扬声器已开' : '扬声器已关' }}
+              {{ isSpeakerOn ? t('message.call_window.speaker_on') : t('message.call_window.speaker_off') }}
             </div>
           </div>
         </div>
@@ -354,7 +361,9 @@ import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import router from '@/router'
 import { useGroupStore } from '@/stores/group'
 import { CallResponseStatus } from '../../services/wsType'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 const route = useRoute()
@@ -436,13 +445,13 @@ const avatarSrc = computed(() => AvatarUtils.getAvatarUrl(remoteUserInfo.avatar 
 const callStatusText = computed(() => {
   switch (connectionStatus.value) {
     case RTCCallStatus.CALLING:
-      return '正在呼叫'
+      return t('message.call_window.status.calling')
     case RTCCallStatus.ACCEPT:
-      return '通话中'
+      return t('message.call_window.status.ongoing')
     case RTCCallStatus.END:
-      return '通话已结束'
+      return t('message.call_window.status.ended')
     default:
-      return '准备中'
+      return t('message.call_window.status.preparing')
   }
 })
 

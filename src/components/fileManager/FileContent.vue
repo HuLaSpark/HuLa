@@ -43,7 +43,7 @@
           <div v-for="timeGroup in displayedTimeGroupedFiles" :key="timeGroup.date" class="flex flex-col gap-12px">
             <div class="time-group">
               <span class="text-14px font-600">{{ timeGroup.displayDate || timeGroup.date }}</span>
-              <span class="text-12px">{{ timeGroup.files.length }} 个文件</span>
+              <span class="text-12px">{{ t('fileManager.list.fileCount', { count: timeGroup.files.length }) }}</span>
             </div>
             <!-- 文件列表 -->
             <div class="flex flex-col gap-15px">
@@ -58,7 +58,7 @@
                 <!-- 文件元信息 -->
                 <div class="file-meta-info">
                   <div class="flex-center gap-4px">
-                    <p>来自：</p>
+                    <p>{{ t('fileManager.list.meta.from') }}</p>
                     <p class="file-sender">{{ getUserDisplayName(file.sender?.id) }}</p>
                   </div>
                   <p class="opacity-80">{{ file.uploadTime }}</p>
@@ -73,11 +73,11 @@
       <EmptyState v-else :icon="getEmptyStateIcon()" :title="getEmptyStateTitle()">
         <template #actions>
           <n-button v-if="hasActiveSearch" @click="clearSearch" secondary type="primary" size="small">
-            清除搜索
+            {{ t('fileManager.search.clear') }}
           </n-button>
 
           <n-button v-if="selectedUser" @click="clearUserFilter" ghost color="#13987f" size="small">
-            显示全部用户
+            {{ t('fileManager.search.showAllUsers') }}
           </n-button>
         </template>
       </EmptyState>
@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { sumBy } from 'es-toolkit'
+import { useI18n } from 'vue-i18n'
 import ContextMenu from '@/components/common/ContextMenu.vue'
 import { useDownload } from '@/hooks/useDownload'
 import type { FileBody } from '@/services/types'
@@ -117,6 +118,7 @@ type FileManagerState = {
 }
 
 const groupStore = useGroupStore()
+const { t } = useI18n()
 const fileManagerState = inject<FileManagerState>('fileManagerState')!
 const { timeGroupedFiles, searchKeyword, activeNavigation, selectedUser, userList, setSearchKeyword, setSelectedUser } =
   fileManagerState
@@ -188,9 +190,9 @@ const totalDisplayedFiles = computed(() => sumBy(displayedTimeGroupedFiles.value
 
 const { downloadFile } = useDownload()
 
-const fileContextMenu: OPT.RightMenu[] = [
+const fileContextMenu = computed<OPT.RightMenu[]>(() => [
   {
-    label: '另存为',
+    label: t('menu.save_as'),
     icon: 'Importing',
     click: async (targetFile: any) => {
       const downloadUrl = targetFile.downloadUrl || targetFile.url
@@ -200,8 +202,12 @@ const fileContextMenu: OPT.RightMenu[] = [
         url: downloadUrl,
         downloadFile,
         defaultFileName: defaultName,
-        successMessage: isVideo ? '视频保存成功' : '文件保存成功',
-        errorMessage: isVideo ? '保存视频失败' : '保存文件失败'
+        successMessage: isVideo
+          ? t('fileManager.notifications.saveVideoSuccess')
+          : t('fileManager.notifications.saveFileSuccess'),
+        errorMessage: isVideo
+          ? t('fileManager.notifications.saveVideoFail')
+          : t('fileManager.notifications.saveFileFail')
       }
       try {
         if (isVideo) {
@@ -214,7 +220,7 @@ const fileContextMenu: OPT.RightMenu[] = [
       }
     }
   }
-]
+])
 
 const handleFileMenuSelect = async (menuItem: OPT.RightMenu | null, file: any) => {
   if (!menuItem || typeof menuItem.click !== 'function') {
@@ -234,35 +240,35 @@ const getUserDisplayName = (uid: string) => {
   if (groupName) {
     return groupName
   }
-  return '未知用户'
+  return t('fileManager.common.unknownUser')
 }
 
 // 获取文件搜索占位符
 const getFileSearchPlaceholder = () => {
   switch (activeNavigation.value) {
     case 'myFiles':
-      return '搜索我的文件'
+      return t('fileManager.search.placeholder.myFiles')
     case 'senders':
-      return '搜索发送人文件'
+      return t('fileManager.search.placeholder.senders')
     case 'sessions':
-      return '搜索会话文件'
+      return t('fileManager.search.placeholder.sessions')
     case 'groups':
-      return '搜索群组文件'
+      return t('fileManager.search.placeholder.groups')
     default:
-      return '搜索文件'
+      return t('fileManager.search.placeholder.default')
   }
 }
 
 // 获取内容标题
 const getContentTitle = () => {
   const navigationTitles: { [key: string]: string } = {
-    myFiles: '我的文件',
-    senders: '按发送人分类',
-    sessions: '按会话分类',
-    groups: '按群组分类'
+    myFiles: t('fileManager.header.titles.myFiles'),
+    senders: t('fileManager.header.titles.senders'),
+    sessions: t('fileManager.header.titles.sessions'),
+    groups: t('fileManager.header.titles.groups')
   }
 
-  return navigationTitles[activeNavigation.value] || '文件列表'
+  return navigationTitles[activeNavigation.value] || t('fileManager.header.titles.default')
 }
 
 // 获取内容副标题
@@ -272,16 +278,16 @@ const getContentSubtitle = () => {
   if (selectedUser.value) {
     const user = userList.value.find((u: User) => u.id === selectedUser.value)
     if (user) {
-      return `${user.name} 的文件 · 共 ${totalFiles} 个文件`
+      return t('fileManager.header.subtitle.userFiles', { name: user.name, total: totalFiles })
     }
   }
 
   const keyword = fileSearchKeyword.value.trim()
   if (keyword) {
-    return `找到 ${totalFiles} 个文件`
+    return t('fileManager.header.subtitle.search', { total: totalFiles })
   }
 
-  return `共 ${totalFiles} 个文件`
+  return t('fileManager.header.subtitle.total', { total: totalFiles })
 }
 
 const getEmptyStateIcon = () => {
@@ -301,22 +307,22 @@ const getEmptyStateIcon = () => {
 
 const getEmptyStateTitle = () => {
   if (hasActiveSearch.value) {
-    return '未找到相关文件'
+    return t('fileManager.empty.search')
   }
 
   if (selectedUser.value) {
     const user = userList.value.find((u: User) => u.id === selectedUser.value)
-    return user ? `${user.name} 暂无文件` : '暂无文件'
+    return user ? t('fileManager.empty.userHasNoFiles', { name: user.name }) : t('fileManager.empty.default')
   }
 
   const navigationTitles: { [key: string]: string } = {
-    myFiles: '暂无文件',
-    senders: '暂无发送人文件',
-    sessions: '暂无会话文件',
-    groups: '暂无群组文件'
+    myFiles: t('fileManager.empty.default'),
+    senders: t('fileManager.empty.senders'),
+    sessions: t('fileManager.empty.sessions'),
+    groups: t('fileManager.empty.groups')
   }
 
-  return navigationTitles[activeNavigation.value] || '暂无文件'
+  return navigationTitles[activeNavigation.value] || t('fileManager.empty.default')
 }
 
 // 清除搜索

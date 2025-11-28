@@ -228,27 +228,50 @@
                       <!-- msgType: 使用枚举 AiMsgContentTypeEnum -->
                       <template v-if="message.msgType === AiMsgContentTypeEnum.IMAGE">
                         <!-- 图片消息 -->
-                        <img
-                          :src="message.content"
-                          alt="生成的图片"
-                          class="max-w-400px max-h-400px rounded-8px cursor-pointer"
-                          @click="handleImagePreview(message.content)" />
+                        <template v-if="isRenderableAiImage(message)">
+                          <img
+                            :src="message.content"
+                            alt="生成的图片"
+                            class="max-w-400px max-h-400px rounded-8px cursor-pointer"
+                            @click="handleImagePreview(message.content)" />
+                        </template>
+                        <template v-else>
+                          <div class="flex flex-col gap-8px">
+                            <div class="bubble bubble-ai select-text text-14px" style="white-space: pre-wrap">
+                              {{ getAiPlaceholderText(message) }}
+                            </div>
+                          </div>
+                        </template>
                       </template>
                       <template v-else-if="message.msgType === AiMsgContentTypeEnum.VIDEO">
                         <!-- 视频消息 -->
-                        <video
-                          :src="message.content"
-                          controls
-                          class="max-w-600px max-h-400px rounded-8px"
-                          preload="metadata">
-                          您的浏览器不支持视频播放
-                        </video>
+                        <template v-if="isLikelyMediaUrl(message.content)">
+                          <video
+                            :src="message.content"
+                            controls
+                            class="max-w-600px max-h-400px rounded-8px"
+                            preload="metadata">
+                            您的浏览器不支持视频播放
+                          </video>
+                        </template>
+                        <template v-else>
+                          <div class="bubble bubble-ai select-text text-14px" style="white-space: pre-wrap">
+                            {{ getAiPlaceholderText(message) }}
+                          </div>
+                        </template>
                       </template>
                       <template v-else-if="message.msgType === AiMsgContentTypeEnum.AUDIO">
                         <!-- 音频消息 -->
-                        <audio :src="message.content" controls class="w-300px" preload="metadata">
-                          您的浏览器不支持音频播放
-                        </audio>
+                        <template v-if="isLikelyMediaUrl(message.content)">
+                          <audio :src="message.content" controls class="w-300px" preload="metadata">
+                            您的浏览器不支持音频播放
+                          </audio>
+                        </template>
+                        <template v-else>
+                          <div class="bubble bubble-ai select-text text-14px" style="white-space: pre-wrap">
+                            {{ getAiPlaceholderText(message) }}
+                          </div>
+                        </template>
                       </template>
                       <template v-else>
                         <!-- 文本消息（msgType === 1 或未设置） -->
@@ -837,6 +860,7 @@
   </n-modal>
 </template>
 <script setup lang="ts">
+import { convertFileSrc } from '@tauri-apps/api/core'
 import { type InputInst, UploadFileInfo } from 'naive-ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
@@ -872,6 +896,8 @@ import {
 import { messageSendStream } from '@/utils/ImRequestUtils'
 import { conversationGetMy } from '@/utils/ImRequestUtils'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { persistAiImageFile, resolveAiImagePath } from '@/utils/PathUtil'
+import { md5FromString } from '@/utils/Md5Util'
 import router from '@/router'
 import { storeToRefs } from 'pinia'
 import { useUpload, UploadProviderEnum } from '@/hooks/useUpload'
@@ -1000,8 +1026,112 @@ const conversationTokens = computed(() => {
 })
 const serverTokenUsage = ref<number | null>(null)
 
+type ImageWorkerResponse = {
+  success: boolean
+  url: string
+  buffer?: ArrayBuffer
+  error?: string
+}
+
+type ImageWorkerWaiter = {
+  resolve: (buffer: ArrayBuffer) => void
+  reject: (reason?: unknown) => void
+}
+
+const aiImageWorkerRequests = new Map<string, ImageWorkerWaiter[]>()
+let aiImageDownloadWorker: Worker | null = null
+const aiImageWorkerUrl = new URL('../../../workers/imageDownloader.ts', import.meta.url)
+
+const ensureAiImageWorker = () => {
+  if (aiImageDownloadWorker || typeof window === 'undefined') return
+  aiImageDownloadWorker = new Worker(aiImageWorkerUrl, { type: 'module' })
+  aiImageDownloadWorker.onmessage = (event: MessageEvent<ImageWorkerResponse>) => {
+    const { url, success, buffer, error } = event.data
+    const waiters = aiImageWorkerRequests.get(url)
+    if (!waiters?.length) return
+    aiImageWorkerRequests.delete(url)
+    if (!success || !buffer) {
+      waiters.forEach(({ reject }) => reject(new Error(error || '下载失败')))
+      return
+    }
+    waiters.forEach(({ resolve }) => resolve(buffer))
+  }
+}
+
+const requestAiImageBuffer = (url: string) => {
+  ensureAiImageWorker()
+  if (!aiImageDownloadWorker) {
+    return Promise.reject(new Error('Web Worker 不可用'))
+  }
+  const waiters = aiImageWorkerRequests.get(url)
+  if (waiters && waiters.length > 0) {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      waiters.push({ resolve, reject })
+    })
+  }
+  return new Promise<ArrayBuffer>((resolve, reject) => {
+    aiImageWorkerRequests.set(url, [{ resolve, reject }])
+    aiImageDownloadWorker!.postMessage({ url })
+  })
+}
+
+const getAiImageExtension = (url: string) => {
+  const cleanUrl = url.split(/[?#]/)[0] || ''
+  const ext = cleanUrl.split('.').pop() || ''
+  if (!ext || ext.length > 5 || ext.includes('/')) return 'png'
+  return ext
+}
+
+const buildAiImageFileName = async (url: string) => {
+  const ext = getAiImageExtension(url)
+  try {
+    const hash = await md5FromString(url)
+    return `${hash}.${ext}`
+  } catch (error) {
+    console.error('生成 AI 图片文件名失败:', error)
+    return `ai-image-${Date.now()}.${ext}`
+  }
+}
+
+const ensureLocalAiImage = async (remoteUrl: string, messageIndex: number) => {
+  if (!remoteUrl || !userStore.userInfo?.uid || !currentChat.value.id) return
+  const targetMessage = messageList.value[messageIndex]
+  if (!targetMessage || targetMessage.type !== 'assistant') return
+  const isSameImage = targetMessage.imageUrl
+    ? targetMessage.imageUrl === remoteUrl
+    : targetMessage.content === remoteUrl
+  if (!isSameImage) return
+  try {
+    const fileName = await buildAiImageFileName(remoteUrl)
+    const existsResult = await resolveAiImagePath({
+      userUid: userStore.userInfo.uid,
+      conversationId: currentChat.value.id,
+      fileName
+    })
+    let absolutePath = existsResult.absolutePath
+    if (!existsResult.exists) {
+      const buffer = await requestAiImageBuffer(remoteUrl)
+      const data = new Uint8Array(buffer)
+      const saved = await persistAiImageFile({
+        userUid: userStore.userInfo.uid,
+        conversationId: currentChat.value.id,
+        fileName,
+        data
+      })
+      absolutePath = saved.absolutePath
+    }
+    if (messageList.value[messageIndex]) {
+      const displayUrl = convertFileSrc(absolutePath)
+      messageList.value[messageIndex].content = displayUrl
+      messageList.value[messageIndex].imageUrl = remoteUrl
+    }
+  } catch (error) {
+    console.error('AI 图片本地化失败:', error)
+  }
+}
+
 const getMessageBubbleClass = (message: Message) => {
-  if (message.type === 'assistant' && message.msgType === AiMsgContentTypeEnum.IMAGE) {
+  if (message.type === 'assistant' && isRenderableAiImage(message)) {
     return []
   }
   return ['bubble', message.type === 'user' ? 'bubble-oneself' : 'bubble-ai']
@@ -1334,6 +1464,44 @@ const historyPagination = ref({
 const showImagePreview = ref(false)
 const showVideoPreview = ref(false)
 const previewItem = ref<any>(null)
+const AI_THINKING_PLACEHOLDER = '正在思考中...'
+
+const isLikelyImageUrl = (value?: string) => {
+  if (!value) return false
+  const lower = value.toLowerCase()
+  return (
+    /^https?:\/\//.test(value) ||
+    lower.startsWith('data:image/') ||
+    lower.startsWith('asset:') ||
+    lower.startsWith('file:') ||
+    lower.startsWith('tauri://') ||
+    lower.startsWith('blob:')
+  )
+}
+
+const isLikelyMediaUrl = (value?: string) => {
+  if (!value) return false
+  const lower = value.toLowerCase()
+  return (
+    /^https?:\/\//.test(value) ||
+    lower.startsWith('data:') ||
+    lower.startsWith('asset:') ||
+    lower.startsWith('file:') ||
+    lower.startsWith('tauri://') ||
+    lower.startsWith('blob:')
+  )
+}
+
+const isRenderableAiImage = (message: Message) => {
+  if (message.type !== 'assistant') return false
+  if (!isLikelyImageUrl(message.content)) return false
+  return message.msgType === AiMsgContentTypeEnum.IMAGE || message.msgType === undefined || message.msgType === null
+}
+
+const getAiPlaceholderText = (message: Message) => {
+  if (message.content && message.content.trim()) return message.content
+  return AI_THINKING_PLACEHOLDER
+}
 
 // AI消息发送处理
 const handleSendAI = (data: { content: string }) => {
@@ -1396,7 +1564,7 @@ const sendAIMessage = async (content: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       msgType: 1, // 1=TEXT
-      content: '',
+      content: AI_THINKING_PLACEHOLDER,
       createTime: Date.now()
     })
 
@@ -1429,6 +1597,13 @@ const sendAIMessage = async (content: string, model: any) => {
               // 处理正常内容
               if (data.data.receive.content) {
                 const incrementalContent = data.data.receive.content
+                // 第一段内容到达时清空占位符
+                if (
+                  messageList.value[aiMessageIndex].content === AI_THINKING_PLACEHOLDER &&
+                  accumulatedContent === ''
+                ) {
+                  messageList.value[aiMessageIndex].content = ''
+                }
                 // 手动累加内容、更新AI消息内容
                 accumulatedContent += incrementalContent
                 messageList.value[aiMessageIndex].content = accumulatedContent
@@ -1523,7 +1698,7 @@ const generateImage = async (prompt: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       msgType: 2,
-      content: '🎨 正在生成图片，请稍候...',
+      content: AI_THINKING_PLACEHOLDER,
       createTime: Date.now(),
       isGenerating: true
     })
@@ -1612,6 +1787,8 @@ const pollImageStatus = async (
           }
         }
 
+        void ensureLocalAiImage(image.picUrl, messageIndex)
+
         window.$message.success('图片生成成功')
 
         scrollToBottom()
@@ -1664,7 +1841,7 @@ const generateVideo = async (prompt: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       msgType: 3, // 3=VIDEO
-      content: '🎬 正在生成视频，这可能需要几分钟时间，请耐心等待...',
+      content: AI_THINKING_PLACEHOLDER,
       createTime: Date.now(),
       isGenerating: true
     })
@@ -1820,7 +1997,7 @@ const generateAudio = async (prompt: string, model: any) => {
     messageList.value.push({
       type: 'assistant',
       msgType: 4, // 4=AUDIO
-      content: '🎵 正在生成音频，请稍候...',
+      content: AI_THINKING_PLACEHOLDER,
       createTime: Date.now(),
       isGenerating: true
     })
@@ -2158,7 +2335,7 @@ const loadMessages = async (conversationId: string) => {
       messageList.value = []
 
       data.forEach((msg: any) => {
-        messageList.value.push({
+        const nextMessage: Message = {
           type: msg.type,
           content: msg.content || '',
           reasoningContent: msg.reasoningContent, // 推理思考内容
@@ -2167,8 +2344,29 @@ const loadMessages = async (conversationId: string) => {
           id: msg.id,
           replyId: msg.replyId,
           model: msg.model
-        })
+        }
+        if (
+          nextMessage.type === 'assistant' &&
+          (nextMessage.msgType === undefined || nextMessage.msgType === null) &&
+          isLikelyImageUrl(nextMessage.content)
+        ) {
+          nextMessage.msgType = AiMsgContentTypeEnum.IMAGE
+        }
+        if (nextMessage.msgType === AiMsgContentTypeEnum.IMAGE && isLikelyImageUrl(nextMessage.content)) {
+          nextMessage.imageUrl = msg.imageUrl || nextMessage.content
+        }
+        messageList.value.push(nextMessage)
       })
+
+      if (userStore.userInfo?.uid && currentChat.value.id) {
+        void Promise.all(
+          messageList.value.map((msg, index) => {
+            if (msg.type !== 'assistant' || msg.msgType !== AiMsgContentTypeEnum.IMAGE) return Promise.resolve()
+            const remoteUrl = msg.imageUrl || msg.content
+            return ensureLocalAiImage(remoteUrl, index)
+          })
+        )
+      }
 
       nextTick(() => {
         scrollToBottom()
@@ -2480,6 +2678,9 @@ onUnmounted(() => {
   useMitt.off('refresh-model-list', handleRefreshModelList)
   useMitt.off('open-generation-history', handleOpenHistory)
   useMitt.off('left-chat-title', handleLeftChatTitle)
+  aiImageDownloadWorker?.terminate()
+  aiImageDownloadWorker = null
+  aiImageWorkerRequests.clear()
 })
 
 // 监听会话切换，停止旧会话的轮询任务

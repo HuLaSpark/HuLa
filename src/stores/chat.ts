@@ -243,6 +243,7 @@ export const useChatStore = defineStore(
     const chatMessageList = computed(() => {
       if (!currentMessageMap.value || Object.keys(currentMessageMap.value).length === 0) return []
 
+      // 直接使用 Rust 后端计算的 timeBlock，不做前端计算
       return Object.values(currentMessageMap.value).sort((a, b) => Number(a.message.id) - Number(b.message.id))
     })
 
@@ -821,7 +822,10 @@ export const useChatStore = defineStore(
       const msg = currentMessageMap.value?.[msgId]
       if (msg) {
         msg.message.status = status
-        msg.timeBlock = timeBlock
+        // 只在 timeBlock 有值时才更新，避免覆盖原有值
+        if (timeBlock !== undefined) {
+          msg.timeBlock = timeBlock
+        }
         if (newMsgId) {
           msg.message.id = newMsgId
         }

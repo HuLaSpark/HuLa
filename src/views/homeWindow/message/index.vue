@@ -3,7 +3,7 @@
     <!-- 消息同步加载提示 -->
     <div v-if="syncLoading" class="flex-center gap-10px py-12px text-(12px [--text-color])">
       <n-spin :size="14" />
-      <span>正在同步消息</span>
+      <span>{{ t('message.message_list.sync_loading') }}</span>
     </div>
     <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
@@ -41,7 +41,7 @@
                       <use href="#auth"></use>
                     </svg>
                   </template>
-                  <span>官方群聊认证</span>
+                  <span>{{ t('message.message_list.official_popover') }}</span>
                 </n-popover>
 
                 <n-popover trigger="hover" v-if="item.account === UserType.BOT">
@@ -50,7 +50,7 @@
                       <use href="#authenticationUser"></use>
                     </svg>
                   </template>
-                  <span>HuLa助手</span>
+                  <span>{{ t('message.message_list.bot_popover') }}</span>
                 </n-popover>
               </n-flex>
               <span
@@ -66,14 +66,18 @@
             <n-flex align="center" justify="space-between">
               <template v-if="item.isAtMe">
                 <span class="text flex-1 leading-tight text-12px truncate">
-                  <span class="text-#d5304f mr-4px">[有人@我]</span>
+                  <span class="text-#d5304f mr-4px">{{ t('message.message_list.mention_tag') }}</span>
                   <span>{{ String(item.lastMsg || '').replace(':', '：') }}</span>
                 </span>
               </template>
               <template v-else-if="item.shield">
                 <span class="text flex-1 leading-tight text-12px truncate">
                   <span :class="globalStore.currentSessionRoomId === item.roomId ? 'color-#d5304f90' : 'color-#909090'">
-                    {{ item.type === RoomTypeEnum.GROUP ? '您已屏蔽群聊' : '您已屏蔽此人' }}
+                    {{
+                      item.type === RoomTypeEnum.GROUP
+                        ? t('message.message_list.shield_group')
+                        : t('message.message_list.shield_user')
+                    }}
                   </span>
                 </span>
               </template>
@@ -83,7 +87,7 @@
                     'text flex-1 leading-tight text-12px truncate',
                     { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT }
                   ]">
-                  {{ String(item.lastMsg || '').replace(':', '：') }}
+                  {{ String(item.lastMsg || t('message.message_list.default_last_msg')).replace(':', '：') }}
                 </span>
               </template>
 
@@ -138,9 +142,9 @@
     </n-flex>
 
     <!-- 没有数据显示的提示 -->
-    <n-result v-else class="absolute-center" status="418" description="快和朋友聊天吧！">
+    <n-result v-else class="absolute-center" status="418" :description="t('message.message_list.empty_description')">
       <template #footer>
-        <n-button secondary type="primary">寻找好友</n-button>
+        <n-button secondary type="primary">{{ t('message.message_list.empty_action') }}</n-button>
       </template>
     </n-result>
   </n-scrollbar>
@@ -161,7 +165,9 @@ import { useSettingStore } from '@/stores/setting'
 import { useBotStore } from '@/stores/bot'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()

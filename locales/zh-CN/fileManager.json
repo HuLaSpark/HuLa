@@ -1,0 +1,89 @@
+{
+  "navigation": {
+    "title": "文件分类",
+    "items": {
+      "myFiles": "我的文件",
+      "senders": "按发送人",
+      "sessions": "按会话",
+      "groups": "按群组",
+      "default": "文件列表"
+    }
+  },
+  "search": {
+    "placeholder": {
+      "default": "搜索文件",
+      "myFiles": "搜索我的文件",
+      "senders": "搜索发送人文件",
+      "sessions": "搜索会话文件",
+      "groups": "搜索群组文件"
+    },
+    "clear": "清除搜索",
+    "showAllUsers": "显示全部用户"
+  },
+  "header": {
+    "titles": {
+      "myFiles": "我的文件",
+      "senders": "按发送人分类",
+      "sessions": "按会话分类",
+      "groups": "按群组分类",
+      "default": "文件列表"
+    },
+    "subtitle": {
+      "userFiles": "{name} 的文件 · 共 {total} 个文件",
+      "search": "找到 {total} 个文件",
+      "total": "共 {total} 个文件"
+    }
+  },
+  "list": {
+    "fileCount": "{count} 个文件",
+    "meta": {
+      "from": "来自："
+    }
+  },
+  "empty": {
+    "search": "未找到相关文件",
+    "userHasNoFiles": "{name} 暂无文件",
+    "default": "暂无文件",
+    "senders": "暂无发送人文件",
+    "sessions": "暂无会话文件",
+    "groups": "暂无群组文件"
+  },
+  "notifications": {
+    "saveFileSuccess": "文件保存成功",
+    "saveFileFail": "保存文件失败",
+    "saveVideoSuccess": "视频保存成功",
+    "saveVideoFail": "保存视频失败"
+  },
+  "common": {
+    "unknownUser": "未知用户",
+    "unknown": "未知",
+    "loading": "加载中"
+  },
+  "userList": {
+    "searchPlaceholder": {
+      "default": "搜索",
+      "senders": "搜索发送人",
+      "sessions": "搜索会话",
+      "groups": "搜索群聊"
+    },
+    "sectionTitle": {
+      "default": "列表 ({count})",
+      "senders": "发送人 ({count})",
+      "sessions": "会话 ({count})",
+      "groups": "群聊 ({count})"
+    },
+    "allOptions": {
+      "default": "全部",
+      "senders": "全部发送人",
+      "sessions": "全部会话",
+      "groups": "全部群聊"
+    },
+    "empty": {
+      "default": "未找到匹配项",
+      "senders": "未找到匹配的发送人",
+      "sessions": "未找到匹配的会话",
+      "groups": "未找到匹配的群聊"
+    },
+    "memberCount": "{count} 人"
+  }
+}

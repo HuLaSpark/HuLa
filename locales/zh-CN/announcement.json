@@ -1,0 +1,36 @@
+{
+  "title": {
+    "create": "新增群公告",
+    "view": "查看群公告",
+    "edit": "编辑群公告"
+  },
+  "form": {
+    "placeholder": "填写公告，1～600字",
+    "pinned": "置顶",
+    "actions": {
+      "cancel": "取消",
+      "publish": "发布",
+      "new": "发布新公告"
+    }
+  },
+  "list": {
+    "empty": "暂无公告",
+    "loadMore": "加载更多",
+    "noMore": "没有更多公告了",
+    "deleteConfirm": "你确定要删除全部会话吗？",
+    "delete": {
+      "confirm": "删除",
+      "cancel": "取消"
+    },
+    "expand": "展开",
+    "collapse": "收起"
+  },
+  "toast": {
+    "contentRequired": "公告内容不能为空",
+    "contentTooLong": "公告内容不能超过600字",
+    "createSuccess": "公告发布成功",
+    "createFail": "公告发布失败",
+    "editSuccess": "公告修改成功",
+    "editFail": "公告修改失败"
+  }
+}

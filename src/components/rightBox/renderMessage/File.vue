@@ -8,7 +8,7 @@
       <div class="file-name" :title="body?.fileName">
         <n-highlight
           v-if="props.searchKeyword"
-          :text="truncateFileName(body?.fileName || '未知文件')"
+          :text="truncateFileName(body?.fileName || fallbackFileName)"
           :patterns="[props.searchKeyword]"
           :highlight-style="{
             padding: '0 4px',
@@ -17,13 +17,13 @@
             background: '#13987f'
           }" />
         <template v-else>
-          {{ truncateFileName(body?.fileName || '未知文件') }}
+          {{ truncateFileName(body?.fileName || fallbackFileName) }}
         </template>
       </div>
       <div class="file-size">
         {{ formatBytes(body?.size != null && !isNaN(body.size) ? body.size : 0) }}
         <span class="download-status" :class="{ downloaded: fileStatus?.isDownloaded }">
-          {{ fileStatus?.isDownloaded ? '已下载' : '未下载' }}
+          {{ fileStatus?.isDownloaded ? t('message.file.status.downloaded') : t('message.file.status.not_downloaded') }}
         </span>
       </div>
     </div>
@@ -120,13 +120,16 @@ import { useChatStore } from '@/stores/chat'
 import { formatBytes, getFileSuffix } from '@/utils/Formatting'
 import { getFilesMeta } from '@/utils/PathUtil'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useI18n } from 'vue-i18n'
 
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
+const { t } = useI18n()
 
 const { isDownloading: legacyIsDownloading } = useDownload()
 const fileDownloadStore = useFileDownloadStore()
+const fallbackFileName = computed(() => t('message.file.unknown_file'))
 
 const props = defineProps<{
   body: FileBody
@@ -173,14 +176,14 @@ const persistFileLocalPath = async (absolutePath: string) => {
 
 const revealInDirSafely = async (targetPath?: string | null) => {
   if (!targetPath) {
-    window.$message?.error('暂时找不到本地文件，请先下载后再试~')
+    window.$message?.error(t('message.file.toast.missing_local'))
     return
   }
   try {
     await revealItemInDir(targetPath)
   } catch (error) {
     console.error('在文件夹中显示文件失败:', error)
-    window.$message?.error('无法在文件夹中显示该文件')
+    window.$message?.error(t('message.file.toast.reveal_fail'))
   }
 }
 
@@ -239,8 +242,8 @@ watch(
 )
 
 // 截断文件名，保留后缀
-const truncateFileName = (fileName: string): string => {
-  if (!fileName) return '未知文件'
+const truncateFileName = (fileName?: string): string => {
+  if (!fileName) return fallbackFileName.value
 
   const maxWidth = 160 // 最大宽度像素
   const averageCharWidth = 9 // 平均字符宽度（基于14px Arial字体）
@@ -317,7 +320,7 @@ const handleFileClick = async () => {
     }
   } catch (error) {
     console.error('打开文件失败:', error)
-    const errorMessage = error instanceof Error ? error.message : '未知错误'
+    const errorMessage = error instanceof Error ? error.message : t('message.file.unknown_error')
     if (errorMessage.includes('Not allowed to open path') || errorMessage.includes('revealItemInDir')) {
       console.error('无法打开或显示文件。请手动在文件管理器中找到并打开文件。')
     } else {
@@ -364,9 +367,9 @@ const downloadAndOpenFile = async () => {
     console.error('下载文件失败:', error)
     const errorMessage = error instanceof Error ? error.message : '未知错误'
     if (errorMessage.includes('Not allowed to open path') || errorMessage.includes('revealItemInDir')) {
-      window.$message?.error('文件下载成功，但无法打开或显示文件。请手动在文件管理器中查找下载的文件。')
+      window.$message?.error(t('message.file.toast.download_open_fail'))
     } else {
-      window.$message?.error(`下载文件失败: ${errorMessage}`)
+      window.$message?.error(t('message.file.toast.download_failed', { reason: errorMessage }))
     }
   }
 }

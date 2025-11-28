@@ -1,0 +1,18 @@
+{
+  "search": {
+    "placeholder": "搜索聊天记录"
+  },
+  "tabs": {
+    "all": "全部",
+    "imageVideo": "图片/视频",
+    "file": "文件"
+  },
+  "datePicker": {
+    "placeholder": "选择日期范围",
+    "start": "开始日期",
+    "end": "结束日期"
+  },
+  "empty": {
+    "noData": "暂无消息记录"
+  }
+}

@@ -12,7 +12,7 @@
       <n-flex justify="space-between" align="center">
         <n-flex align="center">
           <n-flex align="center">
-            <p class="text-[--text-color]">当前版本:</p>
+            <p class="text-[--text-color]">{{ t('message.check_update.current_version') }}:</p>
             <p class="text-(20px #909090) font-500">{{ currentVersion }}</p>
           </n-flex>
 
@@ -24,27 +24,29 @@
             <p class="relative text-(20px #13987f) font-500">{{ newVersion }}</p>
 
             <span class="absolute top--10px right--44px p-[4px_8px] bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
-              new
+              {{ t('message.check_update.new_tag') }}
             </span>
           </n-flex>
         </n-flex>
         <n-flex align="center" size="medium">
           <div v-if="newVersionTime">
-            <span class="text-(12px #909090)">新版本发布日期：</span>
+            <span class="text-(12px #909090)">{{ t('message.check_update.new_release_date') }}</span>
             <span class="text-(12px #13987f)">{{ handRelativeTime(newVersionTime) }}</span>
           </div>
 
           <div v-else>
-            <span class="text-(12px #909090)">版本发布日期：</span>
+            <span class="text-(12px #909090)">{{ t('message.check_update.release_date') }}</span>
             <span class="text-(12px #13987f)">{{ handRelativeTime(versionTime) }}</span>
           </div>
         </n-flex>
       </n-flex>
       <n-flex justify="space-between" align="center" class="mb-2px">
-        <p class="text-(14px #909090)">版本更新日志</p>
+        <p class="text-(14px #909090)">{{ t('message.check_update.log_title') }}</p>
         <n-button text @click="toggleLogVisible">
           <n-flex align="center">
-            <span class="text-(12px #13987f)">{{ logVisible ? '收起' : '展开' }}</span>
+            <span class="text-(12px #13987f)">
+              {{ logVisible ? t('message.check_update.collapse') : t('message.check_update.expand') }}
+            </span>
             <svg
               class="w-16px h-16px select-none color-#13987f ml-2px transition-transform duration-300"
               :class="{ 'rotate-180': !logVisible }">
@@ -96,8 +98,8 @@
         </n-scrollbar>
       </div>
       <n-flex justify="end" class="mt-10px">
-        <n-button :onclick="dismissUpdate" secondary>忽略更新</n-button>
-        <n-button :onclick="doUpdate" secondary type="primary">立即更新</n-button>
+        <n-button :onclick="dismissUpdate" secondary>{{ t('message.check_update.ignore') }}</n-button>
+        <n-button :onclick="doUpdate" secondary type="primary">{{ t('message.check_update.update_now') }}</n-button>
       </n-flex>
     </n-flex>
   </div>
@@ -113,13 +115,15 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { handRelativeTime } from '@/utils/ComputedTime'
 import { isMac } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler.ts'
+import { useI18n } from 'vue-i18n'
 
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { createWebviewWindow, resizeWindow, setResizable } = useWindow()
 /** 项目提交日志记录 */
 const commitLog = ref<{ message: string; icon: string }[]>([])
 const newCommitLog = ref<{ message: string; icon: string }[]>([])
-const text = ref('检查更新')
+const text = ref(t('message.check_update.update_now'))
 const currentVersion = ref('')
 const newVersion = ref('')
 const loading = ref(false)
@@ -157,7 +161,7 @@ const mapCommitType = (commitMessage: string) => {
 const getCommitLog = async (url: string, isNew = false) => {
   fetch(url).then((res) => {
     if (!res.ok) {
-      commitLog.value = [{ message: '获取更新日志失败，请配置token后再试', icon: 'cloudError' }]
+      commitLog.value = [{ message: t('message.check_update.fetch_log_failed'), icon: 'cloudError' }]
       loading.value = false
       return
     }
@@ -189,7 +193,7 @@ const getCommitLog = async (url: string, isNew = false) => {
 }
 
 const doUpdate = async () => {
-  if (!(await confirm('确定更新吗'))) {
+  if (!(await confirm(t('message.check_update.confirm_update')))) {
     return
   }
   await createWebviewWindow('更新', 'update', 490, 335, '', false, 490, 335, false, true)
@@ -202,7 +206,7 @@ const doUpdate = async () => {
 }
 
 const dismissUpdate = async () => {
-  if (!(await confirm('忽略更新不影响登录后手动更新，后续将不再弹出此次更新提醒，确定忽略更新吗'))) {
+  if (!(await confirm(t('message.check_update.confirm_ignore')))) {
     return
   }
   settingStore.update.dismiss = newVersion.value
@@ -220,10 +224,10 @@ const checkUpdate = async () => {
       // 检查版本之间不同的提交信息和提交日期
       const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
       await getCommitLog(url, true)
-      text.value = '立即更新'
+      text.value = t('message.check_update.update_now')
     })
     .catch(() => {
-      window.$message.error('检查更新错误，请稍后再试')
+      window.$message.error(t('message.check_update.update_error'))
     })
 }
 

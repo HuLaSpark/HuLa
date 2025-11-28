@@ -11,6 +11,7 @@
       <!-- 内部拖动区域 -->
       <div
         :class="['drag-area', currentDrawTool ? 'cannot-drag' : 'can-drag']"
+        :title="t('message.screenshot.tooltip_drag')"
         @mousedown="handleSelectionDragStart"
         @mousemove="handleSelectionDragMove"
         @mouseup="handleSelectionDragEnd"
@@ -19,64 +20,88 @@
       <!-- resize控制点 - 四个角 -->
       <div
         :class="['resize-handle', 'resize-nw', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'nw')"></div>
       <div
         :class="['resize-handle', 'resize-ne', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'ne')"></div>
       <div
         :class="['resize-handle', 'resize-sw', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'sw')"></div>
       <div
         :class="['resize-handle', 'resize-se', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'se')"></div>
 
       <!-- resize控制点 - 四条边的中间 -->
       <div
         :class="['resize-handle', 'resize-n', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'n')"></div>
       <div
         :class="['resize-handle', 'resize-e', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'e')"></div>
       <div
         :class="['resize-handle', 'resize-s', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 's')"></div>
       <div
         :class="['resize-handle', 'resize-w', { disabled: currentDrawTool }]"
+        :title="t('message.screenshot.tooltip_resize')"
         @mousedown.stop="handleResizeStart($event, 'w')"></div>
 
       <!-- 圆角控制器 -->
       <div class="border-radius-controller" :style="borderRadiusControllerStyle" @click.stop>
-        <label>圆角:</label>
+        <label>{{ t('message.screenshot.border_radius') }}:</label>
         <input type="range" :value="borderRadius" @input="handleBorderRadiusChange" min="0" max="100" step="1" />
         <span>{{ borderRadius }}px</span>
       </div>
     </div>
 
     <div ref="buttonGroup" class="button-group" v-show="showButtonGroup && !isDragging && !isResizing">
-      <span :class="{ active: currentDrawTool === 'rect' }" @click="drawImgCanvas('rect')">
+      <span
+        :class="{ active: currentDrawTool === 'rect' }"
+        :title="t('message.screenshot.tool_rect')"
+        @click="drawImgCanvas('rect')">
         <svg><use href="#square"></use></svg>
       </span>
-      <span :class="{ active: currentDrawTool === 'circle' }" @click="drawImgCanvas('circle')">
+      <span
+        :class="{ active: currentDrawTool === 'circle' }"
+        :title="t('message.screenshot.tool_circle')"
+        @click="drawImgCanvas('circle')">
         <svg><use href="#round"></use></svg>
       </span>
-      <span :class="{ active: currentDrawTool === 'arrow' }" @click="drawImgCanvas('arrow')">
+      <span
+        :class="{ active: currentDrawTool === 'arrow' }"
+        :title="t('message.screenshot.tool_arrow')"
+        @click="drawImgCanvas('arrow')">
         <svg><use href="#arrow-right-up"></use></svg>
       </span>
-      <span :class="{ active: currentDrawTool === 'mosaic' }" @click="drawImgCanvas('mosaic')">
+      <span
+        :class="{ active: currentDrawTool === 'mosaic' }"
+        :title="t('message.screenshot.tool_mosaic')"
+        @click="drawImgCanvas('mosaic')">
         <svg><use href="#mosaic"></use></svg>
       </span>
       <!-- 重做 -->
-      <span @click="drawImgCanvas('redo')">
+      <span :title="t('message.screenshot.redo')" @click="drawImgCanvas('redo')">
         <svg><use href="#refresh"></use></svg>
       </span>
       <!-- 撤回：当没有涂鸦时禁用 -->
-      <span :class="{ disabled: !canUndo }" :aria-disabled="!canUndo" @click.stop="drawImgCanvas('undo')">
+      <span
+        :class="{ disabled: !canUndo }"
+        :aria-disabled="!canUndo"
+        :title="t('message.screenshot.undo')"
+        @click.stop="drawImgCanvas('undo')">
         <svg><use href="#return"></use></svg>
       </span>
-      <span @click="confirmSelection">
+      <span :title="t('message.screenshot.confirm')" @click="confirmSelection">
         <svg><use href="#check-small"></use></svg>
       </span>
-      <span @click="cancelSelection">
+      <span :title="t('message.screenshot.cancel')" @click="cancelSelection">
         <svg><use href="#close"></use></svg>
       </span>
     </div>
@@ -91,6 +116,7 @@ import type { Ref } from 'vue'
 import { useCanvasTool } from '@/hooks/useCanvasTool'
 import { isMac } from '@/utils/PlatformConstants'
 import { ErrorType, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { useI18n } from 'vue-i18n'
 
 type ScreenConfig = {
   startX: number
@@ -105,6 +131,7 @@ type ScreenConfig = {
 }
 
 // 获取当前窗口实例
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const canvasbox: Ref<HTMLDivElement | null> = ref(null)
 
@@ -1236,21 +1263,26 @@ const confirmSelection = async () => {
 
               try {
                 await writeImage(buffer)
+                window.$message?.success(t('message.screenshot.save_success'))
               } catch (clipboardError) {
                 console.error('复制到剪贴板失败:', clipboardError)
+                window.$message?.error(t('message.screenshot.save_failed'))
               }
 
               await resetScreenshot()
             } catch (error) {
+              window.$message?.error(t('message.screenshot.save_failed'))
               await resetScreenshot()
             }
           } else {
+            window.$message?.error(t('message.screenshot.save_failed'))
             await resetScreenshot()
           }
         }, 'image/png')
       }
     } catch (error) {
       console.error('Canvas操作失败:', error)
+      window.$message?.error(t('message.screenshot.save_failed'))
       await resetScreenshot()
     }
   }

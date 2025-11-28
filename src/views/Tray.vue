@@ -13,7 +13,7 @@
         <span>{{ item.title }}</span>
       </n-flex>
       <n-flex
-        @click="createWebviewWindow('在线状态', 'onlineStatus', 320, 480)"
+        @click="createWebviewWindow(t('message.tray.online_status_window_title'), 'onlineStatus', 320, 480)"
         align="center"
         :size="10"
         class="p-6px rounded-4px hover:bg-[--tray-hover]"
@@ -21,7 +21,7 @@
         <svg class="size-14px">
           <use href="#more"></use>
         </svg>
-        <span>更多状态</span>
+        <span>{{ t('message.tray.more_status') }}</span>
       </n-flex>
 
       <component :is="division" />
@@ -30,7 +30,7 @@
         align="center"
         :size="10"
         class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]">
-        <span>{{ messageSound ? '关闭所有声音' : '打开所有声音' }}</span>
+        <span>{{ messageSound ? t('message.tray.mute_all') : t('message.tray.unmute_all') }}</span>
       </n-flex>
 
       <component :is="division" />
@@ -40,7 +40,7 @@
         :size="10"
         class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover]"
         v-once>
-        <span>打开主面板</span>
+        <span>{{ t('message.tray.open_main_panel') }}</span>
       </n-flex>
 
       <component :is="division" />
@@ -50,7 +50,7 @@
         :size="10"
         class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]"
         v-once>
-        <span>退出</span>
+        <span>{{ t('message.tray.exit') }}</span>
       </n-flex>
     </n-flex>
   </n-flex>
@@ -62,7 +62,7 @@
       :size="10"
       class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e]"
       v-once>
-      <span>退出</span>
+      <span>{{ t('message.tray.exit') }}</span>
     </n-flex>
   </n-flex>
 </template>
@@ -78,6 +78,7 @@ import { useUserStore } from '@/stores/user'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { changeUserState } from '@/utils/ImRequestUtils'
 import { isWindows } from '@/utils/PlatformConstants'
+import { useI18n } from 'vue-i18n'
 
 const appWindow = WebviewWindow.getCurrent()
 const { checkWinExist, createWebviewWindow, resizeWindow } = useWindow()
@@ -88,6 +89,7 @@ const globalStore = useGlobalStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { stateList, stateId } = storeToRefs(userStatusStore)
 const { tipVisible, isTrayMenuShow } = storeToRefs(globalStore)
+const { t } = useI18n()
 const isFocused = ref(false)
 // 状态栏图标是否显示
 const iconVisible = ref(false)

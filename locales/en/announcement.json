@@ -1,0 +1,36 @@
+{
+  "title": {
+    "create": "Create group announcement",
+    "view": "Group announcements",
+    "edit": "Edit group announcement"
+  },
+  "form": {
+    "placeholder": "Enter announcement (1-600 characters)",
+    "pinned": "Pin to top",
+    "actions": {
+      "cancel": "Cancel",
+      "publish": "Publish",
+      "new": "Post new announcement"
+    }
+  },
+  "list": {
+    "empty": "No announcements yet",
+    "loadMore": "Load more",
+    "noMore": "No more announcements",
+    "deleteConfirm": "Are you sure to delete all messages?",
+    "delete": {
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "toast": {
+    "contentRequired": "Announcement content cannot be empty",
+    "contentTooLong": "Announcement cannot exceed 600 characters",
+    "createSuccess": "Announcement published successfully",
+    "createFail": "Failed to publish announcement",
+    "editSuccess": "Announcement updated successfully",
+    "editFail": "Failed to update announcement"
+  }
+}

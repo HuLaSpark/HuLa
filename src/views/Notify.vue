@@ -1,7 +1,7 @@
 <template>
   <n-flex vertical :size="6" class="notify" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <n-flex align="center" :size="4" class="m-[8px_0_0_0] text-(12px)">
-      <p>新消息</p>
+      <p>{{ t('message.notify.new_messages') }}</p>
       <p>·</p>
       <p>{{ msgCount }}</p>
     </n-flex>
@@ -24,7 +24,7 @@
             <span class="max-w-150px truncate text-(12px [--text-color])">
               <template v-if="group.isAtMe">
                 <span class="text flex-1 leading-tight text-12px truncate">
-                  <span class="text-#d5304f mr-4px">[有人@我]</span>
+                  <span class="text-#d5304f mr-4px">{{ t('message.message_list.mention_tag') }}</span>
                   <span>{{ group.latestContent.replace(':', '：') }}</span>
                 </span>
               </template>
@@ -44,7 +44,9 @@
       </n-flex>
     </n-scrollbar>
     <component :is="division" />
-    <p @click="handleTip" class="pt-4px pl-6px text-(12px #13987f) cursor-pointer">忽略全部</p>
+    <p @click="handleTip" class="pt-4px pl-6px text-(12px #13987f) cursor-pointer">
+      {{ t('message.notify.ignore_all') }}
+    </p>
   </n-flex>
 </template>
 <script setup lang="tsx">
@@ -62,6 +64,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { isWindows } from '@/utils/PlatformConstants'
+import { useI18n } from 'vue-i18n'
 
 // import { useTauriListener } from '../hooks/useTauriListener'
 
@@ -86,6 +89,7 @@ const { checkMessageAtMe } = useReplaceMsg()
 const globalStore = useGlobalStore()
 const chatStore = useChatStore()
 const { tipVisible } = storeToRefs(globalStore)
+const { t } = useI18n()
 const isMouseInWindow = ref(false)
 const content = ref<GroupedMessage[]>([])
 const msgCount = ref(0)

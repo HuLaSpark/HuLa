@@ -46,7 +46,7 @@
             </svg>
           </div>
         </template>
-        上一个视频
+        {{ t('message.video_viewer.previous_video') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
@@ -57,7 +57,7 @@
             </svg>
           </div>
         </template>
-        {{ isPlaying ? '暂停' : '播放' }}
+        {{ isPlaying ? t('message.video_viewer.pause') : t('message.video_viewer.play') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
@@ -68,7 +68,7 @@
             </svg>
           </div>
         </template>
-        {{ isMuted ? '取消静音' : '静音' }}
+        {{ isMuted ? t('message.video_viewer.unmute') : t('message.video_viewer.mute') }}
       </n-tooltip>
 
       <!-- 下一个视频 -->
@@ -80,7 +80,7 @@
             </svg>
           </div>
         </template>
-        下一个视频
+        {{ t('message.video_viewer.next_video') }}
       </n-tooltip>
     </div>
   </div>
@@ -94,7 +94,9 @@ import { readDir } from '@tauri-apps/plugin-fs'
 import ActionBar from '@/components/windows/ActionBar.vue'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useVideoViewer } from '@/stores/videoViewer.ts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { addListener } = useTauriListener()
 const videoViewerStore = useVideoViewer()
 const appWindow = WebviewWindow.getCurrent()
@@ -262,7 +264,7 @@ const previousVideo = async () => {
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
     // 如果是网络视频，使用原有逻辑
     currentIndex.value--
-    showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+    showVideoTip(t('message.video_viewer.tip_playing_index', { index: currentIndex.value + 1 }))
   } else {
     // 如果是本地视频，从文件夹获取视频列表
     const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
@@ -271,15 +273,15 @@ const previousVideo = async () => {
       if (currentVideoIndex > 0) {
         const previousVideoPath = folderVideos[currentVideoIndex - 1]
         videoList.value[currentIndex.value] = previousVideoPath
-        showVideoTip('正在播放上一个视频')
+        showVideoTip(t('message.video_viewer.tip_playing_previous'))
       } else {
-        showVideoTip('已经是第一个视频了')
+        showVideoTip(t('message.video_viewer.tip_first'))
         return
       }
     } else {
       // 如果获取文件夹视频失败，使用原有逻辑
       currentIndex.value--
-      showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+      showVideoTip(t('message.video_viewer.tip_playing_index', { index: currentIndex.value + 1 }))
     }
   }
 
@@ -307,7 +309,7 @@ const nextVideo = async () => {
   if (!currentVideoPath || currentVideoPath.startsWith('http')) {
     // 如果是网络视频，使用原有逻辑
     currentIndex.value++
-    showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+    showVideoTip(t('message.video_viewer.tip_playing_index', { index: currentIndex.value + 1 }))
   } else {
     // 如果是本地视频，从文件夹获取视频列表
     const folderVideos = await getVideosFromCurrentFolder(currentVideoPath)
@@ -316,15 +318,15 @@ const nextVideo = async () => {
       if (currentVideoIndex < folderVideos.length - 1) {
         const nextVideoPath = folderVideos[currentVideoIndex + 1]
         videoList.value[currentIndex.value] = nextVideoPath
-        showVideoTip('正在播放下一个视频')
+        showVideoTip(t('message.video_viewer.tip_playing_next'))
       } else {
-        showVideoTip('已经是最后一个视频了')
+        showVideoTip(t('message.video_viewer.tip_last'))
         return
       }
     } else {
       // 如果获取文件夹视频失败，使用原有逻辑
       currentIndex.value++
-      showVideoTip(`正在播放第 ${currentIndex.value + 1} 个视频`)
+      showVideoTip(t('message.video_viewer.tip_playing_index', { index: currentIndex.value + 1 }))
     }
   }
 

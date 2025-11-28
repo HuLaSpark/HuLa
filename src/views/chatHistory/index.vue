@@ -12,7 +12,7 @@
         autoCapitalize="off"
         v-model:value="searchKeyword"
         size="small"
-        placeholder="搜索"
+        :placeholder="t('chatHistory.search.placeholder')"
         clearable
         @input="handleSearch">
         <template #prefix>
@@ -24,20 +24,20 @@
     <!-- Tab 选项卡和筛选按钮 -->
     <div class="tab-section select-none">
       <n-tabs v-model:value="activeTab" @update:value="resetAndReload">
-        <n-tab-pane name="all" tab="全部" />
-        <n-tab-pane name="image" tab="图片/视频" />
-        <n-tab-pane name="file" tab="文件" />
+        <n-tab-pane name="all" :tab="t('chatHistory.tabs.all')" />
+        <n-tab-pane name="image" :tab="t('chatHistory.tabs.imageVideo')" />
+        <n-tab-pane name="file" :tab="t('chatHistory.tabs.file')" />
       </n-tabs>
 
       <n-date-picker
         v-model:value="dateRange"
         type="daterange"
-        placeholder="选择日期范围"
+        :placeholder="t('chatHistory.datePicker.placeholder')"
         clearable
         size="small"
         @update:value="handleDateChange"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
+        :start-placeholder="t('chatHistory.datePicker.start')"
+        :end-placeholder="t('chatHistory.datePicker.end')"
         format="yyyy-MM-dd"
         value-format="timestamp" />
     </div>
@@ -46,7 +46,7 @@
     <div class="flex-1 overflow-auto select-none">
       <n-infinite-scroll :distance="10" @load="loadMore">
         <div v-if="messages.length === 0 && !loading" class="flex-center h-200px">
-          <n-empty description="暂无消息记录" />
+          <n-empty :description="t('chatHistory.empty.noData')" />
         </div>
 
         <div v-else class="px-20px py-16px">
@@ -111,6 +111,7 @@ import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatDateGroupLabel } from '@/utils/ComputedTime'
+import { useI18n } from 'vue-i18n'
 
 type ChatHistoryResponse = {
   messages: MessageType[]
@@ -125,6 +126,7 @@ const chatStore = useChatStore()
 const { openImageViewer } = useImageViewer()
 const { openVideoViewer } = useVideoViewer()
 const { specialMenuList } = useChatMain(true, { disableHistoryActions: true })
+const { t } = useI18n()
 
 const isGroup = computed(() => chatStore.isGroup)
 const userUid = computed(() => userStore.userInfo!.uid)

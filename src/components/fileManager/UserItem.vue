@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 type Emits = (e: 'click', item: any) => void
 
 const props = withDefaults(
@@ -37,13 +39,21 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<Emits>()
+const { t } = useI18n()
 
 // 统一的数据格式
 const itemData = computed(() => {
   const item = props.user || props.room || props.contact || {}
 
   return {
-    name: item.name || item.roomName || item.groupName || item.nickname || item.userName || item.remark || '未知',
+    name:
+      item.name ||
+      item.roomName ||
+      item.groupName ||
+      item.nickname ||
+      item.userName ||
+      item.remark ||
+      t('fileManager.common.unknown'),
     avatar: item.avatar || item.roomAvatar || '',
     isOnline: item.isOnline || item.activeStatus === 1,
     subtitle: getSubtitle(item),
@@ -55,7 +65,7 @@ const itemData = computed(() => {
 const getSubtitle = (item: any) => {
   if (item.roomName) {
     // 群聊显示成员数量
-    return item.memberCount ? `${item.memberCount}人` : ''
+    return item.memberCount ? t('fileManager.userList.memberCount', { count: item.memberCount }) : ''
   }
   if (item.lastMessage) {
     // 会话显示最后一条消息

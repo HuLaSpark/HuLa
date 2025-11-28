@@ -6,9 +6,9 @@
       <div class="voice-status">
         <div v-if="!isRecording && !audioBlob && !isProcessing">
           <span class="text-#909090 flex-y-center gap-6px select-none">
-            点击
+            {{ t('message.voice_recorder.tap_prefix') }}
             <svg class="size-14px color-#13987f"><use href="#voice"></use></svg>
-            说话
+            {{ t('message.voice_recorder.tap_suffix') }}
           </span>
         </div>
 
@@ -16,14 +16,14 @@
           <div class="recording-animation">
             <div class="pulse-dot"></div>
           </div>
-          <span>{{ formatTime(recordingTime) }} 正在录音</span>
+          <span>{{ formatTime(recordingTime) }} {{ t('message.voice_recorder.recording') }}</span>
         </div>
 
         <div v-if="!isRecording && isProcessing" class="status-processing">
           <div class="processing-animation">
             <div class="loading-spinner"></div>
           </div>
-          <span>正在处理音频</span>
+          <span>{{ t('message.voice_recorder.processing') }}</span>
         </div>
 
         <div v-if="!isRecording && audioBlob && !isProcessing" class="status-completed">
@@ -98,6 +98,9 @@
 
 <script setup lang="ts">
 import { useVoiceRecordRust } from '@/hooks/useVoiceRecordRust'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 // 事件定义
 const emit = defineEmits<{
@@ -137,7 +140,7 @@ const {
     createAudioElement()
   },
   onError: () => {
-    window.$message?.error('录音失败')
+    window.$message?.error(t('message.voice_recorder.error'))
     isProcessing.value = false
   }
 })

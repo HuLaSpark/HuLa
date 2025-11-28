@@ -9,7 +9,7 @@ use crate::vo::vo::ChatMessageReq;
 use entity::im_user::Entity as ImUserEntity;
 use entity::{im_message, im_user};
 use once_cell::sync::Lazy;
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -123,10 +123,29 @@ pub async fn page_msg(
         a_time.cmp(&b_time)
     });
 
-    let message_resps: Vec<MessageResp> = raw_list
-        .into_iter()
-        .map(|msg| convert_message_to_resp(msg, None))
-        .collect();
+    // 计算每条消息的 time_block
+    let mut message_resps: Vec<MessageResp> = Vec::new();
+    for (index, msg) in raw_list.into_iter().enumerate() {
+        let mut resp = convert_message_to_resp(msg.clone(), None);
+
+        // 第一条消息始终显示时间
+        if index == 0 {
+            resp.time_block = Some(1);
+        } else if let Some(send_time) = msg.message.send_time {
+            // 使用统一的 time_block 计算函数
+            resp.time_block = im_message_repository::calculate_time_block(
+                state.db_conn.deref(),
+                &msg.message.room_id,
+                &msg.message.id,
+                send_time,
+                &login_uid,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+        }
+
+        message_resps.push(resp);
+    }
 
     Ok(CursorPageResp {
         cursor: db_result.cursor,
@@ -317,7 +336,65 @@ pub async fn fetch_all_messages(
         .im_request(ImUrl::GetMsgList, body, None::<serde_json::Value>)
         .await?;
 
-    if let Some(messages) = messages {
+    if let Some(mut messages) = messages {
+        // 排序消息（按发送时间）
+        messages.sort_by(|a, b| {
+            let a_time = a.message.send_time.unwrap_or(0);
+            let b_time = b.message.send_time.unwrap_or(0);
+            a_time.cmp(&b_time)
+        });
+
+        // 批量计算 time_block（先计算，再一次性写库）
+        // 以 DB 中最后一条消息的 send_time 作为起点，批次内逐条递进
+        const TIME_BLOCK_THRESHOLD_MS: i64 = 1000 * 60 * 10;
+        let mut last_send_time_map: HashMap<String, Option<i64>> = HashMap::new();
+
+        for (index, msg_resp) in messages.iter_mut().enumerate() {
+            let room_id = match &msg_resp.message.room_id {
+                Some(v) => v.clone(),
+                None => continue,
+            };
+            let send_time = match msg_resp.message.send_time {
+                Some(v) => v,
+                None => continue,
+            };
+
+            // 获取该房间的上一条 send_time（优先使用批次内最新值，否则从 DB 取一次）
+            let prev_send_time = match last_send_time_map.get(&room_id) {
+                Some(value) => *value,
+                None => {
+                    let last_time = im_message::Entity::find()
+                        .filter(im_message::Column::RoomId.eq(&room_id))
+                        .filter(im_message::Column::LoginUid.eq(uid))
+                        .order_by_desc(im_message::Column::SendTime)
+                        .select_only()
+                        .column(im_message::Column::SendTime)
+                        .into_tuple::<Option<i64>>()
+                        .one(db_conn)
+                        .await
+                        .map_err(|e| anyhow::anyhow!("Failed to query last send_time: {}", e))?
+                        .flatten();
+                    last_send_time_map.insert(room_id.clone(), last_time);
+                    last_time
+                }
+            };
+
+            msg_resp.time_block = if let Some(prev) = prev_send_time {
+                let gap = send_time - prev;
+                if gap >= TIME_BLOCK_THRESHOLD_MS {
+                    Some(gap)
+                } else {
+                    None
+                }
+            } else {
+                // 房间第一条消息始终显示时间
+                Some(1)
+            };
+
+            // 当前消息成为下一条的参考
+            last_send_time_map.insert(room_id, Some(send_time));
+        }
+
         // 开启事务
         let tx = db_conn.begin().await?;
 

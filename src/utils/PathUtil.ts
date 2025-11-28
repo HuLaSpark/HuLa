@@ -11,6 +11,8 @@ const USER_DATA = 'userData'
 const MODELS_DIR = 'models'
 // 用户专属表情包目录名
 const EMOJIS_DIR = 'emojis'
+// AI 生成资源目录名
+const AI_DIR = 'ai'
 
 /**
  * 确保资源目录下存在 userData 根目录。
@@ -96,6 +98,78 @@ export const getUserAbsoluteEmojiDir = async (userUid: string): Promise<string> 
 
 const getImageCache = (subFolder: string, userUid: string): string => {
   return 'cache/' + String(userUid) + '/' + subFolder + '/'
+}
+
+// 确保 userData/ai 根目录存在，移动端使用 AppData，桌面使用 Resource
+const ensureAiDir = async (): Promise<string> => {
+  await ensureUserDataRoot()
+  const aiRoot = await join(USER_DATA, AI_DIR)
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const hasAiDir = await exists(aiRoot, { baseDir })
+  if (!hasAiDir) {
+    await mkdir(aiRoot, {
+      baseDir,
+      recursive: true
+    })
+  }
+  return aiRoot
+}
+
+// 确保 AI 图片目录 userData/ai/{uid}/{conversationId} 存在，并返回相对路径
+const ensureAiConversationDir = async (userUid: string, conversationId: string): Promise<string> => {
+  const aiRoot = await ensureAiDir()
+  const aiConversationDir = await join(aiRoot, userUid, conversationId)
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const hasConversationDir = await exists(aiConversationDir, { baseDir })
+  if (!hasConversationDir) {
+    await mkdir(aiConversationDir, {
+      baseDir,
+      recursive: true
+    })
+  }
+  return aiConversationDir
+}
+
+// 生成 AI 图片的相对/绝对路径以及对应的 BaseDirectory 配置
+const buildAiImagePaths = async (options: {
+  userUid: string
+  conversationId: string
+  fileName: string
+}): Promise<{
+  relativePath: string
+  absolutePath: string
+  baseDir: BaseDirectory
+}> => {
+  const { userUid, conversationId, fileName } = options
+  const aiDir = await ensureAiConversationDir(userUid, conversationId)
+  const relativePath = await join(aiDir, fileName)
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+  const absolutePath = await join(baseDirPath, relativePath)
+  return { relativePath, absolutePath, baseDir }
+}
+
+// 检查 AI 图片是否已存在，返回存在状态和路径
+export const resolveAiImagePath = async (options: {
+  userUid: string
+  conversationId: string
+  fileName: string
+}): Promise<{ exists: boolean; relativePath: string; absolutePath: string }> => {
+  const { relativePath, absolutePath, baseDir } = await buildAiImagePaths(options)
+  const existsFlag = await exists(relativePath, { baseDir })
+  return { exists: existsFlag, relativePath, absolutePath }
+}
+
+// 将 AI 图片二进制内容写入 userData/ai/{uid}/{conversationId} 并返回路径
+export const persistAiImageFile = async (options: {
+  userUid: string
+  conversationId: string
+  fileName: string
+  data: Uint8Array
+}): Promise<{ relativePath: string; absolutePath: string }> => {
+  const { relativePath, absolutePath, baseDir } = await buildAiImagePaths(options)
+  await writeFile(relativePath, options.data, { baseDir })
+  return { relativePath, absolutePath }
 }
 
 /**

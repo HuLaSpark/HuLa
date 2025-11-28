@@ -1,0 +1,21 @@
+{
+  "recent": {
+    "title": "Recently used"
+  },
+  "tabs": {
+    "emoji": "Emoji",
+    "favorites": "My favorites"
+  },
+  "favorites": {
+    "title": "My stickers",
+    "empty": "No stickers yet",
+    "delete": "Delete",
+    "deleteSuccess": "Sticker removed",
+    "deleteFail": "Failed to delete sticker"
+  },
+  "categories": {
+    "expression": "Yellow face emojis",
+    "animal": "Animal emojis",
+    "gesture": "Gesture emojis"
+  }
+}

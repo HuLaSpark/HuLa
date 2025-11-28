@@ -10,8 +10,8 @@
       <div v-if="!isUnlockPage" @click.stop="isUnlockPage = true" class="size-full rounded-8px">
         <n-flex vertical align="center" :size="120" class="size-full mt-10%">
           <n-flex vertical align="center" :size="20" class="will-change-auto will-change-contents">
-            <p class="text-(100px #30303090) font-500">{{ currentTime }}</p>
-            <n-flex align="center" :size="30" class="text-(30px #30303080)">
+            <p class="text-(100px [--chat-text-color]) font-500">{{ currentTime }}</p>
+            <n-flex align="center" :size="30" class="text-(30px [--chat-text-color])">
               <p>{{ currentMonthAndDate }}</p>
               <p>{{ currentWeekday }}</p>
             </n-flex>
@@ -19,9 +19,8 @@
 
           <n-flex vertical justify="center" align="center" :size="20" class="tips">
             <svg><use href="#search"></use></svg>
-            <p class="text-(16px #30303080) text-center leading-24px">
-              这是一个开源的即时通讯(IM)应用，它采用了一些最新的前端技术，包括 Tauri、Vue3、Vite5、UnoCSS 和
-              TypeScript。
+            <p class="text-(16px [--chat-text-color]) text-center leading-24px">
+              {{ t('message.lock_screen.tip_description') }}
             </p>
           </n-flex>
         </n-flex>
@@ -42,7 +41,7 @@
             style="border: 2px solid #f1f1f1"
             :size="120"
             :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)" />
-          <p class="text-(24px #30303080) font-500">{{ userStore.userInfo!.name }}</p>
+          <p class="text-(24px [--chat-text-color]) font-500">{{ userStore.userInfo!.name }}</p>
 
           <!-- 密码输入框 -->
           <n-config-provider :theme="lightTheme">
@@ -60,7 +59,7 @@
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              placeholder="锁屏密码"
+              :placeholder="t('message.lock_screen.password_placeholder')"
               show-password-on="click"
               type="password"
               @keyup.enter.prevent="unlock"
@@ -74,7 +73,7 @@
                       <use href="#arrow-right"></use>
                     </svg>
                   </template>
-                  <p>进入系统</p>
+                  <p>{{ t('message.lock_screen.enter_system_tooltip') }}</p>
                 </n-popover>
               </template>
             </n-input>
@@ -83,16 +82,16 @@
           <!-- 登录时显示的文字 -->
           <n-flex vertical align="center" justify="center" :size="30" v-if="isLogining && !isWrongPassword">
             <img class="size-42px" src="@/assets/img/loading-one.svg" alt="" />
-            <p class="text-(20px #30303080)">解锁中</p>
+            <p class="text-(20px [--chat-text-color])">{{ t('message.lock_screen.unlocking') }}</p>
           </n-flex>
 
           <!-- 密码不正常时显示 -->
           <n-flex v-if="isWrongPassword" vertical justify="center" align="center" :size="30">
-            <p class="text-(18px #30303080)">密码不正确, 请再试一次</p>
+            <p class="text-(18px [--chat-text-color])">{{ t('message.lock_screen.wrong_password') }}</p>
             <p
               @click="init"
               class="w-120px bg-[rgba(255,255,255,0.1)] backdrop-blur-xl cursor-pointer p-10px rounded-8px text-(14px #323232 center) font-500">
-              确定
+              {{ t('message.lock_screen.confirm_button') }}
             </p>
           </n-flex>
         </n-flex>
@@ -102,11 +101,11 @@
           justify="space-around"
           align="center"
           :size="0"
-          class="options text-(14px #30303080)">
-          <p @click="isUnlockPage = false">返回</p>
-          <p @click="logout">退出登录</p>
-          <p>忘记密码</p>
-          <p @click="unlock">进入系统</p>
+          class="options text-(14px [--chat-text-color])">
+          <p @click="isUnlockPage = false">{{ t('message.lock_screen.return_action') }}</p>
+          <p @click="logout">{{ t('message.lock_screen.logout_action') }}</p>
+          <p>{{ t('message.lock_screen.forgot_password') }}</p>
+          <p @click="unlock">{{ t('message.lock_screen.enter_system_action') }}</p>
         </n-flex>
       </n-flex>
     </Transition>
@@ -122,12 +121,14 @@ import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { getWeekday } from '@/utils/ComputedTime'
+import { useI18n } from 'vue-i18n'
 
 const appWindow = WebviewWindow.getCurrent()
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const { lockScreen } = storeToRefs(settingStore)
 const { logout } = useLogin()
+const { t } = useI18n()
 /** 解锁密码 */
 const password = ref('')
 /** 是否是解锁页面 */
@@ -173,7 +174,7 @@ watch(isWrongPassword, (val) => {
 /** 解锁 */
 const unlock = () => {
   if (password.value === '') {
-    window.$message.error('请输入密码')
+    window.$message.error(t('message.lock_screen.toast_empty_password'))
   } else {
     isLogining.value = true
     if (password.value === lockScreen.value.password) {

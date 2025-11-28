@@ -1,0 +1,218 @@
+{
+  "file": {
+    "unknown_file": "Unknown file",
+    "unknown_error": "Unknown error",
+    "status": {
+      "downloaded": "Downloaded",
+      "not_downloaded": "Not downloaded"
+    },
+    "toast": {
+      "missing_local": "Local file not found. Please download it first~",
+      "reveal_fail": "Unable to reveal the file in folder",
+      "open_fail_hint": "Unable to open or reveal the file. Please locate it manually in your file manager.",
+      "download_open_fail": "File downloaded but cannot be opened or revealed. Please find it manually in your file manager.",
+      "download_failed": "Failed to download file: {reason}"
+    }
+  },
+  "video": {
+    "unknown_video": "Video file",
+    "uploading": "Uploading video... {progress}%",
+    "opening": "Opening video..."
+  },
+  "file_upload": {
+    "title": "Send files",
+    "cancel": "Cancel",
+    "send": "Send ({count})"
+  },
+  "file_upload_progress": {
+    "uploading_with_name": "Uploading: {name}",
+    "uploading": "Uploading files",
+    "preparing": "Preparing upload",
+    "completed_failed": "Upload finished ({count} failed)",
+    "completed": "Upload finished"
+  },
+  "voice_recorder": {
+    "tap_prefix": "Tap",
+    "tap_suffix": "to speak",
+    "recording": "Recording",
+    "processing": "Processing audio",
+    "error": "Recording failed"
+  },
+  "call_window": {
+    "incoming": "Incoming call",
+    "video_call": "Video call",
+    "voice_call": "Voice call",
+    "unknown_user": "Unknown user",
+    "status": {
+      "calling": "Calling",
+      "ongoing": "In call",
+      "ended": "Call ended",
+      "preparing": "Preparing"
+    },
+    "mic_on": "Mic on",
+    "mic_off": "Mic off",
+    "speaker_on": "Speaker on",
+    "speaker_off": "Speaker off",
+    "camera_disable": "Turn camera off",
+    "camera_enable": "Turn camera on",
+    "hangup": "Hang up"
+  },
+  "friend_verify": {
+    "title": "Add friend request",
+    "account": "Account: {account}",
+    "placeholder": "Say something to them...",
+    "send_btn": "Add friend",
+    "toast_success": "Friend request sent",
+    "default_msg": "I'm {name}"
+  },
+  "group_verify": {
+    "title": "Join group request",
+    "account": "Group ID: {account}",
+    "placeholder": "Enter your verification message",
+    "send_btn": "Apply to join",
+    "toast_success": "Group request sent",
+    "default_msg": "I'm {name}"
+  },
+  "message_list": {
+    "sync_loading": "Syncing messages",
+    "official_popover": "Official group",
+    "bot_popover": "HuLa Assistant",
+    "mention_tag": "[Mentioned me]",
+    "shield_group": "Group muted",
+    "shield_user": "User muted",
+    "empty_description": "Start chatting with friends!",
+    "empty_action": "Find friends",
+    "default_last_msg": "Welcome to HuLa"
+  },
+  "message_menu": {
+    "pin_success": "Pinned",
+    "unpin_success": "Unpinned",
+    "pin_fail": "Failed to pin",
+    "unpin_fail": "Failed to unpin",
+    "copy_success": "Copied {account}",
+    "shield_success": "Messages blocked",
+    "unshield_success": "Block removed",
+    "delete_friend_success": "Friend removed",
+    "cannot_dissolve_channel": "Cannot dissolve channel",
+    "cannot_quit_channel": "Cannot quit channel",
+    "dissolve_group_success": "Group dissolved",
+    "quit_group_success": "Left group",
+    "notification_allowed": "Notifications enabled",
+    "notification_silent": "Receiving silently"
+  },
+  "image_viewer": {
+    "zoom_out": "Zoom out",
+    "zoom_in": "Zoom in",
+    "rotate_left": "Rotate left",
+    "rotate_right": "Rotate right",
+    "reset": "Reset",
+    "save_as": "Save as",
+    "first_image": "This is the first image",
+    "last_image": "This is already the last image",
+    "filter_name": "Image"
+  },
+  "video_viewer": {
+    "previous_video": "Previous video",
+    "next_video": "Next video",
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "tip_playing_index": "Playing video #{index}",
+    "tip_playing_previous": "Now playing previous video",
+    "tip_first": "This is the first video",
+    "tip_playing_next": "Now playing next video",
+    "tip_last": "This is the last video"
+  },
+  "screenshot": {
+    "border_radius": "Radius",
+    "redo": "Redo",
+    "undo": "Undo",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "tool_rect": "Rectangle",
+    "tool_circle": "Circle",
+    "tool_arrow": "Arrow",
+    "tool_mosaic": "Mosaic",
+    "tooltip_drag": "Drag to adjust selection",
+    "tooltip_resize": "Drag handles to resize",
+    "save_success": "Screenshot copied to clipboard",
+    "save_failed": "Screenshot failed, please retry"
+  },
+  "lock_screen": {
+    "title": "Lock screen",
+    "password_label": "Lock password",
+    "password_placeholder": "Enter lock password",
+    "confirm_button": "Confirm",
+    "validation_required": "Please enter the lock password",
+    "tip_description": "An open-source IM app built with cutting-edge tech like Tauri, Vue 3, Vite 5, UnoCSS, and TypeScript.",
+    "enter_system_tooltip": "Enter",
+    "unlocking": "Unlocking",
+    "wrong_password": "Incorrect password. Please try again",
+    "toast_empty_password": "Please enter the password",
+    "return_action": "Back",
+    "logout_action": "Log out",
+    "forgot_password": "Forgot password",
+    "enter_system_action": "Enter"
+  },
+  "check_update": {
+    "current_version": "Current version",
+    "new_tag": "new",
+    "new_release_date": "New release date:",
+    "release_date": "Release date:",
+    "log_title": "Release notes",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "ignore": "Ignore",
+    "update_now": "Update now",
+    "check_now": "Check update",
+    "downloading": "Downloading...",
+    "update_success": "Updated",
+    "confirm_update": "Proceed with update?",
+    "confirm_ignore": "Ignoring will stop this reminder but you can still update later. Confirm ignore?",
+    "update_error": "Update check failed, please try again later",
+    "fetch_log_failed": "Failed to load release notes, please set token and retry",
+    "download_success_toast": "Installer downloaded. It will install and restart soon",
+    "restart_failed": "Restart failed, please restart manually"
+  },
+  "notify": {
+    "new_messages": "New messages",
+    "ignore_all": "Ignore all"
+  },
+  "tray": {
+    "online_status_window_title": "Online status",
+    "more_status": "More statuses",
+    "mute_all": "Mute all sounds",
+    "unmute_all": "Enable all sounds",
+    "open_main_panel": "Open main panel",
+    "exit": "Exit"
+  },
+  "update_window": {
+    "updating": "Updating",
+    "fetch_commit_failed": "Failed to load release notes for v{version}",
+    "fetch_release_error": "Failed to fetch release info",
+    "fetch_release_error_with_reason": "Failed to fetch release info: {reason}"
+  },
+  "multi_choose": {
+    "search_placeholder": "Search sessions",
+    "send_to_separately": "Send separately to",
+    "leave_message_placeholder": "Leave a note",
+    "single_forward": "Forward individually",
+    "merge_forward": "Forward as summary",
+    "save_to_pc": "Save to PC",
+    "delete_action": "Delete",
+    "exit_multi_select": "Exit selection",
+    "cancel_button": "Cancel",
+    "send_button": "Send",
+    "not_implemented": "Not implemented yet",
+    "select_delete_prompt": "Please select messages to delete",
+    "delete_confirm": "Deleted messages will disappear from your history. Delete these {count} messages?",
+    "room_missing": "Current session unknown, delete failed",
+    "delete_failed_short": "Failed to delete message",
+    "delete_failed_retry": "Failed to delete, please try again later",
+    "delete_success": "Selected messages deleted",
+    "forward_success": "Messages forwarded",
+    "forward_failed": "Failed to forward",
+    "non_text_message": "[Non-text message]"
+  }
+}

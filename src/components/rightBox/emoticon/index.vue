@@ -9,7 +9,9 @@
         <!-- 最近使用 -->
         <div v-if="activeIndex === 0">
           <div v-if="emojiRef.historyList?.length > 0">
-            <span v-if="!checkIsUrl(emojiRef.historyList[0])" class="text-12px text-[--text-color]">最近使用</span>
+            <span v-if="!checkIsUrl(emojiRef.historyList[0])" class="text-12px text-[--text-color]">
+              {{ t('emoticon.recent.title') }}
+            </span>
             <n-flex align="center" :class="isMobile() ? 'emoji-grid-mobile mt-12px mb-12px' : 'mt-12px mb-12px'">
               <n-flex
                 align="center"
@@ -65,7 +67,7 @@
         <!-- 我的喜欢页面 -->
         <div v-else>
           <div v-if="emojiStore.emojiList?.length > 0">
-            <span class="text-12px text-[--text-color]">我的表情包</span>
+            <span class="text-12px text-[--text-color]">{{ t('emoticon.favorites.title') }}</span>
             <n-flex align="center" :class="isMobile() ? 'emoji-pack-grid-mobile mx-6px my-12px' : 'mx-6px my-12px'">
               <n-flex
                 align="center"
@@ -95,7 +97,7 @@
                     </div>
                   </template>
                   <n-button quaternary size="tiny" @click.stop="deleteMyEmoji(item.id)">
-                    删除
+                    {{ t('emoticon.favorites.delete') }}
                     <template #icon>
                       <n-icon>
                         <svg><use href="#delete"></use></svg>
@@ -106,7 +108,7 @@
               </n-flex>
             </n-flex>
           </div>
-          <span v-else>暂无表情包</span>
+          <span v-else>{{ t('emoticon.favorites.empty') }}</span>
         </div>
       </div>
     </transition>
@@ -155,6 +157,7 @@ import { getAllTypeEmojis } from '@/utils/Emoji.ts'
 import { md5FromString } from '@/utils/Md5Util'
 import { detectRemoteFileType, getUserEmojiDir } from '@/utils/PathUtil'
 import { isMobile } from '@/utils/PlatformConstants'
+import { useI18n } from 'vue-i18n'
 
 type TabItem = {
   id: number
@@ -189,6 +192,7 @@ const props = defineProps<{
 const { emoji, setEmoji, lastEmojiTabIndex, setLastEmojiTabIndex } = useHistoryStore()
 const emojiStore = useEmojiStore()
 const userStore = useUserStore()
+const { t } = useI18n()
 /** 获取米游社的表情包 */
 const emojisBbs = HulaEmojis.MihoyoBbs
 const activeIndex = ref(lastEmojiTabIndex)
@@ -215,8 +219,8 @@ const emojiExtCache = new Map<string, string>()
 // 生成选项卡数组
 const tabList = computed<TabItem[]>(() => {
   const baseItems: TabItem[] = [
-    { id: 0, type: 'icon', name: 'emoji表情', icon: '#face' },
-    { id: -1, type: 'icon', name: '我喜欢的', icon: '#heart' }
+    { id: 0, type: 'icon', name: t('emoticon.tabs.emoji'), icon: '#face' },
+    { id: -1, type: 'icon', name: t('emoticon.tabs.favorites'), icon: '#heart' }
   ]
 
   // 添加米游社表情包系列
@@ -550,12 +554,12 @@ const handleContextMenu = (event: MouseEvent, item: any) => {
 const deleteMyEmoji = async (id: string) => {
   try {
     await emojiStore.deleteEmoji(id)
-    window.$message.success('删除表情成功')
+    window.$message.success(t('emoticon.favorites.deleteSuccess'))
     // 关闭菜单
     activeMenuId.value = ''
   } catch (error) {
     console.error('删除表情失败:', error)
-    window.$message.error('删除表情失败')
+    window.$message.error(t('emoticon.favorites.deleteFail'))
   }
 }
 

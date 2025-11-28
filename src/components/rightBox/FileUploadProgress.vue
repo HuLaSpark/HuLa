@@ -33,7 +33,9 @@ import { storeToRefs } from 'pinia'
 import { ThemeEnum } from '@/enums'
 import { globalFileUploadQueue } from '@/hooks/useFileUploadQueue'
 import { useSettingStore } from '@/stores/setting'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const settingStore = useSettingStore()
 const { themes } = storeToRefs(settingStore)
 
@@ -45,15 +47,16 @@ const getStatusText = () => {
   if (queue.isActive) {
     if (isUploading.value) {
       const uploadingFile = queue.items.find((item) => item.status === 'uploading')
-      return uploadingFile ? `正在上传: ${uploadingFile.name}` : '正在上传文件'
-    } else {
-      return '准备上传'
+      return uploadingFile
+        ? t('message.file_upload_progress.uploading_with_name', { name: uploadingFile.name })
+        : t('message.file_upload_progress.uploading')
     }
+    return t('message.file_upload_progress.preparing')
   } else if (queue.endTime) {
     if (queue.failedFiles > 0) {
-      return `上传完成 (${queue.failedFiles} 个失败)`
+      return t('message.file_upload_progress.completed_failed', { count: queue.failedFiles })
     } else {
-      return '上传完成'
+      return t('message.file_upload_progress.completed')
     }
   }
   return ''

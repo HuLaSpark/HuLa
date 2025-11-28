@@ -2,7 +2,9 @@
   <div class="w-200px flex-shrink-0 flex flex-col bg-[--center-bg-color] border-r border-solid border-[--line-color]">
     <!-- 导航标题 -->
     <div class="navigation-header p-20px pb-16px">
-      <h2 class="text-16px font-600 text-[--text-color] m-0">文件分类</h2>
+      <h2 class="text-16px font-600 text-[--text-color] m-0">
+        {{ t('fileManager.navigation.title') }}
+      </h2>
     </div>
 
     <!-- 导航菜单 -->
@@ -17,13 +19,15 @@
             <use :href="`#${item.icon}`"></use>
           </svg>
         </div>
-        <span class="text-14px">{{ item.label }}</span>
+        <span class="text-14px">{{ getNavigationLabel(item) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 type NavigationItem = {
   key: string
   label: string
@@ -36,12 +40,28 @@ type FileManagerState = {
   setActiveNavigation: (key: string) => void
 }
 
+const { t } = useI18n()
 const fileManagerState = inject<FileManagerState>('fileManagerState')!
 
 const { navigationItems, setActiveNavigation } = fileManagerState
 
 const handleNavigationClick = (key: string) => {
   setActiveNavigation(key)
+}
+
+const navigationKeyMap: Record<string, string> = {
+  myFiles: 'fileManager.navigation.items.myFiles',
+  senders: 'fileManager.navigation.items.senders',
+  sessions: 'fileManager.navigation.items.sessions',
+  groups: 'fileManager.navigation.items.groups'
+}
+
+const getNavigationLabel = (item: NavigationItem) => {
+  const key = navigationKeyMap[item.key]
+  if (key) {
+    return t(key)
+  }
+  return item.label ?? t('fileManager.navigation.items.default')
 }
 </script>
 

@@ -31,7 +31,7 @@
       </NCarousel>
 
       <p class="cursor-default color-#13987f text-center text-sm mt-4" data-tauri-drag-region>
-        更新中 {{ percentage }}%
+        {{ t('message.update_window.updating') }} {{ percentage }}%
       </p>
     </div>
   </n-flex>
@@ -41,12 +41,14 @@ import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
 import { NCarousel, NCarouselItem } from 'naive-ui'
 import { changeColor } from 'seemly'
+import { useI18n } from 'vue-i18n'
 
 const list = ref<string[]>([])
 const updating = ref(false)
 const percentage = ref(0)
 const total = ref(0)
 const downloaded = ref(0)
+const { t } = useI18n()
 
 // https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${newVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}
 
@@ -89,9 +91,11 @@ const setupCommitList = async (version: string) => {
     const releaseData = await fetchGiteeReleaseData(version)
     list.value = extractCommitMessages(releaseData.body)
   } catch (err) {
-    console.error(`v${version} 版本 Commit 信息获取失败:`, err)
+    console.error(`${t('message.update_window.fetch_commit_failed', { version })}:`, err)
     list.value =
-      err instanceof Error ? [`Error fetching release data: ${err.message}`] : ['Error fetching release data']
+      err instanceof Error
+        ? [t('message.update_window.fetch_release_error_with_reason', { reason: err.message })]
+        : [t('message.update_window.fetch_release_error')]
   }
 }
 

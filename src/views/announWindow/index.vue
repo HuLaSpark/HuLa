@@ -9,7 +9,7 @@
           class="max-h-480px border-(1px solid #90909080) rounded-6px bg-[--center-bg-color]"
           v-model:value="announContent"
           type="textarea"
-          placeholder="填写公告，1～600字"
+          :placeholder="t('announcement.form.placeholder')"
           :autosize="announcementAutosize"
           maxlength="600"
           spellCheck="false"
@@ -28,17 +28,19 @@
             v-model:value="isTop"
             :true-value="true"
             :false-value="false" />
-          <span class="text-(14px [--text-color]) ml-10px">置顶</span>
+          <span class="text-(14px [--text-color]) ml-10px">{{ t('announcement.form.pinned') }}</span>
         </div>
         <div class="w-45% h-42px flex-end-center">
-          <n-button quaternary size="small" class="bg-[--button-bg]" @click="handleCancel">取消</n-button>
+          <n-button quaternary size="small" class="bg-[--button-bg]" @click="handleCancel">
+            {{ t('announcement.form.actions.cancel') }}
+          </n-button>
           <n-button
             secondary
             type="primary"
             size="small"
             class="bg-[--button-bg] ml-5px"
             @click="handlePushAnnouncement">
-            发布
+            {{ t('announcement.form.actions.publish') }}
           </n-button>
         </div>
       </n-flex>
@@ -47,12 +49,17 @@
     <n-flex v-else vertical :size="6" class="size-full flex-center">
       <div class="text-(14px [--chat-text-color]) flex-between-center w-95% pt-10px">
         <span>{{ title }}</span>
-        <n-button v-if="isAdmin" size="small" secondary @click="handleNew">发布新公告</n-button>
+        <n-button v-if="isAdmin" size="small" secondary @click="handleNew">
+          {{ t('announcement.form.actions.new') }}
+        </n-button>
       </div>
 
       <!--暂无数据-->
       <div v-if="!announList || announList.length === 0" class="flex-center">
-        <n-empty style="height: calc(100vh / var(--page-scale, 1) - 100px)" class="flex-center" description="暂无公告">
+        <n-empty
+          style="height: calc(100vh / var(--page-scale, 1) - 100px)"
+          class="flex-center"
+          :description="t('announcement.list.empty')">
           <template #icon>
             <n-icon>
               <svg>
@@ -90,7 +97,7 @@
                   <div
                     v-if="announcement?.top"
                     class="p-[3px_4px] bg-[#237265] c-#fff rounded-3px text-[10px] flex-center">
-                    <span>置顶</span>
+                    <span>{{ t('announcement.form.pinned') }}</span>
                   </div>
                 </n-flex>
 
@@ -111,14 +118,14 @@
                         size="small"
                         tertiary
                         @click.stop="announcementStates[announcement.id].showDeleteConfirm = false">
-                        取消
+                        {{ t('announcement.list.delete.cancel') }}
                       </n-button>
                       <n-button
                         size="small"
                         type="error"
                         :loading="announcementStates[announcement.id].deleteLoading"
                         @click="handleDel(announcement)">
-                        删除
+                        {{ t('announcement.list.delete.confirm') }}
                       </n-button>
                     </template>
                     <template #trigger>
@@ -130,7 +137,7 @@
                         </template>
                       </n-button>
                     </template>
-                    你确定要删除全部会话吗？
+                    {{ t('announcement.list.deleteConfirm') }}
                   </n-popconfirm>
                 </n-flex>
               </div>
@@ -153,7 +160,9 @@
                 v-if="needsExpansion(announcement.content)"
                 class="expand-button"
                 @click.stop="toggleExpand(announcement)">
-                <span>{{ announcement.expanded ? '收起' : '展开' }}</span>
+                <span>
+                  {{ announcement.expanded ? t('announcement.list.collapse') : t('announcement.list.expand') }}
+                </span>
                 <svg class="size-12px ml-2px" :class="{ 'rotate-180': announcement.expanded }">
                   <use href="#arrow-down"></use>
                 </svg>
@@ -165,7 +174,9 @@
         <div v-if="announList.length > 0" class="w-full h-40px flex-center mt-10px">
           <!-- <n-button v-if="!isLast" class="bg-[--button-bg]" @click="handleLoadMore">加载更多</n-button> -->
           <img v-if="isLoading" class="size-16px" src="@/assets/img/loading.svg" alt="" />
-          <span v-if="isLast && !isLoading" class="text-[12px] color-[#909090]">没有更多公告了</span>
+          <span v-if="isLast && !isLoading" class="text-[12px] color-[#909090]">
+            {{ t('announcement.list.noMore') }}
+          </span>
         </div>
         <div class="w-full h-40px"></div>
       </n-scrollbar>
@@ -186,6 +197,7 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { deleteAnnouncement, editAnnouncement, pushAnnouncement } from '@/utils/ImRequestUtils'
 import { extractLinkSegments, openExternalUrl } from '@/hooks/useLinkSegments'
+import { useI18n } from 'vue-i18n'
 
 // 定义响应式变量
 const title = ref('')
@@ -212,6 +224,7 @@ const groupStore = useGroupStore()
 const cachedStore = useCachedStore()
 const userStore = useUserStore()
 const settingStore = useSettingStore()
+const { t } = useI18n()
 const { themes } = storeToRefs(settingStore)
 /** 判断当前用户是否拥有id为6的徽章 并且是频道 */
 const hasBadge6 = computed(() => {
@@ -236,7 +249,7 @@ watch(
   () => viewType.value,
   (newVal) => {
     if (newVal === '0') {
-      title.value = '新增群公告'
+      title.value = t('announcement.title.create')
     }
   }
 )
@@ -359,7 +372,7 @@ const handleNew = () => {
   viewType.value = '0'
   isBack.value = true
   isEdit.value = false
-  title.value = '新增群公告'
+  title.value = t('announcement.title.create')
 }
 
 // 处理取消操作
@@ -368,7 +381,7 @@ const handleCancel = () => {
   if (isBack.value) {
     viewType.value = '1'
     isBack.value = false
-    title.value = '查看群公告'
+    title.value = t('announcement.title.view')
     return
   }
   getCurrentWebviewWindow().close()
@@ -420,17 +433,17 @@ const handleEdit = (announcement: any) => {
   isTop.value = announcement.top
   viewType.value = '0'
   isBack.value = true
-  title.value = '编辑群公告'
+  title.value = t('announcement.title.edit')
 }
 
 // 验证公告内容
 const validateAnnouncement = (content: string) => {
   if (content.length < 1) {
-    window.$message.error('公告内容不能为空')
+    window.$message.error(t('announcement.toast.contentRequired'))
     return false
   }
   if (content.length > 600) {
-    window.$message.error('公告内容不能超过600字')
+    window.$message.error(t('announcement.toast.contentTooLong'))
     return false
   }
   return true
@@ -457,8 +470,8 @@ const handlePushAnnouncement = async () => {
           top: isTop.value
         })
 
-  const successMessage = isEdit.value ? '公告修改成功' : '公告发布成功'
-  const errorMessage = isEdit.value ? '公告修改失败' : '公告发布失败'
+  const successMessage = isEdit.value ? t('announcement.toast.editSuccess') : t('announcement.toast.createSuccess')
+  const errorMessage = isEdit.value ? t('announcement.toast.editFail') : t('announcement.toast.createFail')
 
   try {
     await apiCall()
@@ -546,7 +559,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: flex-end;
   margin-top: 4px;
-  color: var(--msg-active-color, #13987f);
+  color: #13987f;
   cursor: pointer;
   font-size: 12px;
 

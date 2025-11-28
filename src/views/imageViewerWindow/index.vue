@@ -61,7 +61,7 @@
         <template #trigger>
           <svg @click="zoomOut" class="size-24px cursor-pointer color-white"><use href="#zoom-out"></use></svg>
         </template>
-        缩小
+        {{ t('message.image_viewer.zoom_out') }}
       </n-tooltip>
 
       <span class="color-white text-14px min-w-50px text-center select-none">{{ scaleText }}</span>
@@ -70,7 +70,7 @@
         <template #trigger>
           <svg @click="zoomIn" class="size-24px cursor-pointer color-white"><use href="#zoom-in"></use></svg>
         </template>
-        放大
+        {{ t('message.image_viewer.zoom_in') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
@@ -79,28 +79,28 @@
             <use href="#RotateRight"></use>
           </svg>
         </template>
-        向左旋转
+        {{ t('message.image_viewer.rotate_left') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
           <svg @click="rotateRight" class="size-24px cursor-pointer color-white"><use href="#RotateRight"></use></svg>
         </template>
-        向右旋转
+        {{ t('message.image_viewer.rotate_right') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
           <svg @click="resetImage()" class="size-24px cursor-pointer color-white"><use href="#refresh"></use></svg>
         </template>
-        重置
+        {{ t('message.image_viewer.reset') }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
           <svg @click="saveImage" class="size-24px cursor-pointer color-white"><use href="#Importing"></use></svg>
         </template>
-        另存为
+        {{ t('message.image_viewer.save_as') }}
       </n-tooltip>
     </div>
   </div>
@@ -115,7 +115,9 @@ import { useDownload } from '@/hooks/useDownload'
 import { useImageViewer as useImageViewerHook } from '@/hooks/useImageViewer'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { useImageViewer as useImageViewerStore } from '@/stores/imageViewer.ts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { addListener } = useTauriListener()
 const { downloadFile } = useDownload()
 const imageViewerStore = useImageViewerStore()
@@ -281,7 +283,7 @@ const saveImage = async () => {
   const savePath = await save({
     filters: [
       {
-        name: '图片',
+        name: t('message.image_viewer.filter_name'),
         extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp']
       }
     ],
@@ -314,7 +316,7 @@ const prevImage = () => {
     resetImage(true) // 立即重置
     syncCurrentIndex(currentIndex.value - 1)
   } else {
-    showTipMessage('这是第一张图片')
+    showTipMessage(t('message.image_viewer.first_image'))
   }
 }
 
@@ -323,7 +325,7 @@ const nextImage = () => {
     resetImage(true) // 立即重置
     syncCurrentIndex(currentIndex.value + 1)
   } else {
-    showTipMessage('已经最后一张图片')
+    showTipMessage(t('message.image_viewer.last_image'))
   }
 }
 

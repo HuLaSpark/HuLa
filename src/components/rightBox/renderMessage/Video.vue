@@ -105,17 +105,17 @@
 
       <!-- 视频信息 -->
       <div class="video-info">
-        <div class="video-filename">{{ body?.filename || '视频文件' }}</div>
+        <div class="video-filename">{{ body?.filename || fallbackVideoName }}</div>
         <div class="video-filesize">{{ formatBytes(body?.size) }}</div>
       </div>
 
       <!-- 加载提示 -->
       <transition name="fade">
         <div v-if="isUploading" class="loading-tip upload-tip">
-          <div class="loading-text">正在上传视频... {{ uploadProgress }}%</div>
+          <div class="loading-text">{{ uploadingTip }}</div>
         </div>
         <div v-else-if="isOpening" class="loading-tip">
-          <div class="loading-text">正在打开视频...</div>
+          <div class="loading-text">{{ openingTip }}</div>
         </div>
       </transition>
     </div>
@@ -139,11 +139,13 @@ import { useChatStore } from '@/stores/chat'
 import { formatBytes } from '@/utils/Formatting.ts'
 import { isMobile } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
+import { useI18n } from 'vue-i18n'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
 const videoViewerStore = useVideoViewerStore()
 const chatStore = useChatStore()
 const { downloadFile, isDownloading, process } = useDownload()
+const { t } = useI18n()
 const props = defineProps<{
   body: VideoBody
   messageStatus?: MessageStatusEnum
@@ -171,6 +173,9 @@ const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SEN
 const uploadProgress = computed(() => {
   return props.uploadProgress || 0
 })
+const fallbackVideoName = computed(() => t('message.video.unknown_video'))
+const uploadingTip = computed(() => t('message.video.uploading', { progress: uploadProgress.value }))
+const openingTip = computed(() => t('message.video.opening'))
 const thumbnailStore = useThumbnailCacheStore()
 const { observe: observeVideoVisibility, disconnect: disconnectVideoVisibility } = useIntersectionTaskQueue({
   threshold: 0.5

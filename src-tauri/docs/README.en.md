@@ -228,6 +228,10 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | 🔔 | System Tray Notifications | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📷 | Image Viewer | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | ✂️ | Screenshot Feature | ![In Progress](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🎙️ | Voice Calling | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 🎥 | Video Calling | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| ⌨️ | Global Shortcut Control | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
+| 📺 | Dedicated Media Viewer | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 📁 | File Upload (Qiniu Cloud) | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔄 | Auto-update System | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
@@ -387,6 +391,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 ### 🥈 Silver Sponsors ($8-14)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
 |---------|----------|--------|---------|
+| 2025-11-29 | **Sven** | `¥66` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-06-26 | **m udDy🐖** | `¥88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-09 | **犹豫，就会败北。** | `¥88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-01 | **墨** | `¥88.88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |

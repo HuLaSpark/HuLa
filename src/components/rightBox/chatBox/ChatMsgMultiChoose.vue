@@ -3,15 +3,19 @@
     v-if="chatStore.isMsgMultiChoose && chatStore.msgMultiChooseMode !== 'forward' && !showModal"
     class="relative flex-center gap-22px h-full">
     <!-- 功能模块 -->
-    <div class="flex flex-col flex-y-center gap-14px" v-for="opt in opts">
-      <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px">
-        <template #icon>
-          <svg class="size-22px">
-            <use :href="opt.icon"></use>
-          </svg>
-        </template>
-      </n-button>
-      <p class="text-(12px [--text-color])">{{ opt.text }}</p>
+    <div class="flex items-start gap-14px">
+      <div class="flex flex-col items-center gap-14px w-64px" v-for="opt in opts">
+        <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px mx-auto">
+          <template #icon>
+            <svg class="size-22px">
+              <use :href="opt.icon"></use>
+            </svg>
+          </template>
+        </n-button>
+        <p class="text-(12px [--text-color]) text-center w-full whitespace-normal break-words leading-tight">
+          {{ opt.text }}
+        </p>
+      </div>
     </div>
   </div>
 
@@ -38,6 +42,7 @@
               v-model:value="searchText"
               class="rounded-6px mt-8px border-(solid 1px [--line-color]) w-full relative text-12px"
               :maxlength="20"
+              :placeholder="t('message.multi_choose.search_placeholder')"
               clearable
               size="small">
               <template #prefix>
@@ -62,7 +67,7 @@
           </div>
           <!-- 已选择会话 -->
           <div class="flex-1 min-w-0 h-64vh px-12px pt-4px flex flex-col">
-            <p class="text-(12px #909090) pb-10px">分别发送给</p>
+            <p class="text-(12px #909090) pb-10px">{{ t('message.multi_choose.send_to_separately') }}</p>
             <n-scrollbar class="flex-1">
               <template v-for="session in selectedSessions" :key="session.roomId">
                 <n-flex align="center" class="p-8px">
@@ -85,10 +90,16 @@
 
             <div class="flex-1 flex-col-center">
               <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
-              <n-input class="my-12px border-(solid 1px [--line-color])" placeholder="给朋友留言" />
+              <n-input
+                class="my-12px border-(solid 1px [--line-color])"
+                :placeholder="t('message.multi_choose.leave_message_placeholder')" />
               <div class="w-full flex justify-between">
-                <n-button secondary class="w-100px h-30px" @click="showModal = false">取消</n-button>
-                <n-button secondary type="primary" class="w-100px h-30px" @click="sendMsg">发送</n-button>
+                <n-button secondary class="w-100px h-30px" @click="showModal = false">
+                  {{ t('message.multi_choose.cancel_button') }}
+                </n-button>
+                <n-button secondary type="primary" class="w-100px h-30px" @click="sendMsg">
+                  {{ t('message.multi_choose.send_button') }}
+                </n-button>
               </div>
             </div>
           </div>
@@ -115,8 +126,12 @@
         <span class="text-14px leading-normal">{{ deleteConfirmText }}</span>
 
         <n-flex justify="end">
-          <n-button class="w-78px" secondary @click="showDeleteConfirm = false">取消</n-button>
-          <n-button class="w-78px" color="#13987f" :loading="isDeleting" @click="handleBatchDelete">确定</n-button>
+          <n-button class="w-78px" secondary @click="showDeleteConfirm = false">
+            {{ t('message.multi_choose.cancel_button') }}
+          </n-button>
+          <n-button class="w-78px" color="#13987f" :loading="isDeleting" @click="handleBatchDelete">
+            {{ t('message.multi_choose.delete_action') }}
+          </n-button>
         </n-flex>
       </div>
     </div>
@@ -135,9 +150,11 @@ import { mergeMsg } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { useI18n } from 'vue-i18n'
 import type { MsgId } from '@/typings/global'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
+const { t } = useI18n()
 const chatStore = useChatStore()
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
@@ -154,7 +171,8 @@ const getMessagePreview = (msg: (typeof selectedMsgs.value)[number]) => {
   const userInfo = groupStore.getUserInfo(msg.fromUser.uid)
   const nickname = userInfo?.myName || msg.fromUser?.username || ''
   const body: any = msg.message.body || {}
-  const preview = body.content || body.fileName || body.name || body.title || body.url || '［非文本消息］'
+  const preview =
+    body.content || body.fileName || body.name || body.title || body.url || t('message.multi_choose.non_text_message')
   return nickname ? `${nickname}: ${preview}` : preview
 }
 
@@ -184,14 +202,14 @@ let mergeMessageType: MergeMessageType = MergeMessageType.SINGLE
 const deleteConfirmText = computed(() => {
   const count = selectedMsgs.value.length
   if (!count) {
-    return '请选择需要删除的消息'
+    return t('message.multi_choose.select_delete_prompt')
   }
-  return `删除后将不会出现在你的消息记录中，确定删除这${count}条消息吗?`
+  return t('message.multi_choose.delete_confirm', { count })
 })
 
 const handleDeleteClick = () => {
   if (selectedMsgs.value.length === 0) {
-    window.$message?.warning('请选择需要删除的消息')
+    window.$message?.warning(t('message.multi_choose.select_delete_prompt'))
     return
   }
   showDeleteConfirm.value = true
@@ -201,7 +219,7 @@ const handleBatchDelete = async () => {
   if (isDeleting.value || selectedMsgs.value.length === 0) return
   const roomId = globalStore.currentSessionRoomId
   if (!roomId) {
-    window.$message?.error('无法确定当前会话，删除失败')
+    window.$message?.error(t('message.multi_choose.room_missing'))
     showDeleteConfirm.value = false
     return
   }
@@ -219,14 +237,14 @@ const handleBatchDelete = async () => {
             roomId
           },
           {
-            customErrorMessage: '删除消息失败',
+            customErrorMessage: t('message.multi_choose.delete_failed_short'),
             errorType: ErrorType.Client
           }
         )
       )
     )
     ids.forEach((id) => chatStore.deleteMsg(id))
-    window.$message?.success('已删除选中消息')
+    window.$message?.success(t('message.multi_choose.delete_success'))
     chatStore.clearMsgCheck()
     chatStore.resetSessionSelection()
     chatStore.setMsgMultiChoose(false)
@@ -234,7 +252,7 @@ const handleBatchDelete = async () => {
     showDeleteConfirm.value = false
   } catch (error) {
     console.error('批量删除消息失败:', error)
-    window.$message?.error('删除消息失败，请稍后再试')
+    window.$message?.error(t('message.multi_choose.delete_failed_retry'))
   } finally {
     isDeleting.value = false
   }
@@ -242,7 +260,7 @@ const handleBatchDelete = async () => {
 
 const opts = computed(() => [
   {
-    text: '逐条转发',
+    text: t('message.multi_choose.single_forward'),
     icon: '#share-three',
     disabled: selectedMsgs.value.length === 0,
     click: () => {
@@ -252,7 +270,7 @@ const opts = computed(() => [
     }
   },
   {
-    text: '合并转发',
+    text: t('message.multi_choose.merge_forward'),
     icon: '#share',
     disabled: selectedMsgs.value.length === 0,
     click: () => {
@@ -269,20 +287,20 @@ const opts = computed(() => [
   //   }
   // },
   {
-    text: '保存至电脑',
+    text: t('message.multi_choose.save_to_pc'),
     icon: '#collect-laptop',
     click: () => {
-      window.$message.warning('暂未实现')
+      window.$message.warning(t('message.multi_choose.not_implemented'))
     }
   },
   {
-    text: '删除',
+    text: t('message.multi_choose.delete_action'),
     icon: '#delete',
     disabled: selectedMsgs.value.length === 0,
     click: handleDeleteClick
   },
   {
-    text: '',
+    text: t('message.multi_choose.exit_multi_select'),
     icon: '#close',
     click: () => {
       chatStore.clearMsgCheck()
@@ -322,11 +340,11 @@ const sendMsg = async () => {
     fromRoomId: globalStore.currentSessionRoomId
   })
     .then(() => {
-      window.$message.success('消息转发成功')
+      window.$message.success(t('message.multi_choose.forward_success'))
     })
     .catch((e) => {
       console.error('消息转发失败', e)
-      window.$message.error(e)
+      window.$message.error(t('message.multi_choose.forward_failed'))
     })
     .finally(() => {
       showModal.value = false

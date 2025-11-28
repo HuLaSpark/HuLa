@@ -1,0 +1,21 @@
+{
+  "recent": {
+    "title": "最近使用"
+  },
+  "tabs": {
+    "emoji": "表情",
+    "favorites": "我喜欢的"
+  },
+  "favorites": {
+    "title": "我的表情包",
+    "empty": "暂无表情包",
+    "delete": "删除",
+    "deleteSuccess": "删除表情成功",
+    "deleteFail": "删除表情失败"
+  },
+  "categories": {
+    "expression": "小黄脸表情",
+    "animal": "动物表情",
+    "gesture": "手势表情"
+  }
+}
