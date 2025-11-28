@@ -1,5 +1,57 @@
 
 
+## [3.0.5](https://github.com/HuLaSpark/HuLa/compare/v3.0.4...v3.0.5) (2025-11-28)
+
+
+### ✨ Features | 新功能
+
+* **del msg:** :sparkles: add delete chat log function ([0698866](https://github.com/HuLaSpark/HuLa/commit/0698866226589b429594941e7e385e35bea4378b)), closes [#386](https://github.com/HuLaSpark/HuLa/issues/386)
+* **i18n:** :sparkles: add English translations for agreement, auth, dynamic, and settings modules ([f9e6693](https://github.com/HuLaSpark/HuLa/commit/f9e6693163382956596380c824e185973980a29f))
+* **i18n:** :sparkles: add i18n for remaining pages and fix content disorder ([b7ec9b2](https://github.com/HuLaSpark/HuLa/commit/b7ec9b21d47be15b46ed1512418cdfb603318ba4))
+* **i18n:** :sparkles: add recognition of language auto ([8aee1f0](https://github.com/HuLaSpark/HuLa/commit/8aee1f0ef894962751c44f669ced410e978fb832))
+* **i18n:** :sparkles: bring i18 n-compatible pages to 98%（exc mobile） ([d582052](https://github.com/HuLaSpark/HuLa/commit/d582052da4733262aa1be8395dbf36b22b88958e))
+* **i18n:** :sparkles: i18n to add content for other pages and windows ([715d629](https://github.com/HuLaSpark/HuLa/commit/715d6298791aa4bf23de367ba615f4c5b62aef15))
+* **i18n:** add internationalization support ([#405](https://github.com/HuLaSpark/HuLa/issues/405)) ([799dce1](https://github.com/HuLaSpark/HuLa/commit/799dce10e11e4b6286c086af103ad3d52624cfa9))
+* **i18n:** add new translation entries ([#409](https://github.com/HuLaSpark/HuLa/issues/409)) ([fe3085b](https://github.com/HuLaSpark/HuLa/commit/fe3085b4fde3c059c00a2d9c4c6f64a58cb89176))
+* **log:** :sparkles: add versioning details for console output ([c0d3fc9](https://github.com/HuLaSpark/HuLa/commit/c0d3fc9a97d38a51d78512cdaaec197801be1997))
+* **message:** :sparkles: add click user name auto @ ([5ca19e2](https://github.com/HuLaSpark/HuLa/commit/5ca19e2f37948398f8ccef72b1ec6e17081f1023)), closes [#385](https://github.com/HuLaSpark/HuLa/issues/385)
+* **session:** :sparkles: add persistent unread count cache for sessions ([a00ea17](https://github.com/HuLaSpark/HuLa/commit/a00ea17755547a7b0f67a0e86c6b666062d264ed))
+* **sync:** :sparkles: add message sync throttling and optimize login flow ([d3690b1](https://github.com/HuLaSpark/HuLa/commit/d3690b1ab6a4b2f4408ac44085bb6b2c8baa2446))
+* **theme:** :sparkles: add login window and other windows compatible with dark mode ([581daac](https://github.com/HuLaSpark/HuLa/commit/581daac28dd6b73a421bda65f8b69098d30d724f))
+* **webSocket:** :sparkles: add automatic message sync after reconnection ([5411cc4](https://github.com/HuLaSpark/HuLa/commit/5411cc4e1f89a7bfbc6dd7fcde47d9f7417920c6))
+
+
+### 🐛 Bug Fixes | Bug 修复
+
+* commits list not collapsible ([f938c49](https://github.com/HuLaSpark/HuLa/commit/f938c497c47f6b4ab36fe75106301c44848846a7))
+* **common:** :bug: add loading indicator for message synchronization during reconnection and login ([36444f6](https://github.com/HuLaSpark/HuLa/commit/36444f62025788e9b03756943cfeef058f8b1643))
+* **common:** :bug: fix friend request message maximum width issue ([0715860](https://github.com/HuLaSpark/HuLa/commit/07158608d45a59bde82ec1037ce8b8af49632087))
+* **common:** :bug: fix model avatar modificationFix model avatar modification ([8c15424](https://github.com/HuLaSpark/HuLa/commit/8c15424116f97b48b5cc0e93d96f6d881cdf9b21))
+* **common:** :bug: fix recall message conversation list not updated ([e072c27](https://github.com/HuLaSpark/HuLa/commit/e072c27ec7050998a43b87384fc15106bc19461c))
+* **common:** :bug: optimize QR code login ([ae69f57](https://github.com/HuLaSpark/HuLa/commit/ae69f579300714d2fb04081a7bc45e5e08c5ea54))
+* **common:** :bug: wS reconnection request message ([daefd83](https://github.com/HuLaSpark/HuLa/commit/daefd839a981bfa9de7b426d13a3843a14aafc0d))
+* **i18n:** :bug: migrate to Composition API mode and add reactive locale support ([73b71d4](https://github.com/HuLaSpark/HuLa/commit/73b71d46c938fda8e94928caddacd91a842a565f))
+* **mac:** :bug: disable mac right-click selected text features ([fb95df5](https://github.com/HuLaSpark/HuLa/commit/fb95df576e20ac805fd3af6cafacbd26b80a8a59))
+* **mobile:** :bug: fix the QR code scanning failure issue ([58812f9](https://github.com/HuLaSpark/HuLa/commit/58812f90ce30937fce88eddaa60e4752478091fe))
+* **notification:** :bug: fix batch modification group notifications not taking effect ([3a8dd7c](https://github.com/HuLaSpark/HuLa/commit/3a8dd7c0090c07c838370d772d82e04b83e77250))
+* **plugin:** :bug: adapt to deep thinking ([f419cd2](https://github.com/HuLaSpark/HuLa/commit/f419cd241e3a75438e6cbef18009e52eb460c89a))
+* **plugin:** :bug: add AI balance inquiry ([e3db8ce](https://github.com/HuLaSpark/HuLa/commit/e3db8ce0318882d75041fbe9ad08174ec4689929))
+* **session:** :bug: add null safety checks for currentSession across components ([993648d](https://github.com/HuLaSpark/HuLa/commit/993648d13504703e655f8591a6e41a71ba4d9790))
+* **types:** narrow LoadLocale return type to Record<string, string> ([#407](https://github.com/HuLaSpark/HuLa/issues/407)) ([ff5e94f](https://github.com/HuLaSpark/HuLa/commit/ff5e94ffd235c4ec532287c7bbbaa33056da7f4c))
+* **update:** prevent program from exiting when only update window is open ([5b53fa5](https://github.com/HuLaSpark/HuLa/commit/5b53fa53dc32a2d8b8959d96fa9ec831de190a45))
+* upgrade @tauri-apps/plugin-barcode-scanner from 2.4.0 to 2.4.2 ([caf0bb2](https://github.com/HuLaSpark/HuLa/commit/caf0bb22bf32083114bcb7d6b5fb08e6336b6acd))
+* upgrade dayjs from 1.11.18 to 1.11.19 ([4c6fff7](https://github.com/HuLaSpark/HuLa/commit/4c6fff7d4337bc7e79b2a10d23c798f13bf00f3f))
+* upgrade hula-emojis from 1.2.30 to 1.2.31 ([15a69c3](https://github.com/HuLaSpark/HuLa/commit/15a69c3e72ada32a2f5b233baffcaffa4a7bec85))
+* upgrade pinia from 3.0.3 to 3.0.4 ([70aa7c3](https://github.com/HuLaSpark/HuLa/commit/70aa7c34d90c7d923a2086426a17335cfd3305f8))
+* **window:** handle tray window on Windows; prevent exit blocking when update window closes ([907d5e6](https://github.com/HuLaSpark/HuLa/commit/907d5e62d4ab1646ef06d41bb73e4459ea6c85f3))
+
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **common:** :zap: optimize my emoji page caching logic ([2999564](https://github.com/HuLaSpark/HuLa/commit/29995649ee4a33dab5cf7fd90cb393c6a1b1c0d2))
+* **i18n:** :zap: add i18n support for dayjs ([7dba84b](https://github.com/HuLaSpark/HuLa/commit/7dba84b56631c83ea6aba166305d13badb7c5d2f))
+* **i18n:** :zap: add some pages to support i18n ([e6240d0](https://github.com/HuLaSpark/HuLa/commit/e6240d0395dad281eea014aa56314abd9a61aa75))
+
 ## [3.0.4](https://github.com/HuLaSpark/HuLa/compare/v3.0.3...v3.0.4) (2025-11-14)
 
 
