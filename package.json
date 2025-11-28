@@ -116,7 +116,7 @@
     "mitt": "^3.0.1",
     "naive-ui": "^2.43.1",
     "p-limit": "^7.2.0",
-    "pinia": "^3.0.3",
+    "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
     "pinia-shared-state": "^1.0.1",
     "seemly": "^0.3.10",
