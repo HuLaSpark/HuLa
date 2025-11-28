@@ -229,6 +229,22 @@
       "group_name_update_failed": "群名称更新失败"
     }
   },
+  "manage_group_member": {
+    "title": "管理群成员",
+    "search_placeholder_mobile": "搜索成员~",
+    "search_placeholder_pc": "搜索群成员",
+    "selected_count": "已选择 {count} 人",
+    "remove_button": "踢出群聊",
+    "dialog_negative": "取消",
+    "dialog_positive": "确定",
+    "remove_confirm": "确定要踢出 {count} 位成员吗？",
+    "channel_not_allowed": "频道不允许踢出成员",
+    "select_member_warning": "请选择要踢出的成员",
+    "remove_success": "成功踢出 {count} 位成员",
+    "remove_failed": "踢出失败，请重试",
+    "confirm_remove_title": "确认踢出",
+    "channel_manage_unsupported": "频道不支持管理成员"
+  },
   "profile_card": {
     "online_status": "在线状态",
     "status": {

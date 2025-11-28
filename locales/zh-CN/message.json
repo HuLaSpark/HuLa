@@ -187,6 +187,49 @@
     "open_main_panel": "打开主面板",
     "exit": "退出"
   },
+  "location": {
+    "modal": {
+      "title": {
+        "map_error": "地图错误",
+        "location_error": "位置获取失败",
+        "default": "选择位置"
+      },
+      "result": {
+        "map_error_title": "地图加载失败",
+        "location_error_title": "位置获取失败"
+      },
+      "buttons": {
+        "cancel": "取消",
+        "retry": "重试",
+        "send": "发送位置"
+      },
+      "loading": {
+        "locating": "正在获取位置...",
+        "map": "地图加载中..."
+      },
+      "info": {
+        "current": "当前位置",
+        "fetching_address": "获取地址中...",
+        "coordinate": "坐标: {lat}, {lng}",
+        "unknown_address": "未知地址"
+      },
+      "errors": {
+        "missing_api_key": "腾讯地图API密钥未配置",
+        "geocode_failed": "获取地址失败"
+      }
+    },
+    "map": {
+      "marker_current": "当前位置"
+    },
+    "hook": {
+      "permission_check_failed": "检查地理位置权限失败",
+      "unsupported": "浏览器不支持地理位置功能",
+      "error_generic": "获取位置失败",
+      "permission_denied": "位置权限被拒绝",
+      "position_unavailable": "位置信息不可用",
+      "timeout": "获取位置超时"
+    }
+  },
   "update_window": {
     "updating": "更新中",
     "fetch_commit_failed": "v{version} 版本更新内容获取失败",

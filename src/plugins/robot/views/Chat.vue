@@ -861,6 +861,7 @@
 </template>
 <script setup lang="ts">
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { fetch as nativeFetch } from '@tauri-apps/plugin-http'
 import { type InputInst, UploadFileInfo } from 'naive-ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
@@ -1026,70 +1027,123 @@ const conversationTokens = computed(() => {
 })
 const serverTokenUsage = ref<number | null>(null)
 
-type ImageWorkerResponse = {
-  success: boolean
-  url: string
-  buffer?: ArrayBuffer
-  error?: string
-}
+const aiMediaDownloadTasks = new Map<string, Promise<ArrayBuffer>>()
 
-type ImageWorkerWaiter = {
-  resolve: (buffer: ArrayBuffer) => void
-  reject: (reason?: unknown) => void
-}
+// 将各种可能的二进制返回形式统一转成 ArrayBuffer，兼容 plugin-http/浏览器 fetch 等场景
+const convertHttpDataToArrayBuffer = (rawData: unknown): ArrayBuffer => {
+  if (rawData === null || rawData === undefined) {
+    throw new Error('图片数据为空')
+  }
 
-const aiImageWorkerRequests = new Map<string, ImageWorkerWaiter[]>()
-let aiImageDownloadWorker: Worker | null = null
-const aiImageWorkerUrl = new URL('../../../workers/imageDownloader.ts', import.meta.url)
+  if (rawData instanceof ArrayBuffer) {
+    return rawData
+  }
 
-const ensureAiImageWorker = () => {
-  if (aiImageDownloadWorker || typeof window === 'undefined') return
-  aiImageDownloadWorker = new Worker(aiImageWorkerUrl, { type: 'module' })
-  aiImageDownloadWorker.onmessage = (event: MessageEvent<ImageWorkerResponse>) => {
-    const { url, success, buffer, error } = event.data
-    const waiters = aiImageWorkerRequests.get(url)
-    if (!waiters?.length) return
-    aiImageWorkerRequests.delete(url)
-    if (!success || !buffer) {
-      waiters.forEach(({ reject }) => reject(new Error(error || '下载失败')))
-      return
+  if (rawData instanceof Uint8Array) {
+    return rawData.slice().buffer
+  }
+
+  if (ArrayBuffer.isView(rawData)) {
+    // 复制一份，避免 SharedArrayBuffer 类型不兼容
+    const view = rawData as ArrayBufferView
+    const copy = new Uint8Array(view.byteLength)
+    copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
+    return copy.buffer
+  }
+
+  if (Array.isArray(rawData)) {
+    return Uint8Array.from(rawData).buffer
+  }
+
+  if (typeof rawData === 'object') {
+    const maybeData = (rawData as { data?: number[] }).data
+    if (Array.isArray(maybeData)) {
+      return Uint8Array.from(maybeData).buffer
     }
-    waiters.forEach(({ resolve }) => resolve(buffer))
   }
+
+  if (typeof rawData === 'string') {
+    const binaryString = atob(rawData)
+    const len = binaryString.length
+    const bytes = new Uint8Array(len)
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+    return bytes.buffer
+  }
+
+  throw new Error('无法解析图片数据')
 }
 
-const requestAiImageBuffer = (url: string) => {
-  ensureAiImageWorker()
-  if (!aiImageDownloadWorker) {
-    return Promise.reject(new Error('Web Worker 不可用'))
+// 下载 AI 媒体的二进制数据：同 URL 复用 Promise，避免重复下载；按 plugin-http 的多种返回形态兜底
+const requestAiMediaBuffer = (url: string) => {
+  if (!url) {
+    return Promise.reject(new Error('图片地址无效'))
   }
-  const waiters = aiImageWorkerRequests.get(url)
-  if (waiters && waiters.length > 0) {
-    return new Promise<ArrayBuffer>((resolve, reject) => {
-      waiters.push({ resolve, reject })
+
+  const existingTask = aiMediaDownloadTasks.get(url)
+  if (existingTask) {
+    return existingTask
+  }
+
+  const downloadTask = (async () => {
+    const response = await nativeFetch(url, {
+      method: 'GET'
     })
-  }
-  return new Promise<ArrayBuffer>((resolve, reject) => {
-    aiImageWorkerRequests.set(url, [{ resolve, reject }])
-    aiImageDownloadWorker!.postMessage({ url })
+
+    const anyResponse = response as any
+    const status = typeof anyResponse.status === 'number' ? anyResponse.status : 200
+    const statusText = typeof anyResponse.statusText === 'string' ? anyResponse.statusText : ''
+    const ok = 'ok' in anyResponse ? Boolean(anyResponse.ok) : status >= 200 && status < 400
+
+    if (!ok) {
+      throw new Error(`下载失败: ${status} ${statusText}`.trim())
+    }
+
+    // 优先使用标准的 arrayBuffer
+    if (typeof anyResponse.arrayBuffer === 'function') {
+      const buffer = await anyResponse.arrayBuffer()
+      if (buffer instanceof ArrayBuffer) {
+        return buffer
+      }
+    }
+
+    // plugin-http 额外提供的 bytes 方法
+    if (typeof anyResponse.bytes === 'function') {
+      const bytes = await anyResponse.bytes()
+      return convertHttpDataToArrayBuffer(bytes)
+    }
+
+    // 最后回退 data 字段
+    if ('data' in anyResponse) {
+      return convertHttpDataToArrayBuffer(anyResponse.data)
+    }
+
+    throw new Error('无法解析图片数据')
+  })().finally(() => {
+    aiMediaDownloadTasks.delete(url)
   })
+
+  aiMediaDownloadTasks.set(url, downloadTask)
+  return downloadTask
 }
 
-const getAiImageExtension = (url: string) => {
+// 解析媒体扩展名，默认回退为指定后缀
+const getAiMediaExtension = (url: string, fallback = 'png') => {
   const cleanUrl = url.split(/[?#]/)[0] || ''
   const ext = cleanUrl.split('.').pop() || ''
-  if (!ext || ext.length > 5 || ext.includes('/')) return 'png'
+  if (!ext || ext.length > 5 || ext.includes('/')) return fallback
   return ext
 }
 
-const buildAiImageFileName = async (url: string) => {
-  const ext = getAiImageExtension(url)
+const buildAiMediaFileName = async (url: string, fallbackExt: string, prefix: string) => {
+  const ext = getAiMediaExtension(url, fallbackExt)
   try {
     const hash = await md5FromString(url)
-    return `${hash}.${ext}`
+    return `${prefix}-${hash}.${ext}`
   } catch (error) {
-    console.error('生成 AI 图片文件名失败:', error)
-    return `ai-image-${Date.now()}.${ext}`
+    console.error('生成 AI 媒体文件名失败:', error)
+    return `${prefix}-${Date.now()}.${ext}`
   }
 }
 
@@ -1102,7 +1156,7 @@ const ensureLocalAiImage = async (remoteUrl: string, messageIndex: number) => {
     : targetMessage.content === remoteUrl
   if (!isSameImage) return
   try {
-    const fileName = await buildAiImageFileName(remoteUrl)
+    const fileName = await buildAiMediaFileName(remoteUrl, 'png', 'ai-image')
     const existsResult = await resolveAiImagePath({
       userUid: userStore.userInfo.uid,
       conversationId: currentChat.value.id,
@@ -1110,7 +1164,7 @@ const ensureLocalAiImage = async (remoteUrl: string, messageIndex: number) => {
     })
     let absolutePath = existsResult.absolutePath
     if (!existsResult.exists) {
-      const buffer = await requestAiImageBuffer(remoteUrl)
+      const buffer = await requestAiMediaBuffer(remoteUrl)
       const data = new Uint8Array(buffer)
       const saved = await persistAiImageFile({
         userUid: userStore.userInfo.uid,
@@ -1127,6 +1181,82 @@ const ensureLocalAiImage = async (remoteUrl: string, messageIndex: number) => {
     }
   } catch (error) {
     console.error('AI 图片本地化失败:', error)
+  }
+}
+
+// 视频本地化：与图片同目录策略，下载后替换展示 URL
+const ensureLocalAiVideo = async (remoteUrl: string, messageIndex: number) => {
+  if (!remoteUrl || !userStore.userInfo?.uid || !currentChat.value.id) return
+  const targetMessage = messageList.value[messageIndex]
+  if (!targetMessage || targetMessage.type !== 'assistant') return
+  const isSameVideo = targetMessage.videoUrl
+    ? targetMessage.videoUrl === remoteUrl
+    : targetMessage.content === remoteUrl
+  if (!isSameVideo) return
+  try {
+    const fileName = await buildAiMediaFileName(remoteUrl, 'mp4', 'ai-video')
+    const existsResult = await resolveAiImagePath({
+      userUid: userStore.userInfo.uid,
+      conversationId: currentChat.value.id,
+      fileName
+    })
+    let absolutePath = existsResult.absolutePath
+    if (!existsResult.exists) {
+      const buffer = await requestAiMediaBuffer(remoteUrl)
+      const data = new Uint8Array(buffer)
+      const saved = await persistAiImageFile({
+        userUid: userStore.userInfo.uid,
+        conversationId: currentChat.value.id,
+        fileName,
+        data
+      })
+      absolutePath = saved.absolutePath
+    }
+    if (messageList.value[messageIndex]) {
+      const displayUrl = convertFileSrc(absolutePath)
+      messageList.value[messageIndex].content = displayUrl
+      messageList.value[messageIndex].videoUrl = remoteUrl
+    }
+  } catch (error) {
+    console.error('AI 视频本地化失败:', error)
+  }
+}
+
+// 音频本地化：与图片同目录策略，下载后替换展示 URL
+const ensureLocalAiAudio = async (remoteUrl: string, messageIndex: number) => {
+  if (!remoteUrl || !userStore.userInfo?.uid || !currentChat.value.id) return
+  const targetMessage = messageList.value[messageIndex]
+  if (!targetMessage || targetMessage.type !== 'assistant') return
+  const isSameAudio = targetMessage.audioUrl
+    ? targetMessage.audioUrl === remoteUrl
+    : targetMessage.content === remoteUrl
+  if (!isSameAudio) return
+  try {
+    const fileName = await buildAiMediaFileName(remoteUrl, 'mp3', 'ai-audio')
+    const existsResult = await resolveAiImagePath({
+      userUid: userStore.userInfo.uid,
+      conversationId: currentChat.value.id,
+      fileName
+    })
+    let absolutePath = existsResult.absolutePath
+    if (!existsResult.exists) {
+      const buffer = await requestAiMediaBuffer(remoteUrl)
+      const data = new Uint8Array(buffer)
+      const saved = await persistAiImageFile({
+        userUid: userStore.userInfo.uid,
+        conversationId: currentChat.value.id,
+        fileName,
+        data
+      })
+      absolutePath = saved.absolutePath
+    }
+    if (messageList.value[messageIndex]) {
+      const displayUrl = convertFileSrc(absolutePath)
+      messageList.value[messageIndex].content = displayUrl
+      messageList.value[messageIndex].audioUrl = remoteUrl
+    }
+  } catch (error) {
+    console.error('AI 音频本地化失败:', error)
   }
 }
 
@@ -1946,6 +2076,8 @@ const pollVideoStatus = async (
           }
         }
 
+        void ensureLocalAiVideo(video.videoUrl, messageIndex)
+
         window.$message.success('视频生成成功')
 
         scrollToBottom()
@@ -2075,6 +2207,8 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
             speed: audioParams.value.speed
           }
         }
+
+        void ensureLocalAiAudio(audio.audioUrl, messageIndex)
 
         window.$message.success('音频生成成功')
 
@@ -2361,9 +2495,20 @@ const loadMessages = async (conversationId: string) => {
       if (userStore.userInfo?.uid && currentChat.value.id) {
         void Promise.all(
           messageList.value.map((msg, index) => {
-            if (msg.type !== 'assistant' || msg.msgType !== AiMsgContentTypeEnum.IMAGE) return Promise.resolve()
-            const remoteUrl = msg.imageUrl || msg.content
-            return ensureLocalAiImage(remoteUrl, index)
+            if (msg.type !== 'assistant') return Promise.resolve()
+            if (msg.msgType === AiMsgContentTypeEnum.IMAGE) {
+              const remoteUrl = msg.imageUrl || msg.content
+              return ensureLocalAiImage(remoteUrl, index)
+            }
+            if (msg.msgType === AiMsgContentTypeEnum.VIDEO) {
+              const remoteUrl = msg.videoUrl || msg.content
+              return ensureLocalAiVideo(remoteUrl, index)
+            }
+            if (msg.msgType === AiMsgContentTypeEnum.AUDIO) {
+              const remoteUrl = msg.audioUrl || msg.content
+              return ensureLocalAiAudio(remoteUrl, index)
+            }
+            return Promise.resolve()
           })
         )
       }
@@ -2678,9 +2823,6 @@ onUnmounted(() => {
   useMitt.off('refresh-model-list', handleRefreshModelList)
   useMitt.off('open-generation-history', handleOpenHistory)
   useMitt.off('left-chat-title', handleLeftChatTitle)
-  aiImageDownloadWorker?.terminate()
-  aiImageDownloadWorker = null
-  aiImageWorkerRequests.clear()
 })
 
 // 监听会话切换，停止旧会话的轮询任务

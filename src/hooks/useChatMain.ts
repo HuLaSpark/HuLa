@@ -455,7 +455,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             },
 
             {
-              label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
+              label: () => (isMac() ? t('menu.show_in_finder') : t('menu.show_in_folder')),
               icon: 'file2',
               click: async (item: RightMouseMessageItem) => {
                 console.log('打开文件夹的item项：', item)
@@ -655,7 +655,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
     },
 
     {
-      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
+      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.show_in_folder')),
       icon: 'file2',
       click: async (item: RightMouseMessageItem) => {
         console.log('打开文件夹的item项：', item)
@@ -750,7 +750,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       }
     },
     {
-      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.open_folder')),
+      label: () => (isMac() ? t('menu.show_in_finder') : t('menu.show_in_folder')),
       icon: 'file2',
       click: async (item: MessageType) => {
         const fileUrl = item.message.body.url || item.message.body.content

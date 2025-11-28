@@ -230,6 +230,22 @@
       "group_name_update_failed": "Failed to rename group"
     }
   },
+  "manage_group_member": {
+    "title": "Manage group members",
+    "search_placeholder_mobile": "Search members~",
+    "search_placeholder_pc": "Search group members",
+    "selected_count": "Selected {count} members",
+    "remove_button": "Remove from group",
+    "dialog_negative": "Cancel",
+    "dialog_positive": "Confirm",
+    "remove_confirm": "Remove {count} members?",
+    "channel_not_allowed": "Channels cannot remove members",
+    "select_member_warning": "Select members to remove",
+    "remove_success": "Removed {count} members",
+    "remove_failed": "Failed to remove members, please retry",
+    "confirm_remove_title": "Confirm removal",
+    "channel_manage_unsupported": "Channels do not support member management"
+  },
   "profile_card": {
     "online_status": "Online status",
     "status": {

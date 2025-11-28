@@ -10,7 +10,9 @@
         @click="toggleStatus(item)"
         class="p-6px rounded-4px hover:bg-[--tray-hover]">
         <img class="size-14px" :src="item.url" alt="" />
-        <span>{{ item.title }}</span>
+        <span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+          {{ translateStateTitle(item.title) }}
+        </span>
       </n-flex>
       <n-flex
         @click="createWebviewWindow(t('message.tray.online_status_window_title'), 'onlineStatus', 320, 480)"
@@ -21,7 +23,7 @@
         <svg class="size-14px">
           <use href="#more"></use>
         </svg>
-        <span>{{ t('message.tray.more_status') }}</span>
+        <span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{{ t('message.tray.more_status') }}</span>
       </n-flex>
 
       <component :is="division" />
@@ -104,6 +106,13 @@ const messageSound = computed({
 
 const division = () => {
   return <div class={'h-1px bg-[--line-color] w-full'}></div>
+}
+
+const translateStateTitle = (title?: string) => {
+  if (!title) return ''
+  const key = `auth.onlineStatus.states.${title}`
+  const translated = t(key)
+  return translated === key ? title : translated
 }
 
 const handleExit = () => {

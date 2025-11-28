@@ -183,6 +183,26 @@ jobs:
           }
           EOF
 
+      - name: Prepare production config
+        shell: bash
+        env:
+          YOUDAO_APP_KEY: ${{ secrets.YOUDAO_APP_KEY }}
+          YOUDAO_APP_SECRET: ${{ secrets.YOUDAO_APP_SECRET }}
+          TENCENT_API_KEY: ${{ secrets.TENCENT_API_KEY }}
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_MAP_KEY: ${{ secrets.TENCENT_MAP_KEY }}
+        run: |
+          mkdir -p src-tauri/configuration
+          cat > src-tauri/configuration/production.yaml <<'EOF'
+          youdao:
+            app_key: "${YOUDAO_APP_KEY}"
+            app_secret: "${YOUDAO_APP_SECRET}"
+          tencent:
+            api_key: "${TENCENT_API_KEY}"
+            secret_id: "${TENCENT_SECRET_ID}"
+            map_key: "${TENCENT_MAP_KEY}"
+          EOF
+
       # 安装 Rust
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly

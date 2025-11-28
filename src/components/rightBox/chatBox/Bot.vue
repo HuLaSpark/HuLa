@@ -109,7 +109,6 @@ import { isDesktop } from '@/utils/PlatformConstants'
 import { useBotStore } from '@/stores/bot'
 import { useAssistantModelPresets, type AssistantModelPreset } from '@/hooks/useAssistantModelPresets'
 import HuLaAssistant from './HuLaAssistant.vue'
-import 'github-markdown-css/github-markdown.css'
 
 // 当前语言
 const currentLang = ref<'zh' | 'en'>('zh')

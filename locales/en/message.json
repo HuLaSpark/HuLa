@@ -187,6 +187,49 @@
     "open_main_panel": "Open main panel",
     "exit": "Exit"
   },
+  "location": {
+    "modal": {
+      "title": {
+        "map_error": "Map error",
+        "location_error": "Location failed",
+        "default": "Pick a location"
+      },
+      "result": {
+        "map_error_title": "Map failed to load",
+        "location_error_title": "Failed to get location"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "retry": "Retry",
+        "send": "Send location"
+      },
+      "loading": {
+        "locating": "Fetching location...",
+        "map": "Loading map..."
+      },
+      "info": {
+        "current": "Current location",
+        "fetching_address": "Getting address...",
+        "coordinate": "Coord: {lat}, {lng}",
+        "unknown_address": "Unknown address"
+      },
+      "errors": {
+        "missing_api_key": "Tencent Map API key not configured",
+        "geocode_failed": "Failed to fetch address"
+      }
+    },
+    "map": {
+      "marker_current": "Current location"
+    },
+    "hook": {
+      "permission_check_failed": "Failed to check geolocation permission",
+      "unsupported": "Geolocation is not supported in this browser",
+      "error_generic": "Failed to obtain location",
+      "permission_denied": "Location permission denied",
+      "position_unavailable": "Location unavailable",
+      "timeout": "Location request timed out"
+    }
+  },
   "update_window": {
     "updating": "Updating",
     "fetch_commit_failed": "Failed to load release notes for v{version}",

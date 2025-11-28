@@ -8,7 +8,7 @@
         :hidden-right="true"
         :enable-default-background="false"
         :enable-shadow="false"
-        room-name="管理群成员" />
+        :room-name="t('home.manage_group_member.title')" />
 
       <!-- 顶部搜索框 -->
       <div class="px-16px mt-10px flex gap-3">
@@ -16,7 +16,7 @@
           <n-input
             v-model:value="keyword"
             class="rounded-10px w-full bg-gray-100 relative text-14px"
-            placeholder="搜索成员~"
+            :placeholder="t('home.manage_group_member.search_placeholder_mobile')"
             clearable
             spellCheck="false"
             autoComplete="off"
@@ -61,7 +61,11 @@
                       </span>
                       <div class="text-12px text-gray-500 flex items-center gap-4px truncate">
                         <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                        {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                        {{
+                          item.activeStatus === OnlineEnum.ONLINE
+                            ? t('home.friends_list.status.online')
+                            : t('home.friends_list.status.offline')
+                        }}
                       </div>
                     </div>
                   </div>
@@ -74,9 +78,11 @@
 
       <!-- 底部操作栏 -->
       <div class="px-16px py-10px bg-white border-t border-gray-200 flex justify-between items-center">
-        <span class="text-14px">已选择 {{ selectedList.length }} 人</span>
+        <span class="text-14px">
+          {{ t('home.manage_group_member.selected_count', { count: selectedList.length }) }}
+        </span>
         <n-button type="error" :disabled="selectedList.length === 0" :loading="isLoading" @click="handleMobileRemove">
-          踢出群聊
+          {{ t('home.manage_group_member.remove_button') }}
         </n-button>
       </div>
     </div>
@@ -87,7 +93,7 @@
     <!-- PC端头部 -->
     <div class="flex-shrink-0">
       <div class="flex items-center justify-between px-20px py-16px border-b border-[--line-color]">
-        <h2 class="text-16px font-medium text-[--text-color]">管理群成员</h2>
+        <h2 class="text-16px font-medium text-[--text-color]">{{ t('home.manage_group_member.title') }}</h2>
       </div>
     </div>
 
@@ -101,7 +107,7 @@
           autoCorrect="off"
           autoCapitalize="off"
           class="border-(solid 1px [--line-color]) rounded-8px"
-          placeholder="搜索群成员">
+          :placeholder="t('home.manage_group_member.search_placeholder_pc')">
           <template #prefix>
             <svg class="w-12px h-12px"><use href="#search"></use></svg>
           </template>
@@ -141,7 +147,11 @@
                     </span>
                     <div class="text-11px text-[--chat-text-color] flex items-center gap-4px truncate">
                       <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                      {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                      {{
+                        item.activeStatus === OnlineEnum.ONLINE
+                          ? t('home.friends_list.status.online')
+                          : t('home.friends_list.status.offline')
+                      }}
                     </div>
                   </div>
                 </div>
@@ -154,14 +164,20 @@
 
     <!-- 底部操作栏 -->
     <div class="px-20px py-12px bg-[--bg-popover] border-t border-[--line-color] flex justify-between items-center">
-      <span class="text-13px text-[--text-color]">已选择 {{ selectedList.length }} 人</span>
+      <span class="text-13px text-[--text-color]">
+        {{ t('home.manage_group_member.selected_count', { count: selectedList.length }) }}
+      </span>
       <n-popconfirm v-model:show="showDeleteConfirm">
         <template #icon>
           <svg class="size-22px"><use href="#explosion"></use></svg>
         </template>
         <template #action>
-          <n-button size="small" tertiary @click.stop="showDeleteConfirm = false">取消</n-button>
-          <n-button size="small" type="error" @click.stop="handleRemove">确定</n-button>
+          <n-button size="small" tertiary @click.stop="showDeleteConfirm = false">
+            {{ t('home.manage_group_member.dialog_negative') }}
+          </n-button>
+          <n-button size="small" type="error" @click.stop="handleRemove">
+            {{ t('home.manage_group_member.dialog_positive') }}
+          </n-button>
         </template>
         <template #trigger>
           <n-button
@@ -170,10 +186,10 @@
             type="error"
             :disabled="selectedList.length === 0"
             :loading="isLoading">
-            踢出群聊
+            {{ t('home.manage_group_member.remove_button') }}
           </n-button>
         </template>
-        确定要踢出 {{ selectedList.length }} 位成员吗？
+        {{ t('home.manage_group_member.remove_confirm', { count: selectedList.length }) }}
       </n-popconfirm>
     </div>
   </div>
@@ -188,6 +204,7 @@ import { useGroupStore } from '@/stores/group'
 import { useGlobalStore } from '@/stores/global'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import router from '@/router'
+import { useI18n } from 'vue-i18n'
 
 defineOptions({
   name: 'ManageGroupMember'
@@ -200,6 +217,7 @@ const emit = defineEmits<{
 const groupStore = useGroupStore()
 const globalStore = useGlobalStore()
 const dialog = useDialog()
+const { t } = useI18n()
 
 const keyword = ref('')
 const selectedList = ref<string[]>([])
@@ -248,12 +266,12 @@ const handleClose = () => {
 
 const validateRemoval = () => {
   if (globalStore.currentSessionRoomId === '1') {
-    window.$message.warning('频道不允许踢出成员')
+    window.$message.warning(t('home.manage_group_member.channel_not_allowed'))
     return false
   }
 
   if (selectedList.value.length === 0) {
-    window.$message.warning('请选择要踢出的成员')
+    window.$message.warning(t('home.manage_group_member.select_member_warning'))
     return false
   }
 
@@ -275,13 +293,13 @@ const handleRemove = async () => {
   try {
     await groupStore.removeGroupMembers(members, globalStore.currentSessionRoomId)
 
-    window.$message.success(`成功踢出 ${count} 位成员`)
+    window.$message.success(t('home.manage_group_member.remove_success', { count }))
     selectedList.value = []
     handleClose()
     return true
   } catch (error) {
     console.error('踢出失败:', error)
-    window.$message.error('踢出失败，请重试')
+    window.$message.error(t('home.manage_group_member.remove_failed'))
     return false
   } finally {
     isLoading.value = false
@@ -293,10 +311,10 @@ const handleMobileRemove = () => {
   if (!validateRemoval()) return
 
   dialog.warning({
-    title: '确认踢出',
-    content: `确定要踢出 ${selectedList.value.length} 位成员吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
+    title: t('home.manage_group_member.confirm_remove_title'),
+    content: t('home.manage_group_member.remove_confirm', { count: selectedList.value.length }),
+    positiveText: t('home.manage_group_member.dialog_positive'),
+    negativeText: t('home.manage_group_member.dialog_negative'),
     onPositiveClick: handleRemove
   })
 }
@@ -313,7 +331,7 @@ const calculateScrollHeight = () => {
 onMounted(async () => {
   // 如果是频道（roomId === '1'），直接返回上一页
   if (globalStore.currentSessionRoomId === '1') {
-    window.$message.warning('频道不支持管理成员')
+    window.$message.warning(t('home.manage_group_member.channel_manage_unsupported'))
     handleClose()
     return
   }

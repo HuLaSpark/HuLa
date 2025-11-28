@@ -25,11 +25,15 @@
 
       <!-- 地图加载错误 -->
       <div v-if="mapError" class="h-340px flex-center">
-        <n-result status="error" title="地图加载失败" :description="mapError">
+        <n-result status="error" :title="t('message.location.modal.result.map_error_title')" :description="mapError">
           <template #footer>
             <n-flex justify="center" :size="12">
-              <n-button secondary @click="modalVisible = false">取消</n-button>
-              <n-button type="primary" secondary @click="retryMapLoad">重试</n-button>
+              <n-button secondary @click="modalVisible = false">
+                {{ t('message.location.modal.buttons.cancel') }}
+              </n-button>
+              <n-button type="primary" secondary @click="retryMapLoad">
+                {{ t('message.location.modal.buttons.retry') }}
+              </n-button>
             </n-flex>
           </template>
         </n-result>
@@ -37,11 +41,18 @@
 
       <!-- 位置获取失败 -->
       <div v-else-if="locationState.error && !selectedLocation" class="h-340px flex-center">
-        <n-result status="warning" title="位置获取失败" :description="locationState.error">
+        <n-result
+          status="warning"
+          :title="t('message.location.modal.result.location_error_title')"
+          :description="locationState.error">
           <template #footer>
             <n-flex justify="center" :size="12">
-              <n-button secondary @click="modalVisible = false">取消</n-button>
-              <n-button type="primary" secondary @click="relocate">重试</n-button>
+              <n-button secondary @click="modalVisible = false">
+                {{ t('message.location.modal.buttons.cancel') }}
+              </n-button>
+              <n-button type="primary" secondary @click="relocate">
+                {{ t('message.location.modal.buttons.retry') }}
+              </n-button>
             </n-flex>
           </template>
         </n-result>
@@ -54,7 +65,13 @@
           <!-- 地图加载中 -->
           <div v-if="locationState.loading || mapLoading" class="flex-col-center gap-42px">
             <n-spin :size="42" />
-            <p class="text-(14px [--text-cplor])">{{ locationState.loading ? '正在获取位置...' : '地图加载中...' }}</p>
+            <p class="text-(14px [--text-cplor])">
+              {{
+                locationState.loading
+                  ? t('message.location.modal.loading.locating')
+                  : t('message.location.modal.loading.map')
+              }}
+            </p>
           </div>
 
           <!-- 地图组件 -->
@@ -72,12 +89,17 @@
         <!-- 位置信息显示 -->
         <div v-if="selectedLocation" class="rounded-6px bg-#fefefe dark:bg-#303030 p-12px">
           <n-flex vertical :size="8">
-            <span class="text-14px font-medium">当前位置</span>
+            <span class="text-14px font-medium">{{ t('message.location.modal.info.current') }}</span>
             <div class="text-12px text-gray-500">
-              {{ selectedLocation.address || '获取地址中...' }}
+              {{ selectedLocation.address || t('message.location.modal.info.fetching_address') }}
             </div>
             <div class="text-11px text-gray-400">
-              坐标: {{ selectedLocation.latitude.toFixed(6) }}, {{ selectedLocation.longitude.toFixed(6) }}
+              {{
+                t('message.location.modal.info.coordinate', {
+                  lat: selectedLocation.latitude.toFixed(6),
+                  lng: selectedLocation.longitude.toFixed(6)
+                })
+              }}
             </div>
           </n-flex>
         </div>
@@ -85,7 +107,9 @@
 
       <!-- 操作按钮 -->
       <n-flex v-if="showActionButtons" align="center" :size="24" class="py-8px">
-        <n-button type="primary" secondary :loading="sendingLocation" @click="handleConfirm">发送位置</n-button>
+        <n-button type="primary" secondary :loading="sendingLocation" @click="handleConfirm">
+          {{ t('message.location.modal.buttons.send') }}
+        </n-button>
       </n-flex>
     </div>
   </n-modal>
@@ -97,6 +121,7 @@ import { reverseGeocode } from '@/services/mapApi'
 import { getSettings } from '@/services/tauriCommand'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import LocationMap from './LocationMap.vue'
+import { useI18n } from 'vue-i18n'
 
 type LocationData = {
   latitude: number
@@ -136,11 +161,13 @@ const mapError = ref<string | null>(null)
 const sendingLocation = ref(false)
 const apiKey = ref('')
 
+const { t } = useI18n()
+
 // 计算属性
 const modalTitle = computed(() => {
-  if (mapError.value) return '地图错误'
-  if (locationState.error) return '位置获取失败'
-  return '选择位置'
+  if (mapError.value) return t('message.location.modal.title.map_error')
+  if (locationState.error) return t('message.location.modal.title.location_error')
+  return t('message.location.modal.title.default')
 })
 
 const showActionButtons = computed(() => {
@@ -163,15 +190,20 @@ const getLocation = async () => {
     // 设置 API key
     apiKey.value = settings.tencent?.map_key || ''
     if (!apiKey.value) {
-      throw new Error('腾讯地图API密钥未配置')
+      const missingKeyMsg = t('message.location.modal.errors.missing_api_key')
+      mapError.value = missingKeyMsg
+      throw new Error(missingKeyMsg)
     }
 
     // 获取地址信息
     const geocodeResult = await reverseGeocode(result.transformed.lat, result.transformed.lng).catch((error) => {
-      console.warn('获取地址失败:', error)
+      console.warn(t('message.location.modal.errors.geocode_failed'), error)
       return null
     })
-    const address = geocodeResult?.formatted_addresses?.recommend || geocodeResult?.address || '未知地址'
+    const address =
+      geocodeResult?.formatted_addresses?.recommend ||
+      geocodeResult?.address ||
+      t('message.location.modal.info.unknown_address')
 
     selectedLocation.value = {
       latitude: result.transformed.lat,
@@ -216,7 +248,7 @@ const handleLocationChange = async (newLocation: { lat: number; lng: number }) =
 
   // 获取新位置的地址
   const geocodeResult = await reverseGeocode(newLocation.lat, newLocation.lng).catch((error) => {
-    console.warn('获取地址失败:', error)
+    console.warn(t('message.location.modal.errors.geocode_failed'), error)
     return null
   })
   const address =

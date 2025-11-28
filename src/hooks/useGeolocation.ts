@@ -1,4 +1,5 @@
 import { transformCoordinates } from '@/services/mapApi'
+import { useI18n } from 'vue-i18n'
 
 type GeolocationState = {
   loading: boolean
@@ -15,6 +16,7 @@ type GeolocationOptions = {
 }
 
 export const useGeolocation = () => {
+  const { t } = useI18n()
   const state = ref<GeolocationState>({
     loading: false,
     error: null,
@@ -37,7 +39,7 @@ export const useGeolocation = () => {
         state.value.permission = permission.state
         return permission.state
       } catch (error) {
-        console.warn('检查地理位置权限失败:', error)
+        console.warn(t('message.location.hook.permission_check_failed'), error)
       }
     }
     return 'prompt'
@@ -47,7 +49,8 @@ export const useGeolocation = () => {
   const getCurrentPosition = async (options?: GeolocationOptions): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('浏览器不支持地理位置功能'))
+        const unsupportedError = t('message.location.hook.unsupported')
+        reject(new Error(unsupportedError))
         return
       }
 
@@ -69,17 +72,17 @@ export const useGeolocation = () => {
         },
         (error) => {
           state.value.loading = false
-          let errorMessage = '获取位置失败'
+          let errorMessage = t('message.location.hook.error_generic')
 
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = '位置权限被拒绝'
+              errorMessage = t('message.location.hook.permission_denied')
               break
             case error.POSITION_UNAVAILABLE:
-              errorMessage = '位置信息不可用'
+              errorMessage = t('message.location.hook.position_unavailable')
               break
             case error.TIMEOUT:
-              errorMessage = '获取位置超时'
+              errorMessage = t('message.location.hook.timeout')
               break
           }
 

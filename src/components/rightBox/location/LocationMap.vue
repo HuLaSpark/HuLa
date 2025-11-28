@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 type LocationData = {
   latitude: number
   longitude: number
@@ -51,6 +52,7 @@ const props = withDefaults(defineProps<LocationMapProps>(), {
 })
 
 const emit = defineEmits<LocationMapEmits>()
+const { t } = useI18n()
 
 // 地图实例和状态
 const mapRef = ref()
@@ -91,7 +93,7 @@ const markerGeometries = computed(() => [
     id: 'current',
     styleId: 'current-location',
     position: mapCenter.value,
-    properties: { title: '当前位置' },
+    properties: { title: t('message.location.map.marker_current') },
     draggable: props.draggable
   }
 ])
