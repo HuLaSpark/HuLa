@@ -544,14 +544,17 @@ const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
   if (!payload || payload.type !== 'connectionStateChanged') return
 
-  const previousState = lastWsConnectionState
-  const nextState = payload.state
+  const previousState = (lastWsConnectionState || '').toUpperCase() || null
+  const nextStateRaw = payload.state
+  const nextState = typeof nextStateRaw === 'string' ? nextStateRaw.toUpperCase() : ''
   const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
+  const shouldHandleReconnect =
+    nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop || previousState === 'CONNECTED')
 
-  lastWsConnectionState = nextState ?? previousState
+  lastWsConnectionState = nextState || previousState
 
-  if (!(nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop))) return
+  if (!shouldHandleReconnect) return
 
   // 开始同步，显示加载状态
   chatStore.syncLoading = true
