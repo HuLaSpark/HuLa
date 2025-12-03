@@ -48,14 +48,18 @@
           v-if="item.url === 'message'"
           :max="99"
           :value="unReadMark.newMsgUnreadCount"
-          :show="unReadMark.newMsgUnreadCount > 0">
+          :show="unreadReady && unReadMark.newMsgUnreadCount > 0">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
           </svg>
         </n-badge>
         <!-- 好友提示 -->
-        <n-badge v-if="item.url === 'friendsList'" :max="99" :value="unreadApplyCount" :show="unreadApplyCount > 0">
+        <n-badge
+          v-if="item.url === 'friendsList'"
+          :max="99"
+          :value="unreadApplyCount"
+          :show="unreadApplyCount > 0 && unreadReady">
           <svg class="size-22px">
             <use
               :href="`#${activeUrl === item.url || openWindowsList.has(item.url) ? item.iconAction : item.icon}`"></use>
@@ -279,6 +283,7 @@ const { plugins } = storeToRefs(pluginsStore)
 const { unreadCount: feedUnreadCount } = storeToRefs(feedStore)
 const { t } = useI18n()
 const unReadMark = computed(() => globalStore.unReadMark)
+const unreadReady = computed(() => globalStore.unreadReady)
 // const headerRef = useTemplateRef('header')
 // const actionListRef = useTemplateRef('actionList')
 //const { } = toRefs(getCurrentInstance) // 所有菜单的外层div

@@ -349,7 +349,7 @@ pub async fn fetch_all_messages(
         const TIME_BLOCK_THRESHOLD_MS: i64 = 1000 * 60 * 10;
         let mut last_send_time_map: HashMap<String, Option<i64>> = HashMap::new();
 
-        for (index, msg_resp) in messages.iter_mut().enumerate() {
+        for (_index, msg_resp) in messages.iter_mut().enumerate() {
             let room_id = match &msg_resp.message.room_id {
                 Some(v) => v.clone(),
                 None => continue,

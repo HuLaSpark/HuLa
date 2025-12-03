@@ -24,6 +24,7 @@ export const useGlobalStore = defineStore(
       newGroupUnreadCount: 0,
       newMsgUnreadCount: 0
     })
+    const unreadReady = ref<boolean>(true)
 
     // 当前阅读未读列表状态
     const currentReadUnreadList = reactive<{ show: boolean; msgId: number | null }>({
@@ -98,6 +99,19 @@ export const useGlobalStore = defineStore(
       unreadCountManager.calculateTotal(chatStore.sessionList, unReadMark)
     }
 
+    // 兜底同步 Dock/角标，防止未读数与徽章不同步
+    watch(
+      () => ({
+        msg: unReadMark.newMsgUnreadCount,
+        friend: unReadMark.newFriendUnreadCount,
+        group: unReadMark.newGroupUnreadCount
+      }),
+      () => {
+        if (!unreadReady.value) return
+        unreadCountManager.refreshBadge(unReadMark)
+      }
+    )
+
     // 监听当前会话变化，添加防重复触发逻辑
     watch(currentSessionRoomId, async (val, oldVal) => {
       if (!val || val === oldVal) {
@@ -151,6 +165,7 @@ export const useGlobalStore = defineStore(
       createGroupModalInfo,
       tipVisible,
       isTrayMenuShow,
+      unreadReady,
       setTipVisible,
       updateGlobalUnreadCount,
       updateCurrentSessionRoomId,

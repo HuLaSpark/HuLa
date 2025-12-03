@@ -57,7 +57,8 @@ impl Default for WebSocketConfig {
             client_id: String::new(),
             heartbeat_interval: 9900, // 9.9秒
             heartbeat_timeout: 15000, // 15秒
-            max_reconnect_attempts: 10,
+            // 0 表示无限重连
+            max_reconnect_attempts: 0,
             reconnect_delay_ms: 1000, // 1秒
         }
     }

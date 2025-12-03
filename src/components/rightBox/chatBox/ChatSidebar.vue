@@ -221,7 +221,14 @@ const announcementStore = useAnnouncementStore()
 const { clearAnnouncements } = announcementStore
 const { themes } = storeToRefs(settingStore)
 // 当前加载的群聊ID
-const onlineCountDisplay = computed(() => groupStore.countInfo?.onlineNum ?? 0)
+// 如果成员列表未完全加载，使用当前列表的在线人数，避免与头像显示不一致
+const onlineCountDisplay = computed(() => {
+  const totalOnline = groupStore.countInfo?.onlineNum ?? 0
+  const loadedOnline =
+    groupStore.onlineCountMap[globalStore.currentSessionRoomId] ??
+    groupStore.userList.filter((m) => m.activeStatus === OnlineEnum.ONLINE).length
+  return groupStore.userListOptions.isLast ? totalOnline : loadedOnline
+})
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 // 公告相关计算属性
 const { announcementContent, announNum, announError, isAddAnnoun } = storeToRefs(announcementStore)

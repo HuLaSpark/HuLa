@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
+import { OnlineEnum, RoleEnum, RoomTypeEnum, StoresEnum } from '@/enums'
 import type { GroupDetailReq, UserItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { useUserStore } from '@/stores/user'
@@ -28,6 +28,7 @@ export const useGroupStore = defineStore(
 
     const userListMap = reactive<Record<string, UserItem[]>>({})
     const memberOrderCounters = reactive<Record<string, number>>({})
+    const onlineCountMap = reactive<Record<string, number>>({})
 
     const getRoleSortWeight = (roleId?: number) => {
       switch (roleId) {
@@ -71,11 +72,13 @@ export const useGroupStore = defineStore(
       if (!Array.isArray(members) || members.length === 0) {
         userListMap[roomId] = []
         memberOrderCounters[roomId] = 0
+        onlineCountMap[roomId] = 0
         return
       }
 
       const sortedMembers = sortMembersByRole(roomId, members as InternalUserItem[])
       userListMap[roomId] = sortedMembers
+      onlineCountMap[roomId] = sortedMembers.filter((m) => m.activeStatus === OnlineEnum.ONLINE).length
     }
     const groupDetails = ref<GroupDetailReq[]>([])
     const userListOptions = reactive({ isLast: false, loading: true, cursor: '' }) // 分页加载相关状态
@@ -449,6 +452,9 @@ export const useGroupStore = defineStore(
       if (group) {
         group.memberNum = totalNum
         group.onlineNum = onlineNum
+        if (typeof onlineNum === 'number') {
+          onlineCountMap[roomId] = onlineNum
+        }
       }
     }
 
@@ -795,6 +801,7 @@ export const useGroupStore = defineStore(
       countInfo,
       getUser,
       getRoomIdsByUid,
+      onlineCountMap,
       updateOnlineNum,
       removeAllUsers,
       getCurrentUser,

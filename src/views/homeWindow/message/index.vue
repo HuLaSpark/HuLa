@@ -110,6 +110,7 @@
                 v-else
                 :max="99"
                 :value="item.unreadCount"
+                :show="globalStore.unreadReady && item.unreadCount > 0"
                 :color="item.muteNotification === 1 ? 'rgba(128, 128, 128, 0.5)' : undefined" />
             </n-flex>
           </n-flex>

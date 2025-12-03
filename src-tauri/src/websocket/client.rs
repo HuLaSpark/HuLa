@@ -314,15 +314,31 @@ impl WebSocketClient {
                     continue;
                 }
                 Err(e) => {
-                    let attempts = self.reconnect_attempts.fetch_add(1, Ordering::SeqCst) + 1;
+                    // 当 max_reconnect_attempts 为 0 时表示无限重连，避免溢出使用饱和加
+                    let attempts = self
+                        .reconnect_attempts
+                        .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |val| {
+                            Some(val.saturating_add(1))
+                        })
+                        .map(|old| old.saturating_add(1))
+                        .unwrap_or_else(|old| old.saturating_add(1));
                     let config = self.config.read().await;
 
                     error!(
-                        " WebSocket connection failed (attempt {}/{}): {}",
-                        attempts, config.max_reconnect_attempts, e
+                        " WebSocket connection failed (attempt {}/{}) : {}",
+                        attempts,
+                        if config.max_reconnect_attempts == 0 {
+                            "∞".to_string()
+                        } else {
+                            config.max_reconnect_attempts.to_string()
+                        },
+                        e
                     );
 
-                    if attempts >= config.max_reconnect_attempts {
+                    // 当 max_reconnect_attempts 为 0 时不做次数上限限制；否则遵循上限
+                    if config.max_reconnect_attempts > 0
+                        && attempts >= config.max_reconnect_attempts
+                    {
                         self.emit_error(
                             "Too many connection failures, stopping retry".to_string(),
                             None,
@@ -330,15 +346,14 @@ impl WebSocketClient {
                         .await;
                         self.is_ws_connected.store(false, Ordering::SeqCst);
                         self.update_state(ConnectionState::Error, false).await;
-
-                        // 重新登录
-                        self.app_handle.emit_to("home", "relogin", ()).unwrap();
                         return Err(anyhow::anyhow!("Max reconnection attempts reached"));
                     }
 
                     // 指数退避延迟
+                    // 退避阶数做上限，避免 attempts 无限增长导致幂计算溢出
+                    let backoff_steps = attempts.saturating_sub(1).min(10);
                     let delay = std::cmp::min(
-                        config.reconnect_delay_ms * (2_u64.pow(attempts.saturating_sub(1))),
+                        config.reconnect_delay_ms * (2_u64.pow(backoff_steps)),
                         15000, // 最大15秒
                     );
 
