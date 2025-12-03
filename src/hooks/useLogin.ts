@@ -234,10 +234,9 @@ export const useLogin = () => {
       }
     }
     // 强制持久化
-    groupStore.$persist()
-    chatStore.$persist()
-    cachedStore.$persist()
-    globalStore.$persist()
+    chatStore.$persist?.()
+    cachedStore.$persist?.()
+    globalStore.$persist?.()
 
     await setLoginState()
   }

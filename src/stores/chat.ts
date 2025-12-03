@@ -507,6 +507,18 @@ export const useChatStore = defineStore(
         await reconcileUnreadWithReadHistory()
         await clearCurrentSessionUnread()
         updateTotalUnreadCount()
+        // 如果当前会话仍被服务器标记为未读，主动上报并清零，避免气泡卡住
+        if (globalStore.currentSessionRoomId) {
+          const currentSession = resolveSessionByRoomId(globalStore.currentSessionRoomId)
+          if (currentSession?.unreadCount) {
+            try {
+              await markMsgRead(currentSession.roomId)
+            } catch (error) {
+              console.error('[chat] 会话列表同步后上报已读失败:', error)
+            }
+            markSessionRead(currentSession.roomId)
+          }
+        }
         globalStore.unreadReady = true
         unreadCountManager.refreshBadge(globalStore.unReadMark)
       } catch (e) {

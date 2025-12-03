@@ -539,6 +539,7 @@ const listenMobileReLogin = async () => {
 }
 
 let lastWsConnectionState: string | null = null
+let isReconnectInFlight = false
 
 const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
@@ -549,12 +550,13 @@ const handleWebsocketEvent = async (event: any) => {
   const nextState = typeof nextStateRaw === 'string' ? nextStateRaw.toUpperCase() : ''
   const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
-  const shouldHandleReconnect =
-    nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop || previousState === 'CONNECTED')
+  const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
 
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
+  if (isReconnectInFlight) return
+  isReconnectInFlight = true
 
   // 开始同步，显示加载状态
   chatStore.syncLoading = true
@@ -582,6 +584,7 @@ const handleWebsocketEvent = async (event: any) => {
   } finally {
     // 同步完成，隐藏加载状态
     chatStore.syncLoading = false
+    isReconnectInFlight = false
   }
 }
 
