@@ -1,43 +1,897 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# ==============================================================================
+# COMPREHENSIVE .GITIGNORE TEMPLATE
+# ==============================================================================
+# This template covers most common development scenarios and tools
+# Generated patterns use ** to match any subdirectory depth
 
-node_modules
-dist
-dist-ssr
-*.local
+# ==============================================================================
+# PYTHON
+# ==============================================================================
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/build/
+**/develop-eggs/
+**/dist/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/share/python-wheels/
+**/*.egg-info/
+**/.installed.cfg
+**/*.egg
+**/MANIFEST
 
-# Editor directories and files
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.idea
+# PyInstaller
+**/*.manifest
+**/*.spec
 
-src-tauri/target
+# Installer logs
+**/pip-log.txt
+**/pip-delete-this-directory.txt
 
-.history/
+# Unit test / coverage reports
+**/htmlcov/
+**/.tox/
+**/.nox/
+**/.coverage
+**/.coverage.*
+**/.cache
+**/nosetests.xml
+**/coverage.xml
+**/*.cover
+**/*.py,cover
+**/.hypothesis/
+**/.pytest_cache/
+**/cover/
 
-/coverage
-.cursorrules
-.claude/
+# Translations
+**/*.mo
+**/*.pot
 
-target
-.claude/
-.serena/
-*.sqlite
-db.sqlite
-.idea
-.qoder
-AGENTS.md
-GEMINI.md
+# Django stuff:
+**/*.log
+**/local_settings.py
+**/db.sqlite3
+**/db.sqlite3-journal
 
-src/typings/components.pc.d.ts
-src/typings/components.mobile.d.ts
+# Flask stuff:
+**/instance/
+**/.webassets-cache
+
+# Scrapy stuff:
+**/.scrapy
+
+# Sphinx documentation
+**/docs/_build/
+
+# PyBuilder
+**/.pybuilder/
+**/target/
+
+# Jupyter Notebook
+**/.ipynb_checkpoints
+
+# IPython
+**/profile_default/
+**/ipython_config.py
+
+# pyenv
+**/.python-version
+
+# pipenv
+**/Pipfile.lock
+
+# poetry
+**/poetry.lock
+
+# pdm
+**/.pdm.toml
+**/.pdm-python
+**/.pdm-build/
+
+# PEP 582
+**/__pypackages__/
+
+# Celery stuff
+**/celerybeat-schedule
+**/celerybeat.pid
+
+# SageMath parsed files
+**/*.sage.py
+
+# Environments
+**/.env
+**/.venv
+**/env/
+**/venv/
+**/ENV/
+**/env.bak/
+**/venv.bak/
+
+# Spyder project settings
+**/.spyderproject
+**/.spyproject
+
+# Rope project settings
+**/.ropeproject
+
+# mkdocs documentation
+**/site/
+
+# mypy
+**/.mypy_cache/
+**/.dmypy.json
+**/dmypy.json
+
+# Pyre type checker
+**/.pyre/
+
+# pytype static type analyzer
+**/.pytype/
+
+# Cython debug symbols
+**/cython_debug/
+
+# PyCharm
+**/.idea/
+
+# ==============================================================================
+# NODE.JS / JAVASCRIPT / TYPESCRIPT
+# ==============================================================================
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/lerna-debug.log*
+**/.pnpm-debug.log*
+
+# Runtime data
+**/pids/
+**/*.pid
+**/*.seed
+**/*.pid.lock
+
+# Coverage directory used by tools like istanbul
+**/coverage/
+**/.nyc_output
+
+# Grunt intermediate storage
+**/.grunt
+
+# Bower dependency directory
+**/bower_components
+
+# node-waf configuration
+**/.lock-wscript
+
+# Compiled binary addons
+**/build/Release
+
+# Dependency directories
+**/jspm_packages/
+
+# Snowpack dependency directory
+**/web_modules/
+
+# TypeScript cache
+**/*.tsbuildinfo
+
+# Optional npm cache directory
+**/.npm
+
+# Optional eslint cache
+**/.eslintcache
+
+# Optional stylelint cache
+**/.stylelintcache
+
+# Microbundle cache
+**/.rpt2_cache/
+**/.rts2_cache_cjs/
+**/.rts2_cache_es/
+**/.rts2_cache_umd/
+
+# Optional REPL history
+**/.node_repl_history
+
+# Output of 'npm pack'
+**/*.tgz
+
+# Yarn Integrity file
+**/.yarn-integrity
+
+# dotenv environment variable files
+**/.env
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+**/.env.local
+
+# parcel-bundler cache
+**/.cache
+**/.parcel-cache
+
+# Next.js build output
+**/.next
+**/out/
+
+# Nuxt.js build / generate output
+**/.nuxt
+**/dist
+
+# Gatsby files
+**/.cache/
+**/public
+
+# Vue.js
+**/dist/
+**/.tmp
+**/.cache
+
+# Vuepress build output
+**/.vuepress/dist
+
+# Serverless directories
+**/.serverless/
+
+# FuseBox cache
+**/.fusebox/
+
+# DynamoDB Local files
+**/.dynamodb/
+
+# TernJS port file
+**/.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+**/.vscode-test
+
+# yarn v2
+**/.yarn/cache
+**/.yarn/unplugged
+**/.yarn/build-state.yml
+**/.yarn/install-state.gz
+**/.pnp.*
+
+# Storybook
+**/.storybook-out
+**/storybook-static
+
+# Angular
+**/e2e/
+**/.angular/
+
+# React Native
+**/ios/Pods/
+**/android/app/build/
+
+# Expo
+**/.expo/
+**/dist/
+**/npm-debug.*
+**/yarn-error.*
+**/.expo-shared
+
+# ==============================================================================
+# JAVA
+# ==============================================================================
+**/*.class
+**/*.log
+**/*.ctxt
+**/.mtj.tmp/
+**/*.jar
+**/*.war
+**/*.nar
+**/*.ear
+**/*.zip
+**/*.tar.gz
+**/*.rar
+**/hs_err_pid*
+**/replay_pid*
+
+# Maven
+**/target/
+**/pom.xml.tag
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/pom.xml.next
+**/release.properties
+**/dependency-reduced-pom.xml
+**/buildNumber.properties
+**/.mvn/timing.properties
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+**/.gradle/
+**/build/
+**/.gradletasknamecache
+**/gradle-app.setting
+
+# IntelliJ IDEA
+**/.idea/
+**/*.iws
+**/*.iml
+**/*.ipr
+**/out/
+
+# Eclipse
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+**/bin/
+**/tmp/
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*~.nib
+**/local.properties
+**/.metadata
+**/.loadpath
+**/.recommenders
+
+# NetBeans
+**/nbproject/private/
+**/.nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
+
+# VS Code
+**/.vscode/
+
+# ==============================================================================
+# C / C++
+# ==============================================================================
+# Prerequisites
+**/*.d
+
+# Object files
+**/*.o
+**/*.ko
+**/*.obj
+**/*.elf
+
+# Linker output
+**/*.ilk
+**/*.map
+**/*.exp
+
+# Precompiled Headers
+**/*.gch
+**/*.pch
+
+# Libraries
+**/*.lib
+**/*.a
+**/*.la
+**/*.lo
+
+# Shared objects (inc. Windows DLLs)
+**/*.dll
+**/*.so
+**/*.so.*
+**/*.dylib
+
+# Executables
+**/*.exe
+**/*.out
+**/*.app
+**/*.i*86
+**/*.x86_64
+**/*.hex
+
+# Debug files
+**/*.dSYM/
+**/*.su
+**/*.idb
+**/*.pdb
+
+# Kernel Module Compile Results
+**/*.mod*
+**/*.cmd
+**/.tmp_versions/
+**/modules.order
+**/Module.symvers
+**/Mkfile.old
+**/dkms.conf
+
+# CMake
+**/CMakeLists.txt.user
+**/CMakeCache.txt
+**/CMakeFiles
+**/CMakeScripts
+**/Testing
+**/Makefile
+**/cmake_install.cmake
+**/install_manifest.txt
+**/compile_commands.json
+**/CTestTestfile.cmake
+**/_deps
+
+# Conan
+**/conanfile.txt
+**/conandata.yml
+**/conan.lock
+**/.conan/
+
+# ==============================================================================
+# C# / .NET
+# ==============================================================================
+**/bin/
+**/obj/
+**/out/
+**/*.user
+**/*.suo
+**/*.sln.docstates
+**/*.userprefs
+**/*.pidb
+**/*.booproj
+**/.vs/
+**/packages/
+**/TestResults/
+**/*.Cache
+**/ClientBin/
+**/*_i.c
+**/*_p.c
+**/*_h.h
+**/*.ilk
+**/*.meta
+**/*.obj
+**/*.iobj
+**/*.pch
+**/*.pdb
+**/*.ipdb
+**/*.pgc
+**/*.pgd
+**/*.rsp
+**/*.sbr
+**/*.tlb
+**/*.tli
+**/*.tlh
+**/*.tmp
+**/*.tmp_proj
+**/*_wpftmp.csproj
+**/*.log
+**/*.vspscc
+**/*.vssscc
+**/.builds
+**/*.pidb
+**/*.svclog
+**/*.scc
+
+# ==============================================================================
+# GO
+# ==============================================================================
+# Binaries for programs and plugins
+**/*.exe
+**/*.exe~
+**/*.dll
+**/*.so
+**/*.dylib
+
+# Test binary, built with `go test -c`
+**/*.test
+
+# Output of the go coverage tool
+**/*.out
+
+# Dependency directories
+**/vendor/
+
+# Go workspace file
+**/go.work
+
+# ==============================================================================
+# RUST
+# ==============================================================================
+# Generated by Cargo
+**/target/
+
+# Remove Cargo.lock from gitignore if creating an executable
+# Cargo.lock
+
+# These are backup files generated by rustfmt
+**/*.rs.bk
+
+# MSVC Windows builds of rustc
+**/*.pdb
+
+# ==============================================================================
+# PHP
+# ==============================================================================
+**/vendor/
+**/node_modules/
+**/npm-debug.log
+**/yarn-error.log
+
+# Laravel specific
+**/.env
+**/storage/*.key
+**/Homestead.yaml
+**/Homestead.json
+**/.vagrant
+**/.phpunit.result.cache
+
+# Symfony specific
+**/.env.local
+**/.env.local.php
+**/.env.*.local
+**/config/secrets/prod/prod.decrypt.private.php
+**/public/bundles/
+**/var/
+**/vendor/
+
+# Composer
+**/composer.phar
+**/composer.lock
+
+# ==============================================================================
+# RUBY
+# ==============================================================================
+**/*.gem
+**/*.rbc
+**/.config
+**/coverage/
+**/InstalledFiles
+**/pkg/
+**/spec/reports/
+**/spec/examples.txt
+**/test/tmp/
+**/test/version_tmp/
+**/tmp/
+**/.yardoc/
+**/_yardoc/
+**/doc/
+**/.bundle/
+**/vendor/bundle
+**/lib/bundler/man/
+**/.rbenv-version
+**/.rvmrc
+**/.ruby-version
+**/.ruby-gemset
+**/Gemfile.lock
+
+# Rails
+**/log/
+**/tmp/
+**/db/*.sqlite3
+**/db/*.sqlite3-journal
+**/db/*.sqlite3-*
+**/public/system/
+**/coverage/
+**/spec/tmp/
+**/.sass-cache/
+**/capybara-*.html
+**/.rspec
+**/.generators
+**/.rakeTasks
+
+# ==============================================================================
+# DATABASES
+# ==============================================================================
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.db-shm
+**/*.db-wal
+
+# MySQL
+**/mysql-bin.*
+
+# PostgreSQL
+**/*.backup
+**/*.sql
+
+# MongoDB
+**/dump/
+
+# Redis
+**/dump.rdb
+
+# ==============================================================================
+# DEVOPS & CONTAINERS
+# ==============================================================================
+# Docker
+**/Dockerfile*
+**/.dockerignore
+**/docker-compose*.yml
+**/.docker/
+
+# Kubernetes
+**/*.kubeconfig
+
+# Terraform
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/terraform.tfvars.json
+**/*.tfplan
+**/*.tfstate.backup
+
+# Vagrant
+**/.vagrant/
+**/*.box
+
+# Ansible
+**/retry files
+**/*.retry
+
+# ==============================================================================
+# OPERATING SYSTEMS
+# ==============================================================================
+# Windows
+**/Thumbs.db
+**/Thumbs.db:encryptable
+**/ehthumbs.db
+**/ehthumbs_vista.db
+**/*.stackdump
+**/$RECYCLE.BIN/
+**/Desktop.ini
+
+# macOS
+**/.DS_Store
+**/.AppleDouble
+**/.LSOverride
+**/Icon
+**/.DocumentRevisions-V100
+**/.fseventsd
+**/.Spotlight-V100
+**/.TemporaryItems
+**/.Trashes
+**/.VolumeIcon.icns
+**/.com.apple.timemachine.donotpresent
+**/.AppleDB
+**/.AppleDesktop
+**/Network Trash Folder
+**/Temporary Items
+**/.apdisk
+
+# Linux
+**/*~
+**/.fuse_hidden*
+**/.directory
+**/.Trash-*
+**/.nfs*
+
+# ==============================================================================
+# IDEs & EDITORS
+# ==============================================================================
+# Visual Studio Code
+**/.vscode/
+**/*.code-workspace
+**/.history/
+
+# Visual Studio
+**/.vs/
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+
+# IntelliJ IDEA
+**/.idea/
+**/*.iws
+**/*.iml
+**/*.ipr
+
+# Eclipse
+**/.metadata
+**/bin/
+**/tmp/
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*~.nib
+**/local.properties
+**/.settings/
+**/.loadpath
+**/.recommenders
+**/.apt_generated/
+**/.apt_generated_test/
+**/.cache-main
+**/.scala_dependencies
+**/.worksheet
+
+# NetBeans
+**/nbproject/private/
+**/.nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
+**/build/
+
+# Sublime Text
+**/*.sublime-workspace
+**/*.sublime-project
+
+# Vim
+**/*.swp
+**/*.swo
+**/*~
+**/.netrwhist
+**/tags
+
+# Emacs
+**/*~
+**/#*#
+**/.#*
+**/.emacs.desktop
+**/.emacs.desktop.lock
+**/*.elc
+**/auto-save-list
+**/tramp
+**/.org-id-locations
+**/*_archive
+**/*_flymake.*
+**/flycheck_*.el
+**/.dir-locals.el
+**/.projectile
+
+# Atom
+**/.atom/
+
+# ==============================================================================
+# LOGS & TEMPORARY FILES
+# ==============================================================================
+**/logs/
+**/*.log
+**/log/
+**/debug/
+**/tmp/
+**/temp/
+**/.tmp/
+**/.temp/
+**/crash.log
+**/error.log
+**/access.log
+**/combined.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# ==============================================================================
+# SECURITY & CREDENTIALS
+# ==============================================================================
+**/.env*
+!**/.env.example
+!**/.env.template
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/secrets/
+**/credentials/
+**/.secrets/
+**/.credentials/
+**/auth.json
+**/service-account*.json
+**/.gcloud/
+**/.aws/
+**/.azure/
+
+# ==============================================================================
+# BACKUP & ARCHIVE FILES
+# ==============================================================================
+**/*.bak
+**/*.backup
+**/*.old
+**/*.orig
+**/*.rej
+**/*.swp
+**/*.swo
+**/*~
+**/*.tmp
+**/*.temp
+**/.DS_Store?
+**/._*
+**/*.zip
+**/*.rar
+**/*.7z
+**/*.tar
+**/*.gz
+**/*.tgz
+**/*.tar.gz
+**/*.tar.bz2
+**/*.tar.xz
+
+# ==============================================================================
+# CACHE & BUILD ARTIFACTS
+# ==============================================================================
+**/.cache/
+**/cache/
+**/build/
+**/dist/
+**/out/
+**/target/
+**/.next/
+**/.nuxt/
+**/.vuepress/dist/
+**/public/build/
+**/public/hot
+**/public/storage
+**/storage/*.key
+**/bootstrap/cache/
+
+# ==============================================================================
+# PACKAGE MANAGERS
+# ==============================================================================
+# npm
+**/node_modules/
+**/package-lock.json
+**/.npm/
+
+# Yarn
+**/yarn.lock
+**/.yarn/
+**/.pnp.*
+
+# pnpm
+**/pnpm-lock.yaml
+**/.pnpm-store/
+
+# Bower
+**/bower_components/
+
+# Composer (PHP)
+**/vendor/
+**/composer.lock
+
+# Bundler (Ruby)
+**/vendor/bundle/
+**/Gemfile.lock
+
+# Maven (Java)
+**/target/
+
+# Gradle (Java/Android)
+**/.gradle/
+**/build/
+
+# Cargo (Rust)
+**/target/
+**/Cargo.lock
+
+# ==============================================================================
+# MISC
+# ==============================================================================
+# Thumbnails
+**/*.jpg:large
+**/*.jpeg:large
+**/*.png:large
+**/*.gif:large
+
+# Archive files
+**/*.7z
+**/*.dmg
+**/*.iso
+**/*.jar
+**/*.rar
+**/*.tar
+**/*.zip
+
+# ==============================================================================
+# PROJECT SPECIFIC
+# ==============================================================================
+# Add your project-specific ignores here
+# workspace/
+# data/
+# uploads/
+# downloads/
+
