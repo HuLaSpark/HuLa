@@ -148,10 +148,21 @@ export const useLogin = () => {
   }
 
   // 全量同步
-  const runFullSync = async () => {
+  const runFullSync = async (preserveSession?: string) => {
     await chatStore.getSessionList(true)
-    // 重置当前选中会话，等待用户主动选择
-    globalStore.updateCurrentSessionRoomId('')
+    // 如果有需要保留的会话且该会话仍存在于列表中，则恢复选中状态
+    if (preserveSession) {
+      const sessionExists = chatStore.sessionList.some((s) => s.roomId === preserveSession)
+      if (sessionExists) {
+        // 会话存在，保持选中状态不变
+      } else {
+        // 会话不存在了，清空选中
+        globalStore.updateCurrentSessionRoomId('')
+      }
+    } else {
+      // 没有需要保留的会话，重置
+      globalStore.updateCurrentSessionRoomId('')
+    }
 
     // 加载所有群的成员数据
     const groupSessions = chatStore.getGroupSessions()
@@ -164,10 +175,19 @@ export const useLogin = () => {
   }
 
   // 增量同步
-  const runIncrementalSync = async () => {
+  const runIncrementalSync = async (preserveSession?: string) => {
     // 优先保证会话列表最新消息和未读数：拉会话即可让未读/最新一条消息就绪
     await chatStore.getSessionList(true)
-    globalStore.updateCurrentSessionRoomId('')
+    // 如果有需要保留的会话且该会话仍存在于列表中，则保持选中状态
+    if (preserveSession) {
+      const sessionExists = chatStore.sessionList.some((s) => s.roomId === preserveSession)
+      if (!sessionExists) {
+        // 会话不存在了，清空选中
+        globalStore.updateCurrentSessionRoomId('')
+      }
+      // 会话存在则保持当前状态不变
+    }
+    // 没有需要保留的会话时也保持当前状态（增量同步不重置）
 
     // 后台同步消息：登录命令已触发一次全量/离线同步，这里避免重复拉取；仅在需要时再显式调用
     // 将消息预取和其他预热放后台，避免阻塞 UI
@@ -182,8 +202,8 @@ export const useLogin = () => {
 
   const init = async (options?: { isInitialSync?: boolean }) => {
     const emojiStore = useEmojiStore()
-    // 初始化前清空当前选中的会话，避免自动打开会话
-    globalStore.updateCurrentSessionRoomId('')
+    // 保存当前选中的会话，避免同步时丢失用户的选中状态
+    const previousSessionRoomId = globalStore.currentSessionRoomId
     // 连接 ws
     await rustWebSocketClient.initConnect()
 
@@ -231,14 +251,14 @@ export const useLogin = () => {
     if (isInitialSync) {
       chatStore.syncLoading = true
       try {
-        await runFullSync()
+        await runFullSync(previousSessionRoomId)
       } finally {
         chatStore.syncLoading = false
       }
     } else {
       chatStore.syncLoading = true
       try {
-        await runIncrementalSync()
+        await runIncrementalSync(previousSessionRoomId)
       } finally {
         // 增量登录仅等待会话准备好就关闭提示，后台同步继续进行
         chatStore.syncLoading = false
