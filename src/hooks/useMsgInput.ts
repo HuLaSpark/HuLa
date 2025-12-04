@@ -338,8 +338,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (html.includes('data-type="emoji"')) {
         const doc = parseHtmlSafely(html)
         const imgElement = doc?.querySelector<HTMLImageElement>('img[data-type]')
-        if (imgElement?.src) {
-          return (msgInput.value = imgElement.src)
+        if (imgElement) {
+          const serverUrl = imgElement.dataset?.serverUrl
+          if (serverUrl) {
+            return (msgInput.value = serverUrl)
+          }
+          if (imgElement.src) {
+            return (msgInput.value = imgElement.src)
+          }
         }
       }
       // 检查是否是视频

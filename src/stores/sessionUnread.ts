@@ -58,9 +58,15 @@ export const useSessionUnreadStore = defineStore(StoresEnum.SESSION_UNREAD, () =
     sessions.forEach((session) => {
       const activeTime = session.activeTime || 0
       const lastReadTime = lastReadCache?.[session.roomId] || 0
+      const currentUnread = sanitizeCount(session.unreadCount)
 
       // 如果本地记录的最后已读活跃时间不小于当前会话活跃时间，认为是陈旧未读，直接清零
-      if (lastReadTime > 0 && activeTime > 0 && activeTime <= lastReadTime) {
+      if (lastReadTime > 0 && (activeTime === 0 || activeTime <= lastReadTime) && currentUnread > 0) {
+        console.log('[SessionUnread][apply] clear stale unread by lastRead', session.roomId, {
+          activeTime,
+          lastReadTime,
+          serverUnread: currentUnread
+        })
         session.unreadCount = 0
         cache[session.roomId] = 0
         return

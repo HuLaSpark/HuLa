@@ -31,7 +31,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isIOS, isMobile, isWindows, isWindows10 } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import {
@@ -552,6 +552,15 @@ const handleWebsocketEvent = async (event: any) => {
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
   const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
 
+  console.log('[WS] state change', {
+    prev: previousState,
+    next: nextState,
+    isReconnectionFlag,
+    hasRecoveredFromDrop,
+    shouldHandleReconnect,
+    raw: payload
+  })
+
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
@@ -608,6 +617,11 @@ onMounted(() => {
   // 仅在windows上使用
   if (isWindows()) {
     fixedScale.enable()
+  }
+  if (isWindows10()) {
+    void appWindow.setShadow(false).catch((error) => {
+      console.warn('禁用窗口阴影失败:', error)
+    })
   }
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop() && import('@/styles/scss/global/desktop.scss')

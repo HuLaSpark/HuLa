@@ -14,6 +14,10 @@ const EMOJIS_DIR = 'emojis'
 // AI 生成资源目录名
 const AI_DIR = 'ai'
 
+// 远程文件类型探测结果与进行中的 Promise 缓存，避免重复请求同一资源
+const remoteFileTypeResultCache = new Map<string, FileTypeResult | undefined>()
+const remoteFileTypePromiseCache = new Map<string, Promise<FileTypeResult | undefined>>()
+
 /**
  * 确保资源目录下存在 userData 根目录。
  * Tauri 在构建后默认不会创建该目录，需要在第一次使用前主动创建。
@@ -228,51 +232,70 @@ export async function detectRemoteFileType(options: {
   fileSize: number
   byteLength?: number
 }): Promise<FileTypeResult | undefined> {
-  try {
-    const { url, byteLength = 4100, fileSize } = options
+  const cacheKey = options.url
+  if (remoteFileTypeResultCache.has(cacheKey)) {
+    return remoteFileTypeResultCache.get(cacheKey)
+  }
+  if (remoteFileTypePromiseCache.has(cacheKey)) {
+    return await remoteFileTypePromiseCache.get(cacheKey)!
+  }
 
-    // 1. 先发送 HEAD 请求，检查文件是否存在及大小
-    const headResponse = await fetch(url, { method: 'HEAD' })
+  const task = (async () => {
+    try {
+      const { url, byteLength = 4100, fileSize } = options
 
-    if (!headResponse.ok) {
-      window.$message?.error('找不到文件了😞 ~')
-      throw new Error(`文件不存在, 状态: ${headResponse.status}`)
-    }
+      // 1. 先发送 HEAD 请求，检查文件是否存在及大小
+      const headResponse = await fetch(url, { method: 'HEAD' })
 
-    // 2. 如果是空文件，直接返回 undefined
-    if (fileSize === 0) {
-      console.log('文件大小为 0 字节，尝试使用后缀名检测')
-      try {
-        const result = await invoke<FilesMeta>('get_files_meta', { filesPath: [url] })
-        const meta = result[0]
-
-        return {
-          ext: meta.file_type,
-          mime: meta.mime_type
-        }
-      } catch (_error) {
-        console.warn(`该资源无法识别类型：${url}`)
-        return void 0
+      if (!headResponse.ok) {
+        window.$message?.error('找不到文件')
+        throw new Error(`文件不存在, 状态: ${headResponse.status}`)
       }
+
+      // 2. 如果是空文件，直接返回 undefined
+      if (fileSize === 0) {
+        console.log('文件大小为 0 字节，尝试使用后缀名检测')
+        try {
+          const result = await invoke<FilesMeta>('get_files_meta', { filesPath: [url] })
+          const meta = result[0]
+
+          return {
+            ext: meta.file_type,
+            mime: meta.mime_type
+          }
+        } catch (_error) {
+          console.warn(`该资源无法识别类型：${url}`)
+          return void 0
+        }
+      }
+
+      // 3. 如果文件大小 < byteLength，直接 GET 整个文件，避免 Range 错误
+      const shouldUseRange = fileSize === null || fileSize >= byteLength
+      const rangeEnd = shouldUseRange ? byteLength - 1 : void 0
+
+      const response = await fetch(url, shouldUseRange ? { headers: { Range: `bytes=0-${rangeEnd}` } } : void 0)
+
+      if (!response.ok) {
+        throw new Error(`获取文件数据失败, 状态: ${response.status}`)
+      }
+
+      const buffer = await response.arrayBuffer()
+
+      // 4. 如果 buffer 有数据，尝试解析文件类型
+      return buffer.byteLength > 0 ? await fileTypeFromBuffer(buffer) : void 0
+    } catch (error) {
+      console.error('尝试解析远程文件类型时出现错误：', error)
+      return void 0
     }
+  })()
 
-    // 3. 如果文件大小 < byteLength，直接 GET 整个文件，避免 Range 错误
-    const shouldUseRange = fileSize === null || fileSize >= byteLength
-    const rangeEnd = shouldUseRange ? byteLength - 1 : void 0
-
-    const response = await fetch(url, shouldUseRange ? { headers: { Range: `bytes=0-${rangeEnd}` } } : void 0)
-
-    if (!response.ok) {
-      throw new Error(`获取文件数据失败, 状态: ${response.status}`)
-    }
-
-    const buffer = await response.arrayBuffer()
-
-    // 4. 如果 buffer 有数据，尝试解析文件类型
-    return buffer.byteLength > 0 ? await fileTypeFromBuffer(buffer) : void 0
-  } catch (error) {
-    console.error('尝试解析远程文件类型时出现错误：', error)
-    return void 0
+  remoteFileTypePromiseCache.set(cacheKey, task)
+  try {
+    const result = await task
+    remoteFileTypeResultCache.set(cacheKey, result)
+    return result
+  } finally {
+    remoteFileTypePromiseCache.delete(cacheKey)
   }
 }
 

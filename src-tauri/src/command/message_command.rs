@@ -13,10 +13,61 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::future::Future;
 use std::ops::Deref;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use tauri::{State, ipc::Channel};
-use tracing::{debug, error, info};
+use tokio::sync::Mutex;
+use tokio::time::{Duration, sleep};
+use tracing::{debug, error, info, warn};
+
+const WRITE_RETRY_LIMIT: usize = 3; // 写操作最多重试 3 次
+const WRITE_RETRY_DELAY_MS: u64 = 80; // 重试基础延迟 80ms
+
+async fn run_with_write_lock<T, F, Fut>(
+    lock: Arc<Mutex<()>>, // 传入全局写锁，保证串行执行
+    op_name: &str,        // 当前操作名用于日志
+    mut operation: F,     // 实际写入逻辑
+) -> Result<T, String>
+where
+    F: FnMut() -> Fut,                            // 返回异步写入 Future 的闭包
+    Fut: Future<Output = Result<T, CommonError>>, // 写入结果类型
+{
+    let mut attempt: usize = 0; // 当前已重试次数
+    loop {
+        let guard = lock.lock().await; // 获取写锁
+        let result = operation().await; // 执行实际写入
+        drop(guard); // 释放写锁
+
+        match result {
+            Ok(val) => return Ok(val), // 成功直接返回
+            Err(err) => {
+                let err_msg = err.to_string(); // 记录错误信息
+                let lowered = err_msg.to_lowercase(); // 统一大小写方便匹配
+                let is_locked =
+                    lowered.contains("database is locked") || lowered.contains("database is busy"); // 检测是否锁冲突
+
+                if is_locked && attempt + 1 < WRITE_RETRY_LIMIT {
+                    let delay = WRITE_RETRY_DELAY_MS * (attempt as u64 + 1); // 递增延迟
+                    warn!(
+                        target: "tauri_db",
+                        "[{}] database locked (attempt {}), retrying in {}ms",
+                        op_name,
+                        attempt + 1,
+                        delay
+                    );
+                    attempt += 1; // 记录本次重试
+                    sleep(Duration::from_millis(delay)).await; // 延迟后再试
+                    continue;
+                }
+
+                error!(target: "tauri_db", "[{}] database write failed: {}", op_name, err_msg);
+                return Err(err_msg);
+            }
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -585,22 +636,18 @@ pub async fn send_msg(
 
     let mut message_record = MessageWithThumbnail::new(message_model, thumbnail_path);
 
-    let tx = state
-        .db_conn
-        .begin()
-        .await
-        .map_err(|e| CommonError::DatabaseError(e))?;
-    // 先保存到本地数据库
-    message_record = match im_message_repository::save_message(&tx, message_record).await {
-        Ok(record) => record,
-        Err(e) => {
-            error!("Failed to save message to database: {}", e);
-            return Err(e.to_string());
+    let write_lock = state.write_lock.clone(); // 克隆全局写锁句柄
+    message_record = run_with_write_lock(write_lock, "send_msg", || {
+        let db_conn = state.db_conn.clone(); // 克隆数据库连接供异步使用
+        let mut record = message_record.clone(); // 拷贝消息记录以便闭包内可变
+        async move {
+            let tx = db_conn.begin().await.map_err(CommonError::DatabaseError)?; // 开启事务
+            record = im_message_repository::save_message(&tx, record).await?; // 保存消息
+            tx.commit().await.map_err(CommonError::DatabaseError)?; // 提交事务
+            Ok(record)
         }
-    };
-    tx.commit()
-        .await
-        .map_err(|e| CommonError::DatabaseError(e))?;
+    })
+    .await?;
 
     info!(
         "Message saved to local database, ID: {}",
@@ -675,13 +722,17 @@ pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<()
     // 创建 im_message::Model
     let record = convert_resp_to_record_for_fetch(data, state.user_info.lock().await.uid.clone());
 
-    async {
-        let tx = state.db_conn.clone().begin().await?;
-        // 保存到数据库
-        im_message_repository::save_message(&tx, record).await?;
-        tx.commit().await?;
-        Ok::<(), CommonError>(())
-    }
+    let lock = state.write_lock.clone();
+    run_with_write_lock(lock, "save_msg", || {
+        let db_conn = state.db_conn.clone();
+        let record = record.clone();
+        async move {
+            let tx = db_conn.begin().await?;
+            im_message_repository::save_message(&tx, record).await?;
+            tx.commit().await?;
+            Ok(())
+        }
+    })
     .await?;
 
     Ok(())

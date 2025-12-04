@@ -17,6 +17,7 @@ import { useUserStatusStore } from '../stores/userStatus'
 import { useUserStore } from '../stores/user'
 import { useLoginHistoriesStore } from '../stores/loginHistory'
 import rustWebSocketClient from '@/services/webSocketRust'
+import { useEmojiStore } from '@/stores/emoji'
 import { getAllUserState, getUserDetail } from '../utils/ImRequestUtils'
 import { useNetwork } from '@vueuse/core'
 import { UserInfoType } from '../services/types'
@@ -180,6 +181,7 @@ export const useLogin = () => {
   }
 
   const init = async (options?: { isInitialSync?: boolean }) => {
+    const emojiStore = useEmojiStore()
     // 初始化前清空当前选中的会话，避免自动打开会话
     globalStore.updateCurrentSessionRoomId('')
     // 连接 ws
@@ -195,6 +197,10 @@ export const useLogin = () => {
     }
     userStore.userInfo = account
     loginHistoriesStore.addLoginHistory(account)
+    // 初始化表情列表并在后台预取本地缓存（使用 worker + 并发限制）
+    void emojiStore.initEmojis().catch((error) => {
+      console.warn('[login] 初始化表情失败:', error)
+    })
 
     // 在 sqlite 中存储用户信息
     await invokeWithErrorHandler(
@@ -216,6 +222,11 @@ export const useLogin = () => {
       await configStore.initConfig()
     }
     const isInitialSync = options?.isInitialSync ?? !initialSyncStore.isSynced(account.uid)
+
+    // 登录后立即预热表情本地缓存（异步，不阻塞后续流程）
+    void emojiStore.prefetchEmojiToLocal().catch((error) => {
+      console.warn('[login] 预热表情缓存失败:', error)
+    })
 
     if (isInitialSync) {
       chatStore.syncLoading = true
