@@ -22,16 +22,24 @@ export type Settings = {
     base_url: string
     ws_url: string
   }
-  youdao: {
+  youdao?: {
     app_key: string
     app_secret: string
   }
-  tencent: {
+  tencent?: {
     api_key: string
     secret_id: string
     map_key: string
   }
-  ice_server: {
+  minio?: {
+    endpoint: string
+    bucket: string
+    access_key: string
+    secret_key: string
+    region: string
+    download_domain: string
+  }
+  ice_server?: {
     urls: string[]
     username: string
     credential: string

@@ -1,4 +1,4 @@
-import { getSettings } from '@/services/tauriCommand'
+import { initConfig } from '@/utils/ImRequestUtils'
 import { wgs84ToGcj02 } from '@/utils/CoordinateTransform'
 
 type TransformedCoordinate = {
@@ -75,8 +75,8 @@ export const transformCoordinates = async (lat: number, lng: number): Promise<Tr
   }
 
   // 获取腾讯地图API密钥
-  const settings = await getSettings()
-  const mapKey = settings.tencent?.map_key || ''
+  const init: any = await initConfig()
+  const mapKey = init?.tencent?.mapKey || ''
 
   if (!mapKey) {
     throw new Error('腾讯地图API密钥未配置')
@@ -143,8 +143,8 @@ export const reverseGeocode = async (lat: number, lng: number): Promise<ReverseG
   }
 
   // 获取腾讯地图API密钥
-  const settings = await getSettings()
-  const mapKey = settings.tencent?.map_key || ''
+  const init: any = await initConfig()
+  const mapKey = init?.tencent?.mapKey || ''
 
   if (!mapKey) {
     throw new Error('腾讯地图API密钥未配置')

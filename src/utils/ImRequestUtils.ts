@@ -551,10 +551,28 @@ export async function initConfig() {
   })
 }
 
-export async function getQiniuToken() {
+export async function getQiniuToken(params?: { scene?: string; fileName?: string }) {
   return await imRequest({
-    url: ImUrlEnum.GET_QINIU_TOKEN
+    url: ImUrlEnum.GET_QINIU_TOKEN,
+    params: params || undefined
   })
+}
+
+/** 获取默认上传提供者 */
+let __uploadProviderCache: { provider: 'qiniu' | 'minio' } | null = null
+let __uploadProviderPending: Promise<{ provider: 'qiniu' | 'minio' }> | null = null
+
+export async function getUploadProvider(): Promise<{ provider: 'qiniu' | 'minio' }> {
+  if (__uploadProviderCache) return __uploadProviderCache
+  if (__uploadProviderPending) return await __uploadProviderPending
+  __uploadProviderPending = imRequest<{ provider: 'qiniu' | 'minio' }>({
+    url: ImUrlEnum.STORAGE_PROVIDER
+  }).then((res) => {
+    __uploadProviderCache = res
+    __uploadProviderPending = null
+    return res
+  })
+  return await __uploadProviderPending
 }
 
 export async function register(body: RegisterUserReq) {

@@ -10,9 +10,10 @@ use tracing::info;
 pub struct Settings {
     pub database: DatabaseSettings,
     pub backend: BackendSettings,
-    pub youdao: Youdao,
-    pub tencent: Tencent,
-    pub ice_server: IceServer,
+    pub youdao: Option<Youdao>,
+    pub tencent: Option<Tencent>,
+    pub minio: Option<MinioSettings>,
+    pub ice_server: Option<IceServer>,
 }
 
 // 数据库配置设置
@@ -46,6 +47,16 @@ pub struct Tencent {
     pub api_key: String,
     pub secret_id: String,
     pub map_key: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct MinioSettings {
+    pub endpoint: String,
+    pub bucket: String,
+    pub access_key: String,
+    pub secret_key: String,
+    pub region: String,
+    pub download_domain: String,
 }
 
 // 应用程序运行环境枚举
