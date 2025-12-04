@@ -31,7 +31,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isIOS, isMobile, isWindows, isWindows10 } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import {
@@ -539,6 +539,7 @@ const listenMobileReLogin = async () => {
 }
 
 let lastWsConnectionState: string | null = null
+let isReconnectInFlight = false
 
 const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
@@ -549,12 +550,22 @@ const handleWebsocketEvent = async (event: any) => {
   const nextState = typeof nextStateRaw === 'string' ? nextStateRaw.toUpperCase() : ''
   const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
-  const shouldHandleReconnect =
-    nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop || previousState === 'CONNECTED')
+  const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
+
+  console.log('[WS] state change', {
+    prev: previousState,
+    next: nextState,
+    isReconnectionFlag,
+    hasRecoveredFromDrop,
+    shouldHandleReconnect,
+    raw: payload
+  })
 
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
+  if (isReconnectInFlight) return
+  isReconnectInFlight = true
 
   // 开始同步，显示加载状态
   chatStore.syncLoading = true
@@ -582,6 +593,7 @@ const handleWebsocketEvent = async (event: any) => {
   } finally {
     // 同步完成，隐藏加载状态
     chatStore.syncLoading = false
+    isReconnectInFlight = false
   }
 }
 
@@ -605,6 +617,11 @@ onMounted(() => {
   // 仅在windows上使用
   if (isWindows()) {
     fixedScale.enable()
+  }
+  if (isWindows10()) {
+    void appWindow.setShadow(false).catch((error) => {
+      console.warn('禁用窗口阴影失败:', error)
+    })
   }
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop() && import('@/styles/scss/global/desktop.scss')

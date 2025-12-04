@@ -6,7 +6,7 @@ import { info } from '@tauri-apps/plugin-log'
 import { assign } from 'es-toolkit/compat'
 import { CallTypeEnum, EventEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
-import { isCompatibility, isDesktop, isMac, isWindows } from '@/utils/PlatformConstants'
+import { isCompatibility, isDesktop, isMac, isWindows, isWindows10 } from '@/utils/PlatformConstants'
 
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
@@ -133,7 +133,8 @@ export const useWindow = () => {
       transparent: transparent || isCompatibilityMode.value,
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
-      visible: visible
+      visible: visible,
+      ...(isWindows10() ? { shadow: false } : {})
     })
 
     await webview.once('tauri://created', async () => {
@@ -277,7 +278,8 @@ export const useWindow = () => {
       transparent: isCompatibilityMode.value,
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
-      visible: false
+      visible: false,
+      ...(isWindows10() ? { shadow: false } : {})
     })
 
     // 监听窗口创建完成事件

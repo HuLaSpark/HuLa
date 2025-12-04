@@ -135,6 +135,11 @@ export const useChatStore = defineStore(
 
         // 只有在「本地之前为 0、当前为正数、且存在有效活跃时间并未变化」时认为是陈旧未读
         if (prevUnread === 0 && currentUnread > 0 && hasValidActiveTime && session.activeTime === prev.activeTime) {
+          console.log('[Chat][reconcileStaleUnread] clear stale unread', session.roomId, {
+            prevUnread,
+            currentUnread,
+            activeTime: session.activeTime
+          })
           updateSession(session.roomId, { unreadCount: 0 })
           // 补一次已读上报，避免下一次刷新又回灌
           promises.push(
@@ -160,7 +165,12 @@ export const useChatStore = defineStore(
         const lastReadTime = lastReadActiveTime.value[session.roomId] || 0
         const currentUnread = Math.max(0, session.unreadCount || 0)
 
-        if (currentUnread > 0 && activeTime > 0 && activeTime <= lastReadTime) {
+        if (currentUnread > 0 && lastReadTime > 0 && (activeTime === 0 || activeTime <= lastReadTime)) {
+          console.log('[Chat][reconcileUnreadWithReadHistory] clear by lastRead', session.roomId, {
+            activeTime,
+            lastReadTime,
+            currentUnread
+          })
           updateSession(session.roomId, { unreadCount: 0 })
           promises.push(
             markMsgRead(session.roomId).catch((error) => {
@@ -507,6 +517,18 @@ export const useChatStore = defineStore(
         await reconcileUnreadWithReadHistory()
         await clearCurrentSessionUnread()
         updateTotalUnreadCount()
+        // 如果当前会话仍被服务器标记为未读，主动上报并清零，避免气泡卡住
+        if (globalStore.currentSessionRoomId) {
+          const currentSession = resolveSessionByRoomId(globalStore.currentSessionRoomId)
+          if (currentSession?.unreadCount) {
+            try {
+              await markMsgRead(currentSession.roomId)
+            } catch (error) {
+              console.error('[chat] 会话列表同步后上报已读失败:', error)
+            }
+            markSessionRead(currentSession.roomId)
+          }
+        }
         globalStore.unreadReady = true
         unreadCountManager.refreshBadge(globalStore.unReadMark)
       } catch (e) {

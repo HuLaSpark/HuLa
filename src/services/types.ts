@@ -311,6 +311,8 @@ export type RevokedMsgType = {
 export type EmojiItem = {
   expressionUrl: string
   id: string
+  /** 本地缓存路径，存在时用于渲染展示 */
+  localUrl?: string
 }
 
 // -------------------- ⬇消息体类型定义⬇ ----------------
