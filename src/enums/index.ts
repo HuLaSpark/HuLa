@@ -567,7 +567,9 @@ export enum TauriCommand {
   /** 查询聊天历史记录 */
   QUERY_CHAT_HISTORY = 'query_chat_history',
   /** AI 消息流式发送 */
-  AI_MESSAGE_SEND_STREAM = 'ai_message_send_stream'
+  AI_MESSAGE_SEND_STREAM = 'ai_message_send_stream',
+  /** 生成 MinIO 预签名 URL */
+  GENERATE_MINIO_PRESIGNED_URL = 'generate_minio_presigned_url'
 }
 
 // 通话状态枚举
@@ -607,8 +609,8 @@ export enum ImUrlEnum {
   GET_QINIU_TOKEN = 'getQiniuToken',
   /** 初始化配置 */
   INIT_CONFIG = 'initConfig',
-  /** 文件上传 */
-  FILE_UPLOAD = 'fileUpload',
+  /** 获取默认存储提供者 */
+  STORAGE_PROVIDER = 'storageProvider',
   /** 获取模型列表 */
   GET_ASSISTANT_MODEL_LIST = 'getAssistantModelList',
 

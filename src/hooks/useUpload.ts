@@ -6,7 +6,7 @@ import { useConfigStore } from '@/stores/config'
 import { useUserStore } from '@/stores/user'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
-import { getQiniuToken } from '@/utils/ImRequestUtils'
+import { getQiniuToken, getUploadProvider } from '@/utils/ImRequestUtils'
 import { isAndroid, isMobile } from '@/utils/PlatformConstants'
 import { getWasmMd5 } from '@/utils/Md5Util'
 
@@ -30,7 +30,9 @@ export enum UploadProviderEnum {
   /** 默认上传方式 */
   DEFAULT = 'default',
   /** 七牛云上传 */
-  QINIU = 'qiniu'
+  QINIU = 'qiniu',
+  /** MinIO 上传 */
+  MINIO = 'minio'
 }
 
 /** 上传配置 */
@@ -173,45 +175,6 @@ export const useUpload = () => {
     }
     return key
   }
-
-  /**
-   * 上传文件到默认存储 - 支持分片上传
-   * @param url 上传链接
-   * @param file 文件
-   */
-  // const uploadToDefault = async (url: string, file: File) => {
-  //   isUploading.value = true
-
-  //   try {
-  //     if (file.size > CHUNK_THRESHOLD) {
-  //       await uploadToDefaultWithChunks(url, file)
-  //     } else {
-  //       // 将File对象转换为ArrayBuffer
-  //       const arrayBuffer = await file.arrayBuffer()
-
-  //       const response = await fetch(url, {
-  //         method: 'PUT',
-  //         headers: {
-  //           'Content-Type': file.type
-  //         },
-  //         body: arrayBuffer,
-  //         duplex: 'half'
-  //       } as RequestInit)
-
-  //       isUploading.value = false
-
-  //       if (response.ok) {
-  //         trigger('success')
-  //       } else {
-  //         trigger('fail')
-  //       }
-  //     }
-  //   } catch (error) {
-  //     isUploading.value = false
-  //     console.error('Upload failed:', error)
-  //     trigger('fail')
-  //   }
-  // }
 
   /**
    * 分片上传到默认存储
@@ -535,6 +498,14 @@ export const useUpload = () => {
     if (options?.provider) {
       currentProvider.value = options.provider
     }
+    // 如果未指定 provider，读取后端默认 provider
+    if (!options?.provider) {
+      try {
+        const res = await getUploadProvider()
+        if (res?.provider === 'minio') currentProvider.value = UploadProviderEnum.MINIO
+        else if (res?.provider === 'qiniu') currentProvider.value = UploadProviderEnum.QINIU
+      } catch {}
+    }
 
     const info = await parseFile(file, options)
 
@@ -547,16 +518,33 @@ export const useUpload = () => {
     // 根据上传方式选择不同的上传逻辑
     if (currentProvider.value === UploadProviderEnum.QINIU) {
       try {
-        // 获取七牛云token
-        const qiniuConfig = await getQiniuToken()
+        const cred = await getQiniuToken({ scene: options?.scene, fileName: file.name })
         fileInfo.value = { ...info }
         await onStart.trigger(fileInfo)
 
-        // 判断是否使用分片上传
+        if ((cred as any)?.uploadUrl) {
+          const arrayBuffer = await file.arrayBuffer()
+          const response = await fetch((cred as any).uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type || 'application/octet-stream' },
+            body: arrayBuffer,
+            duplex: 'half'
+          } as RequestInit)
+          isUploading.value = false
+          progress.value = 100
+          if (!response.ok) {
+            await trigger('fail')
+            throw new Error(`上传失败: ${response.statusText}`)
+          }
+          fileInfo.value = { ...fileInfo.value!, downloadUrl: (cred as any).downloadUrl }
+          trigger('success')
+          return { downloadUrl: (cred as any).downloadUrl }
+        }
+
         console.log(`uploadFile - 文件大小检查: ${file.size} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
         if (file.size > CHUNK_THRESHOLD) {
           console.log('uploadFile - 使用分片上传方式')
-          const result = (await uploadToQiniuWithChunks(file, qiniuConfig, QINIU_CHUNK_SIZE)) as any
+          const result = (await uploadToQiniuWithChunks(file, cred as any, QINIU_CHUNK_SIZE)) as any
           if (result && result.downloadUrl) {
             fileInfo.value = { ...info, downloadUrl: result.downloadUrl }
           }
@@ -566,7 +554,7 @@ export const useUpload = () => {
           const result = await uploadToQiniu(
             file,
             options?.scene || UploadSceneEnum.CHAT,
-            qiniuConfig,
+            cred as any,
             options?.enableDeduplication || true
           )
           if (result && result.downloadUrl) {
@@ -575,7 +563,40 @@ export const useUpload = () => {
           return result
         }
       } catch (error) {
-        console.error('获取七牛云token失败:', error)
+        console.error('获取上传凭证失败:', error)
+        await trigger('fail')
+      }
+    } else if (currentProvider.value === UploadProviderEnum.MINIO) {
+      try {
+        fileInfo.value = { ...(await parseFile(file, options)) }
+        await onStart.trigger(fileInfo)
+
+        const presign = await getQiniuToken({ scene: options?.scene, fileName: file.name })
+
+        const arrayBuffer = await file.arrayBuffer()
+        const response = await fetch(presign.uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream'
+          },
+          body: arrayBuffer,
+          duplex: 'half'
+        } as RequestInit)
+
+        isUploading.value = false
+        progress.value = 100
+
+        if (!response.ok) {
+          trigger('fail')
+          throw new Error(`上传失败: ${response.statusText}`)
+        }
+
+        fileInfo.value = { ...fileInfo.value!, downloadUrl: presign.downloadUrl }
+        trigger('success')
+        return { downloadUrl: presign.downloadUrl }
+      } catch (error) {
+        isUploading.value = false
+        console.error('MinIO 上传失败:', error)
         await trigger('fail')
       }
     }
@@ -596,27 +617,38 @@ export const useUpload = () => {
     if (options?.provider) {
       currentProvider.value = options.provider
     }
+    // 如果未指定 provider，读取后端默认 provider
+    if (!options?.provider) {
+      try {
+        const res = await getUploadProvider()
+        if (res?.provider === 'minio') currentProvider.value = UploadProviderEnum.MINIO
+        else if (res?.provider === 'qiniu') currentProvider.value = UploadProviderEnum.QINIU
+      } catch {}
+    }
 
     // 根据上传方式选择不同的上传逻辑
     if (currentProvider.value === UploadProviderEnum.QINIU) {
       try {
-        // 获取七牛云token
-        const qiniuConfig = await getQiniuToken()
-
-        const config = {
-          ...qiniuConfig,
-          provider: options?.provider,
-          scene: options?.scene
+        const cred = await getQiniuToken({ scene: options?.scene, fileName: extractFileName(_path) })
+        if ((cred as any)?.token) {
+          const config = { ...cred, provider: options?.provider, scene: options?.scene }
+          return { uploadUrl: UploadProviderEnum.QINIU, downloadUrl: (cred as any).domain, config }
         }
-
-        // 对于七牛云，我们不需要预先获取上传URL，而是直接返回一个标记
         return {
-          uploadUrl: UploadProviderEnum.QINIU, // 标记为七牛云上传
-          downloadUrl: qiniuConfig.domain, // 下载URL会在实际上传后生成
-          config: config
+          uploadUrl: (cred as any).uploadUrl,
+          downloadUrl: (cred as any).downloadUrl,
+          config: { objectKey: (cred as any).objectKey, provider: UploadProviderEnum.MINIO }
         }
       } catch (_error) {
-        throw new Error('获取七牛云token失败，请重试')
+        throw new Error('获取上传凭证失败，请重试')
+      }
+    }
+    if (currentProvider.value === UploadProviderEnum.MINIO) {
+      const resp = await getQiniuToken({ scene: options?.scene, fileName: extractFileName(_path) })
+      return {
+        uploadUrl: resp.uploadUrl,
+        downloadUrl: resp.downloadUrl,
+        config: { objectKey: resp.objectKey, provider: UploadProviderEnum.MINIO }
       }
     }
     return { uploadUrl: '', downloadUrl: '' }
@@ -631,17 +663,36 @@ export const useUpload = () => {
   const doUpload = async (path: string, uploadUrl: string, options?: any): Promise<{ qiniuUrl: string } | string> => {
     // 如果是七牛云上传
     if (uploadUrl === UploadProviderEnum.QINIU && options) {
+      const fileName = extractFileName(path)
       // 如果没有提供七牛云配置，尝试获取
       if (!options.domain || !options.token) {
         try {
-          console.log('获取七牛云配置...')
-          const qiniuConfig = await getQiniuToken()
-          options.domain = qiniuConfig.domain
-          options.token = qiniuConfig.token
-          options.storagePrefix = qiniuConfig.storagePrefix
-          options.region = qiniuConfig.region
+          const cred = await getQiniuToken({ scene: options.scene, fileName })
+          if ((cred as any)?.token) {
+            options.domain = (cred as any).domain
+            options.token = (cred as any).token
+            options.storagePrefix = (cred as any).storagePrefix
+            options.region = (cred as any).region
+          } else if ((cred as any)?.uploadUrl) {
+            const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
+            const file = await readFile(path, { baseDir })
+            const response = await fetch((cred as any).uploadUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/octet-stream' },
+              body: file,
+              duplex: 'half'
+            } as RequestInit)
+            isUploading.value = false
+            progress.value = 100
+            if (!response.ok) {
+              trigger('fail')
+              throw new Error(`上传失败: ${response.statusText}`)
+            }
+            trigger('success')
+            return (cred as any).downloadUrl
+          }
         } catch (error) {
-          console.error('七牛云上传配置不完整，缺少 domain 或 token', error)
+          console.error('获取上传凭证失败', error)
         }
       }
 
@@ -650,183 +701,50 @@ export const useUpload = () => {
         const file = await readFile(path, { baseDir })
         console.log(`📁 读取文件: ${path}, 大小: ${file.length} bytes`)
 
-        // 创建File对象
-        const fileName = extractFileName(path)
-        const fileObj = new File([new Uint8Array(file)], fileName, {
-          type: getFileType(fileName)
-        })
+        const fileObj = new File([new Uint8Array(file)], fileName, { type: getFileType(fileName) })
         console.log(`📦 创建File对象: ${fileName}, 原始大小: ${fileObj.size} bytes, 数组大小: ${file.length} bytes`)
 
         isUploading.value = true
         progress.value = 0
 
-        console.log('七牛云上传开始:', {
-          token: options.token,
-          domain: options.domain,
-          scene: options.scene,
-          storagePrefix: options.storagePrefix,
-          fileName,
-          fileSize: file.length,
-          enableDeduplication: options.enableDeduplication
-        })
-
-        // 判断是否使用分片上传
-        console.log(`文件大小检查: ${file.length} bytes, 阈值: ${CHUNK_THRESHOLD} bytes`)
-        if (file.length > CHUNK_THRESHOLD) {
-          console.log('使用分片上传方式')
-
-          // 执行分片上传
-          const chunkSize = QINIU_CHUNK_SIZE
-          const totalSize = file.length
-          const totalChunks = Math.ceil(totalSize / chunkSize)
-
-          // 创建进度跟踪对象
-          const progressInfo: ChunkProgressInfo = {
-            uploadedChunks: 0,
-            totalChunks,
-            currentChunkProgress: 0
-          }
-
-          // 生成文件名和key
-          const key = await generateHashKey(
-            { scene: options.scene, enableDeduplication: options.enableDeduplication },
+        const useChunks = fileObj.size > CHUNK_THRESHOLD
+        if (useChunks) {
+          const r = await uploadToQiniuWithChunks(
             fileObj,
-            fileName
-          )
-
-          console.log('开始七牛云分片上传:', {
-            fileName,
-            fileSize: totalSize,
-            chunkSize,
-            totalChunks,
-            key
-          })
-
-          // 使用七牛云的分片上传API v2 - 创建上传块
-          const contexts: string[] = []
-
-          for (let i = 0; i < totalChunks; i++) {
-            const start = i * chunkSize
-            const end = Math.min(start + chunkSize, totalSize)
-            const chunkData = file.slice(start, end)
-            const currentChunkSize = end - start
-
-            // 创建块
-            const blockResponse = await fetch(`${options.domain}/mkblk/${currentChunkSize}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/octet-stream',
-                Authorization: `UpToken ${options.token}`
-              },
-              body: chunkData
-            })
-
-            if (!blockResponse.ok) {
-              const errorText = await blockResponse.text()
-              console.error(`上传分片 ${i + 1}/${totalChunks} 失败:`, {
-                status: blockResponse.status,
-                statusText: blockResponse.statusText,
-                errorText
-              })
-              throw new Error(`上传分片 ${i + 1}/${totalChunks} 失败: ${blockResponse.statusText}`)
-            }
-
-            const blockResult = await blockResponse.json()
-            contexts.push(blockResult.ctx)
-            progressInfo.uploadedChunks++
-
-            progress.value = Math.floor((progressInfo.uploadedChunks / progressInfo.totalChunks) * 100)
-            console.log(`分片上传触发进度事件: ${progress.value}%`)
-            trigger('progress') // 触发进度事件
-
-            console.log(`上传分片 ${progressInfo.uploadedChunks}/${progressInfo.totalChunks} 成功:`, {
-              ctx: blockResult.ctx.substring(0, 10) + '...',
-              progress: progress.value + '%'
-            })
-          }
-
-          // 完成上传 - 合并所有块
-          const encodedKey = btoa(key)
-          const completeResponse = await fetch(`${options.domain}/mkfile/${totalSize}/key/${encodedKey}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'text/plain',
-              Authorization: `UpToken ${options.token}`
+            {
+              token: options.token,
+              domain: options.domain,
+              storagePrefix: options.storagePrefix,
+              region: options.region
             },
-            body: contexts.join(',')
-          })
-
-          if (!completeResponse.ok) {
-            const errorText = await completeResponse.text()
-            console.error('完成分片上传失败:', {
-              status: completeResponse.status,
-              statusText: completeResponse.statusText,
-              errorText
-            })
-            throw new Error(`完成分片上传失败: ${completeResponse.statusText}`)
-          }
-
-          const completeResult = await completeResponse.json()
-          console.log('完成分片上传:', completeResult)
-          console.log('原始key:', key)
-          console.log('响应key:', completeResult.key)
-
+            QINIU_CHUNK_SIZE,
+            true
+          )
           isUploading.value = false
           progress.value = 100
-
-          const qiniuUrl = `${configStore.config.qiNiu.ossDomain}/${completeResult.key || key}`
+          const qiniuUrl = `${configStore.config.qiNiu.ossDomain}/${(r as any).key}`
           trigger('success')
           return qiniuUrl
         } else {
-          console.log('uploadFile - 使用七牛普通上传方式')
-          // 使用普通上传方式
-          // 创建FormData对象
-          const formData = new FormData()
-
-          // 生成文件名和key
-          const key = await generateHashKey(
-            { scene: options.scene, enableDeduplication: options.enableDeduplication },
+          const r = await uploadToQiniu(
             fileObj,
-            fileName
-          )
-
-          formData.append('token', options.token)
-          formData.append('key', key)
-          formData.append('file', fileObj)
-
-          // 使用fetch API进行上传
-          const response = await fetch(options.domain, {
-            headers: {
-              Host: options.storagePrefix
+            options.scene,
+            {
+              token: options.token,
+              domain: options.domain,
+              storagePrefix: options.storagePrefix,
+              region: options.region
             },
-            method: 'POST',
-            body: formData
-          } as RequestInit)
-
+            options.enableDeduplication
+          )
           isUploading.value = false
           progress.value = 100
-
-          console.log('七牛云上传响应:', {
-            status: response.status,
-            statusText: response.statusText
-          })
-
-          if (response.ok) {
-            const result = await response.json()
-            console.log('七牛云上传成功:', result)
-            const qiniuUrl = `${configStore.config.qiNiu.ossDomain}/${result.key}`
+          if ((r as any).downloadUrl) {
             trigger('success')
-            return qiniuUrl
-          } else {
-            const errorText = await response.text()
-            console.error('七牛云上传失败:', {
-              status: response.status,
-              statusText: response.statusText,
-              errorText
-            })
-            trigger('fail')
-            throw new Error(`上传失败: ${response.statusText}`)
+            return (r as any).downloadUrl
           }
+          trigger('fail')
+          throw new Error('上传失败')
         }
       } catch (error) {
         isUploading.value = false
@@ -849,7 +767,7 @@ export const useUpload = () => {
         isUploading.value = true
         progress.value = 0
 
-        if (file.length > CHUNK_THRESHOLD) {
+        if (file.length > CHUNK_THRESHOLD && options?.provider !== UploadProviderEnum.MINIO) {
           // 转换file的类型
           // TODO：本地上传还需要测试
           const fileObj = new File([new Uint8Array(file)], __filename, { type: 'application/octet-stream' })

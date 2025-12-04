@@ -1,7 +1,7 @@
 import { fetch } from '@tauri-apps/plugin-http'
 import CryptoJS from 'crypto-js'
 import { AppException } from '@/common/exception.ts'
-import { getSettings, type Settings } from '@/services/tauriCommand.ts'
+import { initConfig } from '@/utils/ImRequestUtils.ts'
 import type { TranslateProvider } from './types.ts'
 
 // 有道云翻译接口响应类型
@@ -134,10 +134,9 @@ export const translateText = async (text: string, provider: TranslateProvider = 
  */
 const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
   // 从环境变量获取密钥信息
-  const settings: Settings = await getSettings()
+  const init: any = await initConfig()
 
-  // 检查密钥是否为空
-  if (!settings.youdao.app_key || !settings.youdao.app_secret) {
+  if (!init?.youdao?.appKey || !init?.youdao?.appSecret) {
     throw window.$message?.error('有道翻译API密钥未配置')
   }
 
@@ -145,7 +144,7 @@ const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
   const curtime = Math.round(new Date().getTime() / 1000) // 当前时间戳
 
   // 计算签名
-  const sign = signUtils.getYoudaoSign(text, settings.youdao.app_key, salt, curtime, settings.youdao.app_secret)
+  const sign = signUtils.getYoudaoSign(text, init.youdao.appKey, salt, curtime, init.youdao.appSecret)
 
   // 发送翻译请求
   const response = await fetch('https://openapi.youdao.com/api', {
@@ -157,7 +156,7 @@ const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
       q: text, // 待翻译文本
       from: 'auto', // 源语言
       to: 'zh-CHS', // 目标语言
-      appKey: settings.youdao.app_key, // 应用ID
+      appKey: init.youdao.appKey, // 应用ID
       salt: salt.toString(), // 随机数
       sign, // 签名
       signType: 'v3', // 签名类型
@@ -190,9 +189,9 @@ const youdaoTranslate = async (text: string): Promise<TranslateResult> => {
  */
 const tencentTranslate = async (text: string): Promise<TranslateResult> => {
   // 从环境变量获取密钥信息
-  const settings: Settings = await getSettings()
-  const secretId = settings.tencent.secret_id
-  const secretKey = settings.tencent.api_key
+  const init: any = await initConfig()
+  const secretId = init?.tencent?.secretId
+  const secretKey = init?.tencent?.apiKey
 
   // 检查密钥是否为空
   if (!secretId || !secretKey) {
