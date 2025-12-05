@@ -613,6 +613,12 @@ export enum ImUrlEnum {
   STORAGE_PROVIDER = 'storageProvider',
   /** 获取模型列表 */
   GET_ASSISTANT_MODEL_LIST = 'getAssistantModelList',
+  /** 坐标转换 */
+  MAP_COORD_TRANSLATE = 'mapCoordTranslate',
+  /** 逆地理编码 */
+  MAP_REVERSE_GEOCODE = 'mapReverseGeocode',
+  /** 地址静态图片 */
+  MAP_STATIC = 'mapStatic',
 
   // 验证码相关
   /** 发送验证码 */

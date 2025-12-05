@@ -21,19 +21,13 @@
 
     <!-- 地图预览区域 -->
     <div class="relative rounded-6px overflow-hidden bg-gray-100 dark:bg-#202020 h-120px flex-center">
-      <!-- 如果有地图API，显示地图预览 -->
-      <div v-if="showMapPreview" class="size-full">
-        <LocationMap
-          v-if="body && apiKey"
-          :location="locationData"
-          :api-key="apiKey"
-          :zoom="18"
-          :height="120"
-          :draggable="false"
-          @map-error="() => (showMapPreview = false)" />
-      </div>
-
-      <!-- 否则显示静态的位置图标 -->
+      <StaticProxyMap
+        v-if="body"
+        :location="locationData"
+        :zoom="18"
+        :height="120"
+        :draggable="false"
+        :controls="false" />
       <div v-else class="flex-col-center gap-8px">
         <svg class="size-32px color-[--text-color-3]">
           <use href="#cloudError"></use>
@@ -48,10 +42,9 @@
 </template>
 
 <script setup lang="ts">
-import { getSettings } from '@/services/tauriCommand'
+import StaticProxyMap from '../location/StaticProxyMap.vue'
 import type { LocationBody } from '@/services/types'
 import { isWindows } from '@/utils/PlatformConstants'
-import LocationMap from '../location/LocationMap.vue'
 import LocationModal from '../location/LocationModal.vue'
 
 defineOptions({
@@ -69,8 +62,6 @@ const props = withDefaults(
 
 // 响应式状态
 const modalVisible = ref(false)
-const showMapPreview = ref(true)
-const apiKey = ref('')
 
 // 计算属性
 const locationData = computed(() => ({
@@ -80,30 +71,19 @@ const locationData = computed(() => ({
   timestamp: Number(props.body?.timestamp) || Date.now()
 }))
 
-// 获取API密钥
-const loadApiKey = async () => {
-  try {
-    const settings = await getSettings()
-    apiKey.value = settings.tencent?.map_key || ''
-    if (!apiKey.value) {
-      showMapPreview.value = false
-    }
-  } catch (error) {
-    console.warn('获取地图API密钥失败:', error)
-    showMapPreview.value = false
-  }
-}
-
 // 点击位置消息
 const handleLocationClick = () => {
   if (!isWindows()) return
   modalVisible.value = true
 }
 
-// 组件挂载时加载API密钥
-onMounted(() => {
-  loadApiKey()
-})
+// 组件挂载无需加载密钥（后端静态图代理）
+
+watch(
+  () => props.body,
+  () => {},
+  { immediate: false }
+)
 </script>
 
 <style scoped lang="scss">
