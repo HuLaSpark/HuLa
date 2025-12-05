@@ -3,8 +3,15 @@
 
 use dotenv::dotenv;
 
+#[cfg(target_os = "windows")]
+use hula_app_lib::utils::win_runtime_guard::apply_runtime_guards;
+
 fn main() -> std::io::Result<()> {
     dotenv().ok();
+    #[cfg(target_os = "windows")]
+    {
+        apply_runtime_guards();
+    }
     hula_app_lib::run();
     Ok(())
 }
