@@ -780,14 +780,20 @@ export const useChatStore = defineStore(
       }
     }
 
-    const recordRecallMsg = (data: { recallUid: string; msg: MessageType }) => {
+    const recordRecallMsg = (data: {
+      recallUid: string
+      msg: MessageType
+      originalType?: number
+      originalContent?: string
+    }) => {
       // 存储撤回的消息内容和时间
       const recallTime = Date.now()
+      // 优先使用传入的 originalType 和 originalContent，避免竞态条件导致类型已被修改
       recalledMessages[data.msg.message.id] = {
         messageId: data.msg.message.id,
-        content: data.msg.message.body.content,
+        content: data.originalContent ?? data.msg.message.body.content,
         recallTime,
-        originalType: data.msg.message.type
+        originalType: data.originalType ?? data.msg.message.type
       }
 
       if (data.recallUid === userStore.userInfo!.uid) {

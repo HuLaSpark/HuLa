@@ -240,6 +240,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
         const msg = { ...item }
+        // 在调用 API 前先保存原始类型，避免 WebSocket 消息先到达导致 type 被修改
+        const originalType = item.message.type
+        const originalContent = item.message.body.content
         const res = await recallMsg({ roomId: globalStore.currentSessionRoomId, msgId: item.message.id })
         if (res) {
           window.$message.error(res)
@@ -247,7 +250,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         }
         chatStore.recordRecallMsg({
           recallUid: userStore.userInfo!.uid,
-          msg
+          msg,
+          originalType,
+          originalContent
         })
         await chatStore.updateRecallMsg({
           recallUid: userStore.userInfo!.uid,
