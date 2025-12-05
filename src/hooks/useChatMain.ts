@@ -20,7 +20,7 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { translateText } from '@/services/translate'
+import { translateTextStream } from '@/services/translate'
 import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
@@ -367,16 +367,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           return
         }
 
-        const result = await translateText(content, chat.value.translate)
-        item.message.body.translatedText = {
-          provider: result.provider,
-          text: result.text
-        }
+        item.message.body.translatedText = { provider: chat.value.translate || 'tencent', text: '' }
+        await translateTextStream(content, chat.value.translate || 'tencent', (seg) => {
+          const prev = item.message.body.translatedText?.text || ''
+          item.message.body.translatedText = { provider: chat.value.translate || 'tencent', text: prev + seg }
+        })
       },
-      visible: (item: MessageType) => {
-        return item.message.type === MsgEnum.TEXT
-      }
+      visible: (item: MessageType) => item.message.type === MsgEnum.TEXT
     },
+
     ...commonMenuList.value
   ])
   const specialMenuList = computed(() => {
