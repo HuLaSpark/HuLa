@@ -1,0 +1,31 @@
+{
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "actionBar": {
+    "always_on_top": {
+      "enabled": "Disable always-on-top",
+      "disabled": "Pin to top"
+    },
+    "close_prompt": {
+      "title": "Minimize to tray or exit the app?",
+      "hide_to_tray": "Minimize to system tray",
+      "exit_app": "Exit application",
+      "no_prompt": "Don't show this again"
+    }
+  },
+  "avatarCropper": {
+    "title": "Crop Avatar",
+    "preview": {
+      "round": "Round preview",
+      "square": "Rounded-square preview"
+    },
+    "uploading": "Uploading..."
+  },
+  "announcementCard": {
+    "title": "Announcement",
+    "viewDetail": "View details",
+    "windowTitle": "View group announcement"
+  }
+}

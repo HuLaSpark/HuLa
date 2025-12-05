@@ -29,8 +29,8 @@
         :disabled-options="disabledOptions" />
 
       <n-flex align="center" justify="end" class="p-16px">
-        <n-button color="#13987f" @click="handleInvite">确定</n-button>
-        <n-button secondary @click="handleClose">取消</n-button>
+        <n-button color="#13987f" @click="handleInvite">{{ t('home.chat_header.modal.confirm') }}</n-button>
+        <n-button secondary @click="handleClose">{{ t('home.chat_header.modal.cancel') }}</n-button>
       </n-flex>
     </div>
   </div>
@@ -42,7 +42,9 @@ import { useWindow } from '@/hooks/useWindow'
 import { getDisabledOptions, getFilteredOptions, renderLabel, renderSourceList } from '@/layout/center/model.tsx'
 import { useGroupStore } from '@/stores/group'
 import { inviteGroupMember } from '@/utils/ImRequestUtils'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { getWindowPayload } = useWindow()
 const groupStore = useGroupStore()
 const windowTitle = ref('')

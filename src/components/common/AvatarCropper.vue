@@ -17,7 +17,9 @@
           </svg>
         </div>
 
-        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">裁剪头像</n-flex>
+        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">
+          {{ t('components.avatarCropper.title') }}
+        </n-flex>
 
         <svg
           v-if="isWindows()"
@@ -50,7 +52,9 @@
         <n-flex vertical class="px-20px">
           <!-- 圆形预览 -->
           <div class="mb-20px">
-            <div class="text-14px text-[--text-color] mb-8px">圆形预览</div>
+            <div class="text-14px text-[--text-color] mb-8px">
+              {{ t('components.avatarCropper.preview.round') }}
+            </div>
             <div class="preview-wrapper">
               <div
                 class="rounded-full preview-content"
@@ -71,7 +75,9 @@
 
           <!-- 方形预览 -->
           <div>
-            <div class="text-14px text-[--text-color] mb-8px">矩形预览</div>
+            <div class="text-14px text-[--text-color] mb-8px w-120px">
+              {{ t('components.avatarCropper.preview.square') }}
+            </div>
             <div class="preview-wrapper">
               <div
                 class="rounded-36px preview-content"
@@ -92,7 +98,7 @@
         </n-flex>
       </n-flex>
       <n-flex class="p-12px" align="center" justify="center" :size="12">
-        <n-button quaternary @click="closeWindow" :disabled="loading">取消</n-button>
+        <n-button quaternary @click="closeWindow" :disabled="loading">{{ t('components.common.cancel') }}</n-button>
         <n-button secondary type="primary" @click="handleCrop" :loading="loading">{{ loadingText }}</n-button>
       </n-flex>
     </div>
@@ -100,14 +106,18 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import 'vue-cropper/dist/index.css'
 import { VueCropper } from 'vue-cropper'
 
+const { t } = useI18n()
 const localImageUrl = ref('')
 const cropperRef = ref()
 const loading = ref(false)
-const loadingText = ref('确定')
+const loadingText = computed(() =>
+  loading.value ? t('components.avatarCropper.uploading') : t('components.common.confirm')
+)
 const previewUrl = ref<{
   url: string
   img: any
@@ -139,7 +149,6 @@ const handleRealTime = (data: { url: string; img: any; w: number; h: number }) =
 
 const handleCrop = () => {
   loading.value = true
-  loadingText.value = '上传中...'
 
   cropperRef.value?.getCropBlob((blob: Blob) => {
     emit('crop', blob)
@@ -156,7 +165,6 @@ const closeWindow = () => {
 /** 结束加载状态 */
 const finishLoading = () => {
   loading.value = false
-  loadingText.value = '确定'
 }
 
 // 定义组件实例类型
