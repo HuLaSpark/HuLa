@@ -54,10 +54,8 @@
                 </n-popover>
               </n-flex>
               <span
-                :class="[
-                  { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT },
-                  { 'color-#d5304f90!': item.shield && globalStore.currentSessionRoomId === item.roomId }
-                ]"
+                v-if="item.account !== UserType.BOT"
+                :class="{ 'color-#d5304f90!': item.shield && globalStore.currentSessionRoomId === item.roomId }"
                 class="text text-10px w-fit truncate text-right">
                 {{ item.lastMsgTime }}
               </span>
@@ -179,6 +177,7 @@ const { addListener } = useTauriListener()
 const { themes } = storeToRefs(settingStore)
 const { syncLoading } = storeToRefs(chatStore)
 const botDisplayText = computed(() => botStore.displayText)
+const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visibleSpecialMenu } = useMessage()
@@ -189,10 +188,13 @@ type SessionMsgCacheItem = { msg: string; isAtMe: boolean; time: number; senderN
 
 // 缓存每个会话的格式化消息，避免重复计算
 const sessionMsgCache = reactive<Record<string, SessionMsgCacheItem>>({})
+// 当会话最后一条消息需要强制刷新时递增，配合 mitt 事件触发重算
+const sessionCacheRefreshKey = ref(0)
 
 // 会话列表
 const sessionList = computed(() => {
-  const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
+  // 依赖 refreshKey，确保外部缓存失效时触发重算
+  sessionCacheRefreshKey.value
 
   return (
     chatStore.sessionList
@@ -357,7 +359,8 @@ onMounted(async () => {
   useMitt.on(MittEnum.UPDATE_SESSION_LAST_MSG, (payload?: { roomId?: string }) => {
     const roomId = payload?.roomId
     if (!roomId) return
-    delete sessionMsgCache[roomId]
+    Reflect.deleteProperty(sessionMsgCache, roomId)
+    sessionCacheRefreshKey.value++
   })
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)

@@ -1,5 +1,4 @@
 import { MsgEnum, RoomTypeEnum } from '@/enums'
-import { useCommon } from '@/hooks/useCommon.ts'
 import type { MessageType } from '@/services/types'
 import { useChatStore } from '@/stores/chat'
 import { useGroupStore } from '@/stores/group'
@@ -65,7 +64,7 @@ export const useReplaceMsg = () => {
    * @returns 格式化后的撤回消息文本
    */
   const formatRecallMessage = (message: MessageType, roomType: RoomTypeEnum, userName: string) => {
-    const { userUid } = useCommon()
+    const currentUid = userStore.userInfo?.uid
     const content = message.message?.body?.content
     if (typeof content === 'string' && content.trim().length > 0) {
       return content
@@ -74,7 +73,7 @@ export const useReplaceMsg = () => {
     if (roomType === RoomTypeEnum.GROUP) {
       return `${userName}:撤回了一条消息`
     } else {
-      return message.fromUser.uid === userUid.value ? '你撤回了一条消息' : '对方撤回了一条消息'
+      return message.fromUser.uid === currentUid ? '你撤回了一条消息' : '对方撤回了一条消息'
     }
   }
 

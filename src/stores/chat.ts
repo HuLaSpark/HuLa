@@ -808,6 +808,8 @@ export const useChatStore = defineStore(
       const { msgId } = data
       const roomIdFromPayload = data.roomId || currentMessageMap.value?.[msgId]?.message?.roomId
       const resolvedRoomId = roomIdFromPayload || findRoomIdByMsgId(msgId)
+      const session = resolvedRoomId ? resolveSessionByRoomId(resolvedRoomId) : undefined
+      const sessionType = session?.type ?? RoomTypeEnum.SINGLE
       const roomMessages = resolvedRoomId ? messageMap[resolvedRoomId] : undefined
       const message = roomMessages?.[msgId] || currentMessageMap.value?.[msgId]
       let recallMessageBody = ''
@@ -819,6 +821,11 @@ export const useChatStore = defineStore(
 
         const isRecallerCurrentUser = data.recallUid === currentUid
         const isSenderCurrentUser = senderUid === currentUid
+        const recallerUser = groupStore.getUserInfo(data.recallUid, resolvedRoomId)
+        const recallerName = recallerUser?.myName || recallerUser?.name || data.recallUid || ''
+        const senderUser = groupStore.getUserInfo(senderUid, resolvedRoomId)
+        const senderName = senderUser?.myName || senderUser?.name || message.fromUser.username || senderUid
+        const isGroup = sessionType === RoomTypeEnum.GROUP
 
         if (isRecallerCurrentUser) {
           // 当前用户是撤回操作执行者
@@ -826,29 +833,28 @@ export const useChatStore = defineStore(
             // 自己的视角
             recallMessageBody = '你撤回了一条消息'
           } else {
-            // 撤回他人的消息：群主/管理员视角
-            const senderUser = groupStore.getUserInfo(senderUid)!
-            recallMessageBody = `你撤回了${senderUser.name}的一条消息`
+            // 撤回他人的消息
+            recallMessageBody = `你撤回了${senderName}的一条消息`
           }
         } else {
           // 当前用户不是撤回操作执行者
-          const isLord = groupStore.isCurrentLord(data.recallUid)
-          const isAdmin = groupStore.isAdmin(data.recallUid)
-
-          // 构建角色前缀
-          let rolePrefix = ''
-          if (isLord) {
-            rolePrefix = '群主'
-          } else if (isAdmin) {
-            rolePrefix = '管理员'
-          }
-          // 普通成员不显示角色前缀
-          if (isSenderCurrentUser) {
-            // 当前用户是被撤回消息的发送者（被撤回者视角）
-            recallMessageBody = `${rolePrefix}撤回了你的一条消息`
+          if (isGroup) {
+            // 群聊下，展示撤回人昵称
+            const recallerLabel = recallerName || '对方'
+            if (isSenderCurrentUser) {
+              recallMessageBody = `${recallerLabel}撤回了你的一条消息`
+            } else {
+              recallMessageBody = `${recallerLabel}撤回了一条消息`
+            }
           } else {
-            // 当前用户是旁观者（其他成员视角）
-            recallMessageBody = `${rolePrefix}撤回了一条消息`
+            // 非群聊保持原有单聊逻辑
+            if (isSenderCurrentUser) {
+              // 当前用户是被撤回消息的发送者（被撤回者视角）
+              recallMessageBody = '对方撤回了你的一条消息'
+            } else {
+              // 当前用户是旁观者（其他成员视角）
+              recallMessageBody = '对方撤回了一条消息'
+            }
           }
         }
 

@@ -232,6 +232,10 @@ export async function detectRemoteFileType(options: {
   fileSize: number
   byteLength?: number
 }): Promise<FileTypeResult | undefined> {
+  const { url } = options
+  if (!/^https?:\/\//i.test(url)) {
+    return void 0
+  }
   const cacheKey = options.url
   if (remoteFileTypeResultCache.has(cacheKey)) {
     return remoteFileTypeResultCache.get(cacheKey)
