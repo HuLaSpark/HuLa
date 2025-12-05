@@ -320,6 +320,9 @@ pub enum ImUrl {
     GetQiniuToken,
     InitConfig,
     StorageProvider,
+    MapCoordTranslate,
+    MapReverseGeocode,
+    MapStatic,
     GetAssistantModelList,
     SendCaptcha,
     GetCaptcha,
@@ -550,6 +553,11 @@ impl ImUrl {
             ImUrl::GetQiniuToken => (http::Method::GET, "system/anyTenant/ossToken"),
             ImUrl::InitConfig => (http::Method::GET, "system/anyTenant/config/init"),
             ImUrl::StorageProvider => (http::Method::GET, "system/anyTenant/storage/provider"),
+            ImUrl::MapCoordTranslate => (http::Method::GET, "system/anyTenant/map/coord/translate"),
+            ImUrl::MapReverseGeocode => {
+                (http::Method::GET, "system/anyTenant/map/geocoder/reverse")
+            }
+            ImUrl::MapStatic => (http::Method::GET, "system/anyTenant/map/static"),
             ImUrl::GetAssistantModelList => (http::Method::GET, "system/model/list"),
 
             // 验证码相关
@@ -851,6 +859,9 @@ impl ImUrl {
             "getQiniuToken" => Ok(ImUrl::GetQiniuToken),
             "initConfig" => Ok(ImUrl::InitConfig),
             "storageProvider" => Ok(ImUrl::StorageProvider),
+            "mapCoordTranslate" => Ok(ImUrl::MapCoordTranslate),
+            "mapReverseGeocode" => Ok(ImUrl::MapReverseGeocode),
+            "mapStatic" => Ok(ImUrl::MapStatic),
             "getAssistantModelList" => Ok(ImUrl::GetAssistantModelList),
 
             // 验证码相关
