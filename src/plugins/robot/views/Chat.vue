@@ -700,7 +700,7 @@
               </n-popover>
               <n-popover trigger="hover" :show-arrow="false" placement="top">
                 <template #trigger>
-                  <n-switch v-model:value="reasoningEnabled" size="small" :disabled="!supportsReasoning">
+                  <n-switch v-model:value="reasoningEnabled" size="small">
                     <template #checked>深度思考</template>
                     <template #unchecked>关闭</template>
                   </n-switch>
@@ -1717,7 +1717,7 @@ const sendAIMessage = async (content: string, model: any) => {
         conversationId: currentChat.value.id,
         content: content,
         useContext: true,
-        reasoningEnabled: reasoningEnabled.value && supportsReasoning.value
+        reasoningEnabled: reasoningEnabled.value
       },
       {
         onChunk: (chunk: string) => {
@@ -2561,6 +2561,8 @@ const handleCreateNewChat = async () => {
       useMitt.emit('add-conversation', newChat)
 
       // 跳转到聊天页面
+      serverTokenUsage.value = null
+      messageList.value = []
       router.push('/chat')
     }
   } catch (error) {
@@ -2630,6 +2632,7 @@ const handleDeleteChat = async () => {
       createTime: 0
     }
     messageList.value = []
+    serverTokenUsage.value = null
 
     // 先跳转到欢迎页、然后通知左侧列表刷新
     await router.push('/welcome')
@@ -2649,6 +2652,9 @@ useMitt.on('chat-active', async (e) => {
   currentChat.value.id = id
   currentChat.value.messageCount = messageCount ?? 0
   currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
+
+  serverTokenUsage.value = null
+  messageList.value = []
 
   if (modelList.value.length === 0) {
     await fetchModelList()

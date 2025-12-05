@@ -109,8 +109,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     {
       uid: '1',
       type: 'Ollama',
-      name: 'DeepSeek-V3',
+      name: 'DeepSeek-Chat',
       value: 'deepseek-chat',
+      avatar: '/AI/deepseek.png'
+    },
+    {
+      uid: '1b',
+      type: 'Ollama',
+      name: 'DeepSeek-Reasoner',
+      value: 'deepseek-reasoner',
       avatar: '/AI/deepseek.png'
     },
     {
