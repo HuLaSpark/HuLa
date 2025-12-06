@@ -141,7 +141,7 @@
     "@iconify/vue": "^5.0.0",
     "@inquirer/prompts": "^8.0.2",
     "@release-it/bumper": "^7.0.5",
-    "@release-it/conventional-changelog": "10.0.2",
+    "@release-it/conventional-changelog": "10.0.1",
     "@tauri-apps/cli": "2.9.5",
     "@types/crypto-js": "^4.2.2",
     "@types/node": "^24.10.0",
@@ -182,6 +182,9 @@
     }
   },
   "pnpm": {
+    "overrides": {
+      "conventional-changelog-conventionalcommits": "8.0.0"
+    },
     "ignoredBuiltDependencies": ["@parcel/watcher", "esbuild", "sharp", "tlbs-map-vue", "vue-demi"]
   }
 }
