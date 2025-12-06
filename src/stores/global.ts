@@ -141,8 +141,9 @@ export const useGlobalStore = defineStore(
         clearQueue()
         // 延攱1秒后开始查询已读数
         setTimeout(readCountQueue, 1000)
-        markMsgRead(val)
+        // 先清空本地未读标记（立即更新UI），再异步上报已读（不阻塞）
         chatStore.markSessionRead(val)
+        markMsgRead(val).catch((err) => console.error('[global] 已读上报失败:', err))
       }
 
       useMitt.emit(MittEnum.SESSION_CHANGED, {

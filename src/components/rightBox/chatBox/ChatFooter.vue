@@ -505,36 +505,15 @@ const emojiHandle = async (item: string | EmojiUrlPayload, type: 'emoji' | 'emoj
       imgElement.dataset.serverUrl = serverUrl
     }
 
-    // 获取回复框
-    const replyDiv = document.getElementById('replyDiv')
+    // 在用户光标位置插入表情包
+    lastEditRange.range.insertNode(imgElement)
 
-    // 如果有回复框，确保表情插入在回复框之后
-    if (replyDiv && inp) {
-      // 创建一个范围，定位到回复框之后
-      const range = document.createRange()
-      range.setStartAfter(replyDiv)
-      range.collapse(true)
-
-      // 插入表情到回复框后面
-      range.insertNode(imgElement)
-
-      // 移动光标到表情后面
-      const newRange = document.createRange()
-      newRange.setStartAfter(imgElement)
-      newRange.collapse(true)
-      selection?.removeAllRanges()
-      selection?.addRange(newRange)
-    } else {
-      // 没有回复框，按原来方式插入
-      lastEditRange.range.insertNode(imgElement)
-
-      // 移动光标到图片后面
-      const range = document.createRange()
-      range.setStartAfter(imgElement)
-      range.collapse(true)
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-    }
+    // 移动光标到图片后面
+    const range = document.createRange()
+    range.setStartAfter(imgElement)
+    range.collapse(true)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
   } else {
     const emojiText = typeof item === 'string' ? item : ''
     insertNodeAtRange(MsgEnum.TEXT, emojiText, inp, lastEditRange)

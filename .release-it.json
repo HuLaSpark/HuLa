@@ -5,8 +5,8 @@
       "out": ["src-tauri/tauri.*.json"]
     },
     "@release-it/conventional-changelog": {
-      "preset": {
-        "name": "conventionalcommits",
+      "preset": "conventionalcommits",
+      "presetConfig": {
         "types": [
           { "type": "feat", "section": "✨ Features | 新功能" },
           { "type": "fix", "section": "🐛 Bug Fixes | Bug 修复" },

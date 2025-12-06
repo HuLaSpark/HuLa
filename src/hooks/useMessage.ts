@@ -55,8 +55,9 @@ export const useMessage = () => {
     // 先更新会话，再根据是否存在自身成员做一次兜底刷新，防止批量切换账号后看到旧数据
     await ensureGroupMembersSynced(item.roomId, item.type)
     if (item.unreadCount && item.unreadCount > 0) {
-      markMsgRead(item.roomId)
+      // 先清空本地未读标记（立即更新UI），再异步上报已读（不阻塞）
       chatStore.markSessionRead(item.roomId)
+      markMsgRead(item.roomId).catch((err) => console.error('[useMessage] 已读上报失败:', err))
     }
   }
 

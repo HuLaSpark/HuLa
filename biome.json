@@ -13,7 +13,8 @@
       "!node_modules/*",
       "!tauri-plugin-hula/*",
       "!dist/*",
-      "!src-tauri/gen/schemas"
+      "!src-tauri/gen/schemas",
+      "!.release-it.json"
     ]
   },
   "formatter": {

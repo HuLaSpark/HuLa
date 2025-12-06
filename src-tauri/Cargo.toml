@@ -37,12 +37,12 @@ name = "hula_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.2", features = [] }
+tauri-build = { version = "2.5.3", features = [] }
 cc = "1.2"
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.9.3", features = [
+tauri = { version = "2.9.4", features = [
     "protocol-asset",
     "macos-private-api",
     "tray-icon",
@@ -68,7 +68,7 @@ tauri-plugin-opener = "2"
 # tauri-plugin-devtools = "2"
 tauri-plugin-log = { version = "2", features = ["colored"] }
 tracing = "0.1"
-tracing-subscriber = "0.3.20"
+tracing-subscriber = "0.3.22"
 
 # Tauri 非官方依赖
 tauri-plugin-mic-recorder = "2"
@@ -93,7 +93,7 @@ migration = { path = "migration" } # depends on your needs
 anyhow = "1.0.100"
 thiserror = "2.0.17"
 config = { version = "0.15.19", default-features = false, features = ["yaml"] }
-http = "1.3.1"
+http = "1.4.0"
 lazy_static = "1.5"
 mime_guess = "2.0.5"
 base64 = "0.22.1"
@@ -115,7 +115,7 @@ pulldown-cmark = "0.13"
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
 futures-util = "0.3"
 url = "2.5"
-uuid = { version = "1.18", features = ["v4"] }
+uuid = { version = "1.19", features = ["v4"] }
 
 # 移动端的依赖 (iOS 和 Android)
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
