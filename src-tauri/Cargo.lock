@@ -2870,6 +2870,7 @@ dependencies = [
  "image 0.25.9",
  "jni",
  "lazy_static",
+ "libc",
  "migration",
  "mime_guess",
  "moka",

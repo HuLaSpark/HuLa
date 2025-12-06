@@ -3,14 +3,18 @@
 
 use dotenv::dotenv;
 
+#[cfg(target_os = "linux")]
+use hula_app_lib::utils::linux_runtime_guard as runtime_guard;
+#[cfg(target_os = "macos")]
+use hula_app_lib::utils::macos_runtime_guard as runtime_guard;
 #[cfg(target_os = "windows")]
-use hula_app_lib::utils::win_runtime_guard::apply_runtime_guards;
+use hula_app_lib::utils::win_runtime_guard as runtime_guard;
 
 fn main() -> std::io::Result<()> {
     dotenv().ok();
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     {
-        apply_runtime_guards();
+        runtime_guard::apply_runtime_guards();
     }
     hula_app_lib::run();
     Ok(())
