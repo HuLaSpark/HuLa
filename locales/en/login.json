@@ -47,7 +47,7 @@
   "scan_qr_code_fail": "QR code scan failed",
   "status": {
     "logging_in": "Logging in...",
-    "success_redirect": "Login successful, redirecting...",
+    "success_redirect": "Redirecting...",
     "service_disconnected": "Service disconnected"
   },
   "qr": {
