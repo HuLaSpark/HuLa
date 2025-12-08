@@ -130,6 +130,8 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
     name: rest.name,
     uid: rest.uid
   })
+  // 刚登录成功时同步当前/首个群聊的成员信息，避免消息显示“未知用户”
+  await refreshActiveGroupMembers()
 })
 
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
@@ -538,6 +540,24 @@ const listenMobileReLogin = async () => {
   }
 }
 
+// 登录/重连后兜底刷新：仅刷新当前（或首个）群聊成员，避免消息渲染成“未知用户”
+const refreshActiveGroupMembers = async () => {
+  const tasks: Promise<unknown>[] = []
+  try {
+    const isCurrentGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+    const activeRoomId =
+      (isCurrentGroup && globalStore.currentSessionRoomId) ||
+      chatStore.sessionList.find((item) => item.type === RoomTypeEnum.GROUP)?.roomId
+
+    if (activeRoomId) {
+      tasks.push(groupStore.getGroupUserList(activeRoomId, true))
+    }
+    await Promise.allSettled(tasks)
+  } catch (error) {
+    console.error('[Network] 刷新群成员失败:', error)
+  }
+}
+
 let lastWsConnectionState: string | null = null
 let isReconnectInFlight = false
 
@@ -575,6 +595,8 @@ const handleWebsocketEvent = async (event: any) => {
     }
     await chatStore.getSessionList(true)
     await chatStore.setAllSessionMsgList(20)
+    // 重连后同步频道和当前/首个群聊成员信息，避免展示断网前的旧数据
+    await refreshActiveGroupMembers()
     if (globalStore.currentSessionRoomId) {
       await chatStore.resetAndRefreshCurrentRoomMessages()
       await chatStore.fetchCurrentRoomRemoteOnce(20)

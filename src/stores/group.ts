@@ -148,7 +148,7 @@ export const useGroupStore = defineStore(
 
         // 重置群组并加载新的群成员数据
         resetGroupData()
-        await getGroupUserList(newSession.roomId)
+        await getGroupUserList(newSession.roomId, true)
 
         // 更新缓存
         const currentMembers = userListMap[newSession.roomId] || []
@@ -554,14 +554,37 @@ export const useGroupStore = defineStore(
         refreshTargets.add(targetRoomId)
       }
 
+      const applyUpdateToRoom = (roomIdToUpdate: string) => {
+        const list = Array.isArray(userListMap[roomIdToUpdate]) ? [...userListMap[roomIdToUpdate]] : []
+        const existingIndex = list.findIndex((user) => user.uid === uid)
+
+        if (existingIndex >= 0) {
+          list[existingIndex] = {
+            ...list[existingIndex],
+            ...updates,
+            uid
+          }
+        } else {
+          list.push({
+            uid,
+            ...updates
+          } as UserItem)
+        }
+
+        setRoomMemberList(roomIdToUpdate, list)
+      }
+
       if (refreshTargets.size === 0) {
+        // 仅当调用方明确指定了群聊房间时才落库，避免把未知用户写入当前群
+        if (roomId !== 'all' && isValidGroupRoom(roomId)) {
+          applyUpdateToRoom(roomId)
+          return true
+        }
         return false
       }
 
       refreshTargets.forEach((validRoomId) => {
-        getGroupUserList(validRoomId, true).catch((error) => {
-          console.error('[group] refresh members failed:', error)
-        })
+        applyUpdateToRoom(validRoomId)
       })
 
       return true
