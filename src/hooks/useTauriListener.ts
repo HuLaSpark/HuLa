@@ -23,6 +23,7 @@ const safeUnlisten = (unlisten: UnlistenFn) => {
 /** 自动管理tauri Listener事件监听器的hooks */
 export const useTauriListener = () => {
   const listeners: Promise<UnlistenFn>[] = []
+  const listenerIds: string[] = []
   const instance = getCurrentInstance()
   const windowLabel = WebviewWindow.getCurrent().label
   let isComponentMounted = true
@@ -44,6 +45,7 @@ export const useTauriListener = () => {
       // 添加新的监听器
       listenerIdMap.set(listenerId, listener)
       listeners.push(listener)
+      listenerIds.push(listenerId)
       // 同时添加到全局监听器管理中
       if (!globalListeners.has(windowLabel)) {
         globalListeners.set(windowLabel, [])
@@ -84,6 +86,22 @@ export const useTauriListener = () => {
         const unlistenFns = await Promise.all(listeners)
         // 执行所有的 unlisten 函数
         unlistenFns.forEach((unlisten) => safeUnlisten(unlisten))
+
+        // 移除全局引用，防止 Promise 长驻内存
+        const windowListeners = globalListeners.get(windowLabel)
+        if (windowListeners?.length) {
+          const removable = new Set(listeners)
+          const filtered = windowListeners.filter((item) => !removable.has(item))
+          if (filtered.length === 0) {
+            globalListeners.delete(windowLabel)
+          } else {
+            globalListeners.set(windowLabel, filtered)
+          }
+        }
+
+        // 删除对应的监听 ID 记录
+        listenerIds.forEach((id) => listenerIdMap.delete(id))
+        listenerIds.length = 0
         listeners.length = 0
       } catch (error) {
         console.error('清理监听器失败:', error)
@@ -107,6 +125,13 @@ export const useTauriListener = () => {
 
       // 清理全局状态
       globalListeners.delete(windowLabel)
+
+      // 同步清理 listenerIdMap 里对应的 Promise 引用
+      for (const [id, promise] of Array.from(listenerIdMap.entries())) {
+        if (windowListeners.includes(promise)) {
+          listenerIdMap.delete(id)
+        }
+      }
     } catch (error) {
       console.error('清理监听器失败:', error)
     }

@@ -205,6 +205,8 @@ const previewImage = ref<any>(null)
 
 // 轮询定时器
 let pollingTimer: NodeJS.Timeout | null = null
+let pollingStartAt: number | null = null
+const MAX_POLL_DURATION = 5 * 60 * 1000 // 5分钟超时，防止长时间占用内存
 // 记录已完成的图片ID,避免重复提示
 const completedImageIds = new Set<string>()
 
@@ -293,7 +295,15 @@ const handleGenerate = async () => {
 const startPolling = () => {
   if (pollingTimer) return
 
+  pollingStartAt = Date.now()
   pollingTimer = setInterval(async () => {
+    // 超时保护，避免长时间挂起导致内存占用
+    if (pollingStartAt && Date.now() - pollingStartAt > MAX_POLL_DURATION) {
+      stopPolling()
+      window.$message.warning('检测到图片生成轮询超时，已自动停止，请刷新重试')
+      return
+    }
+
     // 检查是否有进行中的任务
     const hasInProgress = imageList.value.some((img) => img.status === 10)
     if (hasInProgress) {
@@ -311,6 +321,7 @@ const stopPolling = () => {
     clearInterval(pollingTimer)
     pollingTimer = null
   }
+  pollingStartAt = null
 }
 
 // 删除图片
@@ -374,6 +385,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopPolling()
+  // 清空缓存，释放内存
+  completedImageIds.clear()
 })
 </script>
 

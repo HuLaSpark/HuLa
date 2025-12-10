@@ -28,13 +28,11 @@ type RecalledMessage = {
 // 定义每页加载的消息数量
 export const pageSize = 20
 
+// 单个会话在内存中的消息保留上限，防止后台会话无限增长
+const ROOM_MESSAGE_CACHE_LIMIT = 40
+
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
-
-// // 定义消息数量阈值
-// const MESSAGE_THRESHOLD = 120
-// // 定义保留的最新消息数量
-// const KEEP_MESSAGE_COUNT = 60
 
 // 创建src/workers/timer.worker.ts
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -681,6 +679,11 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
+
+      // 防止后台会话长期堆积消息，超出上限时做裁剪（保持当前会话完整，避免阅读中被截断）
+      if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
+        clearRedundantMessages(msg.message.roomId, ROOM_MESSAGE_CACHE_LIMIT)
+      }
     }
 
     const checkMsgExist = (roomId: string, msgId: string) => {
@@ -1121,18 +1124,18 @@ export const useChatStore = defineStore(
       requestUnreadCountUpdate()
     }
 
-    const clearRedundantMessages = (roomId: string) => {
+    const clearRedundantMessages = (roomId: string, limit: number = pageSize) => {
       const currentMessages = messageMap[roomId]
       if (!currentMessages) return
 
       // 将消息转换为数组并按消息ID倒序排序，前面的元素代表最新的消息
       const sortedMessages = Object.values(currentMessages).sort((a, b) => Number(b.message.id) - Number(a.message.id))
 
-      if (sortedMessages.length <= pageSize) {
+      if (sortedMessages.length <= limit) {
         return
       }
 
-      const keptMessages = sortedMessages.slice(0, pageSize)
+      const keptMessages = sortedMessages.slice(0, limit)
       const keepMessageIds = new Set(keptMessages.map((msg) => msg.message.id))
       const fallbackCursor = keptMessages[keptMessages.length - 1]?.message.id || ''
 
@@ -1155,6 +1158,15 @@ export const useChatStore = defineStore(
           isLast: false
         }
       }
+
+      // 控制台提示裁剪信息，方便定位内存压缩触发点
+      console.info(
+        '[chat][trim]',
+        `roomId=${roomId}`,
+        `removed=${sortedMessages.length - keptMessages.length}`,
+        `kept=${keptMessages.length}`,
+        `limit=${limit}`
+      )
     }
 
     /**
