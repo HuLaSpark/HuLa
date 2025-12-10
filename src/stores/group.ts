@@ -59,14 +59,7 @@ export const useGroupStore = defineStore(
       ensureMemberOrder(roomId, members)
 
       return [...members].sort((a, b) => {
-        // 1. 优先按在线状态排序（在线用户排在前面）
-        const onlineStatusDiff =
-          (b.activeStatus === OnlineEnum.ONLINE ? 1 : 0) - (a.activeStatus === OnlineEnum.ONLINE ? 1 : 0)
-        if (onlineStatusDiff !== 0) {
-          return onlineStatusDiff
-        }
-
-        // 2. 再按角色排序
+        // 按角色排序（群主 > 管理员 > 普通成员）
         const roleDiff = getRoleSortWeight(a.roleId) - getRoleSortWeight(b.roleId)
         if (roleDiff !== 0) {
           return roleDiff
