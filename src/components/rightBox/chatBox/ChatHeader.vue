@@ -108,7 +108,7 @@
       </div>
 
       <div
-        v-if="!isChannel && !isBotUser && activeItem?.roomId !== '1'"
+        v-if="!isChannel && !isBotUser && currentSessionRoomId !== '1'"
         class="options-box"
         @click="handleCreateGroupOrInvite">
         <n-popover trigger="hover" :show-arrow="false" placement="bottom">
@@ -381,7 +381,7 @@
             <!-- 管理群成员（仅管理员和群主可见） -->
             <div
               v-if="
-                groupStore.isAdminOrLord() && activeItem?.hotFlag !== IsAllUserEnum.Yes && activeItem?.roomId !== '1'
+                groupStore.isAdminOrLord() && activeItem?.hotFlag !== IsAllUserEnum.Yes && currentSessionRoomId !== '1'
               "
               class="box-item cursor-pointer mb-20px"
               @click="handleManageGroupMember">
@@ -470,7 +470,7 @@
         <div class="flex flex-col items-center gap-16px">
           <n-qr-code
             style="border-radius: 16px"
-            :value="JSON.stringify({ type: 'scanEnterGroup', roomId: activeItem?.roomId })"
+            :value="JSON.stringify({ type: 'scanEnterGroup', roomId: currentSessionRoomId })"
             :size="200"
             :color="themes.content === ThemeEnum.DARK ? '#202020' : '#000000'"
             :background-color="themes.content === ThemeEnum.DARK ? '#e3e3e3' : '#e3e3e382'"
@@ -574,17 +574,17 @@ const modalShow = ref(false)
 const sidebarShow = ref(false)
 const showQRCodeModal = ref(false)
 const showManageGroupMemberModal = ref(false)
-const { currentSession: activeItem } = storeToRefs(globalStore)
+const { currentSession: activeItem, currentSessionRoomId } = storeToRefs(globalStore)
 const { persistMyRoomInfo, resolveMyRoomNickname } = useMyRoomInfoUpdater()
 
 // 是否为频道（仅显示 more 按钮）
-const isChannel = computed(() => activeItem.value?.hotFlag === IsAllUserEnum.Yes || activeItem.value?.roomId === '1')
+const isChannel = computed(() => activeItem.value?.hotFlag === IsAllUserEnum.Yes || currentSessionRoomId.value === '1')
 // 是否为bot用户
 const isBotUser = computed(() => activeItem.value?.account === UserType.BOT)
 // 是否为群主
 const isGroupOwner = computed(() => {
   const session = activeItem.value
-  if (!session || session.roomId === '1' || session.hotFlag === IsAllUserEnum.Yes) {
+  if (!session || currentSessionRoomId.value === '1' || session.hotFlag === IsAllUserEnum.Yes) {
     return false
   }
 
@@ -612,7 +612,7 @@ const localRemark = ref('')
 // 初始化本地变量
 const initLocalValues = () => {
   localMyName.value = resolveMyRoomNickname({
-    roomId: activeItem.value?.roomId,
+    roomId: currentSessionRoomId.value,
     myName: groupStore.myNameInCurrentGroup || ''
   })
   localRemark.value = groupStore.countInfo?.remark || ''
@@ -622,7 +622,7 @@ watch(
   () => groupStore.myNameInCurrentGroup,
   (newName) => {
     const normalized = resolveMyRoomNickname({
-      roomId: activeItem.value?.roomId,
+      roomId: currentSessionRoomId.value,
       myName: newName || ''
     })
     if (localMyName.value !== normalized) {
@@ -632,9 +632,9 @@ watch(
 )
 // 监听当前会话变化，重新初始化本地变量
 watch(
-  () => activeItem.value?.roomId,
+  () => currentSessionRoomId.value,
   () => {
-    if (activeItem.value?.roomId) {
+    if (currentSessionRoomId.value) {
       nextTick(() => {
         initLocalValues()
       })
@@ -713,7 +713,7 @@ const {
     const session = activeItem.value
     if (!session) return
     await updateRoomInfo({
-      id: session.roomId,
+      id: currentSessionRoomId.value,
       avatar: downloadUrl
     })
   }
@@ -757,7 +757,7 @@ const handleInvite = async () => {
   if (!session) return
   // 使用封装后的createModalWindow方法创建模态窗口，并传递当前会话的 roomId
   await createModalWindow(t('home.chat_header.modal.invite_friends'), 'modal-invite', 600, 500, 'home', {
-    roomId: session.roomId,
+    roomId: currentSessionRoomId.value,
     type: session.type
   })
 }
@@ -771,7 +771,7 @@ const handleManageGroupMember = () => {
 // 保存群聊信息
 const saveGroupInfo = async () => {
   const session = activeItem.value
-  if (!session?.roomId || session.type !== RoomTypeEnum.GROUP) return
+  if (!currentSessionRoomId.value || session?.type !== RoomTypeEnum.GROUP) return
 
   const pendingInfo = pendingGroupInfo.value
   if (!pendingInfo) return
@@ -781,13 +781,13 @@ const saveGroupInfo = async () => {
 
   try {
     await persistMyRoomInfo({
-      roomId: session.roomId,
+      roomId: currentSessionRoomId.value,
       myName,
       remark
     })
 
     localMyName.value = resolveMyRoomNickname({
-      roomId: session.roomId,
+      roomId: currentSessionRoomId.value,
       myName
     })
     localRemark.value = remark
@@ -812,10 +812,10 @@ const handleMedia = () => {
 const handleTop = (value: boolean) => {
   const session = activeItem.value
   if (!session) return
-  setSessionTop({ roomId: session.roomId, top: value })
+  setSessionTop({ roomId: currentSessionRoomId.value, top: value })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, { top: value })
+      chatStore.updateSession(currentSessionRoomId.value, { top: value })
       window.$message.success(value ? t('home.chat_header.toast.pin_on') : t('home.chat_header.toast.pin_off'))
     })
     .catch(() => {
@@ -833,12 +833,12 @@ const handleNotification = (value: boolean) => {
     handleShield(false)
   }
   notification({
-    roomId: session.roomId,
+    roomId: currentSessionRoomId.value,
     type: newType
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, {
+      chatStore.updateSession(currentSessionRoomId.value, {
         muteNotification: newType
       })
 
@@ -864,12 +864,12 @@ const handleShield = (value: boolean) => {
   const session = activeItem.value
   if (!session) return
   shield({
-    roomId: session.roomId,
+    roomId: currentSessionRoomId.value,
     state: value
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, {
+      chatStore.updateSession(currentSessionRoomId.value, {
         shield: value
       })
 
@@ -992,7 +992,7 @@ const handleDelete = (label: RoomActEnum) => {
 
 const handleConfirm = async () => {
   const currentOption = optionsType.value
-  const targetRoomId = activeItem.value?.roomId
+  const targetRoomId = currentSessionRoomId.value
   const targetDetailId = activeItem.value?.detailId
 
   if (currentOption === undefined || currentOption === null || !targetRoomId) return
@@ -1087,8 +1087,7 @@ const startEditGroupName = () => {
 
 // 保存群名称
 const saveGroupName = async () => {
-  const session = activeItem.value
-  if (!isGroupOwner.value || !session?.roomId) return
+  if (!isGroupOwner.value || !currentSessionRoomId.value) return
 
   isEditingGroupName.value = false
 
@@ -1099,7 +1098,7 @@ const saveGroupName = async () => {
   try {
     // 调用更新群信息的API
     await updateRoomInfo({
-      id: session.roomId,
+      id: currentSessionRoomId.value,
       name: trimmedName
     })
     // 清空待保存的群信息
@@ -1112,7 +1111,7 @@ const saveGroupName = async () => {
 
 // 处理上传头像
 const handleUploadAvatar = () => {
-  if (!isGroupOwner.value || !activeItem.value?.roomId) return
+  if (!isGroupOwner.value || !currentSessionRoomId.value) return
 
   openFileSelector()
 }

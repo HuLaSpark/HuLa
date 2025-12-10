@@ -65,7 +65,7 @@ export const useGroupStore = defineStore(
           return roleDiff
         }
 
-        // 3. 最后按加入顺序排序
+        // 最后按加入顺序排序
         return (a.__order ?? Number.MAX_SAFE_INTEGER) - (b.__order ?? Number.MAX_SAFE_INTEGER)
       })
     }
@@ -460,21 +460,13 @@ export const useGroupStore = defineStore(
       }
     }
 
-    // 校验合法的群聊/频道才会触发成员刷新
-    const isValidGroupRoom = (roomId?: string | null): roomId is string => {
-      if (!roomId) return false
-      if (roomId === '1') return true
-      const session = chatStore.getSession(roomId)
-      return session?.type === RoomTypeEnum.GROUP
-    }
-
     /**
      * 获取群成员列表
      * @param roomId 群聊房间ID
      * @param forceRefresh 是否强制刷新,默认false
      */
     const getGroupUserList = async (roomId: string, forceRefresh = false) => {
-      if (!isValidGroupRoom(roomId)) {
+      if (!roomId) {
         console.warn('[group] skip member refresh, invalid room id:', roomId)
         return []
       }
@@ -544,50 +536,24 @@ export const useGroupStore = defineStore(
 
       if (roomId === 'all') {
         getRoomIdsByUid(uid).forEach((room) => {
-          if (isValidGroupRoom(room)) {
-            refreshTargets.add(room)
-          }
+          refreshTargets.add(room)
         })
       } else {
         const targetRoomId = roomId || globalStore.currentSessionRoomId
-        if (!isValidGroupRoom(targetRoomId)) {
+        if (!targetRoomId) {
           return false
         }
         refreshTargets.add(targetRoomId)
       }
 
-      const applyUpdateToRoom = (roomIdToUpdate: string) => {
-        const list = Array.isArray(userListMap[roomIdToUpdate]) ? [...userListMap[roomIdToUpdate]] : []
-        const existingIndex = list.findIndex((user) => user.uid === uid)
-
-        if (existingIndex >= 0) {
-          // 用户存在，更新信息
-          list[existingIndex] = {
-            ...list[existingIndex],
-            ...updates,
-            uid
-          }
-          setRoomMemberList(roomIdToUpdate, list)
-        } else {
-          // 用户不存在，重新拉取该房间的完整成员列表
-          console.warn(`[updateUserItem] User ${uid} not found in room ${roomIdToUpdate}, refreshing member list`)
-          getGroupUserList(roomIdToUpdate, true).catch((error) => {
-            console.error('[updateUserItem] refresh members failed:', error)
-          })
-        }
-      }
-
       if (refreshTargets.size === 0) {
-        // 仅当调用方明确指定了群聊房间时才落库，避免把未知用户写入当前群
-        if (roomId !== 'all' && isValidGroupRoom(roomId)) {
-          applyUpdateToRoom(roomId)
-          return true
-        }
         return false
       }
 
       refreshTargets.forEach((validRoomId) => {
-        applyUpdateToRoom(validRoomId)
+        getGroupUserList(validRoomId, true).catch((error) => {
+          console.error('[group] refresh members failed:', error)
+        })
       })
 
       return true
@@ -607,7 +573,7 @@ export const useGroupStore = defineStore(
       }
 
       const targetRoomId = roomId || globalStore.currentSessionRoomId
-      if (!isValidGroupRoom(targetRoomId)) {
+      if (!targetRoomId) {
         console.warn('[addUserItem] cannot determine target room id')
         return false
       }
@@ -632,7 +598,7 @@ export const useGroupStore = defineStore(
       }
 
       const targetRoomId = roomId || globalStore.currentSessionRoomId
-      if (!isValidGroupRoom(targetRoomId)) {
+      if (!targetRoomId) {
         console.warn('[removeUserItem] cannot determine target room id')
         return false
       }
@@ -796,7 +762,7 @@ export const useGroupStore = defineStore(
         }
         // 检查当前房间是否包含指定的用户
         const hasUser = userList.some((user) => user.uid === uid)
-        if (hasUser && isValidGroupRoom(roomId)) {
+        if (hasUser) {
           roomIds.push(roomId)
         }
       })

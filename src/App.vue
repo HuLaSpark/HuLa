@@ -580,7 +580,8 @@ const handleWebsocketEvent = async (event: any) => {
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
-  if (isReconnectInFlight) return
+  // 防止并行重连/同步导致 syncLoading 卡死
+  if (isReconnectInFlight || chatStore.syncLoading) return
   isReconnectInFlight = true
 
   // 开始同步，显示加载状态
@@ -596,15 +597,16 @@ const handleWebsocketEvent = async (event: any) => {
     if (globalStore.currentSessionRoomId) {
       await chatStore.resetAndRefreshCurrentRoomMessages()
       await chatStore.fetchCurrentRoomRemoteOnce(20)
-      const currentSession = chatStore.getSession(globalStore.currentSessionRoomId)
+      const currentRoomId = globalStore.currentSessionRoomId
+      const currentSession = chatStore.getSession(currentRoomId)
       // 重连后如果当前会话仍有未读，补一次已读上报和本地清零，避免气泡卡住
       if (currentSession?.unreadCount) {
         try {
-          await ImRequestUtils.markMsgRead(currentSession.roomId)
+          await ImRequestUtils.markMsgRead(currentRoomId)
         } catch (error) {
           console.error('[Network] 重连后上报已读失败:', error)
         }
-        chatStore.markSessionRead(currentSession.roomId)
+        chatStore.markSessionRead(currentRoomId)
       }
     }
     unreadCountManager.refreshBadge(globalStore.unReadMark)

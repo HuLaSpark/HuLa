@@ -488,7 +488,12 @@ export const useChatStore = defineStore(
           sessionOptions.isLoading = false
           return null
         })
-        if (!data) return
+        if (!data) {
+          // 拉取失败也要恢复未读角标的展示，避免 unreadReady 卡在 false
+          globalStore.unreadReady = true
+          unreadCountManager.refreshBadge(globalStore.unReadMark)
+          return
+        }
 
         // console.log(
         //   '[SessionDebug] 后端返回的会话列表:',
@@ -516,15 +521,16 @@ export const useChatStore = defineStore(
         await clearCurrentSessionUnread()
         updateTotalUnreadCount()
         // 如果当前会话仍被服务器标记为未读，主动上报并清零，避免气泡卡住
-        if (globalStore.currentSessionRoomId) {
-          const currentSession = resolveSessionByRoomId(globalStore.currentSessionRoomId)
+        const currentRoomId = globalStore.currentSessionRoomId
+        if (currentRoomId) {
+          const currentSession = resolveSessionByRoomId(currentRoomId)
           if (currentSession?.unreadCount) {
             try {
-              await markMsgRead(currentSession.roomId)
+              await markMsgRead(currentRoomId)
             } catch (error) {
               console.error('[chat] 会话列表同步后上报已读失败:', error)
             }
-            markSessionRead(currentSession.roomId)
+            markSessionRead(currentRoomId)
           }
         }
         globalStore.unreadReady = true

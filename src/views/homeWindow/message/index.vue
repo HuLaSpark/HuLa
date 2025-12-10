@@ -5,6 +5,16 @@
       <n-spin :size="14" />
       <span>{{ t('message.message_list.sync_loading') }}</span>
     </div>
+    <!-- 当右侧 chatBox 未展示且网络离线时，在列表区域提示网络状态 -->
+    <div
+      v-if="!networkStatus.isOnline.value && !syncLoading && !globalStore.currentSessionRoomId"
+      class="mx-10px mt-6px border-(1px solid [--danger-text]) flex items-center gap-8px rounded-6px bg-[--danger-bg] px-12px py-10px text-(12px [--danger-text])"
+      style="position: sticky; top: 6px; z-index: 999">
+      <svg class="size-16px flex-shrink-0">
+        <use href="#cloudError"></use>
+      </svg>
+      <span class="leading-tight">{{ t('home.chat_main.network_offline') }}</span>
+    </div>
     <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
@@ -162,6 +172,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useBotStore } from '@/stores/bot'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useI18n } from 'vue-i18n'
@@ -183,6 +194,7 @@ const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visibleSpecialMenu } = useMessage()
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
+const networkStatus = useNetworkStatus()
 
 type SessionMsgCacheItem = { msg: string; isAtMe: boolean; time: number; senderName: string }
 

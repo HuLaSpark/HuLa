@@ -34,8 +34,14 @@ export const useGlobalStore = defineStore(
 
     const currentSessionRoomId = ref('')
     const lastKnownSession = ref<SessionItem | null>(null)
-    // 当前会话信息：包含房间ID和房间类型
-    const currentSession = computed((): SessionItem | null => {
+    type CurrentSessionView = Omit<SessionItem, 'roomId'>
+    const stripRoomId = (session?: SessionItem | null): CurrentSessionView | null => {
+      if (!session) return null
+      const { roomId: _omit, ...rest } = session
+      return rest
+    }
+    // 当前会话信息：不暴露 roomId，统一从 currentSessionRoomId 读取
+    const currentSession = computed((): CurrentSessionView | null => {
       const cachedRoomId = currentSessionRoomId.value
       if (!cachedRoomId) {
         lastKnownSession.value = null
@@ -48,10 +54,12 @@ export const useGlobalStore = defineStore(
       }
       if (session) {
         lastKnownSession.value = session
-        return session
+        return stripRoomId(session)
       }
 
-      return lastKnownSession.value && lastKnownSession.value.roomId === cachedRoomId ? lastKnownSession.value : null
+      return lastKnownSession.value && lastKnownSession.value.roomId === cachedRoomId
+        ? stripRoomId(lastKnownSession.value)
+        : null
     })
 
     /** 当前选中的联系人信息 */
