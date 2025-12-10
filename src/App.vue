@@ -350,16 +350,14 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
       onlineNum: onStatusChangeType.onlineNum,
       isAdd: true
     })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.ONLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
+    groupStore.updateUserItem(
+      onStatusChangeType.uid,
+      {
+        activeStatus: OnlineEnum.ONLINE,
+        lastOptTime: onStatusChangeType.lastOptTime
+      },
+      onStatusChangeType.roomId
+    )
   }
 })
 
@@ -487,16 +485,14 @@ useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusCha
       onlineNum: onStatusChangeType.onlineNum,
       isAdd: false
     })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.OFFLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
+    groupStore.updateUserItem(
+      onStatusChangeType.uid,
+      {
+        activeStatus: OnlineEnum.OFFLINE,
+        lastOptTime: onStatusChangeType.lastOptTime
+      },
+      onStatusChangeType.roomId
+    )
   }
 })
 

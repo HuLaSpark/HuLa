@@ -59,11 +59,20 @@ export const useGroupStore = defineStore(
       ensureMemberOrder(roomId, members)
 
       return [...members].sort((a, b) => {
+        // 1. 优先按在线状态排序（在线用户排在前面）
+        const onlineStatusDiff =
+          (b.activeStatus === OnlineEnum.ONLINE ? 1 : 0) - (a.activeStatus === OnlineEnum.ONLINE ? 1 : 0)
+        if (onlineStatusDiff !== 0) {
+          return onlineStatusDiff
+        }
+
+        // 2. 再按角色排序
         const roleDiff = getRoleSortWeight(a.roleId) - getRoleSortWeight(b.roleId)
         if (roleDiff !== 0) {
           return roleDiff
         }
 
+        // 3. 最后按加入顺序排序
         return (a.__order ?? Number.MAX_SAFE_INTEGER) - (b.__order ?? Number.MAX_SAFE_INTEGER)
       })
     }
@@ -559,19 +568,20 @@ export const useGroupStore = defineStore(
         const existingIndex = list.findIndex((user) => user.uid === uid)
 
         if (existingIndex >= 0) {
+          // 用户存在，更新信息
           list[existingIndex] = {
             ...list[existingIndex],
             ...updates,
             uid
           }
+          setRoomMemberList(roomIdToUpdate, list)
         } else {
-          list.push({
-            uid,
-            ...updates
-          } as UserItem)
+          // 用户不存在，重新拉取该房间的完整成员列表
+          console.warn(`[updateUserItem] User ${uid} not found in room ${roomIdToUpdate}, refreshing member list`)
+          getGroupUserList(roomIdToUpdate, true).catch((error) => {
+            console.error('[updateUserItem] refresh members failed:', error)
+          })
         }
-
-        setRoomMemberList(roomIdToUpdate, list)
       }
 
       if (refreshTargets.size === 0) {
