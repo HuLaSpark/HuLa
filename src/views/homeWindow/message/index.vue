@@ -5,6 +5,16 @@
       <n-spin :size="14" />
       <span>{{ t('message.message_list.sync_loading') }}</span>
     </div>
+    <!-- 当右侧 chatBox 未展示且网络离线时，在列表区域提示网络状态 -->
+    <div
+      v-if="!networkStatus.isOnline.value && !syncLoading && !globalStore.currentSessionRoomId"
+      class="mx-10px mt-6px border-(1px solid [--danger-text]) flex items-center gap-8px rounded-6px bg-[--danger-bg] px-12px py-10px text-(12px [--danger-text])"
+      style="position: sticky; top: 6px; z-index: 999">
+      <svg class="size-16px flex-shrink-0">
+        <use href="#cloudError"></use>
+      </svg>
+      <span class="leading-tight">{{ t('home.chat_main.network_offline') }}</span>
+    </div>
     <!--  会话列表  -->
     <div v-if="sessionList.length > 0" class="p-[4px_10px_0px_8px]">
       <ContextMenu
@@ -54,10 +64,8 @@
                 </n-popover>
               </n-flex>
               <span
-                :class="[
-                  { 'text-[#707070]! dark:text-[#fff]!': item.account === UserType.BOT },
-                  { 'color-#d5304f90!': item.shield && globalStore.currentSessionRoomId === item.roomId }
-                ]"
+                v-if="item.account !== UserType.BOT"
+                :class="{ 'color-#d5304f90!': item.shield && globalStore.currentSessionRoomId === item.roomId }"
                 class="text text-10px w-fit truncate text-right">
                 {{ item.lastMsgTime }}
               </span>
@@ -164,6 +172,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useBotStore } from '@/stores/bot'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { useI18n } from 'vue-i18n'
@@ -179,20 +188,25 @@ const { addListener } = useTauriListener()
 const { themes } = storeToRefs(settingStore)
 const { syncLoading } = storeToRefs(chatStore)
 const botDisplayText = computed(() => botStore.displayText)
+const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
 const { openMsgSession } = useCommon()
 const msgScrollbar = useTemplateRef<HTMLElement>('msg-scrollbar')
 const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visibleSpecialMenu } = useMessage()
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
+const networkStatus = useNetworkStatus()
 
 type SessionMsgCacheItem = { msg: string; isAtMe: boolean; time: number; senderName: string }
 
 // 缓存每个会话的格式化消息，避免重复计算
 const sessionMsgCache = reactive<Record<string, SessionMsgCacheItem>>({})
+// 当会话最后一条消息需要强制刷新时递增，配合 mitt 事件触发重算
+const sessionCacheRefreshKey = ref(0)
 
 // 会话列表
 const sessionList = computed(() => {
-  const { checkRoomAtMe, getMessageSenderName, formatMessageContent } = useReplaceMsg()
+  // 依赖 refreshKey，确保外部缓存失效时触发重算
+  sessionCacheRefreshKey.value
 
   return (
     chatStore.sessionList
@@ -357,7 +371,8 @@ onMounted(async () => {
   useMitt.on(MittEnum.UPDATE_SESSION_LAST_MSG, (payload?: { roomId?: string }) => {
     const roomId = payload?.roomId
     if (!roomId) return
-    delete sessionMsgCache[roomId]
+    Reflect.deleteProperty(sessionMsgCache, roomId)
+    sessionCacheRefreshKey.value++
   })
   useMitt.on(MittEnum.DELETE_SESSION, async (roomId: string) => {
     await handleMsgDelete(roomId)

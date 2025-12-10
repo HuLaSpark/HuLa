@@ -28,13 +28,11 @@ type RecalledMessage = {
 // 定义每页加载的消息数量
 export const pageSize = 20
 
+// 单个会话在内存中的消息保留上限，防止后台会话无限增长
+const ROOM_MESSAGE_CACHE_LIMIT = 40
+
 // 撤回消息的过期时间
 const RECALL_EXPIRATION_TIME = 2 * 60 * 1000 // 2分钟，单位毫秒
-
-// // 定义消息数量阈值
-// const MESSAGE_THRESHOLD = 120
-// // 定义保留的最新消息数量
-// const KEEP_MESSAGE_COUNT = 60
 
 // 创建src/workers/timer.worker.ts
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -135,6 +133,11 @@ export const useChatStore = defineStore(
 
         // 只有在「本地之前为 0、当前为正数、且存在有效活跃时间并未变化」时认为是陈旧未读
         if (prevUnread === 0 && currentUnread > 0 && hasValidActiveTime && session.activeTime === prev.activeTime) {
+          console.log('[Chat][reconcileStaleUnread] clear stale unread', session.roomId, {
+            prevUnread,
+            currentUnread,
+            activeTime: session.activeTime
+          })
           updateSession(session.roomId, { unreadCount: 0 })
           // 补一次已读上报，避免下一次刷新又回灌
           promises.push(
@@ -160,7 +163,12 @@ export const useChatStore = defineStore(
         const lastReadTime = lastReadActiveTime.value[session.roomId] || 0
         const currentUnread = Math.max(0, session.unreadCount || 0)
 
-        if (currentUnread > 0 && activeTime > 0 && activeTime <= lastReadTime) {
+        if (currentUnread > 0 && lastReadTime > 0 && (activeTime === 0 || activeTime <= lastReadTime)) {
+          console.log('[Chat][reconcileUnreadWithReadHistory] clear by lastRead', session.roomId, {
+            activeTime,
+            lastReadTime,
+            currentUnread
+          })
           updateSession(session.roomId, { unreadCount: 0 })
           promises.push(
             markMsgRead(session.roomId).catch((error) => {
@@ -480,7 +488,12 @@ export const useChatStore = defineStore(
           sessionOptions.isLoading = false
           return null
         })
-        if (!data) return
+        if (!data) {
+          // 拉取失败也要恢复未读角标的展示，避免 unreadReady 卡在 false
+          globalStore.unreadReady = true
+          unreadCountManager.refreshBadge(globalStore.unReadMark)
+          return
+        }
 
         // console.log(
         //   '[SessionDebug] 后端返回的会话列表:',
@@ -507,6 +520,19 @@ export const useChatStore = defineStore(
         await reconcileUnreadWithReadHistory()
         await clearCurrentSessionUnread()
         updateTotalUnreadCount()
+        // 如果当前会话仍被服务器标记为未读，主动上报并清零，避免气泡卡住
+        const currentRoomId = globalStore.currentSessionRoomId
+        if (currentRoomId) {
+          const currentSession = resolveSessionByRoomId(currentRoomId)
+          if (currentSession?.unreadCount) {
+            try {
+              await markMsgRead(currentRoomId)
+            } catch (error) {
+              console.error('[chat] 会话列表同步后上报已读失败:', error)
+            }
+            markSessionRead(currentRoomId)
+          }
+        }
         globalStore.unreadReady = true
         unreadCountManager.refreshBadge(globalStore.unReadMark)
       } catch (e) {
@@ -659,6 +685,11 @@ export const useChatStore = defineStore(
           icon: cacheUser.avatar as string
         })
       }
+
+      // 防止后台会话长期堆积消息，超出上限时做裁剪（保持当前会话完整，避免阅读中被截断）
+      if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
+        clearRedundantMessages(msg.message.roomId, ROOM_MESSAGE_CACHE_LIMIT)
+      }
     }
 
     const checkMsgExist = (roomId: string, msgId: string) => {
@@ -758,14 +789,20 @@ export const useChatStore = defineStore(
       }
     }
 
-    const recordRecallMsg = (data: { recallUid: string; msg: MessageType }) => {
+    const recordRecallMsg = (data: {
+      recallUid: string
+      msg: MessageType
+      originalType?: number
+      originalContent?: string
+    }) => {
       // 存储撤回的消息内容和时间
       const recallTime = Date.now()
+      // 优先使用传入的 originalType 和 originalContent，避免竞态条件导致类型已被修改
       recalledMessages[data.msg.message.id] = {
         messageId: data.msg.message.id,
-        content: data.msg.message.body.content,
+        content: data.originalContent ?? data.msg.message.body.content,
         recallTime,
-        originalType: data.msg.message.type
+        originalType: data.originalType ?? data.msg.message.type
       }
 
       if (data.recallUid === userStore.userInfo!.uid) {
@@ -786,6 +823,8 @@ export const useChatStore = defineStore(
       const { msgId } = data
       const roomIdFromPayload = data.roomId || currentMessageMap.value?.[msgId]?.message?.roomId
       const resolvedRoomId = roomIdFromPayload || findRoomIdByMsgId(msgId)
+      const session = resolvedRoomId ? resolveSessionByRoomId(resolvedRoomId) : undefined
+      const sessionType = session?.type ?? RoomTypeEnum.SINGLE
       const roomMessages = resolvedRoomId ? messageMap[resolvedRoomId] : undefined
       const message = roomMessages?.[msgId] || currentMessageMap.value?.[msgId]
       let recallMessageBody = ''
@@ -797,6 +836,11 @@ export const useChatStore = defineStore(
 
         const isRecallerCurrentUser = data.recallUid === currentUid
         const isSenderCurrentUser = senderUid === currentUid
+        const recallerUser = groupStore.getUserInfo(data.recallUid, resolvedRoomId)
+        const recallerName = recallerUser?.myName || recallerUser?.name || data.recallUid || ''
+        const senderUser = groupStore.getUserInfo(senderUid, resolvedRoomId)
+        const senderName = senderUser?.myName || senderUser?.name || message.fromUser.username || senderUid
+        const isGroup = sessionType === RoomTypeEnum.GROUP
 
         if (isRecallerCurrentUser) {
           // 当前用户是撤回操作执行者
@@ -804,29 +848,28 @@ export const useChatStore = defineStore(
             // 自己的视角
             recallMessageBody = '你撤回了一条消息'
           } else {
-            // 撤回他人的消息：群主/管理员视角
-            const senderUser = groupStore.getUserInfo(senderUid)!
-            recallMessageBody = `你撤回了${senderUser.name}的一条消息`
+            // 撤回他人的消息
+            recallMessageBody = `你撤回了${senderName}的一条消息`
           }
         } else {
           // 当前用户不是撤回操作执行者
-          const isLord = groupStore.isCurrentLord(data.recallUid)
-          const isAdmin = groupStore.isAdmin(data.recallUid)
-
-          // 构建角色前缀
-          let rolePrefix = ''
-          if (isLord) {
-            rolePrefix = '群主'
-          } else if (isAdmin) {
-            rolePrefix = '管理员'
-          }
-          // 普通成员不显示角色前缀
-          if (isSenderCurrentUser) {
-            // 当前用户是被撤回消息的发送者（被撤回者视角）
-            recallMessageBody = `${rolePrefix}撤回了你的一条消息`
+          if (isGroup) {
+            // 群聊下，展示撤回人昵称
+            const recallerLabel = recallerName || '对方'
+            if (isSenderCurrentUser) {
+              recallMessageBody = `${recallerLabel}撤回了你的一条消息`
+            } else {
+              recallMessageBody = `${recallerLabel}撤回了一条消息`
+            }
           } else {
-            // 当前用户是旁观者（其他成员视角）
-            recallMessageBody = `${rolePrefix}撤回了一条消息`
+            // 非群聊保持原有单聊逻辑
+            if (isSenderCurrentUser) {
+              // 当前用户是被撤回消息的发送者（被撤回者视角）
+              recallMessageBody = '对方撤回了你的一条消息'
+            } else {
+              // 当前用户是旁观者（其他成员视角）
+              recallMessageBody = '对方撤回了一条消息'
+            }
           }
         }
 
@@ -1087,18 +1130,18 @@ export const useChatStore = defineStore(
       requestUnreadCountUpdate()
     }
 
-    const clearRedundantMessages = (roomId: string) => {
+    const clearRedundantMessages = (roomId: string, limit: number = pageSize) => {
       const currentMessages = messageMap[roomId]
       if (!currentMessages) return
 
       // 将消息转换为数组并按消息ID倒序排序，前面的元素代表最新的消息
       const sortedMessages = Object.values(currentMessages).sort((a, b) => Number(b.message.id) - Number(a.message.id))
 
-      if (sortedMessages.length <= pageSize) {
+      if (sortedMessages.length <= limit) {
         return
       }
 
-      const keptMessages = sortedMessages.slice(0, pageSize)
+      const keptMessages = sortedMessages.slice(0, limit)
       const keepMessageIds = new Set(keptMessages.map((msg) => msg.message.id))
       const fallbackCursor = keptMessages[keptMessages.length - 1]?.message.id || ''
 
@@ -1121,6 +1164,15 @@ export const useChatStore = defineStore(
           isLast: false
         }
       }
+
+      // 控制台提示裁剪信息，方便定位内存压缩触发点
+      console.info(
+        '[chat][trim]',
+        `roomId=${roomId}`,
+        `removed=${sortedMessages.length - keptMessages.length}`,
+        `kept=${keptMessages.length}`,
+        `limit=${limit}`
+      )
     }
 
     /**

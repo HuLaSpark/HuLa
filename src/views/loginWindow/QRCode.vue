@@ -104,6 +104,8 @@ const qrCodeType = ref('canvas' as const)
 const qrCodeIcon = ref('/logo.png')
 const qrErrorCorrectionLevel = ref('H' as const)
 const pollInterval = ref<NodeJS.Timeout | null>(null)
+const pollStartAt = ref<number | null>(null)
+const MAX_POLL_DURATION = 5 * 60 * 1000 // 5分钟超时，防止长时间占用内存
 const pollingRequesting = ref(false)
 const confirmedHandled = ref(false)
 
@@ -139,6 +141,7 @@ const refreshQRCode = () => {
     clearInterval(pollInterval.value)
     pollInterval.value = null
   }
+  pollStartAt.value = null
   pollingRequesting.value = false
   confirmedHandled.value = false
   // 重新生成二维码
@@ -150,6 +153,7 @@ const clearPolling = () => {
     clearInterval(pollInterval.value)
     pollInterval.value = null
   }
+  pollStartAt.value = null
 }
 
 const handleConfirmed = async (res: any) => {
@@ -187,7 +191,15 @@ const startPolling = () => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value)
   }
+  pollStartAt.value = Date.now()
   pollInterval.value = setInterval(async () => {
+    // 超时保护：超过 5 分钟自动停止并提示
+    if (pollStartAt.value && Date.now() - pollStartAt.value > MAX_POLL_DURATION) {
+      clearPolling()
+      handleError('expired')
+      return
+    }
+
     if (pollingRequesting.value || confirmedHandled.value) {
       return
     }

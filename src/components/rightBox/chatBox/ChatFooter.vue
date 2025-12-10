@@ -62,8 +62,13 @@
                       v-for="(emoji, index) in recentEmojis"
                       :key="index"
                       class="emoji-item cursor-pointer flex-center"
-                      @click="emojiHandle(emoji, checkIsUrl(emoji) ? 'emoji-url' : 'emoji')">
-                      <img v-if="checkIsUrl(emoji)" :src="emoji" class="size-24px" />
+                      @click="
+                        emojiHandle(
+                          checkIsUrl(emoji) ? { renderUrl: resolveRecentRenderUrl(emoji), serverUrl: emoji } : emoji,
+                          checkIsUrl(emoji) ? 'emoji-url' : 'emoji'
+                        )
+                      ">
+                      <img v-if="checkIsUrl(emoji)" :src="resolveRecentRenderUrl(emoji)" class="size-24px" />
                       <span v-else class="text-18px">{{ emoji }}</span>
                     </div>
                   </div>
@@ -225,6 +230,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useHistoryStore } from '@/stores/history'
 import { useSettingStore } from '@/stores/setting'
+import { useEmojiStore } from '@/stores/emoji'
 import FileUtil from '@/utils/FileUtil'
 import { extractFileName, getMimeTypeFromExtension } from '@/utils/Formatting'
 import { isMac, isMobile } from '@/utils/PlatformConstants'
@@ -252,6 +258,7 @@ const contactStore = useContactStore()
 const historyStore = useHistoryStore()
 const chatStore = useChatStore()
 const settingStore = useSettingStore()
+const emojiStore = useEmojiStore()
 const { handleScreenshot } = useGlobalShortcut()
 const MsgInputRef = ref()
 const msgInputDom = ref<HTMLInputElement | null>(null)
@@ -335,6 +342,12 @@ const checkIsUrl = (str: string) => {
   }
 }
 
+// 最近使用的表情包在顶层快捷栏也优先使用本地渲染
+const resolveRecentRenderUrl = (url: string) => {
+  const matched = emojiStore.emojiList.find((item) => item.expressionUrl === url)
+  return matched?.localUrl || url
+}
+
 // 判断是否为单聊
 const isSingleChat = computed(() => {
   return globalStore.currentSession?.type === RoomTypeEnum.SINGLE
@@ -396,16 +409,18 @@ const handleImageOpen = async () => {
 }
 
 // 使用 VueUse 的防抖函数处理表情包发送（300ms 防抖）
-const sendEmojiWithDebounce = useDebounceFn((item: string) => {
+type EmojiUrlPayload = { renderUrl: string; serverUrl: string }
+
+const sendEmojiWithDebounce = useDebounceFn((payload: EmojiUrlPayload) => {
   try {
     // 不等待发送完成，立即返回（避免卡顿）
-    MsgInputRef.value?.sendEmojiDirect(item).catch((error: unknown) => {
+    MsgInputRef.value?.sendEmojiDirect(payload.serverUrl).catch((error: unknown) => {
       console.error('[ChatFooter] 发送表情包失败:', error)
       window.$message?.error?.('发送表情包失败')
     })
 
     // 添加到最近使用表情列表
-    updateRecentEmojis(item)
+    updateRecentEmojis(payload.serverUrl)
   } catch (error) {
     console.error('[ChatFooter] 发送表情包失败:', error)
     window.$message?.error?.('发送表情包失败')
@@ -417,7 +432,7 @@ const sendEmojiWithDebounce = useDebounceFn((item: string) => {
  * @param item 选择的表情
  * @param type 表情类型，'emoji' 为普通表情，'emoji-url' 为表情包URL
  */
-const emojiHandle = async (item: string, type: 'emoji' | 'emoji-url' = 'emoji') => {
+const emojiHandle = async (item: string | EmojiUrlPayload, type: 'emoji' | 'emoji-url' = 'emoji') => {
   emojiShow.value = false
 
   const inp = msgInputDom.value
@@ -425,21 +440,15 @@ const emojiHandle = async (item: string, type: 'emoji' | 'emoji-url' = 'emoji') 
     return
   }
 
-  // 检查是否为 URL
-  const isUrl = (str: string) => {
-    try {
-      new URL(str)
-      return true
-    } catch {
-      return false
-    }
-  }
+  const isEmojiUrlPayload = (value: any): value is EmojiUrlPayload =>
+    value && typeof value === 'object' && typeof value.serverUrl === 'string'
 
-  const urlCheck = isUrl(item)
-
-  // 移动端且是表情包URL时，使用防抖发送
-  if (isMobile() && type === 'emoji-url' && urlCheck) {
-    sendEmojiWithDebounce(item)
+  // 移动端且是表情包URL时，使用防抖发送（发送服务端URL）
+  if (isMobile() && type === 'emoji-url') {
+    const payload: EmojiUrlPayload = isEmojiUrlPayload(item)
+      ? item
+      : { renderUrl: typeof item === 'string' ? item : '', serverUrl: typeof item === 'string' ? item : '' }
+    sendEmojiWithDebounce(payload)
     return
   }
 
@@ -478,47 +487,36 @@ const emojiHandle = async (item: string, type: 'emoji' | 'emoji-url' = 'emoji') 
   }
 
   // 根据内容类型插入不同的节点
-  if (isUrl(item)) {
+  if (type === 'emoji-url') {
+    const payload: EmojiUrlPayload = isEmojiUrlPayload(item)
+      ? item
+      : { renderUrl: typeof item === 'string' ? item : '', serverUrl: typeof item === 'string' ? item : '' }
+    const renderUrl = payload.renderUrl || payload.serverUrl
+    const serverUrl = payload.serverUrl || payload.renderUrl
+    if (!renderUrl) return
     // 如果是URL，创建图片元素并插入
     const imgElement = document.createElement('img')
-    imgElement.src = item
+    imgElement.src = renderUrl
     imgElement.style.maxWidth = '80px'
     imgElement.style.maxHeight = '80px'
     // 设置数据类型，区分是普通图片还是表情包
-    imgElement.dataset.type = type === 'emoji-url' ? 'emoji' : 'image'
-
-    // 获取回复框
-    const replyDiv = document.getElementById('replyDiv')
-
-    // 如果有回复框，确保表情插入在回复框之后
-    if (replyDiv && inp) {
-      // 创建一个范围，定位到回复框之后
-      const range = document.createRange()
-      range.setStartAfter(replyDiv)
-      range.collapse(true)
-
-      // 插入表情到回复框后面
-      range.insertNode(imgElement)
-
-      // 移动光标到表情后面
-      const newRange = document.createRange()
-      newRange.setStartAfter(imgElement)
-      newRange.collapse(true)
-      selection?.removeAllRanges()
-      selection?.addRange(newRange)
-    } else {
-      // 没有回复框，按原来方式插入
-      lastEditRange.range.insertNode(imgElement)
-
-      // 移动光标到图片后面
-      const range = document.createRange()
-      range.setStartAfter(imgElement)
-      range.collapse(true)
-      selection?.removeAllRanges()
-      selection?.addRange(range)
+    imgElement.dataset.type = 'emoji'
+    if (serverUrl) {
+      imgElement.dataset.serverUrl = serverUrl
     }
+
+    // 在用户光标位置插入表情包
+    lastEditRange.range.insertNode(imgElement)
+
+    // 移动光标到图片后面
+    const range = document.createRange()
+    range.setStartAfter(imgElement)
+    range.collapse(true)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
   } else {
-    insertNodeAtRange(MsgEnum.TEXT, item, inp, lastEditRange)
+    const emojiText = typeof item === 'string' ? item : ''
+    insertNodeAtRange(MsgEnum.TEXT, emojiText, inp, lastEditRange)
   }
 
   // 记录新的选区位置
@@ -531,7 +529,14 @@ const emojiHandle = async (item: string, type: 'emoji' | 'emoji-url' = 'emoji') 
   MsgInputRef.value?.focus()
 
   // 添加到最近使用表情列表
-  updateRecentEmojis(item)
+  if (type === 'emoji-url') {
+    const payload: EmojiUrlPayload = isEmojiUrlPayload(item)
+      ? item
+      : { renderUrl: typeof item === 'string' ? item : '', serverUrl: typeof item === 'string' ? item : '' }
+    updateRecentEmojis(payload.serverUrl || payload.renderUrl)
+  } else {
+    updateRecentEmojis(typeof item === 'string' ? item : '')
+  }
 }
 
 /**

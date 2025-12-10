@@ -700,7 +700,7 @@
               </n-popover>
               <n-popover trigger="hover" :show-arrow="false" placement="top">
                 <template #trigger>
-                  <n-switch v-model:value="reasoningEnabled" size="small" :disabled="!supportsReasoning">
+                  <n-switch v-model:value="reasoningEnabled" size="small">
                     <template #checked>深度思考</template>
                     <template #unchecked>关闭</template>
                   </n-switch>
@@ -1001,6 +1001,7 @@ interface Message {
 }
 
 const messageList = ref<Message[]>([])
+const MAX_MESSAGE_COUNT = 40 // 最多保留40条消息，防止内存泄漏
 const scrollContainerRef = ref<HTMLElement | null>(null)
 const messageContentRef = ref<HTMLElement | null>(null)
 const shouldAutoStickBottom = ref(true)
@@ -1028,6 +1029,7 @@ const conversationTokens = computed(() => {
 const serverTokenUsage = ref<number | null>(null)
 
 const aiMediaDownloadTasks = new Map<string, Promise<ArrayBuffer>>()
+const MAX_MEDIA_CACHE_SIZE = 10 // 最多缓存10个媒体下载任务
 
 // 将各种可能的二进制返回形式统一转成 ArrayBuffer，兼容 plugin-http/浏览器 fetch 等场景
 const convertHttpDataToArrayBuffer = (rawData: unknown): ArrayBuffer => {
@@ -1084,6 +1086,14 @@ const requestAiMediaBuffer = (url: string) => {
   const existingTask = aiMediaDownloadTasks.get(url)
   if (existingTask) {
     return existingTask
+  }
+
+  // 清理缓存，防止内存泄漏
+  if (aiMediaDownloadTasks.size >= MAX_MEDIA_CACHE_SIZE) {
+    const firstKey = aiMediaDownloadTasks.keys().next().value
+    if (firstKey) {
+      aiMediaDownloadTasks.delete(firstKey)
+    }
   }
 
   const downloadTask = (async () => {
@@ -1555,7 +1565,8 @@ const clearVideoImage = () => {
 }
 
 // 轮询任务管理
-const pollingTasks = new Map<number, { timerId: number; conversationId: string }>()
+const MAX_POLL_DURATION = 5 * 60 * 1000 // 5 分钟超时保护，避免长时间挂起占用内存
+const pollingTasks = new Map<number, { timerId: number; conversationId: string; startedAt: number }>()
 
 // 停止所有轮询任务
 const stopAllPolling = () => {
@@ -1717,7 +1728,7 @@ const sendAIMessage = async (content: string, model: any) => {
         conversationId: currentChat.value.id,
         content: content,
         useContext: true,
-        reasoningEnabled: reasoningEnabled.value && supportsReasoning.value
+        reasoningEnabled: reasoningEnabled.value
       },
       {
         onChunk: (chunk: string) => {
@@ -1884,6 +1895,19 @@ const pollImageStatus = async (
   const conversationId = currentChat.value.id
 
   const poll = async () => {
+    const task = pollingTasks.get(imageId)
+    if (!task) return
+
+    // 超时保护
+    if (Date.now() - task.startedAt > MAX_POLL_DURATION) {
+      window.clearInterval(task.timerId)
+      pollingTasks.delete(imageId)
+      messageList.value[messageIndex].content = '图片生成超时，请重试'
+      messageList.value[messageIndex].isGenerating = false
+      window.$message.warning('图片生成超时，已停止轮询')
+      return
+    }
+
     try {
       if (!pollingTasks.has(imageId)) {
         return
@@ -1945,7 +1969,7 @@ const pollImageStatus = async (
 
   // 启动定时轮询
   const timerId = window.setInterval(poll, interval)
-  pollingTasks.set(imageId, { timerId, conversationId })
+  pollingTasks.set(imageId, { timerId, conversationId, startedAt: Date.now() })
 
   // 立即执行第一次轮询
   poll()
@@ -2041,6 +2065,19 @@ const pollVideoStatus = async (
   const conversationId = currentChat.value.id
 
   const poll = async () => {
+    const task = pollingTasks.get(videoId)
+    if (!task) return
+
+    // 超时保护
+    if (Date.now() - task.startedAt > MAX_POLL_DURATION) {
+      window.clearInterval(task.timerId)
+      pollingTasks.delete(videoId)
+      messageList.value[messageIndex].content = '视频生成超时，请重试'
+      messageList.value[messageIndex].isGenerating = false
+      window.$message.warning('视频生成超时，已停止轮询')
+      return
+    }
+
     try {
       // 检查任务是否已被停止
       if (!pollingTasks.has(videoId)) {
@@ -2103,7 +2140,7 @@ const pollVideoStatus = async (
 
   // 启动定时轮询
   const timerId = window.setInterval(poll, interval)
-  pollingTasks.set(videoId, { timerId, conversationId })
+  pollingTasks.set(videoId, { timerId, conversationId, startedAt: Date.now() })
 
   // 立即执行第一次轮询
   poll()
@@ -2175,6 +2212,19 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
   const conversationId = currentChat.value.id
 
   const poll = async () => {
+    const task = pollingTasks.get(audioId)
+    if (!task) return
+
+    // 超时保护
+    if (Date.now() - task.startedAt > MAX_POLL_DURATION) {
+      window.clearInterval(task.timerId)
+      pollingTasks.delete(audioId)
+      messageList.value[messageIndex].content = '音频生成超时，请重试'
+      messageList.value[messageIndex].isGenerating = false
+      window.$message.warning('音频生成超时，已停止轮询')
+      return
+    }
+
     try {
       if (!pollingTasks.has(audioId)) {
         return
@@ -2231,7 +2281,7 @@ const pollAudioStatus = async (audioId: number, messageIndex: number, prompt: st
   }
 
   const timerId = window.setInterval(poll, interval)
-  pollingTasks.set(audioId, { timerId, conversationId })
+  pollingTasks.set(audioId, { timerId, conversationId, startedAt: Date.now() })
 
   poll()
 }
@@ -2468,7 +2518,10 @@ const loadMessages = async (conversationId: string) => {
       // 清空当前消息列表
       messageList.value = []
 
-      data.forEach((msg: any) => {
+      // 限制消息数量，只保留最近的 MAX_MESSAGE_COUNT 条
+      const limitedData = data.slice(-MAX_MESSAGE_COUNT)
+
+      limitedData.forEach((msg: any) => {
         const nextMessage: Message = {
           type: msg.type,
           content: msg.content || '',
@@ -2561,6 +2614,8 @@ const handleCreateNewChat = async () => {
       useMitt.emit('add-conversation', newChat)
 
       // 跳转到聊天页面
+      serverTokenUsage.value = null
+      messageList.value = []
       router.push('/chat')
     }
   } catch (error) {
@@ -2630,6 +2685,7 @@ const handleDeleteChat = async () => {
       createTime: 0
     }
     messageList.value = []
+    serverTokenUsage.value = null
 
     // 先跳转到欢迎页、然后通知左侧列表刷新
     await router.push('/welcome')
@@ -2649,6 +2705,9 @@ useMitt.on('chat-active', async (e) => {
   currentChat.value.id = id
   currentChat.value.messageCount = messageCount ?? 0
   currentChat.value.createTime = createTime ?? currentChat.value.createTime ?? Date.now()
+
+  serverTokenUsage.value = null
+  messageList.value = []
 
   if (modelList.value.length === 0) {
     await fetchModelList()

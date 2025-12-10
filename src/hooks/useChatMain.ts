@@ -20,7 +20,7 @@ import { useCommon } from '@/hooks/useCommon.ts'
 import { useDownload } from '@/hooks/useDownload'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useVideoViewer } from '@/hooks/useVideoViewer'
-import { translateText } from '@/services/translate'
+import { translateTextStream } from '@/services/translate'
 import type { FilesMeta, MessageType, RightMouseMessageItem } from '@/services/types.ts'
 import { useCachedStore } from '@/stores/cached'
 import { useChatStore } from '@/stores/chat.ts'
@@ -240,6 +240,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'corner-down-left',
       click: async (item: MessageType) => {
         const msg = { ...item }
+        // 在调用 API 前先保存原始类型，避免 WebSocket 消息先到达导致 type 被修改
+        const originalType = item.message.type
+        const originalContent = item.message.body.content
         const res = await recallMsg({ roomId: globalStore.currentSessionRoomId, msgId: item.message.id })
         if (res) {
           window.$message.error(res)
@@ -247,7 +250,9 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         }
         chatStore.recordRecallMsg({
           recallUid: userStore.userInfo!.uid,
-          msg
+          msg,
+          originalType,
+          originalContent
         })
         await chatStore.updateRecallMsg({
           recallUid: userStore.userInfo!.uid,
@@ -367,16 +372,15 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           return
         }
 
-        const result = await translateText(content, chat.value.translate)
-        item.message.body.translatedText = {
-          provider: result.provider,
-          text: result.text
-        }
+        item.message.body.translatedText = { provider: chat.value.translate || 'tencent', text: '' }
+        await translateTextStream(content, chat.value.translate || 'tencent', (seg) => {
+          const prev = item.message.body.translatedText?.text || ''
+          item.message.body.translatedText = { provider: chat.value.translate || 'tencent', text: prev + seg }
+        })
       },
-      visible: (item: MessageType) => {
-        return item.message.type === MsgEnum.TEXT
-      }
+      visible: (item: MessageType) => item.message.type === MsgEnum.TEXT
     },
+
     ...commonMenuList.value
   ])
   const specialMenuList = computed(() => {

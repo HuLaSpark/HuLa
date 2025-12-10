@@ -250,6 +250,10 @@ onMounted(async () => {
     -webkit-backdrop-filter: blur(4px);
     top: 0;
     left: 0;
+
+    span {
+      text-align: center;
+    }
   }
 
   &:hover .avatar-hover {

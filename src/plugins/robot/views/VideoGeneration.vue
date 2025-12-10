@@ -227,11 +227,13 @@ const previewVideo = ref<any>(null)
 
 // 轮询定时器
 let pollingTimer: NodeJS.Timeout | null = null
+let pollingStartAt: number | null = null
+const MAX_POLL_DURATION = 5 * 60 * 1000 // 5分钟超时，防止长时间占用内存
 
 // 加载模型列表
 const loadModels = async () => {
   try {
-    const res = await modelPage({ pageNo: 1, pageSize: 100 })
+    const res: any = await modelPage({ pageNo: 1, pageSize: 100 })
     if (res?.data?.list) {
       // 筛选视频生成模型 (type = 4)
       modelOptions.value = res.data.list
@@ -303,7 +305,15 @@ const handleGenerate = async () => {
 const startPolling = () => {
   if (pollingTimer) return
 
+  pollingStartAt = Date.now()
   pollingTimer = setInterval(async () => {
+    // 超时保护，避免长时间挂起导致内存占用
+    if (pollingStartAt && Date.now() - pollingStartAt > MAX_POLL_DURATION) {
+      stopPolling()
+      message.warning('检测到视频生成轮询超时，已自动停止，请刷新重试')
+      return
+    }
+
     // 检查是否有进行中的任务
     const hasInProgress = videoList.value.some((video) => video.status === 10)
     if (hasInProgress) {
@@ -320,6 +330,7 @@ const stopPolling = () => {
     clearInterval(pollingTimer)
     pollingTimer = null
   }
+  pollingStartAt = null
 }
 
 // 删除视频
@@ -378,6 +389,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopPolling()
+  // 清空状态，释放内存
+  videoList.value = []
+  formData.value.prompt = ''
 })
 </script>
 

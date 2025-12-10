@@ -31,7 +31,7 @@ import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isIOS, isMobile, isWindows } from '@/utils/PlatformConstants'
+import { isDesktop, isIOS, isMobile, isWindows, isWindows10 } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import {
@@ -130,6 +130,8 @@ useMitt.on(WsResponseMessageType.LOGIN_SUCCESS, async (data: LoginSuccessResType
     name: rest.name,
     uid: rest.uid
   })
+  // 刚登录成功时同步当前/首个群聊的成员信息，避免消息显示“未知用户”
+  await refreshActiveGroupMembers()
 })
 
 useMitt.on(WsResponseMessageType.MSG_RECALL, (data: RevokedMsgType) => {
@@ -348,16 +350,14 @@ useMitt.on(WsResponseMessageType.ONLINE, async (onStatusChangeType: OnStatusChan
       onlineNum: onStatusChangeType.onlineNum,
       isAdd: true
     })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.ONLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
+    groupStore.updateUserItem(
+      onStatusChangeType.uid,
+      {
+        activeStatus: OnlineEnum.ONLINE,
+        lastOptTime: onStatusChangeType.lastOptTime
+      },
+      onStatusChangeType.roomId
+    )
   }
 })
 
@@ -485,16 +485,14 @@ useMitt.on(WsResponseMessageType.OFFLINE, async (onStatusChangeType: OnStatusCha
       onlineNum: onStatusChangeType.onlineNum,
       isAdd: false
     })
-    if (onStatusChangeType) {
-      groupStore.updateUserItem(
-        onStatusChangeType.uid,
-        {
-          activeStatus: OnlineEnum.OFFLINE,
-          lastOptTime: onStatusChangeType.lastOptTime
-        },
-        onStatusChangeType.roomId
-      )
-    }
+    groupStore.updateUserItem(
+      onStatusChangeType.uid,
+      {
+        activeStatus: OnlineEnum.OFFLINE,
+        lastOptTime: onStatusChangeType.lastOptTime
+      },
+      onStatusChangeType.roomId
+    )
   }
 })
 
@@ -538,7 +536,26 @@ const listenMobileReLogin = async () => {
   }
 }
 
+// 登录/重连后兜底刷新：仅刷新当前（或首个）群聊成员，避免消息渲染成“未知用户”
+const refreshActiveGroupMembers = async () => {
+  const tasks: Promise<unknown>[] = []
+  try {
+    const isCurrentGroup = globalStore.currentSession?.type === RoomTypeEnum.GROUP
+    const activeRoomId =
+      (isCurrentGroup && globalStore.currentSessionRoomId) ||
+      chatStore.sessionList.find((item) => item.type === RoomTypeEnum.GROUP)?.roomId
+
+    if (activeRoomId) {
+      tasks.push(groupStore.getGroupUserList(activeRoomId, true))
+    }
+    await Promise.allSettled(tasks)
+  } catch (error) {
+    console.error('[Network] 刷新群成员失败:', error)
+  }
+}
+
 let lastWsConnectionState: string | null = null
+let isReconnectInFlight = false
 
 const handleWebsocketEvent = async (event: any) => {
   const payload: any = event.payload
@@ -549,12 +566,23 @@ const handleWebsocketEvent = async (event: any) => {
   const nextState = typeof nextStateRaw === 'string' ? nextStateRaw.toUpperCase() : ''
   const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
-  const shouldHandleReconnect =
-    nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop || previousState === 'CONNECTED')
+  const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
+
+  console.log('[WS] state change', {
+    prev: previousState,
+    next: nextState,
+    isReconnectionFlag,
+    hasRecoveredFromDrop,
+    shouldHandleReconnect,
+    raw: payload
+  })
 
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
+  // 防止并行重连/同步导致 syncLoading 卡死
+  if (isReconnectInFlight || chatStore.syncLoading) return
+  isReconnectInFlight = true
 
   // 开始同步，显示加载状态
   chatStore.syncLoading = true
@@ -564,24 +592,28 @@ const handleWebsocketEvent = async (event: any) => {
     }
     await chatStore.getSessionList(true)
     await chatStore.setAllSessionMsgList(20)
+    // 重连后同步频道和当前/首个群聊成员信息，避免展示断网前的旧数据
+    await refreshActiveGroupMembers()
     if (globalStore.currentSessionRoomId) {
       await chatStore.resetAndRefreshCurrentRoomMessages()
       await chatStore.fetchCurrentRoomRemoteOnce(20)
-      const currentSession = chatStore.getSession(globalStore.currentSessionRoomId)
+      const currentRoomId = globalStore.currentSessionRoomId
+      const currentSession = chatStore.getSession(currentRoomId)
       // 重连后如果当前会话仍有未读，补一次已读上报和本地清零，避免气泡卡住
       if (currentSession?.unreadCount) {
         try {
-          await ImRequestUtils.markMsgRead(currentSession.roomId)
+          await ImRequestUtils.markMsgRead(currentRoomId)
         } catch (error) {
           console.error('[Network] 重连后上报已读失败:', error)
         }
-        chatStore.markSessionRead(currentSession.roomId)
+        chatStore.markSessionRead(currentRoomId)
       }
     }
     unreadCountManager.refreshBadge(globalStore.unReadMark)
   } finally {
     // 同步完成，隐藏加载状态
     chatStore.syncLoading = false
+    isReconnectInFlight = false
   }
 }
 
@@ -605,6 +637,11 @@ onMounted(() => {
   // 仅在windows上使用
   if (isWindows()) {
     fixedScale.enable()
+  }
+  if (isWindows10()) {
+    void appWindow.setShadow(false).catch((error) => {
+      console.warn('禁用窗口阴影失败:', error)
+    })
   }
   // 判断是否是桌面端，桌面端需要调整样式
   isDesktop() && import('@/styles/scss/global/desktop.scss')

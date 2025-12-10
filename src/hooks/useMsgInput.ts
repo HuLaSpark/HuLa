@@ -109,8 +109,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
     {
       uid: '1',
       type: 'Ollama',
-      name: 'DeepSeek-V3',
+      name: 'DeepSeek-Chat',
       value: 'deepseek-chat',
+      avatar: '/AI/deepseek.png'
+    },
+    {
+      uid: '1b',
+      type: 'Ollama',
+      name: 'DeepSeek-Reasoner',
+      value: 'deepseek-reasoner',
       avatar: '/AI/deepseek.png'
     },
     {
@@ -338,8 +345,14 @@ export const useMsgInput = (messageInputDom: Ref) => {
       if (html.includes('data-type="emoji"')) {
         const doc = parseHtmlSafely(html)
         const imgElement = doc?.querySelector<HTMLImageElement>('img[data-type]')
-        if (imgElement?.src) {
-          return (msgInput.value = imgElement.src)
+        if (imgElement) {
+          const serverUrl = imgElement.dataset?.serverUrl
+          if (serverUrl) {
+            return (msgInput.value = serverUrl)
+          }
+          if (imgElement.src) {
+            return (msgInput.value = imgElement.src)
+          }
         }
       }
       // 检查是否是视频

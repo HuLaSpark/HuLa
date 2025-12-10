@@ -414,7 +414,7 @@ const loadPlatformList = async () => {
         hint: '请前往 OpenAI 官网查看可用模型列表'
       },
       DeepSeek: {
-        examples: 'deepseek-chat, deepseek-coder',
+        examples: 'deepseek-chat, deepseek-reasoner, deepseek-coder',
         docs: 'https://platform.deepseek.com/api-docs',
         hint: '请前往 DeepSeek 官网查看可用模型列表'
       }

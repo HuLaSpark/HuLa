@@ -268,6 +268,7 @@ const globalStore = useGlobalStore()
 const groupStore = useGroupStore()
 const cacheStore = useCachedStore()
 const contactStore = useContactStore()
+const { currentSessionRoomId } = storeToRefs(globalStore)
 const { persistMyRoomInfo } = useMyRoomInfoUpdater()
 
 const title = computed(() => (isGroup.value ? '群' : '好友'))
@@ -374,26 +375,26 @@ async function handleExit() {
       try {
         if (isGroup.value) {
           if (isLord.value) {
-            if (session.roomId === '1') {
+            if (currentSessionRoomId.value === '1') {
               window.$message.warning('无法解散频道')
               return
             }
 
-            groupStore.exitGroup(session.roomId).then(() => {
+            groupStore.exitGroup(currentSessionRoomId.value).then(() => {
               window.$message.success('已解散群聊')
               // 删除当前的会话
-              useMitt.emit(MittEnum.DELETE_SESSION, session.roomId)
+              useMitt.emit(MittEnum.DELETE_SESSION, currentSessionRoomId.value)
             })
           } else {
-            if (session.roomId === '1') {
+            if (currentSessionRoomId.value === '1') {
               window.$message.warning('无法退出频道')
               return
             }
 
-            groupStore.exitGroup(session.roomId).then(() => {
+            groupStore.exitGroup(currentSessionRoomId.value).then(() => {
               window.$message.success('已退出群聊')
               // 删除当前的会话
-              useMitt.emit(MittEnum.DELETE_SESSION, session.roomId)
+              useMitt.emit(MittEnum.DELETE_SESSION, currentSessionRoomId.value)
             })
           }
         } else {
@@ -476,10 +477,10 @@ const handleLoadGroupAnnoun = async () => {
 const handleTop = (value: boolean) => {
   const session = activeItem.value
   if (!session) return
-  setSessionTop({ roomId: session.roomId, top: value })
+  setSessionTop({ roomId: currentSessionRoomId.value, top: value })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, { top: value })
+      chatStore.updateSession(currentSessionRoomId.value, { top: value })
       window.$message.success(value ? '已置顶' : '已取消置顶')
     })
     .catch(() => {
@@ -542,7 +543,7 @@ const handleGroupInfoUpdate = async () => {
   }
 
   await updateRoomInfo({
-    id: session.roomId,
+    id: currentSessionRoomId.value,
     name: nameValue.value,
     avatar: avatarValue.value
   })
@@ -584,12 +585,12 @@ const handleShield = (value: boolean) => {
   const session = activeItem.value
   if (!session) return
   shield({
-    roomId: session.roomId,
+    roomId: currentSessionRoomId.value,
     state: value
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, {
+      chatStore.updateSession(currentSessionRoomId.value, {
         shield: value
       })
 
@@ -618,12 +619,12 @@ const handleNotification = (value: boolean) => {
     handleShield(false)
   }
   notification({
-    roomId: session.roomId,
+    roomId: currentSessionRoomId.value,
     type: newType
   })
     .then(() => {
       // 更新本地会话状态
-      chatStore.updateSession(session.roomId, {
+      chatStore.updateSession(currentSessionRoomId.value, {
         muteNotification: newType
       })
 

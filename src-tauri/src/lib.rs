@@ -68,6 +68,8 @@ pub struct AppData {
     pub config: Arc<Mutex<Settings>>,
     frontend_task: Mutex<bool>,
     backend_task: Mutex<bool>,
+    /// 限制对 SQLite 的写入并发，避免 database is locked
+    pub write_lock: Arc<Mutex<()>>,
 }
 
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
@@ -354,6 +356,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 frontend_task: Mutex::new(false),
                 // 后端任务默认完成
                 backend_task: Mutex::new(true),
+                write_lock: Arc::new(Mutex::new(())),
             });
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {

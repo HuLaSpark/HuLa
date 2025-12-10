@@ -1,8 +1,35 @@
-const QINIU_HOST_KEYWORDS = ['cdn.hulaspark.com']
+import { useConfigStore } from '@/stores/config'
+
+const extractHostname = (domain?: string) => {
+  if (!domain) return null
+  try {
+    const normalizedDomain = /^https?:\/\//i.test(domain) ? domain : `https://${domain}`
+    return new URL(normalizedDomain).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
+let hasWarnedMissingDomain = false
+
+const getQiniuHostKeywords = () => {
+  try {
+    const configStore = useConfigStore()
+    const hostname = extractHostname(configStore.config?.qiNiu?.ossDomain)
+    if (hostname) return [hostname]
+  } catch {
+    // ignore store access errors and fall through to warning
+  }
+  if (!hasWarnedMissingDomain) {
+    console.warn('未获取到七牛 ossDomain，请检查配置')
+    hasWarnedMissingDomain = true
+  }
+  return []
+}
 
 const isQiniuHost = (hostname: string) => {
   const lowerHost = hostname.toLowerCase()
-  return QINIU_HOST_KEYWORDS.some((keyword) => lowerHost.includes(keyword))
+  return getQiniuHostKeywords().some((keyword) => lowerHost.includes(keyword))
 }
 
 export type QiniuImageFormat = 'webp' | 'avif'

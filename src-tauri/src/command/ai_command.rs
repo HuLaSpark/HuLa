@@ -26,6 +26,7 @@ pub struct AiMessageRequest {
     pub conversation_id: String,
     pub content: String,
     pub use_context: Option<bool>,
+    pub reasoning_enabled: Option<bool>,
 }
 
 /// 发送 AI 消息并监听 SSE 流式响应
@@ -36,10 +37,7 @@ pub async fn ai_message_send_stream(
     request_id: String,
     on_event: Channel<SseStreamEvent>,
 ) -> Result<(), String> {
-    info!(
-        "开始发送 AI 流式消息请求, conversation_id: {}, request_id: {}",
-        body.conversation_id, request_id
-    );
+    info!("开始发送 AI 流式消息请求, body: {:?}", body);
 
     // 使用 ImRequestClient 发送流式请求
     let response = {

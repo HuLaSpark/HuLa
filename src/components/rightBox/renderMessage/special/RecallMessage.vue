@@ -4,10 +4,7 @@
     <template v-if="isGroup">
       <n-flex align="center" :size="6" v-if="fromUserUid === userUid">
         <p class="text-(12px #909090) select-none cursor-default">{{ message.body.content }}</p>
-        <p
-          v-if="canReEdit(message.id)"
-          class="text-(12px #13987f) select-none cursor-pointer"
-          @click="handleReEdit(message.id)">
+        <p v-if="canReEdit" class="text-(12px #13987f) select-none cursor-pointer" @click="handleReEdit(message.id)">
           重新编辑
         </p>
       </n-flex>
@@ -18,10 +15,7 @@
         <p class="text-(12px #909090) select-none cursor-default">
           {{ message.body.content }}
         </p>
-        <p
-          v-if="canReEdit(message.id)"
-          class="text-(12px #13987f) select-none cursor-pointer"
-          @click="handleReEdit(message.id)">
+        <p v-if="canReEdit" class="text-(12px #13987f) select-none cursor-pointer" @click="handleReEdit(message.id)">
           重新编辑
         </p>
       </n-flex>
@@ -58,15 +52,18 @@ const recallText = computed(() => {
   return '撤回了一条消息'
 })
 
-const canReEdit = computed(() => (msgId: string) => {
-  const recalledMsg = chatStore.getRecalledMessage(msgId)
+// 直接访问 recalledMessages 以确保响应式依赖收集正常工作
+const canReEdit = computed(() => {
+  const msgId = props.message.id
+  // 直接访问 recalledMessages 对象，确保能追踪到删除操作
+  const recalledMsg = chatStore.recalledMessages[msgId]
   const message = chatStore.getMessage(msgId)
   if (!recalledMsg || !message) return false
 
   // 只有文本类型的撤回消息才能重新编辑
   if (recalledMsg.originalType !== MsgEnum.TEXT) return false
 
-  // 只需要判断是否是当前用户的消息，时间检查已经在 getRecalledMessage 中处理
+  // 只需要判断是否是当前用户的消息
   return message.fromUser.uid === userUid.value
 })
 

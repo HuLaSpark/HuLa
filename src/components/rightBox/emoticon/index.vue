@@ -54,7 +54,15 @@
               class="emoji-item"
               v-for="(item, index) in currentSeries.emojis"
               :key="index"
-              @click.stop="chooseEmoji(item.url, 'url')">
+              @click.stop="
+                chooseEmoji(
+                  {
+                    renderUrl: item.url,
+                    serverUrl: item.url
+                  },
+                  'url'
+                )
+              ">
               <n-image
                 :title="item.name"
                 preview-disabled
@@ -75,7 +83,16 @@
                 class="emoji-item py-4px"
                 v-for="(item, index) in reversedEmojiList"
                 :key="index"
-                @click.stop="chooseEmoji(item.expressionUrl, 'url')">
+                @click.stop="
+                  chooseEmoji(
+                    {
+                      id: item.id,
+                      renderUrl: getEmojiRenderUrl(item),
+                      serverUrl: item.expressionUrl
+                    },
+                    'url'
+                  )
+                ">
                 <n-popover
                   trigger="manual"
                   :show="activeMenuId === item.id"
@@ -86,12 +103,12 @@
                   <template #trigger>
                     <div
                       class="emoji-visibility-wrapper size-full"
-                      :ref="(el) => registerEmojiVisibilityTarget(el, item)">
+                      :ref="(el: any) => registerEmojiVisibilityTarget(el, item)">
                       <n-image
                         width="60"
                         height="60"
                         preview-disabled
-                        :src="emojiLocalPathMap[item.id] || item.expressionUrl"
+                        :src="getEmojiRenderUrl(item)"
                         @contextmenu.prevent="handleContextMenu($event, item)"
                         class="size-full object-contain rounded-8px transition duration-300 ease-in-out transform-gpu" />
                     </div>
@@ -148,6 +165,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory, exists, writeFile } from '@tauri-apps/plugin-fs'
 import HulaEmojis from 'hula-emojis'
+import pLimit from 'p-limit'
 import type { EmojiItem as EmojiListItem } from '@/services/types'
 import { useIntersectionTaskQueue } from '@/hooks/useIntersectionTaskQueue'
 import { useEmojiStore } from '@/stores/emoji'
@@ -215,6 +233,20 @@ const emojiCacheEnv = ref<EmojiCacheEnvironment | null>(null)
 const emojiWorkerUrl = new URL('../../../workers/imageDownloader.ts', import.meta.url)
 let emojiCacheWorker: Worker | null = null
 const emojiExtCache = new Map<string, string>()
+const localUrlCache = new Map<string, string>() // 仅用于最近使用的表情包快速匹配本地链接
+const emojiUrlToLocalMap = new Map<string, string>() // expressionUrl -> localUrl
+const downloadLimit = pLimit(3)
+const downloadingUrls = new Set<string>()
+const clearEmojiLocalPath = (id: string, expressionUrl?: string) => {
+  const next = { ...emojiLocalPathMap.value }
+  delete next[id]
+  emojiLocalPathMap.value = next
+  emojiStore.setLocalUrl(id, null)
+  if (expressionUrl) {
+    emojiUrlToLocalMap.delete(expressionUrl)
+    localUrlCache.delete(expressionUrl)
+  }
+}
 
 // 生成选项卡数组
 const tabList = computed<TabItem[]>(() => {
@@ -328,10 +360,16 @@ const buildEmojiFileName = async (url: string) => {
 }
 
 // 将绝对路径转换为 Tauri 可访问的 file URI，并写入响应式映射
-const setEmojiLocalPath = (id: string, absolutePath: string) => {
+const setEmojiLocalPath = (id: string, absolutePath: string, expressionUrl?: string) => {
+  const localUrl = convertFileSrc(absolutePath)
   emojiLocalPathMap.value = {
     ...emojiLocalPathMap.value,
-    [id]: convertFileSrc(absolutePath)
+    [id]: localUrl
+  }
+  emojiStore.setLocalUrl(id, localUrl)
+  if (expressionUrl) {
+    emojiUrlToLocalMap.set(expressionUrl, localUrl)
+    localUrlCache.set(expressionUrl, localUrl)
   }
 }
 
@@ -447,7 +485,7 @@ const cleanupEmojiObservers = (validIds: string[]) => {
 // 只有当收藏项真正出现在视口内时才执行缓存下载
 const handleEmojiVisibility = async (emojiItem: EmojiListItem) => {
   const id = emojiItem.id
-  if (emojiLocalPathMap.value[id] || cachingEmojiIds.has(id)) {
+  if (emojiItem.localUrl || emojiLocalPathMap.value[id] || cachingEmojiIds.has(id)) {
     releaseEmojiObserver(id)
     return
   }
@@ -470,7 +508,7 @@ const handleEmojiVisibility = async (emojiItem: EmojiListItem) => {
 const registerEmojiVisibilityTarget = (target: Element | ComponentPublicInstance | null, emojiItem: EmojiListItem) => {
   releaseEmojiObserver(emojiItem.id)
   const el = resolveVisibilityElement(target)
-  if (!el || !emojiItem.expressionUrl || emojiLocalPathMap.value[emojiItem.id]) {
+  if (!el || !emojiItem.expressionUrl || emojiItem.localUrl || emojiLocalPathMap.value[emojiItem.id]) {
     return
   }
   emojiVisibilityTargetMap.set(emojiItem.id, el)
@@ -494,7 +532,48 @@ const ensureEmojiCached = async (
     await writeFile(relativePath, bytes, { baseDir })
   }
   const absolutePath = await join(baseDirPath, relativePath)
-  setEmojiLocalPath(emojiItem.id, absolutePath)
+  setEmojiLocalPath(emojiItem.id, absolutePath, emojiItem.expressionUrl)
+}
+
+// 将 store 中已有表情与本地缓存对齐，优先使用本地链接渲染
+const hydrateEmojiLocalCache = async () => {
+  const env = await ensureEmojiCacheEnvironment()
+  if (!env) return
+  const downloadTasks: Promise<unknown>[] = []
+  for (const item of emojiStore.emojiList) {
+    const fileName = await buildEmojiFileName(item.expressionUrl)
+    const relativePath = await join(env.emojiDir, fileName)
+    const hasFile = await exists(relativePath, { baseDir: env.baseDir })
+    const absolutePath = await join(env.baseDirPath, relativePath)
+
+    if (!hasFile) {
+      // 本地文件不存在，先清除失效映射
+      clearEmojiLocalPath(item.id, item.expressionUrl)
+      // 异步下载（使用 worker）
+      if (!downloadingUrls.has(item.expressionUrl)) {
+        downloadingUrls.add(item.expressionUrl)
+        const task = downloadLimit(async () => {
+          try {
+            await ensureEmojiCached(item, env.emojiDir, env.baseDir, env.baseDirPath)
+          } catch (error) {
+            console.error('[emoji] 重新缓存表情失败:', item.expressionUrl, error)
+          } finally {
+            downloadingUrls.delete(item.expressionUrl)
+          }
+        })
+        downloadTasks.push(task)
+      }
+    } else {
+      // 文件存在但 store 没有记录时，回填本地链接
+      const localUrl = convertFileSrc(absolutePath)
+      setEmojiLocalPath(item.id, absolutePath, item.expressionUrl)
+      localUrlCache.set(item.expressionUrl, localUrl)
+      emojiUrlToLocalMap.set(item.expressionUrl, localUrl)
+    }
+  }
+  if (downloadTasks.length) {
+    await Promise.allSettled(downloadTasks)
+  }
 }
 
 // 监听收藏列表变化，保持本地映射与观察目标同步
@@ -504,6 +583,7 @@ watch(
     const ids = list.map((item) => item.id)
     cleanupLocalEmojiMap(ids)
     cleanupEmojiObservers(ids)
+    void hydrateEmojiLocalCache()
   },
   { immediate: true, deep: true }
 )
@@ -520,6 +600,10 @@ watch(
     })
     emojiVisibilityTargetMap.clear()
     disconnectEmojiObserver()
+    // 切换账号后如已有列表，立即尝试用本地缓存替换链接
+    if (emojiStore.emojiList.length > 0 && userStore.userInfo?.uid) {
+      void hydrateEmojiLocalCache()
+    }
   },
   { immediate: true }
 )
@@ -557,6 +641,8 @@ const deleteMyEmoji = async (id: string) => {
     window.$message.success(t('emoticon.favorites.deleteSuccess'))
     // 关闭菜单
     activeMenuId.value = ''
+    localUrlCache.clear()
+    emojiUrlToLocalMap.clear()
   } catch (error) {
     console.error('删除表情失败:', error)
     window.$message.error(t('emoticon.favorites.deleteFail'))
@@ -567,8 +653,8 @@ const deleteMyEmoji = async (id: string) => {
  * 选择表情
  * @param item
  */
-const chooseEmoji = (item: string, type: 'emoji' | 'url' = 'emoji') => {
-  emojiRef.chooseItem = item
+const chooseEmoji = async (item: any, type: 'emoji' | 'url' = 'emoji') => {
+  emojiRef.chooseItem = typeof item === 'string' ? item : item?.renderUrl || item?.expressionUrl || ''
 
   // 只有非URL的表情（emoji）才记录到历史记录中
   if (type === 'emoji') {
@@ -585,8 +671,96 @@ const chooseEmoji = (item: string, type: 'emoji' | 'url' = 'emoji') => {
   }
 
   // 传递表情类型信息，URL类型的表情作为EMOJI类型处理
-  emit('emojiHandle', item, type === 'url' ? 'emoji-url' : 'emoji')
+  // URL 类型时，确保 renderUrl 优先使用本地链接
+  if (type === 'url') {
+    const payload =
+      typeof item === 'object' && item
+        ? {
+            id: item.id,
+            renderUrl: item.renderUrl || item.expressionUrl || '',
+            serverUrl: item.serverUrl || item.expressionUrl || ''
+          }
+        : { renderUrl: typeof item === 'string' ? item : '', serverUrl: typeof item === 'string' ? item : '' }
+    try {
+      const local = await ensureLocalByServerUrl(payload.serverUrl || payload.renderUrl, payload.id)
+      if (local) {
+        payload.renderUrl = local
+      }
+    } catch (error) {
+      console.warn('[emoji] 获取本地表情失败，回退服务器URL', error)
+    }
+    emit('emojiHandle', payload, 'emoji-url')
+    return payload
+  }
+
+  emit('emojiHandle', item, 'emoji')
   return item
+}
+
+const getEmojiRenderUrl = (item: EmojiListItem) => {
+  const mapped = emojiUrlToLocalMap.get(item.expressionUrl)
+  if (mapped) return mapped
+  if (item.localUrl) {
+    emojiUrlToLocalMap.set(item.expressionUrl, item.localUrl)
+    localUrlCache.set(item.expressionUrl, item.localUrl)
+    return item.localUrl
+  }
+  const localById = emojiLocalPathMap.value[item.id]
+  if (localById) return localById
+  return item.expressionUrl
+}
+
+// 确保某个服务端 URL 有本地副本，并返回可用于渲染的本地链接
+const ensureLocalByServerUrl = async (serverUrl: string, id?: string) => {
+  try {
+    if (!serverUrl) return null
+    if (emojiUrlToLocalMap.has(serverUrl)) return emojiUrlToLocalMap.get(serverUrl)!
+    const env = await ensureEmojiCacheEnvironment()
+    if (!env) return null
+    const fileName = await buildEmojiFileName(serverUrl)
+    const relativePath = await join(env.emojiDir, fileName)
+    const hasFile = await exists(relativePath, { baseDir: env.baseDir })
+    const absolutePath = await join(env.baseDirPath, relativePath)
+    if (hasFile) {
+      const localUrl = convertFileSrc(absolutePath)
+      emojiUrlToLocalMap.set(serverUrl, localUrl)
+      localUrlCache.set(serverUrl, localUrl)
+      if (id) {
+        const next = { ...emojiLocalPathMap.value }
+        next[id] = localUrl
+        emojiLocalPathMap.value = next
+      }
+      return localUrl
+    }
+    // 未命中本地文件则异步下载，先返回 null 以便立即使用服务器 URL 展示
+    if (!downloadingUrls.has(serverUrl)) {
+      downloadingUrls.add(serverUrl)
+      void downloadLimit(async () => {
+        try {
+          const bytes = await downloadEmojiFile(serverUrl)
+          await writeFile(relativePath, bytes, { baseDir: env.baseDir })
+          const localUrl = convertFileSrc(absolutePath)
+          emojiUrlToLocalMap.set(serverUrl, localUrl)
+          localUrlCache.set(serverUrl, localUrl)
+          // 触发视图更新
+          if (id) {
+            const nextMap = { ...emojiLocalPathMap.value }
+            nextMap[id] = localUrl
+            emojiLocalPathMap.value = nextMap
+          }
+        } catch (error) {
+          console.error('[emoji] ensureLocalByServerUrl 下载失败:', serverUrl, error)
+          clearEmojiLocalPath('', serverUrl)
+        } finally {
+          downloadingUrls.delete(serverUrl)
+        }
+      })
+    }
+    return null
+  } catch (error) {
+    console.warn('[emoji] ensureLocalByServerUrl 异常，回退服务器URL', error)
+    return null
+  }
 }
 
 /**
@@ -612,6 +786,8 @@ const selectSeries = (index: number) => {
 onMounted(async () => {
   // 获取我的表情包列表
   await emojiStore.getEmojiList()
+  // 表情列表加载后立即尝试使用本地缓存
+  await hydrateEmojiLocalCache()
   // 如果上次选择的是表情包系列，设置正确的currentSeriesIndex
   if (activeIndex.value > 0) {
     currentSeriesIndex.value = activeIndex.value - 1

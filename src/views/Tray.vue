@@ -215,6 +215,7 @@ onUnmounted(() => {
     homeBlurUnlisten()
     homeBlurUnlisten = null
   }
+  stopBlinkTask()
 })
 </script>
 

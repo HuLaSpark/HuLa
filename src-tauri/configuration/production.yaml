@@ -3,11 +3,3 @@ database:
 backend:
   base_url: https://hulaspark.com/api
   ws_url: wss://hulaspark.com/api/ws/ws
-
-youdao:
-  app_key: ''
-  app_secret: ''
-tencent:
-  api_key: ''
-  secret_id: ''
-  map_key: ''

@@ -1,0 +1,31 @@
+{
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "actionBar": {
+    "always_on_top": {
+      "enabled": "取消置顶",
+      "disabled": "置顶"
+    },
+    "close_prompt": {
+      "title": "最小化还是直接退出程序?",
+      "hide_to_tray": "最小化到系统托盘",
+      "exit_app": "直接退出程序",
+      "no_prompt": "下次不出现此提示"
+    }
+  },
+  "avatarCropper": {
+    "title": "裁剪头像",
+    "preview": {
+      "round": "圆形预览",
+      "square": "矩形预览"
+    },
+    "uploading": "上传中..."
+  },
+  "announcementCard": {
+    "title": "公告",
+    "viewDetail": "查看详情",
+    "windowTitle": "查看群公告"
+  }
+}

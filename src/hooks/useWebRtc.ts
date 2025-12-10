@@ -1,6 +1,7 @@
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
+import { initConfig } from '@/utils/ImRequestUtils'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useUserStore } from '@/stores/user'
@@ -47,19 +48,36 @@ export interface WSRtcCallMsg {
 }
 
 // const TURN_SERVER = import.meta.env.VITE_TURN_SERVER_URL
-const MAX_TIME_OUT_SECONDS = 30 // 拨打 超时时间
-const configuration: RTCConfiguration = {
+const MAX_TIME_OUT_SECONDS = 30
+let configuration: RTCConfiguration = {
   iceServers: [
-    {
-      urls: 'stun:117.72.67.248:3478'
-    },
+    { urls: 'stun:117.72.67.248:3478' },
     {
       urls: ['turn:117.72.67.248:3478?transport=udp', 'turn:117.72.67.248:3478?transport=tcp'],
       username: 'chr',
       credential: '123456'
     }
   ],
-  iceTransportPolicy: 'all' // 允许使用所有候选
+  iceTransportPolicy: 'all'
+}
+
+const loadIceServers = async () => {
+  try {
+    const init: any = await initConfig()
+    const ice = init?.iceServer
+    if (ice && Array.isArray(ice.urls) && ice.urls.length > 0) {
+      const entry: RTCIceServer =
+        ice.username && ice.credential
+          ? { urls: ice.urls, username: ice.username, credential: ice.credential }
+          : { urls: ice.urls }
+      configuration = { iceServers: [entry], iceTransportPolicy: 'all' }
+      info(`ICE 配置已加载: ${JSON.stringify(configuration)}`)
+    } else {
+      info('ICE 配置为空，使用内置默认配置')
+    }
+  } catch (e) {
+    error(`加载 ICE 配置失败: ${String(e)}`)
+  }
 }
 
 // const settings = await getSettings()
@@ -1112,6 +1130,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   })()
 
   onMounted(async () => {
+    await loadIceServers()
     if (!isReceiver) {
       console.log(`调用方发送${callType === CallTypeEnum.VIDEO ? '视频' : '语音'}通话请求`)
       await startCall(roomId, callType, [remoteUserId])

@@ -75,12 +75,13 @@
           </div>
 
           <!-- 地图组件 -->
-          <LocationMap
-            v-else-if="selectedLocation && apiKey"
+          <StaticProxyMap
+            v-else-if="selectedLocation"
             :location="selectedLocation"
-            :api-key="apiKey"
             :zoom="18"
             :height="340"
+            :draggable="true"
+            :controls="true"
             @location-change="handleLocationChange"
             @map-ready="() => (mapLoading = false)"
             @map-error="handleMapError" />
@@ -118,9 +119,8 @@
 <script setup lang="ts">
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { reverseGeocode } from '@/services/mapApi'
-import { getSettings } from '@/services/tauriCommand'
+import StaticProxyMap from './StaticProxyMap.vue'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
-import LocationMap from './LocationMap.vue'
 import { useI18n } from 'vue-i18n'
 
 type LocationData = {
@@ -159,7 +159,7 @@ const selectedLocation = ref<LocationData | null>(null)
 const mapLoading = ref(false)
 const mapError = ref<string | null>(null)
 const sendingLocation = ref(false)
-const apiKey = ref('')
+// no api key required for StaticProxyMap
 
 const { t } = useI18n()
 
@@ -179,21 +179,12 @@ const getLocation = async () => {
   try {
     mapError.value = null
 
-    // 并行获取 API key 和位置信息
-    const [settings, result] = await Promise.all([
-      getSettings(),
+    // 获取位置信息
+    const [result] = await Promise.all([
       getLocationWithTransform({
         enableHighAccuracy: true
       })
     ])
-
-    // 设置 API key
-    apiKey.value = settings.tencent?.map_key || ''
-    if (!apiKey.value) {
-      const missingKeyMsg = t('message.location.modal.errors.missing_api_key')
-      mapError.value = missingKeyMsg
-      throw new Error(missingKeyMsg)
-    }
 
     // 获取地址信息
     const geocodeResult = await reverseGeocode(result.transformed.lat, result.transformed.lng).catch((error) => {

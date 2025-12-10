@@ -4,7 +4,7 @@
     <n-flex class="h-34px px-12px select-none cursor-default" align="center" justify="space-between">
       <n-flex align="center" :size="8">
         <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
-        <p class="text-(12px [--chat-text-color])">公告</p>
+        <p class="text-(12px [--chat-text-color])">{{ t('components.announcementCard.title') }}</p>
       </n-flex>
 
       <p class="select-none cursor-default flex-shrink-0 text-(12px [--chat-text-color])">
@@ -37,7 +37,7 @@
         type="primary"
         class="flex-y-center px-12px h-26px text-12px"
         @click.stop="openAnnouncementDetail">
-        查看详情
+        {{ t('components.announcementCard.viewDetail') }}
       </n-button>
     </div>
 
@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useWindow } from '@/hooks/useWindow'
 import type { AnnouncementBody } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
@@ -58,6 +59,7 @@ const props = defineProps<{
   searchKeyword?: string
 }>()
 
+const { t } = useI18n()
 const globalStore = useGlobalStore()
 const { createWebviewWindow } = useWindow()
 const route = useRoute()
@@ -80,7 +82,7 @@ const openAnnouncementDetail = async () => {
     router.push(`/mobile/chatRoom/notice/detail/${props.body.id}`)
   } else {
     // 桌面端打开新窗口
-    await createWebviewWindow('查看群公告', `announList/${roomId}/1`, 420, 620)
+    await createWebviewWindow(t('components.announcementCard.windowTitle'), `announList/${roomId}/1`, 420, 620)
   }
 }
 </script>

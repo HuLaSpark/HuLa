@@ -314,7 +314,7 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { useChatStore } from '@/stores/chat'
 import { useUserStore } from '@/stores/user'
-import { markMsg } from '@/utils/ImRequestUtils'
+import { markMsg, getUserByIds } from '@/utils/ImRequestUtils'
 import { createMacContextSelectionGuard } from '@/utils/MacSelectionGuard'
 import { isMobile } from '@/utils/PlatformConstants'
 import Announcement from './Announcement.vue'
@@ -371,6 +371,7 @@ const { optionsList, report, activeBubble, handleItemType, emojiList, specialMen
 const groupStore = useGroupStore()
 const chatStore = useChatStore()
 const cachedStore = useCachedStore()
+const resolvingUserSet = new Set<string>()
 const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
 const bubbleMaxWidth = computed(() => {
   if (isMobile()) {
@@ -421,6 +422,33 @@ const senderDisplayName = computed(() => {
   }
 
   return props.message.fromUser.username || '未知用户'
+})
+
+const ensureSenderInfo = async (uid: string) => {
+  if (!uid || resolvingUserSet.has(uid)) return
+  const cachedUser = groupStore.getUserInfo(uid)
+  if (cachedUser?.name || cachedUser?.myName || cachedUser?.avatar) return
+  const roomId = props.message?.message?.roomId
+  if (!roomId) return
+  resolvingUserSet.add(uid)
+  try {
+    const users = await getUserByIds([uid])
+    const user = Array.isArray(users) ? users[0] : null
+    if (user?.uid) {
+      // 将缺失用户信息写入消息所属的房间，避免污染其他房间或丢弃结果
+      groupStore.updateUserItem(user.uid, user, roomId)
+    }
+  } catch (error) {
+    console.error('[Message] 拉取缺失用户信息失败:', error)
+  } finally {
+    resolvingUserSet.delete(uid)
+  }
+}
+
+watchEffect(() => {
+  if (!senderDisplayName.value || senderDisplayName.value === '未知用户') {
+    ensureSenderInfo(props.fromUser.uid)
+  }
 })
 
 const senderLocPlace = computed(() => {

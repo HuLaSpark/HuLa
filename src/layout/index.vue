@@ -44,10 +44,13 @@ import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
 import { audioManager } from '@/utils/AudioManager'
 import { useOverlayController } from '@/hooks/useOverlayController'
+import { useGroupStore } from '@/stores/group'
+import { RoomTypeEnum } from '@/enums'
 
 const route = useRoute()
 const userStore = useUserStore()
 const chatStore = useChatStore()
+const groupStore = useGroupStore()
 const fileStore = useFileStore()
 const settingStore = useSettingStore()
 // 负责记录哪些账号已经完成过首次同步的全局 store，避免多账号串数据
@@ -400,6 +403,18 @@ onBeforeMount(async () => {
   await contactStore.getApplyPage('friend', true)
   // 刷新好友列表
   await contactStore.getContactList(true)
+
+  // 页面刷新时，如果用户已登录且有当前会话，刷新群成员列表以获取最新的在线状态
+  if (userStore.userInfo?.uid && globalStore.currentSessionRoomId) {
+    const currentSession = globalStore.currentSession
+    if (currentSession?.type === RoomTypeEnum.GROUP) {
+      try {
+        await groupStore.getGroupUserList(globalStore.currentSessionRoomId, true)
+      } catch (error) {
+        console.error('[layout] 页面初始化：刷新群成员列表失败', error)
+      }
+    }
+  }
 })
 
 onMounted(async () => {

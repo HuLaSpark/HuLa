@@ -1,4 +1,31 @@
+# Changelog
 
+## [3.0.6](https://github.com/HuLaSpark/HuLa/compare/v3.0.5...v3.0.6) (2025-12-07)
+
+### ✨ Features | 新功能
+
+* **common:** :sparkles: add to minio storage ([9d68254](https://github.com/HuLaSpark/HuLa/commit/9d682545f72c5253e57c6b749d19c37f3e1e10ee))
+* **mac、linux:** :sparkles: add webview intrusion protection for mac and linux platforms ([7001ed0](https://github.com/HuLaSpark/HuLa/commit/7001ed0fcd517766e3e09eeb5f063460980a77ad))
+* **plugin:** :sparkles: deep Thinking Model for AI Interface ([527045a](https://github.com/HuLaSpark/HuLa/commit/527045a2c9280625c0af8292aa85ae794ce7dd3d))
+* **security:** :sparkles: add Windows runtime security guards ([e66738c](https://github.com/HuLaSpark/HuLa/commit/e66738c18509292e22e9683796544c98601ac023))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **common:** :bug: fix cursor out of focus and read report race issues ([c581c76](https://github.com/HuLaSpark/HuLa/commit/c581c76bd94d7721615a1a4238ceed94b816dc3b))
+* **emoji:** :bug: fix ix my emoji download logic ([17b2126](https://github.com/HuLaSpark/HuLa/commit/17b21269a973abc88ec41e6818ef3f64bc92bf10)), closes [#390](https://github.com/HuLaSpark/HuLa/issues/390)
+* **i18n:** :bug: fix some content without i18n support ([5bc55dd](https://github.com/HuLaSpark/HuLa/commit/5bc55ddf151734589abe834ea53b3bf02d5faa1d))
+* **README:** :bug: fix README layout issues and show withdrawn message lists ([d631f9b](https://github.com/HuLaSpark/HuLa/commit/d631f9b27107e6de5a1fc60b6ee66092c4ddeb2d))
+* **recall:** :bug: fix Reedit after Withdrawal does not disappear ([5562e54](https://github.com/HuLaSpark/HuLa/commit/5562e5479f47b62a0d9b42c5e79d72abcc4d3b93))
+* **session:** :bug: fix selected session unable to read unread count ([3582920](https://github.com/HuLaSpark/HuLa/commit/35829206ad39076728ff558371424ee1c1291342))
+* **session:** :bug: fix session unread count not resetting issue ([fb2a076](https://github.com/HuLaSpark/HuLa/commit/fb2a0767edab1f0430670b6def14213068526651))
+* **session:** :bug: fix unread tag cannot be removed issue ([3f3332b](https://github.com/HuLaSpark/HuLa/commit/3f3332ba676f026836d122a5639020040ed84d35))
+* **view:** :bug: connect to Tencent Address ResolutionConnect to Tencent Address Resolution ([2138613](https://github.com/HuLaSpark/HuLa/commit/2138613576705ab1683de998114d2fadda20b3d4))
+* **view:** :bug: switch to backend translationSwitch to backend translation ([0397989](https://github.com/HuLaSpark/HuLa/commit/0397989c7fde86cf8146cb256a730f2c4c20a741))
+* **windows:** :bug: fix code bug with win_runtime_guard ([c4f73d0](https://github.com/HuLaSpark/HuLa/commit/c4f73d04ff95c7ee89efe29d4142d3413ee00014))
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **sync:** :zap: do not reset selected sessions when synchronizing messages ([b583031](https://github.com/HuLaSpark/HuLa/commit/b583031367082ec5cb6d1b7ff5496f72bd0de57b))
 
 ## [3.0.5](https://github.com/HuLaSpark/HuLa/compare/v3.0.4...v3.0.5) (2025-11-28)
 
@@ -636,7 +663,7 @@
 * **view:** :zap: 优化申请群聊功能 ([c492c0d](https://github.com/HuLaSpark/HuLa/commit/c492c0d18e9b0288ae45827b71bd29f4632bb636))
 * **view:** :zap: 优化项目中类型的编写和定义方式 ([a832dc1](https://github.com/HuLaSpark/HuLa/commit/a832dc1220468de33f724c78256047a84ff62811))
 
-# Changelog
+
 
 ## <small>2.6.6 (2025-03-01)</small>
 

@@ -182,6 +182,16 @@ const loadingBarContainerStyle = {
   pointerEvents: 'none'
 } as const
 
+// README/Markdown 内容过滤：本地文件可信，尽量少改动布局；如未来需要过滤可扩展此方法
+const sanitizeMarkdown = (html: string, options?: { trustContent?: boolean }) => {
+  if (options?.trustContent ?? true) {
+    return html
+  }
+  return DOMPurify.sanitize(html, {
+    ADD_ATTR: ['style', 'align', 'width', 'height', 'cellpadding', 'cellspacing', 'border']
+  })
+}
+
 const externalWebview = shallowRef<Webview | null>(null)
 const webviewLabel = 'bot-inline-browser'
 const webviewListeners: UnlistenFn[] = []
@@ -416,6 +426,14 @@ const createExternalWebview = async (url: string) => {
   const windowInstance = await ensureHostWindow()
   if (!windowInstance || !webviewContainer.value) return
 
+  // 刷新后可能残留旧实例，尝试关闭同名 Webview
+  try {
+    const existing = await Webview.getByLabel(webviewLabel)
+    await existing?.close()
+  } catch (error) {
+    // 忽略未找到的情况
+  }
+
   await destroyExternalWebview()
   const rect = webviewContainer.value.getBoundingClientRect()
   const newWebview = new Webview(windowInstance, webviewLabel, {
@@ -511,8 +529,8 @@ const loadReadme = async (recordHistory = false, resetHistory = false) => {
     const html = await invoke<string>('get_readme_html', {
       language: currentLang.value
     })
-    // 使用 DOMPurify 进行额外的安全处理
-    renderedMarkdown.value = DOMPurify.sanitize(html)
+    // README 来源可信，直接渲染以保留原有布局
+    renderedMarkdown.value = sanitizeMarkdown(html)
     // 先更新视图状态, 确保 nextTick 时容器已挂载
     currentView.value = { type: 'readme' }
     isViewingLink.value = false
@@ -545,8 +563,8 @@ const loadMarkdownFile = async (filePath: string, recordHistory = true) => {
     const html = await invoke<string>('parse_markdown', {
       filePath: filePath
     })
-    // 使用 DOMPurify 进行额外的安全处理
-    renderedMarkdown.value = DOMPurify.sanitize(html)
+    // 本地 Markdown 可信，直接渲染以保留原有布局
+    renderedMarkdown.value = sanitizeMarkdown(html)
 
     // 显示在 markdown 视图中,而不是 iframe
     isViewingLink.value = false
@@ -677,6 +695,12 @@ watch(isViewingLink, async (newValue) => {
 
 // 组件挂载时加载
 onMounted(() => {
+  // 刷新后可能存在残留的内嵌 Webview，尝试关闭
+  Webview.getByLabel(webviewLabel)
+    .then((webview) => webview?.close())
+    .catch(() => {})
+
+  window.addEventListener('beforeunload', destroyExternalWebview)
   loadReadme(false, true)
 })
 
@@ -685,6 +709,7 @@ onUnmounted(() => {
   removeLinkListeners()
   // 组件销毁时关闭 Webview, 避免孤立窗口
   void destroyExternalWebview()
+  window.removeEventListener('beforeunload', destroyExternalWebview)
 })
 </script>
 
@@ -905,6 +930,8 @@ onUnmounted(() => {
   background-color: transparent;
   color: var(--text-color);
   box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.7;
   word-wrap: break-word;
   overflow-wrap: break-word;
 
@@ -927,41 +954,13 @@ onUnmounted(() => {
   --borderColor-neutral-muted: rgba(144, 144, 144, 0.2);
   --borderColor-accent-emphasis: #13987f;
 
-  // 为表格创建滚动包装器
-  :deep(.markdown-body) {
-    table {
-      display: block;
-      width: 100%;
-      max-width: 100%;
-      overflow-x: auto;
-      box-sizing: border-box;
-      margin: 16px 0;
-
-      tbody,
-      thead {
-        display: table;
-        width: 100%;
-        table-layout: auto;
-      }
-
-      tr {
-        display: table-row;
-      }
-
-      td,
-      th {
-        display: table-cell;
-        word-break: break-word;
-        overflow-wrap: break-word;
-      }
-    }
-  }
-
   // 通用表格处理
   :deep(table) {
-    display: block;
+    display: table;
     width: 100%;
     max-width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
     overflow-x: auto;
     box-sizing: border-box;
     margin: 16px 0;
@@ -980,8 +979,16 @@ onUnmounted(() => {
     td,
     th {
       display: table-cell;
+      padding: 8px 10px;
+      border: 1px solid var(--borderColor-default);
       word-break: break-word;
       overflow-wrap: break-word;
+    }
+
+    th {
+      background: var(--bgColor-neutral-muted);
+      font-weight: 600;
+      text-align: left;
     }
   }
 
@@ -1020,8 +1027,14 @@ onUnmounted(() => {
 
   // 长 URL 和文本处理
   :deep(a) {
+    color: #13987f;
     word-break: break-word;
     overflow-wrap: break-word;
+    text-decoration: none;
+  }
+
+  :deep(a:hover) {
+    text-decoration: underline;
   }
 
   // 段落和标题自适应
@@ -1036,6 +1049,35 @@ onUnmounted(() => {
     word-wrap: break-word;
     overflow-wrap: break-word;
     box-sizing: border-box;
+    margin: 0 0 12px;
+  }
+
+  :deep(h1),
+  :deep(h2),
+  :deep(h3),
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  :deep(h1) {
+    font-size: 26px;
+  }
+
+  :deep(h2) {
+    font-size: 22px;
+  }
+
+  :deep(h3) {
+    font-size: 18px;
+  }
+
+  :deep(h4),
+  :deep(h5),
+  :deep(h6) {
+    font-size: 16px;
   }
 
   // 列表自适应
@@ -1043,6 +1085,12 @@ onUnmounted(() => {
   :deep(ol) {
     max-width: 100%;
     box-sizing: border-box;
+    padding-left: 20px;
+    margin: 0 0 12px;
+  }
+
+  :deep(li) {
+    margin-bottom: 6px;
   }
 
   // 引用块自适应
@@ -1050,6 +1098,10 @@ onUnmounted(() => {
     max-width: 100%;
     overflow-x: auto;
     box-sizing: border-box;
+    padding: 8px 12px;
+    margin: 12px 0;
+    border-left: 3px solid var(--fgColor-accent);
+    background: var(--bgColor-attention-muted);
   }
 
   // div 和其他容器自适应

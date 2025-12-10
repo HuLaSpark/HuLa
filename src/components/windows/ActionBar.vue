@@ -35,8 +35,8 @@
               <use href="#notOnTop"></use>
             </svg>
           </template>
-          <span v-if="alwaysOnTopStatus">取消置顶</span>
-          <span v-else>置顶</span>
+          <span v-if="alwaysOnTopStatus">{{ t('components.actionBar.always_on_top.enabled') }}</span>
+          <span v-else>{{ t('components.actionBar.always_on_top.disabled') }}</span>
         </n-popover>
       </div>
       <!-- 收缩页面 -->
@@ -86,23 +86,27 @@
           <use href="#close"></use>
         </svg>
         <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
-          <span class="text-16px">最小化还是直接退出程序?</span>
+          <span class="text-16px">{{ t('components.actionBar.close_prompt.title') }}</span>
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
-            <span>最小化到系统托盘</span>
+            <span>{{ t('components.actionBar.close_prompt.hide_to_tray') }}</span>
           </label>
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.CLOSE" @change="tipsRef.type = CloseBxEnum.CLOSE" />
-            <span>直接退出程序</span>
+            <span>{{ t('components.actionBar.close_prompt.exit_app') }}</span>
           </label>
           <label class="text-(12px #909090) flex gap-6px justify-end items-center">
             <n-checkbox size="small" v-model:checked="tipsRef.notTips" />
-            <span>下次不出现此提示</span>
+            <span>{{ t('components.actionBar.close_prompt.no_prompt') }}</span>
           </label>
 
           <n-flex justify="end">
-            <n-button @click="handleConfirm" class="w-78px" color="#13987f">确定</n-button>
-            <n-button @click="tipsRef.show = false" class="w-78px" secondary>取消</n-button>
+            <n-button @click="handleConfirm" class="w-78px" color="#13987f">
+              {{ t('components.common.confirm') }}
+            </n-button>
+            <n-button @click="tipsRef.show = false" class="w-78px" secondary>
+              {{ t('components.common.cancel') }}
+            </n-button>
           </n-flex>
         </n-flex>
       </div>
@@ -111,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
@@ -123,6 +128,7 @@ import { useAlwaysOnTopStore } from '@/stores/alwaysOnTop.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isCompatibility, isMac, isWindows } from '@/utils/PlatformConstants'
 
+const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
 const {
   topWinLabel,

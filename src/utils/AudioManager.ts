@@ -42,6 +42,12 @@ class AudioManager {
     try {
       await audio.play()
     } catch (error) {
+      // 网络重连或快速切换时，audio.play 可能被中断抛出 AbortError，这里忽略此类错误
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        this.currentAudio = null
+        this.currentAudioId = null
+        return
+      }
       console.error('音频播放失败:', error)
       this.currentAudio = null
       this.currentAudioId = null
