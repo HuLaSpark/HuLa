@@ -117,7 +117,6 @@
   </n-tabs>
 </template>
 <script setup lang="ts" name="friendsList">
-import { computed, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -174,12 +173,6 @@ const sortedContacts = computed(() => {
     if (a.activeStatus === OnlineEnum.ONLINE && b.activeStatus !== OnlineEnum.ONLINE) return -1
     if (a.activeStatus !== OnlineEnum.ONLINE && b.activeStatus === OnlineEnum.ONLINE) return 1
     return 0
-  })
-})
-/** 监听独立窗口关闭事件 */
-watchEffect(() => {
-  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
-    shrinkStatus.value = event as boolean
   })
 })
 
@@ -276,6 +269,9 @@ watch(
 
 /** 组件挂载时获取数据 */
 onMounted(async () => {
+  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
+    shrinkStatus.value = event as boolean
+  })
   await fetchContactData()
 })
 

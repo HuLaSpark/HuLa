@@ -211,15 +211,6 @@ const avatars = computed(() => {
   return unique
 })
 
-onMounted(async () => {
-  try {
-    await contactStore.getContactList(true)
-    await contactStore.getApplyPage('friend', false)
-  } catch (error) {
-    console.log('请求好友申请列表失败')
-  }
-})
-
 /**
  * 渲染图片图标的函数工厂
  * @param {string} src - 图标图片路径
@@ -294,12 +285,6 @@ const sortedContacts = computed(() => {
     return 0
   })
 })
-/** 监听独立窗口关闭事件 */
-watchEffect(() => {
-  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
-    shrinkStatus.value = event as boolean
-  })
-})
 
 const { preloadChatRoom } = useMessage()
 
@@ -353,6 +338,18 @@ const getUserState = (uid: string) => {
   }
   return null
 }
+
+onMounted(async () => {
+  useMitt.on(MittEnum.SHRINK_WINDOW, async (event) => {
+    shrinkStatus.value = event as boolean
+  })
+  try {
+    await contactStore.getContactList(true)
+    await contactStore.getApplyPage('friend', false)
+  } catch (error) {
+    console.log('请求好友申请列表失败')
+  }
+})
 
 onUnmounted(() => {
   detailsShow.value = false

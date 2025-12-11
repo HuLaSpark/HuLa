@@ -13,6 +13,17 @@ import { useI18n } from 'vue-i18n'
 
 const msgBoxShow = ref(false)
 const shrinkStatus = ref(false)
+
+// 模块级别注册事件监听，避免 hook 被多次调用时重复注册
+let isShrinkListenerRegistered = false
+const registerShrinkListener = () => {
+  if (isShrinkListenerRegistered) return
+  isShrinkListenerRegistered = true
+  useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
+    shrinkStatus.value = event as boolean
+  })
+}
+
 export const useMessage = () => {
   const { t } = useI18n()
   const globalStore = useGlobalStore()
@@ -23,12 +34,9 @@ export const useMessage = () => {
   const groupStore = useGroupStore()
   const userStore = useUserStore()
   const BOT_ALLOWED_MENU_INDEXES = new Set([0, 1, 2, 3])
-  /** 监听独立窗口关闭事件 */
-  watchEffect(() => {
-    useMitt.on(MittEnum.SHRINK_WINDOW, async (event: any) => {
-      shrinkStatus.value = event as boolean
-    })
-  })
+
+  // 确保监听器只注册一次
+  registerShrinkListener()
 
   /**
    * 处理点击选中消息

@@ -191,24 +191,50 @@ export const useGroupStore = defineStore(
       groupDetails.value.push(data)
     }
 
+    const userMapByRoomId = computed(() => {
+      const map = new Map<string, Map<string, UserItem>>()
+      Object.entries(userListMap).forEach(([roomId, list]) => {
+        const roomMap = new Map<string, UserItem>()
+        list.forEach((item) => {
+          roomMap.set(item.uid, item)
+        })
+        map.set(roomId, roomMap)
+      })
+      return map
+    })
+
+    const allUserMap = computed(() => {
+      const map = new Map<string, UserItem>()
+      Object.values(userListMap)
+        .flat()
+        .forEach((item) => {
+          map.set(item.uid, item)
+        })
+      return map
+    })
+
     const getUserInfo = computed(() => (uid: string, roomId?: string) => {
       const targetRoomId = roomId ?? globalStore.currentSessionRoomId
       if (targetRoomId) {
-        const roomUserList = userListMap[targetRoomId]
-        if (roomUserList) {
-          const userInRoom = roomUserList.find((item) => item.uid === uid)
-          if (userInRoom) {
-            return userInRoom
-          }
+        const userInRoom = userMapByRoomId.value.get(targetRoomId)?.get(uid)
+        if (userInRoom) {
+          return userInRoom
         }
       }
 
-      return allUserInfo.value.find((item) => item.uid === uid)
+      return allUserMap.value.get(uid)
+    })
+
+    const userDisplayNameMap = computed(() => {
+      const map = new Map<string, string>()
+      userList.value.forEach((item) => {
+        map.set(item.uid, item.myName || item.name || '')
+      })
+      return map
     })
 
     const getUserDisplayName = computed(() => (uid: string) => {
-      const user = userList.value.find((item) => item.uid === uid)
-      return user?.myName || user?.name || ''
+      return userDisplayNameMap.value.get(uid) || ''
     })
 
     const allUserInfo = computed(() => {

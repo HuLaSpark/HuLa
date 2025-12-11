@@ -29,8 +29,11 @@ const checkAllTimersCompleted = () => {
   }
 }
 
-// 优化的调试信息打印函数
+// 优化的调试信息打印函数 - 只在开启日志时才发送消息，避免不必要的 postMessage 开销
 const logDebugInfo = (msgId: TimerId, remainingTime: number) => {
+  // 只有开启日志功能时才发送 debug 消息和打印日志
+  if (!ENABLE_LOGGING) return
+
   self.postMessage({
     type: 'debug',
     msgId,
@@ -38,8 +41,8 @@ const logDebugInfo = (msgId: TimerId, remainingTime: number) => {
     timestamp: Date.now()
   })
 
-  // 日志打印：只有开启日志功能时才打印，且只在关键时间点打印
-  if (ENABLE_LOGGING && (remainingTime <= 5000 || remainingTime % 10000 < 1000)) {
+  // 只在关键时间点打印日志（最后5秒或每10秒）
+  if (remainingTime <= 5000 || remainingTime % 10000 < 1000) {
     console.log(`[Worker Debug] 消息ID: ${msgId}, 剩余时间: ${(remainingTime / 1000).toFixed(1)}秒`)
   }
 }
@@ -104,23 +107,27 @@ self.onmessage = (e) => {
         safeLog(`[Worker] 替换已存在的定时器: ${msgId}`)
       }
 
-      const startTime = Date.now()
+      // 只在开启日志时才创建调试定时器，避免不必要的性能开销
+      let debugId: NodeJS.Timeout | null = null
 
-      // 立即打印一次初始状态
-      logDebugInfo(msgId, duration)
+      if (ENABLE_LOGGING) {
+        const startTime = Date.now()
+        // 立即打印一次初始状态
+        logDebugInfo(msgId, duration)
 
-      const debugId = setInterval(() => {
-        const elapsed = Date.now() - startTime
-        const remaining = duration - elapsed
-        if (remaining > 0) {
-          logDebugInfo(msgId, remaining)
-        } else {
-          clearInterval(debugId)
-        }
-      }, DEBUG_INTERVAL)
+        debugId = setInterval(() => {
+          const elapsed = Date.now() - startTime
+          const remaining = duration - elapsed
+          if (remaining > 0) {
+            logDebugInfo(msgId, remaining)
+          } else {
+            if (debugId) clearInterval(debugId)
+          }
+        }, DEBUG_INTERVAL)
+      }
 
       const timerId = setTimeout(() => {
-        clearInterval(debugId)
+        if (debugId) clearInterval(debugId)
         safeLog('[Worker] 定时器到期:', msgId)
         self.postMessage({ type: 'timeout', msgId })
         timerIds.delete(msgId)

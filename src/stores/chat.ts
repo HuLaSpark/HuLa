@@ -272,6 +272,22 @@ export const useChatStore = defineStore(
     })
 
     /**
+     * 清理非当前房间的消息缓存
+     * @description 切换房间时调用，释放内存，只保留当前房间的消息
+     * 注意：只清空消息内容，不删除 key，避免影响响应式依赖
+     */
+    const clearOtherRoomsMessages = (currentRoomId: string) => {
+      for (const roomId in messageMap) {
+        if (roomId !== currentRoomId) {
+          // 只清空消息内容，保留响应式对象结构
+          for (const msgId in messageMap[roomId]) {
+            delete messageMap[roomId][msgId]
+          }
+        }
+      }
+    }
+
+    /**
      * 切换聊天室
      * @description
      * 当用户切换到不同的聊天室时调用此方法，执行完整的房间切换流程。
@@ -289,6 +305,12 @@ export const useChatStore = defineStore(
       }
 
       const roomId = globalStore.currentSessionRoomId
+
+      // 清理其他房间的消息缓存，释放内存
+      clearOtherRoomsMessages(roomId)
+
+      // 清理过期的撤回消息缓存
+      cleanupExpiredRecalledMessages()
 
       // 1. 清空当前房间的旧消息数据
       if (messageMap[roomId]) {
@@ -1090,7 +1112,7 @@ export const useChatStore = defineStore(
       timerWorker.terminate()
     }
 
-    // 清理所有定时器
+    // 清理所有定时器和撤回消息缓存
     const clearAllExpirationTimers = () => {
       for (const msgId in expirationTimers) {
         // 通知 worker 停止对应的定时器
@@ -1099,8 +1121,28 @@ export const useChatStore = defineStore(
           msgId
         })
       }
+      // 清理 expirationTimers
       for (const msgId in expirationTimers) {
         delete expirationTimers[msgId]
+      }
+      // 同时清理 recalledMessages，避免内存累积
+      for (const msgId in recalledMessages) {
+        delete recalledMessages[msgId]
+      }
+    }
+
+    // 清理过期的撤回消息（超过2分钟的）
+    const cleanupExpiredRecalledMessages = () => {
+      const now = Date.now()
+      for (const msgId in recalledMessages) {
+        const msg = recalledMessages[msgId]
+        if (now - msg.recallTime > RECALL_EXPIRATION_TIME) {
+          delete recalledMessages[msgId]
+          if (expirationTimers[msgId]) {
+            timerWorker.postMessage({ type: 'clearTimer', msgId })
+            delete expirationTimers[msgId]
+          }
+        }
       }
     }
 
@@ -1275,6 +1317,7 @@ export const useChatStore = defineStore(
       getRecalledMessage,
       recalledMessages,
       clearAllExpirationTimers,
+      cleanupExpiredRecalledMessages,
       updateTotalUnreadCount,
       requestUnreadCountUpdate,
       clearUnreadCount,
