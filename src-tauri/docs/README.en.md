@@ -86,11 +86,6 @@
   <a href="https://www.readme-i18n.com/HuLaSpark/HuLa?lang=ru">Русский</a>
 </p>
 
-<div style="background-color:#fbb99030;color:#fbb990;padding:16px;border-radius:12px;">
-  <p><strong>⚠️ Important Notice</strong></p>
-  <p>Please read this README carefully before joining the group. Questions like “Is there a mobile client?”, “Does it support the web?”, or “Which features are available?” will not be answered in the group because maintaining this open-source project already consumes significant effort. Please avoid disturbing the author or maintainers during holidays or rest days; if you need help, feel free to send a small red envelope in the group and someone will respond. Sponsoring HuLa allows a dedicated consultation or accelerated feature development, and giving the project a star grants one consultation.thank you for your understanding🙏</p>
-</div>
-
 ## 🌐 Supported Platforms
 
 | Platform | Supported Versions |

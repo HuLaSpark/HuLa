@@ -465,6 +465,8 @@ const enterKey = (e: KeyboardEvent) => {
 }
 
 onBeforeMount(async () => {
+  // 登录页初始化时清空当前会话，避免重启后默认选中旧会话
+  globalStore.updateCurrentSessionRoomId('')
   await handlePendingRemoteLoginPayload()
   // 始终初始化托盘菜单状态为false
   isTrayMenuShow.value = false

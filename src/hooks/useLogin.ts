@@ -93,6 +93,7 @@ export const useLogin = () => {
    * 登出账号
    */
   const logout = async () => {
+    globalStore.updateCurrentSessionRoomId('')
     const sendLogoutEvent = async () => {
       // ws 退出连接
       await invokeSilently('ws_disconnect')
