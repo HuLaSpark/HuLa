@@ -46,6 +46,8 @@ export const usePluginsStore = defineStore(
         return updated
           ? {
               ...plugin,
+              size: updated.size ? { ...plugin.size, ...updated.size } : plugin.size,
+              window: updated.window ? { ...plugin.window, ...updated.window } : plugin.window,
               title: updated.title,
               shortTitle: updated.shortTitle
             }

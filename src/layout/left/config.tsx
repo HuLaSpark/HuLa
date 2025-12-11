@@ -85,7 +85,7 @@ const useMoreList = () => {
       label: t('menu.settings'),
       icon: 'settings',
       click: async () => {
-        await createWebviewWindow('设置', 'settings', 840, 840)
+        await createWebviewWindow('设置', 'settings', 840, 840, '', true, 840, 600)
       }
     },
     {
@@ -124,10 +124,12 @@ const basePluginsList: Array<Omit<STO.Plugins<PluginEnum>, 'title' | 'shortTitle
     progress: 0,
     size: {
       width: 600,
-      height: 800
+      height: 800,
+      minWidth: 600,
+      minHeight: 550
     },
     window: {
-      resizable: false
+      resizable: true
     },
     miniShow: false
   },

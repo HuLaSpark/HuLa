@@ -6,7 +6,7 @@
         <ActionBar
           style="position: absolute; top: 0; left: 0; width: 100vw"
           :shrink="false"
-          :max-w="false"
+          :max-w="true"
           :icon-color="'white'"
           :top-win-label="WebviewWindow.getCurrent().label"
           :current-label="WebviewWindow.getCurrent().label">

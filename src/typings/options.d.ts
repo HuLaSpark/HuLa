@@ -23,6 +23,7 @@ declare namespace OPT {
       tip?: string
       size?: {
         minWidth?: number
+        minHeight?: number
         width: number
         height: number
       }

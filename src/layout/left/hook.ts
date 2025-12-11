@@ -140,7 +140,7 @@ export const leftHook = () => {
   const pageJumps = (
     url: string,
     title?: string,
-    size?: { width: number; height: number; minWidth?: number },
+    size?: { width: number; height: number; minWidth?: number; minHeight?: number },
     window?: { resizable: boolean }
   ) => {
     if (window) {
@@ -153,7 +153,8 @@ export const leftHook = () => {
           <number>size?.height,
           '',
           window?.resizable,
-          <number>size?.minWidth
+          <number>size?.minWidth,
+          <number>size?.minHeight
         )
         openWindowsList.value.add(url)
 
