@@ -5,7 +5,7 @@
     :class="{
       'bg-cover bg-center bg-no-repeat': props.backgroundImage
     }"
-    :style="backgroundImageStyle">
+    :style="mergedStyle">
     <!-- 顶部安全区域 -->
     <div :class="[{ 'safe-area-top': safeAreaTop }, props.topSafeAreaClass]" />
 
@@ -93,6 +93,11 @@ const backgroundImageStyle = computed(() => {
   }
   return styles
 })
+
+const mergedStyle = computed(() => ({
+  backgroundColor: 'var(--center-bg-color)',
+  ...backgroundImageStyle.value
+}))
 
 /**
  * 从消息中提取文件信息并添加到 file store

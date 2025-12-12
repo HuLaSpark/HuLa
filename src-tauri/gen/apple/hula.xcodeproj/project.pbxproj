@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -36,8 +36,8 @@
 		5822DACEC671151891D1FD54 /* init.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = init.rs; sourceTree = "<group>"; };
 		582937AEB5D7F35B81C5A220 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		5E348B57006C5877940CA019 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		6DE0FD4D0E352521D4B95B49 /* KeyboardAccessory.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyboardAccessory.mm; sourceTree = "<group>"; };
 		658A253702F290FC4BBF60D5 /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
+		6DE0FD4D0E352521D4B95B49 /* KeyboardAccessory.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyboardAccessory.mm; sourceTree = "<group>"; };
 		76DB59D3790398E1FDB32D5A /* mod.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = mod.rs; sourceTree = "<group>"; };
 		8EA08F12BCB04981BCB86BEF /* common_cmd.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = common_cmd.rs; sourceTree = "<group>"; };
 		90272EF944FF306A026ACA41 /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
@@ -234,7 +234,6 @@
 				LastUpgradeCheck = 1430;
 			};
 			buildConfigurationList = 06E19C25CF276AFE18C2087A /* Build configuration list for PBXProject "hula" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -243,6 +242,7 @@
 			);
 			mainGroup = 19DDB0BC6EF26FCF935BDC63;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
