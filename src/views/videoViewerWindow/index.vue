@@ -12,6 +12,7 @@
           :src="currentVideo"
           controls
           :class="videoClass"
+          :style="videoStyle"
           @loadeddata="onVideoLoaded"
           @ended="onVideoEnded"
           @pause="onVideoPaused"
@@ -128,11 +129,19 @@ const currentVideo = computed(() => {
 })
 
 // 视频样式类
-const videoClass = computed(() => {
-  if (videoWidth.value > 0 && videoWidth.value < 800) {
-    return 'w-full h-full object-contain aspect-video'
+const videoClass = computed(() => 'w-full h-full object-contain')
+
+const videoStyle = computed(() => {
+  const style: Record<string, string> = {
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'contain'
   }
-  return 'w-full h-full object-cover aspect-video'
+  if (videoWidth.value > 0 && videoHeight.value > 0) {
+    style.width = `${videoWidth.value}px`
+    style.height = `${videoHeight.value}px`
+  }
+  return style
 })
 
 // 是否可以切换到上一个视频
@@ -244,6 +253,10 @@ const onVideoLoaded = () => {
 // 视频播放结束事件
 const onVideoEnded = () => {
   isPlaying.value = false
+  // 播放结束不自动切下一条
+  if (videoRef.value) {
+    videoRef.value.currentTime = videoRef.value.duration
+  }
 }
 
 // 视频暂停事件

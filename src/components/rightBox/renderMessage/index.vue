@@ -18,7 +18,7 @@
     :data-message-id="message.message.id"
     :is-group="isGroup"
     :on-image-click="onImageClick"
-    :on-video-click="onVideoClick"
+    :onVideoClick="onVideoClick"
     :search-keyword="searchKeyword"
     :history-mode="historyMode" />
 
@@ -155,7 +155,7 @@
             @contextmenu="handleContextMenuSelection"
             @mouseenter="() => (hoverMsgId = message.message.id)"
             @mouseleave="() => (hoverMsgId = '')"
-            class="w-fit relative flex flex-col chat-message-max-width"
+            class="relative flex flex-col chat-message-max-width"
             :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
             :class="isMe ? 'items-end' : 'items-start'"
             :style="{ '--bubble-max-width': bubbleMaxWidth }"
@@ -183,8 +183,7 @@
                     !isSpecialMsgType(message.message.type) &&
                     message.message.type !== MsgEnum.VOICE &&
                     !isMobile()
-                },
-                isMobile() ? 'max-w-170px!' : ''
+                }
               ]"
               :is="componentMap[message.message.type]"
               :body="message.message.body"
@@ -195,7 +194,7 @@
               :data-message-id="message.message.id"
               :is-group="isGroup"
               :on-image-click="onImageClick"
-              :on-video-click="onVideoClick"
+              :onVideoClick="onVideoClick"
               :search-keyword="searchKeyword"
               :history-mode="historyMode" />
 
@@ -375,7 +374,7 @@ const resolvingUserSet = new Set<string>()
 const isMultiSelectDisabled = computed(() => !isMessageMultiSelectEnabled(props.message.message.type))
 const bubbleMaxWidth = computed(() => {
   if (isMobile()) {
-    return '70vw'
+    return '84%'
   }
   return props.isGroup ? '32vw' : '50vw'
 })

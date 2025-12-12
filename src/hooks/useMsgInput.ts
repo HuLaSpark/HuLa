@@ -15,6 +15,7 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
+import { generateVideoThumbnail } from '@/utils/VideoThumbnail'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
@@ -829,7 +830,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
     try {
       const [videoPath, thumbnailFile] = await Promise.all([
         saveCacheFile(file, 'video/'),
-        messageStrategy.getVideoThumbnail(file)
+        generateVideoThumbnail(file)
       ])
 
       const localThumbUrl = URL.createObjectURL(thumbnailFile)

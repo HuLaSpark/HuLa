@@ -1,6 +1,6 @@
 <template>
   <!-- 公告消息 -->
-  <n-flex vertical :size="0" class="w-240px h-170px bg-[--group-notice-bg] rounded-8px custom-shadow">
+  <n-flex vertical :size="0" class="h-170px bg-[--group-notice-bg] rounded-8px custom-shadow" :style="cardStyle">
     <n-flex class="h-34px px-12px select-none cursor-default" align="center" justify="space-between">
       <n-flex align="center" :size="8">
         <svg class="size-16px flex-shrink-0"><use href="#Loudspeaker"></use></svg>
@@ -69,6 +69,8 @@ const showDetailButton = computed(() => {
   const routeName = route.name?.toString()
   return routeName !== 'chat-history' && routeName !== 'multiMsg'
 })
+
+const cardStyle = computed(() => (isMobile() ? { width: '60vw' } : { width: '240px' }))
 
 const openAnnouncementDetail = async () => {
   const roomId = globalStore.currentSessionRoomId

@@ -67,7 +67,10 @@ const props = defineProps<{
   message: MsgType
 }>()
 // 图片显示相关常量
-const MAX_WIDTH = isMobile() ? 240 : 320
+const MOBILE_MAX_WIDTH_RATIO = 0.7
+const MAX_WIDTH = isMobile()
+  ? Math.round((typeof window !== 'undefined' ? window.innerWidth : 0) * MOBILE_MAX_WIDTH_RATIO) || 240
+  : 320
 const MAX_HEIGHT = 240
 const MIN_WIDTH = 60
 const MIN_HEIGHT = 60

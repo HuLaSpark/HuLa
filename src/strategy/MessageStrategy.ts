@@ -1,5 +1,3 @@
-import { invoke } from '@tauri-apps/api/core'
-import { appCacheDir, join } from '@tauri-apps/api/path'
 import { BaseDirectory, readFile, remove, writeFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import type { Ref } from 'vue'
@@ -12,6 +10,7 @@ import { fixFileMimeType, isVideoUrl } from '@/utils/FileType'
 import { getMimeTypeFromExtension, removeTag } from '@/utils/Formatting'
 import { getImageDimensions } from '@/utils/ImageUtils'
 import { isMobile } from '@/utils/PlatformConstants'
+import { generateVideoThumbnail } from '@/utils/VideoThumbnail'
 import { useGroupStore } from '../stores/group'
 
 interface MessageStrategy {
@@ -853,126 +852,6 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
     return file
   }
 
-  /**
-   * 压缩缩略图
-   * @param file 原始缩略图文件
-   * @param maxWidth 最大宽度，默认300px
-   * @param maxHeight 最大高度，默认150px
-   * @param quality 压缩质量，默认0.6
-   */
-  private async compressThumbnail(
-    file: File,
-    maxWidth: number = 300,
-    maxHeight: number = 150,
-    quality: number = 0.6
-  ): Promise<File> {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-
-      img.onload = () => {
-        // 计算压缩后的尺寸
-        let { width, height } = img
-
-        // 按比例缩放
-        if (width > height) {
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width
-            width = maxWidth
-          }
-        } else {
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height
-            height = maxHeight
-          }
-        }
-
-        canvas.width = width
-        canvas.height = height
-
-        // 绘制压缩后的图片
-        ctx.drawImage(img, 0, 0, width, height)
-
-        // 转换为压缩后的文件
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(new File([blob], file.name, { type: 'image/jpeg' }))
-            } else {
-              reject(new AppException('缩略图压缩失败'))
-            }
-          },
-          'image/jpeg',
-          quality
-        )
-      }
-
-      img.onerror = () => {
-        reject(new AppException('缩略图加载失败'))
-      }
-
-      img.src = URL.createObjectURL(file)
-    })
-  }
-
-  /**
-   * 获取视频缩略图
-   * @param file 视频文件
-   */
-  private async getVideoThumbnail(file: File): Promise<File> {
-    try {
-      // 首先将文件保存到临时位置
-      const tempPath = `temp-video-${Date.now()}-${file.name}`
-      const arrayBuffer = await file.arrayBuffer()
-      const uint8Array = new Uint8Array(arrayBuffer)
-
-      // 写入临时文件
-      const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-      await writeFile(tempPath, uint8Array, { baseDir })
-
-      // 构建完整的文件路径
-      const fullPath = await join(await appCacheDir(), tempPath)
-
-      // 调用 Rust 函数生成缩略图
-      const thumbnailInfo = await invoke<{
-        thumbnail_base64: string
-        width: number
-        height: number
-        duration: number
-      }>('get_video_thumbnail', {
-        videoPath: fullPath,
-        targetTime: 0.1 // 第1秒对应约0.1秒
-      })
-
-      // 将 base64 转换为 File 对象
-      const base64Data = thumbnailInfo.thumbnail_base64
-      const binaryString = atob(base64Data)
-      const bytes = new Uint8Array(binaryString.length)
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
-      }
-
-      const thumbnailBlob = new Blob([bytes], { type: 'image/jpeg' })
-      const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
-
-      // 清理临时文件
-      try {
-        const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-        await remove(tempPath, { baseDir })
-      } catch (cleanupError) {
-        console.warn('清理临时文件失败:', cleanupError)
-      }
-
-      // 压缩缩略图
-      const compressedThumbnail = await this.compressThumbnail(thumbnailFile)
-      return compressedThumbnail
-    } catch (error) {
-      console.error('Rust 缩略图生成失败:', error)
-      throw new AppException(`生成视频缩略图失败: ${error}`)
-    }
-  }
-
   async getMsg(msgInputValue: string, replyValue: any, fileList?: File[]): Promise<any> {
     // 1. 优先处理fileList中的文件
     if (fileList && fileList.length > 0) {
@@ -980,7 +859,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
 
       // 验证视频文件
       const validatedFile = await this.validateVideo(file)
-      const thumbnail = await this.getVideoThumbnail(validatedFile)
+      const thumbnail = await generateVideoThumbnail(validatedFile)
 
       // 将文件保存到缓存目录
       const tempPath = `temp-video-${Date.now()}-${file.name}`
@@ -1013,7 +892,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
 
     // 4. 验证视频文件
     const validatedFile = await this.validateVideo(actualFile)
-    const thumbnail = await this.getVideoThumbnail(validatedFile)
+    const thumbnail = await generateVideoThumbnail(validatedFile)
     const path = parseInnerText(msgInputValue, 'temp-video')
     if (!path) {
       throw new AppException('文件不存在')

@@ -12,6 +12,7 @@
         }
       }"
       :src="displayThumbSrc"
+      @load="handleImageLoad"
       @error="handleImageError">
       <template #placeholder>
         <n-flex
@@ -119,6 +120,14 @@
         </div>
       </transition>
     </div>
+
+    <!-- 移动端视频预览 -->
+    <component
+      :is="VideoPreview"
+      v-if="VideoPreview"
+      v-model:visible="showVideoPreviewRef"
+      :video-url="mobileVideoUrl"
+      :message="message" />
   </div>
 </template>
 
@@ -126,6 +135,7 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { appDataDir, join, resourceDir } from '@tauri-apps/api/path'
 import { BaseDirectory, exists } from '@tauri-apps/plugin-fs'
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { MessageStatusEnum, TauriCommand } from '@/enums'
 import { MittEnum, MsgEnum } from '@/enums/index'
 import { useDownload } from '@/hooks/useDownload'
@@ -142,6 +152,7 @@ import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useI18n } from 'vue-i18n'
 
 const { openVideoViewer, getLocalVideoPath, checkVideoDownloaded } = useVideoViewer()
+const VideoPreview = isMobile() ? defineAsyncComponent(() => import('@/mobile/components/VideoPreview.vue')) : void 0
 const videoViewerStore = useVideoViewerStore()
 const chatStore = useChatStore()
 const { downloadFile, isDownloading, process } = useDownload()
@@ -156,10 +167,10 @@ const props = defineProps<{
 
 // 视频容器引用
 const videoContainerRef = ref<HTMLElement | null>(null)
-const MAX_WIDTH = 300
-const MAX_HEIGHT = 150
-const MIN_WIDTH = 60
-const MIN_HEIGHT = 60
+const MOBILE_MAX_WIDTH_RATIO = 0.7
+const MAX_WIDTH = isMobile()
+  ? Math.round((typeof window !== 'undefined' ? window.innerWidth : 0) * MOBILE_MAX_WIDTH_RATIO) || 320
+  : 400
 // 错误状态控制
 const isError = ref(false)
 // 视频打开状态
@@ -180,6 +191,8 @@ const thumbnailStore = useThumbnailCacheStore()
 const { observe: observeVideoVisibility, disconnect: disconnectVideoVisibility } = useIntersectionTaskQueue({
   threshold: 0.5
 })
+const showVideoPreviewRef = ref(false)
+const mobileVideoUrl = ref('')
 
 const persistVideoLocalPath = async (absolutePath: string) => {
   if (!props.message?.id || !absolutePath) return
@@ -195,43 +208,52 @@ const persistVideoLocalPath = async (absolutePath: string) => {
 }
 const localVideoThumbSrc = ref<string | null>(null)
 
+// 视频缩略图实际加载的尺寸（用于 props 中没有宽高的情况）
+const loadedThumbWidth = ref(0)
+const loadedThumbHeight = ref(0)
+
 const imageStyle = computed(() => {
-  // 如果有原始尺寸，使用原始尺寸计算
-  let width = props.body?.thumbWidth
-  let height = props.body?.thumbHeight
+  // 优先使用加载后的图片尺寸（更准确），如果没有则使用 props 中的原始尺寸
+  let width = loadedThumbWidth.value || props.body?.thumbWidth
+  let height = loadedThumbHeight.value || props.body?.thumbHeight
+
+  // 基础最大尺寸配置
+  const BASE_MAX_WIDTH = MAX_WIDTH
+  // 纵向视频固定尺寸
+  const VERTICAL_MAX_WIDTH = isMobile() ? 170 : 150
+  const VERTICAL_MAX_HEIGHT = isMobile() ? 300 : 320
+  // 横向视频固定尺寸（保持横向，不变成正方形或纵向）
+  const HORIZONTAL_FIXED_WIDTH = 350
+  const HORIZONTAL_FIXED_HEIGHT = isMobile() ? 160 : 200
 
   // 如果没有原始尺寸，使用默认尺寸
   if (!width || !height) {
-    width = MAX_WIDTH
-    height = MAX_HEIGHT
+    width = HORIZONTAL_FIXED_WIDTH
+    height = HORIZONTAL_FIXED_HEIGHT
   }
 
-  const aspectRatio = width / height
-  let finalWidth = width
-  let finalHeight = height
+  const isVertical = height > width
 
-  // 如果图片太大,需要等比缩放
-  if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-    if (width / height > MAX_WIDTH / MAX_HEIGHT) {
-      // 宽度超出更多,以最大宽度为基准缩放
-      finalWidth = MAX_WIDTH
-      finalHeight = MAX_WIDTH / aspectRatio
-    } else {
-      // 高度超出更多,以最大高度为基准缩放
-      finalHeight = MAX_HEIGHT
-      finalWidth = MAX_HEIGHT * aspectRatio
-    }
-  }
-
-  // 确保不小于最小尺寸
-  finalWidth = Math.max(finalWidth, MIN_WIDTH)
-  finalHeight = Math.max(finalHeight, MIN_HEIGHT)
+  // 固定尺寸：纵向与横向分别锁定宽高，避免横向变成正方形或纵向
+  const limitedHorizontalWidth = Math.min(HORIZONTAL_FIXED_WIDTH, BASE_MAX_WIDTH)
+  const limitedVerticalWidth = Math.min(VERTICAL_MAX_WIDTH, BASE_MAX_WIDTH)
+  const finalWidth = isVertical ? limitedVerticalWidth : limitedHorizontalWidth
+  const finalHeight = isVertical ? VERTICAL_MAX_HEIGHT : HORIZONTAL_FIXED_HEIGHT
   // 向上取整避免小数导致的抖动
   return {
     width: `${Math.ceil(finalWidth)}px`,
     height: `${Math.ceil(finalHeight)}px`
   }
 })
+
+// 处理图片加载完成，获取实际宽高
+const handleImageLoad = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  if (target) {
+    loadedThumbWidth.value = target.naturalWidth
+    loadedThumbHeight.value = target.naturalHeight
+  }
+}
 
 const containerStyle = computed(() => {
   const style = imageStyle.value
@@ -290,6 +312,9 @@ watch(
       const existsFlag = await exists(path)
       if (existsFlag) {
         isVideoDownloaded.value = true
+        if (isMobile()) {
+          mobileVideoUrl.value = convertFileSrc(path)
+        }
       }
     } catch (error) {
       console.warn('[Video] 本地视频校验失败:', error)
@@ -352,6 +377,20 @@ const downloadVideo = async () => {
   }
 }
 
+const resolveMobilePlayableUrl = async () => {
+  if (!props.body?.url) return ''
+  const url = props.body.localPath || ''
+  if (url) {
+    return convertFileSrc(url)
+  }
+  const downloaded = await checkVideoDownloaded(props.body.url)
+  if (!downloaded) return ''
+  const relative = await getLocalVideoPath(props.body.url)
+  const baseDirPath = await appDataDir()
+  const absolute = await join(baseDirPath, relative)
+  return convertFileSrc(absolute)
+}
+
 // 处理播放按钮点击
 const handlePlayButtonClick = async () => {
   if (!props.body?.url) return
@@ -367,7 +406,8 @@ const handlePlayButtonClick = async () => {
   // 如果视频未下载，先下载
   if (!isVideoDownloaded.value) {
     await downloadVideo()
-    return
+    isVideoDownloaded.value = await checkVideoDownloaded(props.body.url)
+    if (!isVideoDownloaded.value) return
   }
 
   // 如果已下载，直接播放
@@ -401,6 +441,17 @@ const handleOpenVideoViewer = async () => {
           console.error('视频下载失败，无法打开')
           return
         }
+      }
+
+      if (isMobile()) {
+        const playableUrl = await resolveMobilePlayableUrl()
+        if (!playableUrl) {
+          console.error('未找到可播放的视频地址')
+          return
+        }
+        mobileVideoUrl.value = playableUrl
+        showVideoPreviewRef.value = true
+        return
       }
 
       await openVideoViewer(props.body.url, [MsgEnum.VIDEO])
