@@ -9,6 +9,7 @@ import { ErrorType } from '@/common/exception'
 import { MittEnum, type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
+import { useFeedStore } from '@/stores/feed.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { getSessionDetail, markMsgRead } from '@/utils/ImRequestUtils'
@@ -48,6 +49,7 @@ export const useChatStore = defineStore(
     const route = useRoute()
     const userStore = useUserStore()
     const globalStore = useGlobalStore()
+    const feedStore = useFeedStore()
     const groupStore = useGroupStore()
     const sessionUnreadStore = useSessionUnreadStore()
 
@@ -492,7 +494,7 @@ export const useChatStore = defineStore(
         // 避免显示上次会话的陈旧未读，在同步期间先清零消息未读，待拉取完成后再计算
         globalStore.unreadReady = false
         globalStore.unReadMark.newMsgUnreadCount = 0
-        unreadCountManager.refreshBadge(globalStore.unReadMark)
+        unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
         const prevSessions =
           sessionList.value.length > 0
             ? sessionList.value.reduce(
@@ -513,7 +515,7 @@ export const useChatStore = defineStore(
         if (!data) {
           // 拉取失败也要恢复未读角标的展示，避免 unreadReady 卡在 false
           globalStore.unreadReady = true
-          unreadCountManager.refreshBadge(globalStore.unReadMark)
+          unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
           return
         }
 
@@ -553,16 +555,18 @@ export const useChatStore = defineStore(
               console.error('[chat] 会话列表同步后上报已读失败:', error)
             }
             markSessionRead(currentRoomId)
+            // 清除当前会话未读后，需要重新计算总未读数，确保程序坞图标正确更新
+            updateTotalUnreadCount()
           }
         }
         globalStore.unreadReady = true
-        unreadCountManager.refreshBadge(globalStore.unReadMark)
+        unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
       } catch (e) {
         console.error('获取会话列表失败11:', e)
         sessionOptions.isLoading = false
         // 出错时也恢复未读展示，避免角标长时间隐藏
         globalStore.unreadReady = true
-        unreadCountManager.refreshBadge(globalStore.unReadMark)
+        unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
       } finally {
         sessionOptions.isLoading = false
       }
@@ -1148,13 +1152,13 @@ export const useChatStore = defineStore(
 
     // 更新未读消息计数
     const updateTotalUnreadCount = () => {
-      // 使用统一的计数管理器
-      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark)
+      // 使用统一的计数管理器（包含朋友圈未读数）
+      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark, feedStore.unreadCount)
     }
 
     // 设置计数管理器的更新回调
     unreadCountManager.setUpdateCallback(() => {
-      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark)
+      unreadCountManager.calculateTotal(sessionList.value, globalStore.unReadMark, feedStore.unreadCount)
     })
 
     // 使用防抖机制的更新函数

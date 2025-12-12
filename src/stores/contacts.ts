@@ -3,6 +3,7 @@ import { StoresEnum } from '@/enums'
 import type { FriendItem, NoticeItem } from '@/services/types'
 import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
+import { useFeedStore } from '@/stores/feed'
 import { useGroupStore } from '@/stores/group'
 import {
   deleteFriend,
@@ -16,6 +17,7 @@ import { unreadCountManager } from '@/utils/UnreadCountManager'
 export const pageSize = 20
 export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
+  const feedStore = useFeedStore()
   const groupStore = useGroupStore()
 
   /** 联系人列表 */
@@ -64,7 +66,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend
     globalStore.unReadMark.newGroupUnreadCount = res.unReadCount4Group
 
-    unreadCountManager.refreshBadge(globalStore.unReadMark)
+    unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
   }
 
   /**
@@ -150,7 +152,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
         targetApplyType === 'friend'
           ? (globalStore.unReadMark.newFriendUnreadCount = 0)
           : (globalStore.unReadMark.newGroupUnreadCount = 0)
-        unreadCountManager.refreshBadge(globalStore.unReadMark)
+        unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
       }
       // 刷新好友列表
       await getContactList(true)

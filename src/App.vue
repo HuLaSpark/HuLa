@@ -151,7 +151,7 @@ useMitt.on(
     globalStore.unReadMark.newFriendUnreadCount = data.unReadCount4Friend || 0
     globalStore.unReadMark.newGroupUnreadCount = data.unReadCount4Group || 0
 
-    unreadCountManager.refreshBadge(globalStore.unReadMark)
+    unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
 
     // 刷新好友申请列表
     await contactStore.getApplyPage('friend', true)
@@ -266,7 +266,7 @@ useMitt.on(WsResponseMessageType.REQUEST_APPROVAL_FRIEND, async () => {
   // 刷新好友列表以获取最新状态
   await contactStore.getContactList(true)
   await contactStore.getApplyUnReadCount()
-  unreadCountManager.refreshBadge(globalStore.unReadMark)
+  unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
 })
 
 useMitt.on(WsResponseMessageType.ROOM_INFO_CHANGE, async (data: { roomId: string; name: string; avatar: string }) => {
@@ -383,8 +383,8 @@ useMitt.on(WsResponseMessageType.USER_STATE_CHANGE, async (data: { uid: string; 
 useMitt.on(WsResponseMessageType.FEED_SEND_MSG, (data: { uid: string }) => {
   if (data.uid !== userStore.userInfo!.uid) {
     feedStore.increaseUnreadCount()
-    // 同步更新角标
-    unreadCountManager.refreshBadge(globalStore.unReadMark)
+    // 同步更新角标（包含朋友圈未读数）
+    unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
   } else {
     console.log('[App.vue] 是自己发布的，不增加未读数')
   }
@@ -466,6 +466,8 @@ useMitt.on(WsResponseMessageType.FEED_NOTIFY, async (data: any) => {
       }
       feedNotificationStore.addNotification(commentNotification)
     }
+    // 朋友圈未读数变化后，同步更新程序坞图标（包含朋友圈未读数）
+    unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
   } catch (error) {
     console.error('处理朋友圈通知失败:', error)
   }
@@ -609,7 +611,7 @@ const handleWebsocketEvent = async (event: any) => {
         chatStore.markSessionRead(currentRoomId)
       }
     }
-    unreadCountManager.refreshBadge(globalStore.unReadMark)
+    unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
   } finally {
     // 同步完成，隐藏加载状态
     chatStore.syncLoading = false

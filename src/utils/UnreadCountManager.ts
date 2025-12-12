@@ -49,10 +49,12 @@ export class UnreadCountManager {
    * 计算全局未读计数
    * @param sessionList 会话列表
    * @param unReadMark 全局未读标记对象
+   * @param feedUnreadCount 朋友圈未读数（可选）
    */
   public calculateTotal(
     sessionList: SessionItem[],
-    unReadMark: { newFriendUnreadCount: number; newGroupUnreadCount: number; newMsgUnreadCount: number }
+    unReadMark: { newFriendUnreadCount: number; newGroupUnreadCount: number; newMsgUnreadCount: number },
+    feedUnreadCount?: number
   ) {
     // 检查当前窗口标签
     const webviewWindowLabel = WebviewWindow.getCurrent()
@@ -73,8 +75,8 @@ export class UnreadCountManager {
     // 更新全局未读计数
     unReadMark.newMsgUnreadCount = totalUnread
 
-    // 更新系统徽章
-    this.updateSystemBadge(unReadMark)
+    // 更新系统徽章（包含朋友圈未读数）
+    this.updateSystemBadge(unReadMark, feedUnreadCount)
   }
 
   /**
@@ -89,16 +91,22 @@ export class UnreadCountManager {
 
   /**
    * 更新系统徽章计数
+   * @param unReadMark 全局未读标记对象
+   * @param feedUnreadCount 朋友圈未读数（可选）
    */
-  private async updateSystemBadge(unReadMark: {
-    newFriendUnreadCount: number
-    newGroupUnreadCount: number
-    newMsgUnreadCount: number
-  }): Promise<void> {
+  private async updateSystemBadge(
+    unReadMark: {
+      newFriendUnreadCount: number
+      newGroupUnreadCount: number
+      newMsgUnreadCount: number
+    },
+    feedUnreadCount?: number
+  ): Promise<void> {
     const messageUnread = Math.max(0, unReadMark.newMsgUnreadCount || 0)
     const friendUnread = Math.max(0, unReadMark.newFriendUnreadCount || 0)
     const groupUnread = Math.max(0, unReadMark.newGroupUnreadCount || 0)
-    const badgeTotal = messageUnread + friendUnread + groupUnread
+    const feedUnread = Math.max(0, feedUnreadCount || 0)
+    const badgeTotal = messageUnread + friendUnread + groupUnread + feedUnread
     if (isMac()) {
       const count = badgeTotal > 0 ? badgeTotal : undefined
       await invokeWithErrorHandler('set_badge_count', { count })
@@ -116,13 +124,18 @@ export class UnreadCountManager {
 
   /**
    * 手动刷新系统徽章计数
+   * @param unReadMark 全局未读标记对象
+   * @param feedUnreadCount 朋友圈未读数（可选）
    */
-  public refreshBadge(unReadMark: {
-    newFriendUnreadCount: number
-    newGroupUnreadCount: number
-    newMsgUnreadCount: number
-  }) {
-    this.updateSystemBadge(unReadMark)
+  public refreshBadge(
+    unReadMark: {
+      newFriendUnreadCount: number
+      newGroupUnreadCount: number
+      newMsgUnreadCount: number
+    },
+    feedUnreadCount?: number
+  ) {
+    this.updateSystemBadge(unReadMark, feedUnreadCount)
   }
 
   /**
