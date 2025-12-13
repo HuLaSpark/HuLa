@@ -18,15 +18,15 @@
       <div
         v-for="item in feedList"
         :key="item.id"
-        :class="itemClass"
-        class="bg-white rounded-12px p-16px shadow hover:shadow-md transition-shadow cursor-pointer"
+        :class="[itemClass, 'feed-item']"
+        class="p-16px"
         @click="handleItemClick($event, item)">
         <!-- 用户信息 -->
         <div class="flex items-center gap-12px mb-12px">
           <n-avatar :size="avatarSize" round :src="getUserAvatar(item)" />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-6px">
-              <span class="text-15px font-600 text-#333 truncate">
+              <span class="text-15px font-bold text-[--text-color] truncate">
                 {{ getUserName(item) }}
               </span>
             </div>
@@ -34,7 +34,7 @@
         </div>
 
         <!-- 动态内容 -->
-        <div class="text-15px text-#333 leading-relaxed mb-12px whitespace-pre-wrap break-words">
+        <div class="text-15px text-[--text-color] leading-relaxed mb-12px whitespace-pre-wrap break-words">
           {{ item.content }}
         </div>
 
@@ -99,10 +99,10 @@
               <!-- 点赞按钮 -->
               <div
                 class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer transition-colors"
-                :class="item.hasLiked ? 'bg-#f0f0f0 text-#ff6b6b' : 'hover:bg-#f5f5f5 text-#999'"
+                :class="item.hasLiked ? 'text-#d5304f' : ' text-#999'"
                 @click.stop="handleToggleLike(item)">
-                <svg class="w-16px h-16px" :class="{ 'heart-filled': item.hasLiked }">
-                  <use href="#heart"></use>
+                <svg class="size-16px">
+                  <use :href="item.hasLiked ? '#dianzan' : '#weidianzan'"></use>
                 </svg>
                 <span class="text-13px">
                   {{ item.hasLiked ? t('dynamic.detail.stats.liked') : t('dynamic.detail.stats.like') }}
@@ -110,7 +110,7 @@
               </div>
               <!-- 评论按钮 -->
               <div
-                class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer hover:bg-#f5f5f5 transition-colors text-#999"
+                class="flex items-center justify-center gap-4px py-6px px-12px rounded-6px cursor-pointer text-#999"
                 @click.stop="handleShowCommentInput(item)">
                 <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -126,7 +126,7 @@
               <!-- 更多操作 -->
               <n-dropdown :options="getMoreOptions(item)" @select="handleMoreAction(item, $event)">
                 <div
-                  class="flex items-center justify-center py-6px px-12px rounded-6px cursor-pointer hover:bg-#f5f5f5 transition-colors text-#999"
+                  class="flex items-center justify-center py-6px px-12px rounded-6px cursor-pointer text-#999"
                   @click.stop>
                   <svg class="w-16px h-16px">
                     <use href="#more"></use>
@@ -135,32 +135,30 @@
               </n-dropdown>
             </div>
           </div>
-          <!-- 点赞人名称显示 - 固定高度防止闪烁 -->
-          <div class="min-h-20px mb-8px">
-            <div v-if="(item.likeList || []).length > 0" class="text-12px text-#999">
-              <span>👍</span>
-              <span>{{ (item.likeList || []).map((like) => like.userName).join('、') }}</span>
-            </div>
+          <!-- 点赞人名称显示 - 仅有点赞时渲染 -->
+          <div
+            v-if="(item.likeList || []).length > 0"
+            class="mb-8px flex items-start gap-6px leading-relaxed text-(12px #13987f)">
+            <svg class="size-16px color-##13987f"><use href="#thumbs-up"></use></svg>
+            <span>{{ (item.likeList || []).map((like) => like.userName).join('、') }}</span>
           </div>
 
-          <!-- 评论列表显示 - 固定最小高度防止闪烁 -->
-          <div class="min-h-20px">
-            <div v-if="item.commentList && item.commentList.length > 0" class="bg-#f9f9f9 rounded-8px p-12px">
-              <div v-for="comment in item.commentList.slice(0, 3)" :key="comment.id" class="mb-8px last:mb-0">
-                <div class="text-12px text-#666">
-                  <span class="font-600">{{ comment.userName }}</span>
-                  <!-- 如果是回复评论，显示被回复人信息 -->
-                  <span v-if="comment.replyUserName" class="text-#999">
-                    {{ t('dynamic.detail.actions.reply') }}
-                    <span class="font-600">{{ comment.replyUserName }}</span>
-                  </span>
-                  <span>：</span>
-                  <span>{{ comment.content }}</span>
-                </div>
+          <!-- 评论列表显示 - 仅有评论时渲染 -->
+          <div v-if="item.commentList && item.commentList.length > 0" class="rounded-8px p-12px pb-6px pl-0">
+            <div v-for="comment in item.commentList.slice(0, 3)" :key="comment.id" class="mb-12px last:mb-0">
+              <div class="text-14px text-#13987f">
+                <span class="font-bold">{{ comment.userName }}</span>
+                <!-- 如果是回复评论，显示被回复人信息 -->
+                <span v-if="comment.replyUserName" class="text-#13987f">
+                  {{ t('dynamic.detail.actions.reply') }}
+                  <span class="font-bold">{{ comment.replyUserName }}</span>
+                </span>
+                <span>：</span>
+                <span class="pl-2px text-[--chat-text-color] leading-relaxed">{{ comment.content }}</span>
               </div>
-              <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
-                {{ t('dynamic.list.comments.more', { count: item.commentList.length - 3 }) }}
-              </div>
+            </div>
+            <div v-if="item.commentList.length > 3" class="text-12px text-#999 mt-8px pt-8px border-t border-#e5e5e5">
+              {{ t('dynamic.list.comments.more', { count: item.commentList.length - 3 }) }}
             </div>
           </div>
         </div>
@@ -198,7 +196,7 @@
       :mask-closable="true"
       :segmented="false">
       <template #header>
-        <div class="text-16px font-600">{{ t('dynamic.detail.modal.title') }}</div>
+        <div class="text-16px font-bold">{{ t('dynamic.detail.modal.title') }}</div>
       </template>
       <div class="flex flex-col gap-12px">
         <n-input
@@ -307,10 +305,6 @@ const getUserName = (item: FeedItem) => {
 const getMoreOptions = (feed: FeedItem) => {
   const options = [
     {
-      label: t('dynamic.detail.dropdown.copy'),
-      key: 'copy'
-    },
-    {
       label: t('dynamic.detail.dropdown.report'),
       key: 'report'
     }
@@ -336,10 +330,6 @@ const handleMoreAction = async (feed: FeedItem, action: string) => {
         console.error('删除动态失败:', error)
         window.$message.error(t('dynamic.messages.delete_fail'))
       }
-      break
-    case 'copy':
-      navigator.clipboard.writeText(`${window.location.origin}/feed/${feed.id}`)
-      window.$message.success(t('dynamic.messages.copy_success'))
       break
     case 'report':
       window.$message.info(t('dynamic.messages.report_todo'))
@@ -455,8 +445,8 @@ const handleSubmitComment = async () => {
   scrollbar-width: none;
 }
 
-/* 心形图标填充效果 */
-.heart-filled {
-  fill: currentColor;
+/* 每项底部分隔线，最后一项不显示 */
+.feed-item:not(:last-child) {
+  border-bottom: 1px solid var(--line-color);
 }
 </style>

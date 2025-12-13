@@ -16,6 +16,7 @@
     "actions": {
       "publish": "Post",
       "refresh": "Refresh",
+      "comment_notice": "notifications",
       "like": "Like",
       "liked": "Liked",
       "comment": "Comment",

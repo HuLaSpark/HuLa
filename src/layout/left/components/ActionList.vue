@@ -23,7 +23,7 @@
               </svg>
             </n-badge>
           </template>
-          <p>{{ item.title }} 已打开</p>
+          <p>{{ item.title }} {{ t('home.action.opened') }}</p>
         </n-popover>
         <!-- 该选项有提示时展示 -->
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
@@ -91,7 +91,7 @@
               </svg>
             </n-badge>
           </template>
-          <p>{{ item.title }} 已打开</p>
+          <p>{{ item.title }} {{ t('home.action.opened') }}</p>
         </n-popover>
         <!-- 该选项有提示时展示 -->
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">
@@ -186,7 +186,7 @@
               </svg>
             </n-badge>
           </template>
-          <p>{{ item.title }} 已打开</p>
+          <p>{{ item.title }} {{ t('home.action.opened') }}</p>
         </n-popover>
         <!-- 该选项有提示时展示 -->
         <n-popover style="padding: 12px" v-else-if="item.tip" trigger="manual" v-model:show="tipShow" placement="right">

@@ -175,9 +175,11 @@ import { useBotStore } from '@/stores/bot'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
+import { markMsgRead } from '@/utils/ImRequestUtils'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const route = useRoute()
 const appWindow = WebviewWindow.getCurrent()
 const chatStore = useChatStore()
 const globalStore = useGlobalStore()
@@ -195,6 +197,8 @@ const { handleMsgClick, handleMsgDelete, handleMsgDblclick, visibleMenu, visible
 // 跟踪当前显示右键菜单的会话ID
 const activeContextMenuRoomId = ref<string | null>(null)
 const networkStatus = useNetworkStatus()
+// 未读清空的定时器
+let clearUnreadTimer: NodeJS.Timeout | null = null
 
 type SessionMsgCacheItem = { msg: string; isAtMe: boolean; time: number; senderName: string }
 
@@ -329,6 +333,40 @@ watch(
   { immediate: true }
 )
 
+// 监听路由变化：当切换回/message页面且有选中会话时，延迟2秒后清空未读并上报
+watch(
+  () => route.path,
+  async (newPath) => {
+    // 清理之前的定时器
+    if (clearUnreadTimer) {
+      clearTimeout(clearUnreadTimer)
+      clearUnreadTimer = null
+    }
+
+    // 只在路由切换到/message时处理
+    if (newPath === '/message') {
+      // 检查是否有选中的会话
+      const currentRoomId = globalStore.currentSessionRoomId
+      if (currentRoomId) {
+        const session = chatStore.getSession(currentRoomId)
+        // 如果选中的会话有未读数，则延迟2秒后清空并上报
+        if (session?.unreadCount && session.unreadCount > 0) {
+          clearUnreadTimer = setTimeout(async () => {
+            chatStore.markSessionRead(currentRoomId)
+            // 调用已读上报接口
+            try {
+              await markMsgRead(currentRoomId)
+            } catch (error) {
+              console.error('[message] 路由切换时已读上报失败:', error)
+            }
+            clearUnreadTimer = null
+          }, 2000) // 等待2秒
+        }
+      }
+    }
+  }
+)
+
 // 处理右键菜单显示状态变化
 const handleMenuShow = (roomId: string, isShow: boolean) => {
   activeContextMenuRoomId.value = isShow ? roomId : null
@@ -388,6 +426,14 @@ onMounted(async () => {
       })
     }
   })
+})
+
+onUnmounted(() => {
+  // 清理未读清空的定时器，避免内存泄漏
+  if (clearUnreadTimer) {
+    clearTimeout(clearUnreadTimer)
+    clearUnreadTimer = null
+  }
 })
 </script>
 

@@ -16,6 +16,7 @@
     "actions": {
       "publish": "发布动态",
       "refresh": "刷新",
+      "comment_notice": "评论通知",
       "like": "赞",
       "liked": "已赞",
       "comment": "评论",
