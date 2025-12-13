@@ -61,12 +61,12 @@
     </div>
 
     <!-- 动态列表 -->
-    <div class="flex flex-col items-center px-20px h-full mt-15px">
+    <div class="flex flex-col items-center h-full mt-15px">
       <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 272px)" class="w-full">
         <DynamicList
           mode="pc"
           :avatar-size="42"
-          item-class="w-full mb-10px p-10px box-border cursor-pointer"
+          item-class="w-full mb-10px px-32px py-10px box-border cursor-pointer"
           :empty-text="t('dynamic.list.empty')"
           :show-loaded-all="false"
           :single-image-size="{ width: '200px', height: '200px' }"
