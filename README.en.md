@@ -369,6 +369,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 ### 🏆 Gold Sponsors ($15+)
 | 💝 Date | 👤 Sponsor | 💰 Amount | 🏷️ Platform |
 |---------|----------|--------|---------|
+| 2025-12-13 | **M（PiDAOLab）** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-11-12 | **星** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-03 | **烛火** | `¥500` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-09-05 | **Orion** | `¥200` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
@@ -392,7 +393,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 | 2025-05-09 | **犹豫，就会败北。** | `¥88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-04-01 | **墨** | `¥88.88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-8 | **邓伟** | `¥88` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
-| 2025-02-7 | **dennis** | `¥80` | ![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=flat&logo=gitee&logoColor=white) |
+| 2025-02-7 | **dennis** | `¥40` | ![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=flat&logo=gitee&logoColor=white) |
 | 2025-11-5 | **匿名用户** | `¥66` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-6 | **小二** | `¥62` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-05-15 | **孤鸿影** | `¥56` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |

@@ -157,7 +157,7 @@
             @mouseleave="() => (hoverMsgId = '')"
             class="relative flex flex-col chat-message-max-width"
             :data-key="isMe ? `U${message.message.id}` : `Q${message.message.id}`"
-            :class="isMe ? 'items-end' : 'items-start'"
+            :class="[isMe ? 'items-end' : 'items-start', isMobile() ? 'w-full max-w-full' : '']"
             :style="{ '--bubble-max-width': bubbleMaxWidth }"
             @select="$event.click(message, 'Main')"
             :menu="handleItemType(message.message.type)"

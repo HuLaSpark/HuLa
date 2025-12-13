@@ -11,6 +11,7 @@
   -webkit-overflow-wrap: anywhere;
   hyphens: auto; /** 行尾自动断开长单词 */
   -webkit-hyphens: auto;
+  line-height: 1.7;
   line-break: anywhere; /** 支持任意位置换行，包括特殊字符和符号 */
   &.active {
     background-color: var(--bg-bubble-active);
