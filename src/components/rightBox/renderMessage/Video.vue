@@ -219,12 +219,12 @@ const imageStyle = computed(() => {
 
   // 基础最大尺寸配置
   const BASE_MAX_WIDTH = MAX_WIDTH
-  // 纵向视频固定尺寸
+  // 纵向视频固定尺寸（PC 高度再减 30px）
   const VERTICAL_MAX_WIDTH = isMobile() ? 170 : 150
-  const VERTICAL_MAX_HEIGHT = isMobile() ? 300 : 320
+  const VERTICAL_MAX_HEIGHT = isMobile() ? 300 : 290
   // 横向视频固定尺寸（保持横向，不变成正方形或纵向）
-  const HORIZONTAL_FIXED_WIDTH = 350
-  const HORIZONTAL_FIXED_HEIGHT = isMobile() ? 160 : 200
+  const HORIZONTAL_FIXED_WIDTH = isMobile() ? 350 : 320
+  const HORIZONTAL_FIXED_HEIGHT = isMobile() ? 160 : 170
 
   // 如果没有原始尺寸，使用默认尺寸
   if (!width || !height) {

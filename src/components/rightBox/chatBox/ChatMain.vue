@@ -53,7 +53,7 @@
         @mouseenter="showScrollbar = true"
         @mouseleave="showScrollbar = false">
         <!-- 消息列表 -->
-        <div class="message-list min-h-full flex flex-col">
+        <div ref="messageListRef" class="message-list min-h-full flex flex-col">
           <!-- 没有更多消息提示 -->
           <div
             v-show="chatStore.shouldShowNoMoreMessage"
@@ -197,10 +197,11 @@
 import { computed, nextTick, onMounted, onUnmounted, provide, ref, useTemplateRef, watch, watchPostEffect } from 'vue'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
-import { useDebounceFn, useEventListener, useTimeoutFn } from '@vueuse/core'
+import { useDebounceFn, useEventListener, useResizeObserver, useTimeoutFn } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { MittEnum, MsgEnum, ScrollIntentEnum } from '@/enums'
 import { chatMainInjectionKey, useChatMain } from '@/hooks/useChatMain.ts'
+import { useAutoScrollGuard } from '@/hooks/useAutoScrollGuard'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { usePopover } from '@/hooks/usePopover.ts'
@@ -316,6 +317,7 @@ const shouldShowFloatFooter = computed<boolean>(() => {
 // 响应式状态变量
 const activeReply = ref<string>('')
 const scrollContainerRef = useTemplateRef<HTMLDivElement>('scrollContainer')
+const messageListRef = useTemplateRef<HTMLDivElement>('messageListRef')
 const showScrollbar = ref<boolean>(true)
 const isAnnouncementHover = ref<boolean>(false)
 const topAnnouncement = ref<AnnouncementData | null>(null)
@@ -324,6 +326,10 @@ const hoverId = ref('')
 const isLoadingMore = ref(false)
 // 避免初始化自动触发顶部加载
 const suppressTopLoadMore = ref(false)
+// 标记当前是否在底部
+const isAtBottom = ref(true)
+// 自动滚动保护（rAF 计时）
+const { isAutoScrolling, enableAutoScroll, stopAutoScrollGuard } = useAutoScrollGuard()
 
 const temporarilySuppressTopLoadMore = () => {
   suppressTopLoadMore.value = true
@@ -450,6 +456,10 @@ watch(
     // 只有在房间切换且DOM就绪时才触发初始化意图
     if (newRoomId && newRoomId !== oldRoomId) {
       suppressTopLoadMore.value = true
+      // 切换房间时强制重置为在底部状态，并开启自动滚动保护
+      isAtBottom.value = true
+      enableAutoScroll(1200)
+
       scrollIntent.value = ScrollIntentEnum.INITIAL
     }
   },
@@ -563,17 +573,37 @@ const handleScrollByIntent = (intent: ScrollIntentEnum): void => {
 // 滚动到底部
 const scrollToBottom = (): void => {
   temporarilySuppressTopLoadMore()
-  // console.log('触发滚动到底部')
   const container = scrollContainerRef.value
   if (!container) return
   // 立即清除新消息计数
   chatStore.clearNewMsgCount()
-  // 使用requestAnimationFrame确保在下一帧执行，避免布局抖动
-  container.scrollTo({
-    top: container.scrollHeight,
-    behavior: 'auto'
+  // 标记为在底部并开启自动滚动保护，防止滚动过程中的事件导致 isAtBottom 被错误置为 false
+  isAtBottom.value = true
+  enableAutoScroll(500)
+
+  // 使用 requestAnimationFrame 确保在渲染后执行
+  requestAnimationFrame(() => {
+    if (!container) return
+    container.scrollTop = container.scrollHeight
   })
 }
+// 监听消息列表大小变化，如果当前在底部则自动滚动到底部
+useResizeObserver(messageListRef, () => {
+  const container = scrollContainerRef.value
+  if (!container) return
+
+  // 直接通过 DOM 计算距离，不完全依赖 isAtBottom 状态，避免状态更新延迟导致的问题
+  const { scrollHeight, scrollTop, clientHeight } = container
+  const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+
+  // 如果距离底部小于 150px (允许一定的误差)，或者状态标记为在底部，则执行滚动
+  if (distanceFromBottom <= 150 || isAtBottom.value) {
+    // 使用 nextTick 确保 DOM 状态稳定
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
+})
 
 // 处理悬浮按钮点击 - 重置消息列表并滚动到底部
 const handleFloatButtonClick = async () => {
@@ -598,6 +628,16 @@ const handleScroll = (event: Event) => {
 
   const currentScrollTop = container.scrollTop
   scrollTop.value = currentScrollTop
+
+  // 如果处于自动滚动保护期，强制认为在底部
+  if (isAutoScrolling.value) {
+    isAtBottom.value = true
+  } else {
+    // 更新是否在底部的状态
+    const { scrollHeight, clientHeight } = container
+    // 增加判断阈值到 150px，提高容错率
+    isAtBottom.value = scrollHeight - currentScrollTop - clientHeight <= 150
+  }
 
   debouncedScrollOperations(container)
 }
@@ -801,6 +841,7 @@ onUnmounted(() => {
   if (announcementClearListener) {
     announcementClearListener()
   }
+  stopAutoScrollGuard()
   stopWheelListener()
 })
 </script>
