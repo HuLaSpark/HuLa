@@ -869,11 +869,11 @@ import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import MarkdownRender from 'vue-renderer-markdown'
+import MarkdownRender from 'markstream-vue'
 import { ROBOT_MARKDOWN_CUSTOM_ID } from '@/plugins/robot/utils/markdown'
 import { useResizeObserver } from '@vueuse/core'
 import { ThemeEnum, AiMsgContentTypeEnum } from '@/enums'
-import 'vue-renderer-markdown/index.css'
+import 'markstream-vue/index.css'
 import {
   modelPage,
   conversationCreateMy,
@@ -910,7 +910,7 @@ const { page, themes } = storeToRefs(settingStore)
 const SHIKI_LIGHT_THEME = 'vitesse-light'
 const SHIKI_DARK_THEME = 'vitesse-dark'
 const markdownCustomId = ROBOT_MARKDOWN_CUSTOM_ID
-const markdownThemes = [SHIKI_LIGHT_THEME, SHIKI_DARK_THEME] as const
+const markdownThemes = [SHIKI_LIGHT_THEME, SHIKI_DARK_THEME] as const as any
 
 const MsgInputRef = ref()
 /** 是否是编辑模式 */

@@ -21,7 +21,7 @@ import Left from './layout/Left.vue'
 import Right from './layout/Right.vue'
 import ChatRoleManagement from './components/ChatRoleManagement.vue'
 import ModelManagement from './components/ModelManagement.vue'
-import { getUseMonaco } from 'vue-renderer-markdown'
+import { getUseMonaco } from 'markstream-vue'
 import { initMarkdownRenderer } from '@/plugins/robot/utils/markdown'
 
 const showRoleManagement = ref(false)

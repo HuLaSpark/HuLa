@@ -1,5 +1,5 @@
 import type { DefineComponent } from 'vue'
-import { MarkdownCodeBlockNode, setCustomComponents } from 'vue-renderer-markdown'
+import { MarkdownCodeBlockNode, setCustomComponents } from 'markstream-vue'
 
 interface MarkdownCodeBlockNodeData {
   type: 'code_block'
