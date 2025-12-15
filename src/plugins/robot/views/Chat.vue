@@ -288,7 +288,7 @@
                               class="code-block-wrapper"
                               :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                               <MarkdownRender
-                                :content="message.reasoningContent"
+                                :content="sanitizeContent(message.reasoningContent)"
                                 :custom-id="markdownCustomId"
                                 :is-dark="isDarkTheme"
                                 :viewportPriority="false"
@@ -300,7 +300,7 @@
                           <!-- 最终答案 -->
                           <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                             <MarkdownRender
-                              :content="message.content"
+                              :content="sanitizeContent(message.content)"
                               :custom-id="markdownCustomId"
                               :is-dark="isDarkTheme"
                               :viewportPriority="false"
@@ -1631,6 +1631,13 @@ const isLikelyMediaUrl = (value?: string) => {
     lower.startsWith('tauri://') ||
     lower.startsWith('blob:')
   )
+}
+
+const sanitizeContent = (content: string): string => {
+  if (!content) return ''
+  const element = document.createElement('div')
+  element.textContent = content
+  return element.innerHTML
 }
 
 const isRenderableAiImage = (message: Message) => {
