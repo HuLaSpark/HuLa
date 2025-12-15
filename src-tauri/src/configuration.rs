@@ -5,6 +5,9 @@ use std::time::Duration;
 use tauri::{AppHandle, Manager};
 use tracing::info;
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+
 // 应用程序设置结构体
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct Settings {
