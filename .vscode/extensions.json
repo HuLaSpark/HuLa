@@ -9,6 +9,7 @@
     "ms-vscode.vscode-typescript-next",
     "biomejs.biome",
     "fill-labs.dependi",
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "lokalise.i18n-ally"
   ]
 }

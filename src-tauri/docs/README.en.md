@@ -25,6 +25,9 @@
     <a href="https://gitcode.com/HuLaSpark/HuLa">
       <img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="GitCode Stars">
     </a>
+    <a href="https://gitcode.com/HuLaSpark/HuLa">
+      <img src="https://atomgit.com/HuLaSpark/HuLa/star/2025top.svg" alt="2025 Top 100 Open Source Projects">
+    </a>
   </p>
 </div>
 
