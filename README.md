@@ -23,6 +23,9 @@
     <a href="https://gitcode.com/HuLaSpark/HuLa">
       <img src="https://gitcode.com/HuLaSpark/HuLa/star/badge.svg" alt="GitCode Stars">
     </a>
+    <a href="https://gitcode.com/HuLaSpark/HuLa">
+      <img src="https://atomgit.com/HuLaSpark/HuLa/star/2025top.svg" alt="2025百大开源项目">
+    </a>
   </p>
 </div>
 
@@ -87,14 +90,14 @@
 
 ## 🌐 支持平台
 
-| 平台    | 支持版本                             |
-| ------- | ------------------------------------ |
-| Windows | Windows 10, Windows 11               |
-| macOS   | macOS 10.5+ Mac26已支持               |
-| Linux   | Ubuntu 22.0+                         |
+| 平台    | 支持版本                                                              |
+| ------- | --------------------------------------------------------------------- |
+| Windows | Windows 10, Windows 11                                                |
+| macOS   | macOS 10.5+ Mac26已支持                                               |
+| Linux   | Ubuntu 22.0+                                                          |
 | iOS     | iOS 9.0+ (iOS26 真机已支持， Tauri不支持Intel芯片在ios26模拟器上运行) |
-| Android | Android 12+ (SDK30+)                 |
-| Web     | ⚠️暂不支持(需要自定义移除对桌面功能) |
+| Android | Android 12+ (SDK30+)                                                  |
+| Web     | ⚠️暂不支持(需要自定义移除对桌面功能)                                  |
 
 ## 📝 项目介绍
 
@@ -222,19 +225,19 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 
 ### 🛠️ 系统功能
 
-| 功能 | 描述             | 状态                                                                                             |
-| ---- | ---------------- | ------------------------------------------------------------------------------------------------ |
-| 🪟   | 多窗口管理       | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 🔔   | 系统托盘通知     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 📷   | 图片查看器       | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| ✂️   | 截图功能         | ![进行中](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
-| 🎙️   | 语音通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 🎥   | 视频通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| ⌨️   | 全局快捷键管理   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 📺   | 独立媒体查看器   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 📁   | 文件上传(七牛云) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 🔄   | 自动更新系统     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)   |
-| 🌍   | i18n 支持  | ![进行中](https://img.shields.io/badge/98%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 功能 | 描述             | 状态                                                                                                  |
+| ---- | ---------------- | ----------------------------------------------------------------------------------------------------- |
+| 🪟   | 多窗口管理       | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🔔   | 系统托盘通知     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📷   | 图片查看器       | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| ✂️   | 截图功能         | ![进行中](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)      |
+| 🎙️   | 语音通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🎥   | 视频通话         | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| ⌨️   | 全局快捷键管理   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📺   | 独立媒体查看器   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📁   | 文件上传(七牛云) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🔄   | 自动更新系统     | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🌍   | i18n 支持        | ![进行中](https://img.shields.io/badge/98%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
 
 ### 🌐 跨平台支持
 
@@ -245,8 +248,8 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 
 ### 🤖 AI 集成
 
-| 功能 | 描述           | 状态                                                                                               |
-| ---- | -------------- | -------------------------------------------------------------------------------------------------- |
+| 功能 | 描述           | 状态                                                                                           |
+| ---- | -------------- | ---------------------------------------------------------------------------------------------- |
 | 🧠   | AI 聊天助手    | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔌   | 多平台 AI 支持 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
@@ -378,23 +381,23 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 
 ### 🏆 金牌赞助者 (￥100+)
 
-| 💝 日期    | 👤 赞助者        | 💰 金额 | 🏷️ 平台                                                                                              |
-| ---------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| 2025-12-13 | **M（PiDAOLab）**           | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-11-12 | **星**           | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-09-03 | **烛火**         | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-09-05 | **Orion**        | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-10-24 | **唐勇（伏威）** | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-08-26 | **唐勇**         | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-04-25 | **上官俊斌**     | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-05-27 | **临安居士**     | `¥188`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-04-20 | **姜兴(Simon)**  | `¥188`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-02-17 | **禾硕**         | `¥168`  | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
-| 2025-10-16 | **xx豪**         | `¥101`  | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
-| 2025-10-15 | **兵**           | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-08-13 | **zhongjing**    | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-07-15 | **粉兔**         | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
-| 2025-02-8  | **Boom....**     | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 💝 日期    | 👤 赞助者         | 💰 金额 | 🏷️ 平台                                                                                              |
+| ---------- | ----------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| 2025-12-13 | **M（PiDAOLab）** | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-11-12 | **星**            | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-09-03 | **烛火**          | `¥500`  | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-09-05 | **Orion**         | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-10-24 | **唐勇（伏威）**  | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-08-26 | **唐勇**          | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-04-25 | **上官俊斌**      | `¥200`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-05-27 | **临安居士**      | `¥188`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-04-20 | **姜兴(Simon)**   | `¥188`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-02-17 | **禾硕**          | `¥168`  | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-10-16 | **xx豪**          | `¥101`  | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-10-15 | **兵**            | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-08-13 | **zhongjing**     | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-07-15 | **粉兔**          | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
+| 2025-02-8  | **Boom....**      | `¥100`  | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
 
 ### 🥈 银牌赞助者 (￥50-99)
 
@@ -414,7 +417,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 
 | 💝 日期    | 👤 赞助者      | 💰 金额 | 🏷️ 平台                                                                                              |
 | ---------- | -------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| 2025-11-15 | **云鹏**       | `¥20`   | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-11-15 | **云鹏**       | `¥20`   | ![微信转账](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
 | 2025-08-12 | **\*持**       | `¥20`   | ![支付宝赞赏](https://img.shields.io/badge/支付宝赞赏-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-06-03 | **洪流**       | `¥20`   | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
 | 2025-05-27 | **刘启成**     | `¥20`   | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)     |
