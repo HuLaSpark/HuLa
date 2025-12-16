@@ -416,6 +416,7 @@ pub enum ImUrl {
     MessageDeleteByConversationId,
     MessagePage,
     MessageDeleteByAdmin,
+    MessageSaveGeneratedContent,
 
     ConversationCreateMy,
     ConversationUpdateMy,
@@ -683,6 +684,9 @@ impl ImUrl {
             ImUrl::MessagePage => (http::Method::GET, "ai/chat/message/page"),
             ImUrl::MessageDeleteByAdmin => {
                 (http::Method::DELETE, "ai/chat/message/delete-by-admin")
+            }
+            ImUrl::MessageSaveGeneratedContent => {
+                (http::Method::POST, "ai/chat/message/save-generated-content")
             }
 
             // AI 聊天对话
@@ -985,6 +989,7 @@ impl ImUrl {
             "messageDeleteByConversationId" => Ok(ImUrl::MessageDeleteByConversationId),
             "messagePage" => Ok(ImUrl::MessagePage),
             "messageDeleteByAdmin" => Ok(ImUrl::MessageDeleteByAdmin),
+            "messageSaveGeneratedContent" => Ok(ImUrl::MessageSaveGeneratedContent),
 
             // ================ AI 聊天对话 ================
             "conversationCreateMy" => Ok(ImUrl::ConversationCreateMy),

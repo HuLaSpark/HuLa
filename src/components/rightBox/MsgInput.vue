@@ -59,8 +59,12 @@
           class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex justify-end mb-4px">
           <n-config-provider :theme="lightTheme">
             <n-button-group size="small">
-              <n-button color="#13987f" :disabled="disabledSend" class="w-65px" @click="handleDesktopSend">
-                {{ t('editor.send') }}
+              <n-button
+                color="#13987f"
+                :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
+                class="w-65px"
+                @click="handleDesktopSend">
+                {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
               </n-button>
               <n-button color="#13987f" class="p-[0_6px]">
                 <template #icon>
@@ -195,8 +199,12 @@
             class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
             <n-config-provider class="h-full" :theme="lightTheme">
               <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
-                <n-button color="#13987f" :disabled="disabledSend" class="w-3rem h-full" @click="handleMobileSend">
-                  发送
+                <n-button
+                  color="#13987f"
+                  :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
+                  class="w-3rem h-full"
+                  @click="handleMobileSend">
+                  {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
                 </n-button>
               </n-button-group>
             </n-config-provider>
@@ -243,10 +251,12 @@ import { useI18n, I18nT } from 'vue-i18n'
 
 interface Props {
   isAIMode?: boolean
+  isAIStreaming?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  isAIMode: false
+  isAIMode: false,
+  isAIStreaming: false
 })
 
 const { t } = useI18n()
@@ -454,6 +464,7 @@ const selfEmitter = defineEmits<{
   (e: 'send', data: ClickState): void
   (e: 'input', event: Event): void
   (e: 'send-ai', data: AISendData): void
+  (e: 'stop-ai'): void
 }>()
 
 /** 设置聚焦状态 */
@@ -542,13 +553,17 @@ const determineSendType = (): 'ai' | 'im' => {
 
 // 手机端发送逻辑
 const handleMobileSend = async () => {
+  const isAi = determineSendType() === 'ai'
+  if (isAi && props.isAIStreaming) {
+    selfEmitter('stop-ai')
+    return
+  }
   const content = getInputContent()
   if (!content.trim()) {
     window.$message.warning('请输入消息内容')
     return
   }
-
-  if (determineSendType() === 'ai') {
+  if (isAi) {
     await handleAISend()
   } else {
     await send()
@@ -591,13 +606,17 @@ const handleAISend = async () => {
 
 // 桌面端发送逻辑
 const handleDesktopSend = async () => {
+  const isAi = determineSendType() === 'ai'
+  if (isAi && props.isAIStreaming) {
+    selfEmitter('stop-ai')
+    return
+  }
   const content = getInputContent()
   if (!content.trim()) {
     window.$message.warning('请输入消息内容')
     return
   }
-
-  if (determineSendType() === 'ai') {
+  if (isAi) {
     await handleAISend()
   } else {
     await send()
@@ -608,6 +627,10 @@ const handleEnterKey = (e: KeyboardEvent) => {
   if (determineSendType() === 'ai') {
     e.preventDefault()
     e.stopPropagation()
+    if (props.isAIStreaming) {
+      selfEmitter('stop-ai')
+      return
+    }
     handleAISend()
   } else {
     inputKeyDown(e)

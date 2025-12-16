@@ -812,6 +812,7 @@ export interface StreamCallbacks {
   onChunk?: (chunk: string) => void
   onDone?: (fullContent: string) => void
   onError?: (error: string) => void
+  onStart?: (requestId: string) => void
 }
 
 /**
@@ -874,6 +875,9 @@ export async function messageSendStream(
       }
     }
 
+    // 通知开始
+    callbacks?.onStart?.(requestId)
+
     // 调用 Rust 后端命令发送请求
     invoke(TauriCommand.AI_MESSAGE_SEND_STREAM, {
       body,
@@ -888,6 +892,14 @@ export async function messageSendStream(
       }
     })
   })
+}
+
+/**
+ * 取消 AI 流式消息
+ */
+export async function messageCancelStream(requestId: string): Promise<void> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  await invoke('ai_message_cancel_stream', { requestId })
 }
 
 // 获得指定对话的消息列表
