@@ -1,11 +1,9 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { info } from '@tauri-apps/plugin-log'
 import { useDebounceFn } from '@vueuse/core'
 import { sumBy } from 'es-toolkit'
 import { NotificationTypeEnum } from '@/enums'
 import type { SessionItem } from '@/services/types'
 import { isMac } from '@/utils/PlatformConstants'
-import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
  * 统一的未读计数管理器
@@ -56,15 +54,7 @@ export class UnreadCountManager {
     unReadMark: { newFriendUnreadCount: number; newGroupUnreadCount: number; newMsgUnreadCount: number },
     feedUnreadCount?: number
   ) {
-    // 检查当前窗口标签
-    const webviewWindowLabel = WebviewWindow.getCurrent()
-    if (webviewWindowLabel.label !== 'home' && webviewWindowLabel.label !== 'mobile-home') {
-      return
-    }
-
-    info('[UnreadCountManager] 计算全局未读消息计数')
-
-    // 计算总未读数
+    // 计算总未读数（排除免打扰的会话）
     const totalUnread = sumBy(sessionList, (session) => {
       if (session.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
         return 0
@@ -107,9 +97,15 @@ export class UnreadCountManager {
     const groupUnread = Math.max(0, unReadMark.newGroupUnreadCount || 0)
     const feedUnread = Math.max(0, feedUnreadCount || 0)
     const badgeTotal = messageUnread + friendUnread + groupUnread + feedUnread
+
+    // 在 macOS 上更新 Dock 图标徽章
     if (isMac()) {
       const count = badgeTotal > 0 ? badgeTotal : undefined
-      await invokeWithErrorHandler('set_badge_count', { count })
+      // 使用 getByLabel 获取 home 窗口，即使窗口隐藏也能正常设置徽章
+      const homeWindow = await WebviewWindow.getByLabel('home')
+      if (homeWindow) {
+        await homeWindow.setBadgeCount(count)
+      }
     }
 
     // 更新tipVisible状态，用于控制托盘通知显示

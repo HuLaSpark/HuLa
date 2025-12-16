@@ -322,7 +322,8 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   }
 
   chatStore.pushMsg(data, {
-    isActiveChatView: route.path === '/message',
+    // 只有当用户在消息页面且正在查看这个会话时才算 isActiveChatView
+    isActiveChatView: route.path === '/message' && globalStore.currentSessionRoomId === data.message.roomId,
     activeRoomId: globalStore.currentSessionRoomId || ''
   })
 

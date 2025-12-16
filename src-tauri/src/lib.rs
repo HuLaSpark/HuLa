@@ -388,8 +388,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_token, update_user_last_opt_time,
     };
-    #[cfg(desktop)]
-    use crate::desktops::common_cmd::set_badge_count;
     #[cfg(target_os = "ios")]
     use crate::mobiles::keyboard::set_webview_keyboard_adjustment;
     #[cfg(mobile)]
@@ -429,8 +427,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_directory_usage_info_with_progress,
         #[cfg(desktop)]
         cancel_directory_scan,
-        #[cfg(desktop)]
-        set_badge_count,
         #[cfg(target_os = "windows")]
         get_windows_scale_info,
         // 通用命令（桌面端和移动端都支持）

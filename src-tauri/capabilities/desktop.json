@@ -12,6 +12,7 @@
     "global-shortcut:allow-register-all",
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
-    "core:window:allow-set-resizable"
+    "core:window:allow-set-resizable",
+    "core:window:allow-set-badge-count"
   ]
 }

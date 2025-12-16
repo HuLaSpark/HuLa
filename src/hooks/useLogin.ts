@@ -144,7 +144,10 @@ export const useLogin = () => {
     globalStore.updateCurrentSessionRoomId('')
     // 2. 清除系统托盘图标上的未读数
     if (isMac()) {
-      await invokeWithErrorHandler('set_badge_count', { count: undefined })
+      const homeWindow = await WebviewWindow.getByLabel('home')
+      if (homeWindow) {
+        await homeWindow.setBadgeCount(undefined)
+      }
     }
   }
 

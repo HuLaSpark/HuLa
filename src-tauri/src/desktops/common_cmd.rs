@@ -244,15 +244,6 @@ pub fn set_window_movable(
     Ok(())
 }
 
-#[tauri::command]
-pub fn set_badge_count(count: Option<i64>, handle: AppHandle) -> Result<(), String> {
-    // 如果找不到 home 窗口，直接返回成功，不抛出错误
-    if let Some(window) = handle.get_webview_window("home") {
-        window.set_badge_count(count).map_err(|e| e.to_string())?;
-    }
-    Ok(())
-}
-
 /// 设置 macOS 窗口级别为屏幕保护程序级别，以覆盖菜单栏
 #[tauri::command]
 #[cfg(target_os = "macos")]
