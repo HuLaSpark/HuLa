@@ -2,13 +2,15 @@ import chalk from 'chalk'
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
 import { platform } from 'os'
+import { join } from 'path'
 
 // 环境安装指南
 const INSTALL_GUIDES = {
   'Node.js': 'https://nodejs.org/zh-cn/download/',
   pnpm: 'https://pnpm.io/zh/installation',
   Rust: 'https://www.rust-lang.org/tools/install',
-  'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/'
+  'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/',
+  Perl: 'https://strawberryperl.com/'
 }
 
 // 更新指南
@@ -16,14 +18,16 @@ const UPDATE_GUIDES = {
   Rust: '请运行 `rustup update` 命令更新 Rust 版本'
 }
 
-// Windows 特定的检查路径
+// Windows 特定的检查路径（只检查默认安装路径）
 const WINDOWS_PATHS = {
   'WebView2 Runtime': [
     'C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application',
-    'C:\\Program Files\\Microsoft\\EdgeWebView\\Application',
-    'C:\\Windows\\SystemApps\\Microsoft.Win32WebViewHost_cw5n1h2txyewy'
+    'C:\\Program Files\\Microsoft\\EdgeWebView\\Application'
   ]
 }
+
+// 默认安装路径（winget 安装的固定路径）
+const PERL_DEFAULT_PATH = 'C:\\Strawberry\\perl\\bin'
 
 // 错误信息映射
 const ERROR_MESSAGES = {
@@ -73,12 +77,108 @@ const checkWebView2 = () => {
   }
 }
 
+/**
+ * 检查 winget 包是否已安装
+ * @param {string} packageId winget 包 ID
+ * @returns {boolean}
+ */
+const isWingetPackageInstalled = (packageId) => {
+  try {
+    const result = execSync(`winget list --id ${packageId}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] })
+    return result.includes(packageId)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 检查 Perl 是否安装
+ * @returns {boolean}
+ */
+const checkPerl = () => {
+  try {
+    execSync('perl -v', { stdio: 'ignore' })
+    return true
+  } catch {
+    // 检查默认安装路径
+    if (existsSync(join(PERL_DEFAULT_PATH, 'perl.exe'))) {
+      return true
+    }
+    // 检查 winget 是否已安装
+    return isWingetPackageInstalled('StrawberryPerl.StrawberryPerl')
+  }
+}
+
+/**
+ * 添加路径到用户 PATH 环境变量
+ * @param {string} newPath 要添加的路径
+ */
+const addToUserPath = (newPath) => {
+  try {
+    // 获取当前用户 PATH
+    const currentPath = execSync("powershell -Command \"[Environment]::GetEnvironmentVariable('PATH', 'User')\"", {
+      encoding: 'utf8'
+    }).trim()
+
+    // 检查路径是否已存在
+    if (currentPath.toLowerCase().includes(newPath.toLowerCase())) {
+      return true
+    }
+
+    // 添加新路径
+    const updatedPath = currentPath ? `${currentPath};${newPath}` : newPath
+    execSync(`powershell -Command "[Environment]::SetEnvironmentVariable('PATH', '${updatedPath}', 'User')"`, {
+      stdio: 'inherit'
+    })
+
+    // 同时更新当前进程的 PATH
+    process.env.PATH = `${process.env.PATH};${newPath}`
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 安装 Strawberry Perl（使用 winget）
+ * @returns {Promise<boolean>}
+ */
+const installStrawberryPerl = async () => {
+  try {
+    console.log(chalk.blue('  正在使用 winget 安装 Strawberry Perl...'))
+    execSync(
+      'winget install --id StrawberryPerl.StrawberryPerl --accept-source-agreements --accept-package-agreements',
+      {
+        stdio: 'inherit'
+      }
+    )
+
+    // 添加到 PATH
+    addToUserPath(PERL_DEFAULT_PATH)
+    addToUserPath('C:\\Strawberry\\c\\bin')
+
+    console.log(chalk.green('  ✅ Strawberry Perl 安装成功！'))
+    return true
+  } catch (error) {
+    console.log(chalk.red(`  ❌ Perl 安装失败: ${error.message}`))
+    console.log(chalk.gray(`  请手动安装: ${INSTALL_GUIDES.Perl}`))
+    return false
+  }
+}
+
 // Windows 特定的检查
 const windowsChecks = [
   {
     name: 'WebView2 Runtime',
     checkInstalled: checkWebView2,
     isRequired: true
+  },
+  {
+    name: 'Perl',
+    checkInstalled: checkPerl,
+    installer: installStrawberryPerl,
+    isRequired: true,
+    description: 'OpenSSL 编译依赖'
   }
 ]
 
@@ -199,28 +299,53 @@ function checkDependency(check) {
 /**
  * 检查 Windows 特定的依赖
  * @param {Object} check 检查项
- * @returns {boolean} 是否通过检查
+ * @returns {Promise<boolean>} 是否通过检查
  */
-function checkWindowsDependency(check) {
+async function checkWindowsDependency(check) {
   try {
     const isInstalled = check.checkInstalled()
     if (isInstalled) {
-      console.log(chalk.green(`✅ ${check.name} 已安装`))
+      const desc = check.description ? ` (${check.description})` : ''
+      console.log(chalk.green(`✅ ${check.name} 已安装${desc}`))
       return true
     } else {
-      console.log(chalk.red(`❌ ${check.name} 未安装`))
-      console.log(chalk.gray(`  👉 安装指南: ${INSTALL_GUIDES[check.name]}`))
-      return false
+      const desc = check.description ? ` (${check.description})` : ''
+      console.log(chalk.yellow(`⚠️ ${check.name} 未安装${desc}`))
+
+      // 如果有自动安装器，尝试自动安装
+      if (check.installer) {
+        console.log(chalk.blue(`  正在尝试自动安装 ${check.name}...`))
+        const installSuccess = await check.installer()
+        if (installSuccess) {
+          // 安装后再次检查
+          if (check.checkInstalled()) {
+            console.log(chalk.green(`✅ ${check.name} 安装成功并已配置`))
+            return true
+          }
+          // 即使检查失败，可能需要重启终端
+          console.log(chalk.yellow(`  ⚠️ ${check.name} 已安装，但可能需要重启终端才能生效`))
+          return true
+        }
+      }
+
+      if (check.isRequired) {
+        console.log(chalk.red(`❌ ${check.name} 是必需的依赖`))
+        console.log(chalk.gray(`  👉 安装指南: ${INSTALL_GUIDES[check.name]}`))
+        return false
+      } else {
+        console.log(chalk.yellow(`  跳过可选依赖 ${check.name}`))
+        return true
+      }
     }
   } catch (error) {
     const errorMessage = getFriendlyErrorMessage(error)
     console.log(chalk.red(`❌ ${check.name} 检查失败`))
     console.log(chalk.red(`  原因: ${errorMessage}`))
-    return false
+    return !check.isRequired
   }
 }
 
-function main() {
+async function main() {
   const isWindows = platform() === 'win32'
 
   // 执行基本检查
@@ -229,12 +354,17 @@ function main() {
   // 在 Windows 上执行额外检查
   if (isWindows) {
     console.log(chalk.blue(`\n[HuLa ${new Date().toLocaleTimeString()}] 正在检查 Windows 开发环境...\n`))
-    const windowsResults = windowsChecks.map(checkWindowsDependency)
-    results.push(...windowsResults)
+    for (const check of windowsChecks) {
+      const result = await checkWindowsDependency(check)
+      results.push(result)
+    }
   }
 
   if (results.every(Boolean)) {
     console.log(chalk.green('\n✅ 所有环境检查通过！'))
+    if (isWindows) {
+      console.log(chalk.gray('\n💡 提示：如果刚安装了 Perl，可能需要重启终端或重启电脑使 PATH 生效'))
+    }
     process.exit(0)
   } else {
     console.log(chalk.red('\n❌ 环境依赖检查失败，请按照上述提示安装或更新依赖。'))
@@ -242,4 +372,8 @@ function main() {
   }
 }
 
-main()
+main().catch((error) => {
+  console.error(chalk.red('检查过程中发生错误：'))
+  console.error(chalk.yellow(error.stack || error))
+  process.exit(1)
+})
