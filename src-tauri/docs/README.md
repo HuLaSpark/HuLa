@@ -5,6 +5,7 @@
 <p align="center">一款基于Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯系统</p>
 
 <div align="center">
+<a href="https://trendshift.io/repositories/15187" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15187" alt="HuLaSpark%2FHuLa | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
   <a href="https://hellogithub.com/repository/743b101346c54f6cb5c20eed2edbaa40" target="_blank">
     <img src="https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=743b101346c54f6cb5c20eed2edbaa40&claim_uid=WsQaY6SlnL7qxG3&theme=neutral" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" />
   </a>
@@ -251,6 +252,12 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 | ---- | -------------- | -------------------------------------------------------------------------------------------------- |
 | 🧠   | AI 聊天助手    | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔌   | 多平台 AI 支持 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080) |
+
+## 应用升级赞助商
+
+<a href="https://www.toolsetlink.com">
+  <img height="54" alt="UpgradeLink" src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" />
+</a>
 
 ## 👏 感谢以下贡献者们！
 
