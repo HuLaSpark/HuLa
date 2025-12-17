@@ -126,7 +126,7 @@
         <n-flex align="center" justify="space-between">
           <span>{{ t('setting.storage.curr_dir') }}</span>
           <n-flex vertical align="end" :size="8">
-            <span class="text-(12px #666) max-w-300px truncate">
+            <span :title="currentDirectory" class="text-(12px #666) max-w-300px truncate cursor-default">
               {{ currentDirectory || t('setting.storage.fetching_directory') }}
             </span>
             <n-flex :size="8">

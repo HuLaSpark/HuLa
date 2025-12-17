@@ -73,7 +73,11 @@ export const useThumbnailCacheStore = defineStore(
     }
 
     const decideExt = async (url: string) => {
-      const info = await detectRemoteFileType({ url, fileSize: 1 })
+      const match = url.match(/\\.([a-zA-Z0-9]+)(?:\\?|$)/)
+      if (match?.[1]) {
+        return match[1].toLowerCase()
+      }
+      const info = await detectRemoteFileType({ url, fileSize: null })
       return info?.ext ? info.ext : 'jpg'
     }
 

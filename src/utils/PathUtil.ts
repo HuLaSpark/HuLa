@@ -14,6 +14,13 @@ const EMOJIS_DIR = 'emojis'
 // AI 生成资源目录名
 const AI_DIR = 'ai'
 
+// 获取 userData 根目录
+export const getUserDataRootAbsoluteDir = async (): Promise<string> => {
+  await ensureUserDataRoot()
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir()
+  return await join(baseDirPath, USER_DATA)
+}
+
 // 远程文件类型探测结果与进行中的 Promise 缓存，避免重复请求同一资源
 const remoteFileTypeResultCache = new Map<string, FileTypeResult | undefined>()
 const remoteFileTypePromiseCache = new Map<string, Promise<FileTypeResult | undefined>>()
@@ -229,7 +236,7 @@ export const ensureModelFile = async (fileName: string, remoteUrl: string): Prom
  */
 export async function detectRemoteFileType(options: {
   url: string
-  fileSize: number
+  fileSize?: number | null
   byteLength?: number
 }): Promise<FileTypeResult | undefined> {
   const { url } = options
@@ -246,7 +253,7 @@ export async function detectRemoteFileType(options: {
 
   const task = (async () => {
     try {
-      const { url, byteLength = 4100, fileSize } = options
+      const { url, byteLength = 4100 } = options
 
       // 1. 先发送 HEAD 请求，检查文件是否存在及大小
       const headResponse = await fetch(url, { method: 'HEAD' })
@@ -256,8 +263,11 @@ export async function detectRemoteFileType(options: {
         throw new Error(`文件不存在, 状态: ${headResponse.status}`)
       }
 
+      const contentLengthHeader = headResponse.headers.get('content-length')
+      const resolvedFileSize = options.fileSize ?? (contentLengthHeader ? Number(contentLengthHeader) : null)
+
       // 2. 如果是空文件，直接返回 undefined
-      if (fileSize === 0) {
+      if (resolvedFileSize === 0) {
         console.log('文件大小为 0 字节，尝试使用后缀名检测')
         try {
           const result = await invoke<FilesMeta>('get_files_meta', { filesPath: [url] })
@@ -274,7 +284,7 @@ export async function detectRemoteFileType(options: {
       }
 
       // 3. 如果文件大小 < byteLength，直接 GET 整个文件，避免 Range 错误
-      const shouldUseRange = fileSize === null || fileSize >= byteLength
+      const shouldUseRange = resolvedFileSize === null || resolvedFileSize >= byteLength
       const rangeEnd = shouldUseRange ? byteLength - 1 : void 0
 
       const response = await fetch(url, shouldUseRange ? { headers: { Range: `bytes=0-${rangeEnd}` } } : void 0)

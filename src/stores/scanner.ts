@@ -4,6 +4,7 @@ import { appCacheDir } from '@tauri-apps/api/path'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
+import { getUserDataRootAbsoluteDir } from '@/utils/PathUtil'
 
 type DirectoryScanProgress = {
   current_path: string
@@ -100,8 +101,7 @@ export const useScannerStore = defineStore(StoresEnum.SCANNER, () => {
 
     try {
       // 获取默认目录
-      const cacheDir = await appCacheDir()
-      defaultDirectory.value = cacheDir
+      await setDefaultDirectory()
 
       // 设置事件监听器
       await setupEventListeners()
@@ -115,6 +115,15 @@ export const useScannerStore = defineStore(StoresEnum.SCANNER, () => {
     } catch (error) {
       console.error('初始化扫描器失败:', error)
       window.$message?.error('初始化扫描器失败')
+    }
+  }
+
+  const setDefaultDirectory = async () => {
+    try {
+      defaultDirectory.value = await getUserDataRootAbsoluteDir()
+    } catch (error) {
+      console.error('获取 userData 根目录失败，回退到 appCacheDir:', error)
+      defaultDirectory.value = await appCacheDir()
     }
   }
 

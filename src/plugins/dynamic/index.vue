@@ -27,7 +27,7 @@
             <div class="cursor-pointer" @click="showAddFeedModal = true">
               <n-popover trigger="hover">
                 <template #trigger>
-                  <svg class="size-22px color-white text-white">
+                  <svg class="size-23px color-white text-white">
                     <use href="#plus"></use>
                   </svg>
                 </template>
@@ -38,7 +38,7 @@
             <div class="cursor-pointer" @click="handleRefresh">
               <n-popover trigger="hover">
                 <template #trigger>
-                  <svg class="size-16px color-white"><use href="#refresh"></use></svg>
+                  <svg class="size-17px color-white"><use href="#refresh"></use></svg>
                 </template>
                 <span>{{ t('dynamic.list.actions.refresh') }}</span>
               </n-popover>

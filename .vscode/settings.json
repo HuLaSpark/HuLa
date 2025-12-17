@@ -1,10 +1,14 @@
 {
-  "css.customData": [".vscode/tailwindcss.json"],
+  "css.customData": [
+    ".vscode/tailwindcss.json"
+  ],
   "java.configuration.updateBuildConfiguration": "disabled",
   "typescript.tsdk": "node_modules/typescript/lib",
-
   "i18n-ally.autoDetection": false,
-  "i18n-ally.displayLanguage": "en",
+  "i18n-ally.displayLanguage": "zh-CN",
   "i18n-ally.namespace": true,
-  "i18n-ally.localesPaths": [ "locales" ]
+  "i18n-ally.localesPaths": [
+    "locales"
+  ],
+  "i18n-ally.keystyle": "nested"
 }

@@ -85,14 +85,17 @@ export const useEmojiStore = defineStore(StoresEnum.EMOJI, () => {
   }
 
   const resolveEmojiExt = async (url: string) => {
+    const match = url.match(/\\.([a-zA-Z0-9]+)(?:\\?|$)/)
+    if (match?.[1]) {
+      return match[1].toLowerCase()
+    }
     try {
-      const info = await detectRemoteFileType({ url, fileSize: 1 })
+      const info = await detectRemoteFileType({ url, fileSize: null })
       if (info?.ext) return info.ext
     } catch (error) {
       console.warn('[emoji] 识别表情类型失败:', error)
     }
-    const match = url.match(/\\.([a-zA-Z0-9]+)(?:\\?|$)/)
-    return match?.[1] || 'png'
+    return 'png'
   }
 
   const buildFileName = async (url: string) => {
