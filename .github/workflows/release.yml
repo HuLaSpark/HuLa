@@ -238,3 +238,33 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }} --config release-tauri-config.json
+
+      # 增加获取版本号
+      - name: Generate release tag
+        id: save_tag
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          echo ${{ steps.tauri-action.outputs.appVersion }}
+          echo "appVersion=${{ steps.tauri-action.outputs.appVersion }}" >> $GITHUB_OUTPUT
+
+      # 设置作业级输出
+      - name: Set job output
+        id: set_output
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          # 注意：这里引用的是 save_tag 步骤的 tag_name 输出
+          echo "appVersion=${{ steps.save_tag.outputs.appVersion }}" >> $GITHUB_OUTPUT
+
+  upgradeLink-upload:
+    needs:  publish-tauri  # 依赖于 publish-tauri作业完成
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send a request to UpgradeLink
+        uses: toolsetlink/upgradelink-action@v5
+        with:
+          source-url: 'https://github.com/HuLaSpark/HuLa/releases/download/v${{ needs.publish-tauri.outputs.appVersion }}/latest.json'
+          access-key: ${{ secrets.UPGRADE_LINK_ACCESS_KEY }}  # ACCESS_KEY  密钥key
+          tauri-key: ${{ secrets.UPGRADE_LINK_TAURI_KEY }}    # TAURI_KEY tauri 应用唯一标识
+          github-token: ${{ secrets.GITHUB_TOKEN }}
