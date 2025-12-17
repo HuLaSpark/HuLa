@@ -35,6 +35,8 @@
     "idev": "tauri ios dev",
     "========= 打包桌面应用程序(简化命令) =========": "",
     "tb": "node scripts/interactive-build-inquirer.js",
+    "========= macOS使用系统keychain的密钥启动 =========": "",
+    "td:keychain": "HULA_SQLCIPHER_USE_KEYCHAIN=1 pnpm td",
     "========= 打包桌面应用程序 =========": "",
     "tauri:build": "node scripts/interactive-build-inquirer.js",
     "========= 启动HuLa ios 程序 =========": "",

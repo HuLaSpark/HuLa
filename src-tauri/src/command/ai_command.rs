@@ -2,7 +2,6 @@ use crate::AppData;
 use crate::im_request_client::ImUrl;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use tauri::{State, ipc::Channel};
 use tracing::{error, info};
 
