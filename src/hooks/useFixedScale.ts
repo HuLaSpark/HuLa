@@ -62,6 +62,7 @@ const supportsZoom = (() => {
  * - 提供启用/禁用接口，确保卸载时恢复样式与事件
  * @param options 配置选项
  */
+// TODO：在win10多屏幕高分辨率下还有问题，暂时不使用该hooks解决系统文字放大导致内容不显示问题
 export const useFixedScale = (options: UseFixedScaleOptions = {}): FixedScaleController => {
   const {
     target = '#app',

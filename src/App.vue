@@ -25,13 +25,12 @@ import {
   OnlineEnum,
   RoomTypeEnum
 } from '@/enums'
-import { useFixedScale } from '@/hooks/useFixedScale'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop, isIOS, isMobile, isWindows, isWindows10 } from '@/utils/PlatformConstants'
+import { isDesktop, isIOS, isMobile, isWindows10 } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import {
@@ -75,13 +74,6 @@ const settingStore = useSettingStore()
 const { themes, lockScreen, page, login } = storeToRefs(settingStore)
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
-
-// 创建固定缩放控制器（使用 #app-container 作为目标，避免影响浮层定位）
-const fixedScale = useFixedScale({
-  target: '#app-container',
-  mode: 'transform',
-  enableWindowsTextScaleDetection: true
-})
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus', '/capture'])
@@ -636,10 +628,6 @@ onMounted(() => {
     requestNetworkPermissionForIOS()
   }
 
-  // 仅在windows上使用
-  if (isWindows()) {
-    fixedScale.enable()
-  }
   if (isWindows10()) {
     void appWindow.setShadow(false).catch((error) => {
       console.warn('禁用窗口阴影失败:', error)
@@ -696,9 +684,6 @@ onMounted(() => {
 })
 
 onUnmounted(async () => {
-  // 关闭固定缩放，恢复样式与监听
-  fixedScale.disable()
-
   window.removeEventListener('contextmenu', preventGlobalContextMenu, false)
   window.removeEventListener('dragstart', preventDrag)
 
