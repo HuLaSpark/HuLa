@@ -1,7 +1,7 @@
 {
   "identifier": "desktop-capability",
   "platforms": ["macOS", "windows", "linux"],
-  "windows": ["home", "login", "update", "checkupdate", "capture", "settings", "tray"],
+  "windows": ["*"],
   "permissions": [
     "updater:default",
     "updater:allow-check",
