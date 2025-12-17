@@ -10,5 +10,36 @@
   "i18n-ally.localesPaths": [
     "locales"
   ],
-  "i18n-ally.keystyle": "nested"
+  "i18n-ally.keystyle": "nested",
+
+  "search.exclude": {
+    "**/*.snap": true,
+    "**/*.svg": true,
+    "**/.git": true,
+    "**/.github": false,
+    "**/.nuxt": true,
+    "**/.output": true,
+    "**/.pnpm": true,
+    "**/.vscode": true,
+    "**/.yarn": true,
+    "**/assets": true,
+    "**/bower_components": true,
+    "**/dist/**": true,
+    "**/logs": true,
+    "**/node_modules": true,
+    "**/out/**": true,
+    "**/package-lock.json": true,
+    "**/pnpm-lock.yaml": true,
+    "**/public": true,
+    "**/temp": true,
+    "**/yarn.lock": true,
+    "**/Cargo.lock": true,
+    "**/CHANGELOG*": true,
+    "**/LICENSE*": true,
+    "**/src-tauri/target": true,
+    "**/src-tauri/docs": true,
+    "**/src-tauri/draco": true,
+    "**/src-tauri/gen": true,
+    ".tauri": true,
+  },
 }
