@@ -9,8 +9,8 @@
         <div
           class="cursor-pointer hover:bg-#13987F/10 p-8px rounded-8px transition-all duration-200 active:scale-95"
           @click="goBack">
-          <svg class="w-20px h-20px text-#13987F">
-            <use href="#arrow-left"></use>
+          <svg class="size-20px text-[--text-color] rotate-180">
+            <use href="#right"></use>
           </svg>
         </div>
         <div class="flex items-center gap-10px">
@@ -47,11 +47,12 @@ import { listen } from '@tauri-apps/api/event'
 import { useI18n } from 'vue-i18n'
 import DynamicDetail from '@/components/common/DynamicDetail.vue'
 import { useWindow } from '@/hooks/useWindow'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTauriListener } from '@/hooks/useTauriListener'
 
 const { getWindowPayload } = useWindow()
 const route = useRoute()
+const router = useRouter()
 const { addListener } = useTauriListener()
 const { t } = useI18n()
 
@@ -92,6 +93,10 @@ onMounted(async () => {
 
 // 关闭窗口
 const goBack = async () => {
+  if (route.params.id) {
+    router.back()
+    return
+  }
   const currentWindow = WebviewWindow.getCurrent()
   await currentWindow.close()
 }

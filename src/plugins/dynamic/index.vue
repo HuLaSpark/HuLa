@@ -268,6 +268,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user.ts'
 import { useContactStore } from '@/stores/contacts.ts'
 import { useFeedStore } from '@/stores/feed.ts'
@@ -277,10 +278,9 @@ import { formatTimestamp } from '@/utils/ComputedTime'
 import type { FriendItem } from '@/services/types'
 import { storeToRefs } from 'pinia'
 import DynamicList from '@/components/common/DynamicList.vue'
-import { useWindow } from '@/hooks/useWindow'
 
-const { createWebviewWindow, sendWindowPayload, checkWinExist } = useWindow()
 const { t } = useI18n()
+const router = useRouter()
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const feedStore = useFeedStore()
@@ -410,38 +410,10 @@ const handleRefresh = async () => {
   }
 }
 
-// 处理动态项点击 - 在新窗口中打开
+// 处理动态项点击 - 当前窗口跳转详情
 const handleItemClick = async (feedId: string) => {
-  const windowLabel = `dynamicDetail`
-
-  // 先检查窗口是否已存在
-  const existingWindow = await WebviewWindow.getByLabel(windowLabel)
-  if (existingWindow) {
-    // 如果窗口已存在，激活它并更新内容
-    await checkWinExist(windowLabel)
-    // 发送事件通知窗口更新内容
-    await existingWindow.emit('window-payload-updated', { feedId })
-    return
-  }
-
-  // 创建新的webview窗口来显示动态详情
-  const webview = await createWebviewWindow(
-    t('dynamic.page.detail.title'), // 窗口标题
-    windowLabel, // 窗口标签
-    800, // 宽度
-    900, // 高度
-    undefined, // 不需要关闭其他窗口
-    true, // 可调整大小
-    600, // 最小宽度
-    700, // 最小高度
-    false, // 不透明
-    false // 初始不显示（等待加载完成）
-  )
-
-  // 窗口创建后，发送payload
-  if (webview) {
-    await sendWindowPayload(windowLabel, { feedId })
-  }
+  if (!feedId) return
+  await router.push({ name: 'dynamicDetailWithId', params: { id: feedId } })
 }
 
 // 权限选择相关方法
