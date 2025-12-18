@@ -593,12 +593,15 @@ export const useChatStore = defineStore(
         const index = sessionList.value.findIndex((s) => s.roomId === roomId)
         if (index !== -1) {
           sessionList.value[index] = updatedSession
+        } else {
+          console.warn('[updateSession] 会话不在 sessionList 中:', roomId)
         }
 
         // 同步更新 sessionMap
         sessionMap.value[roomId] = updatedSession
 
         if ('unreadCount' in data && typeof updatedSession.unreadCount === 'number') {
+          console.log('[updateSession] 更新未读数:', roomId, updatedSession.unreadCount)
           persistUnreadCount(roomId, updatedSession.unreadCount)
           requestUnreadCountUpdate(roomId)
         }
@@ -607,6 +610,8 @@ export const useChatStore = defineStore(
         if ('muteNotification' in data) {
           requestUnreadCountUpdate()
         }
+      } else {
+        console.warn('[updateSession] 会话不存在:', roomId)
       }
     }
 
@@ -675,7 +680,7 @@ export const useChatStore = defineStore(
       const cacheUser = groupStore.getUserInfo(uid)
 
       // 更新会话的文本属性和未读数
-      const session = updateSessionLastActiveTime(msg.message.roomId)
+      const session = resolveSessionByRoomId(msg.message.roomId)
       if (session) {
         const lastMsgUserName = cacheUser?.name
         const formattedText =
@@ -691,15 +696,38 @@ export const useChatStore = defineStore(
                 msg.message.body?.content || msg.message.body,
                 session.type
               )
-        session.text = formattedText!
-        // 更新未读数
-        if (msg.fromUser.uid !== userStore.userInfo!.uid) {
-          if (!isActiveChatView || msg.message.roomId !== targetRoomId) {
-            session.unreadCount = (session.unreadCount || 0) + 1
-            persistUnreadCount(session.roomId, session.unreadCount)
-            // 使用防抖机制更新，适合并发消息场景
-            requestUnreadCountUpdate()
-          }
+
+        // 收集需要更新的属性
+        const updateData: Partial<SessionItem> = {
+          text: formattedText!,
+          activeTime: Date.now()
+        }
+
+        // 更新未读数：只有非自己发的消息，且不在当前活跃会话视图中时才增加
+        const isSelfMessage = msg.fromUser.uid === userStore.userInfo!.uid
+        const shouldIncreaseUnread = !isSelfMessage && (!isActiveChatView || msg.message.roomId !== targetRoomId)
+
+        if (shouldIncreaseUnread) {
+          updateData.unreadCount = (session.unreadCount || 0) + 1
+          console.log('[pushMsg] 增加未读数:', msg.message.roomId, updateData.unreadCount, {
+            isActiveChatView,
+            targetRoomId,
+            msgRoomId: msg.message.roomId,
+            isSelfMessage
+          })
+        }
+
+        // 使用 updateSession 统一更新，确保响应式正确触发
+        updateSession(msg.message.roomId, updateData)
+      } else {
+        // 会话不存在，添加新会话
+        await addSession(msg.message.roomId)
+        // 新会话添加后，如果不是自己发的消息且不在当前活跃视图，需要设置未读数
+        const isSelfMessage = msg.fromUser.uid === userStore.userInfo!.uid
+        const shouldIncreaseUnread = !isSelfMessage && (!isActiveChatView || msg.message.roomId !== targetRoomId)
+        if (shouldIncreaseUnread) {
+          updateSession(msg.message.roomId, { unreadCount: 1 })
+          console.log('[pushMsg] 新会话增加未读数:', msg.message.roomId)
         }
       }
 
@@ -1035,11 +1063,17 @@ export const useChatStore = defineStore(
     // 标记已读数为 0
     const markSessionRead = (roomId: string) => {
       const session = resolveSessionByRoomId(roomId)
-      if (!session) return
+      if (!session) {
+        console.log('[markSessionRead] 会话不存在:', roomId)
+        return
+      }
       if (session.unreadCount === 0) {
+        console.log('[markSessionRead] 未读数已为0，跳过:', roomId)
         requestUnreadCountUpdate(roomId)
         return
       }
+
+      console.log('[markSessionRead] 清除未读数:', roomId, '当前未读数:', session.unreadCount)
 
       // 记录已读时的活跃时间，用于重登时识别陈旧未读
       const activeTime = session.activeTime || Date.now()
