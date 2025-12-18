@@ -59,13 +59,21 @@ export const useMessage = () => {
   const handleMsgClick = async (item: SessionItem) => {
     msgBoxShow.value = true
     // 更新当前会话信息
-    globalStore.updateCurrentSessionRoomId(item.roomId)
-    // 先更新会话，再根据是否存在自身成员做一次兜底刷新，防止批量切换账号后看到旧数据
-    await ensureGroupMembersSynced(item.roomId, item.type)
-    if (item.unreadCount && item.unreadCount > 0) {
-      // 先清空本地未读标记（立即更新UI），再异步上报已读（不阻塞）
-      chatStore.markSessionRead(item.roomId)
-      markMsgRead(item.roomId).catch((err) => console.error('[useMessage] 已读上报失败:', err))
+    const roomId = item.roomId
+    globalStore.updateCurrentSessionRoomId(roomId)
+
+    // 先清空本地未读标记（立即更新UI），再异步上报已读（不阻塞），避免后续同步群成员失败导致未读气泡残留
+    const currentSession = chatStore.getSession(roomId)
+    if (currentSession?.unreadCount && currentSession.unreadCount > 0) {
+      chatStore.markSessionRead(roomId)
+      markMsgRead(roomId).catch((err) => console.error('[useMessage] 已读上报失败:', err))
+    }
+
+    // 再根据是否存在自身成员做一次兜底刷新，防止批量切换账号后看到旧数据
+    try {
+      await ensureGroupMembersSynced(roomId, item.type)
+    } catch (error) {
+      console.error('[useMessage] 同步群成员失败:', error)
     }
   }
 
