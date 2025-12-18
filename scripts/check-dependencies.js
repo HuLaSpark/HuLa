@@ -31,7 +31,6 @@ const PERL_DEFAULT_PATH = 'C:\\Strawberry\\perl\\bin'
 const PERL_DEFAULT_EXECUTABLE = join(PERL_DEFAULT_PATH, 'perl.exe')
 const REQUIRED_PERL_OS = 'MSWin32'
 const REQUIRED_PERL_ARCH_KEYWORD = 'mswin32-x64-multi-thread'
-const REQUIRED_PERL_VENDOR = 'strawberry'
 const PERL_INFO_ARGS = '-MConfig -e "print join(q{|}, $Config{osname}, $Config{archname}, $Config{prefix})"'
 
 // 错误信息映射
@@ -105,19 +104,53 @@ const tryGetPerlInfo = (executable = 'perl') => {
 }
 
 /**
- * 判断 perl 是否为原生 64 位 Strawberry Perl
+ * 判断 perl 是否为原生 64 位 Windows Perl（适用于 OpenSSL 编译）
+ * 支持 Strawberry Perl、ActivePerl 等原生 64 位 Windows Perl
  * @param {{osname: string, archname: string, prefix: string}|null} info
  * @returns {boolean}
  */
-const isStrawberryPerl = (info) => {
+const isNativeWindowsPerl = (info) => {
   if (!info) return false
   const arch = info.archname?.toLowerCase() || ''
-  const prefix = info.prefix?.toLowerCase() || ''
-  return (
-    info.osname === REQUIRED_PERL_OS &&
-    arch.includes(REQUIRED_PERL_ARCH_KEYWORD) &&
-    prefix.includes(REQUIRED_PERL_VENDOR)
-  )
+  // 核心要求：原生 64 位 Windows Perl，不能是 Cygwin/MSYS 版本
+  return info.osname === REQUIRED_PERL_OS && arch.includes(REQUIRED_PERL_ARCH_KEYWORD)
+}
+
+/**
+ * 判断 perl 是否为 Cygwin/MSYS 版本（不适用于 OpenSSL 编译）
+ * @param {{osname: string, archname: string, prefix: string}|null} info
+ * @returns {boolean}
+ */
+const isCygwinOrMsysPerl = (info) => {
+  if (!info) return false
+  const arch = info.archname?.toLowerCase() || ''
+  return arch.includes('cygwin') || arch.includes('msys')
+}
+
+/**
+ * 设置 PERL 用户环境变量（避免修改 PATH 顺序导致污染其他工具）
+ * @param {string} perlPath perl 可执行文件完整路径
+ * @returns {boolean}
+ */
+const setUserPerlEnv = (perlPath) => {
+  try {
+    // 检查是否已设置
+    const currentPerl = execSync("powershell -Command \"[Environment]::GetEnvironmentVariable('PERL', 'User')\"", {
+      encoding: 'utf8'
+    }).trim()
+    if (currentPerl.toLowerCase() === perlPath.toLowerCase()) {
+      return true
+    }
+    // 设置 PERL 环境变量
+    execSync(`powershell -Command "[Environment]::SetEnvironmentVariable('PERL', '${perlPath}', 'User')"`, {
+      stdio: 'pipe'
+    })
+    // 同时设置当前进程
+    process.env.PERL = perlPath
+    return true
+  } catch {
+    return false
+  }
 }
 
 const hasStrawberryOnDisk = () => existsSync(PERL_DEFAULT_EXECUTABLE)
@@ -134,31 +167,45 @@ const preferStrawberryPerlForSession = () => {
 }
 
 /**
- * 检查 Perl 是否安装且为 Strawberry Perl
+ * 检查 Perl 是否安装且为原生 64 位 Windows Perl
  * @returns {boolean}
  */
 const checkPerl = () => {
+  // 检查 PATH 中的 perl
   const info = tryGetPerlInfo()
-  if (isStrawberryPerl(info)) {
+
+  // 情况1：PATH 中已是原生 Windows Perl，直接通过
+  if (isNativeWindowsPerl(info)) {
     return true
   }
 
-  if (info) {
-    console.log(
-      chalk.yellow(`  ⚠️ 检测到 perl (${info.archname || 'unknown'})，并非 Strawberry Perl (MSWin32-x64-multi-thread)`)
-    )
-    console.log(chalk.gray(`  当前 perl prefix: ${info.prefix || '未知'}`))
-  } else {
-    console.log(chalk.yellow('  ⚠️ 未检测到可用的 perl 命令'))
+  // 情况2：PATH 中是 Cygwin/MSYS Perl，需要特殊处理
+  if (isCygwinOrMsysPerl(info)) {
+    console.log(chalk.yellow(`  ⚠️ 检测到 Cygwin/MSYS Perl (${info.archname})，无法用于编译 OpenSSL`))
+
+    // 检查磁盘上是否有 Strawberry Perl
+    if (hasStrawberryOnDisk()) {
+      const strawberryInfo = tryGetPerlInfo(PERL_DEFAULT_EXECUTABLE)
+      if (isNativeWindowsPerl(strawberryInfo)) {
+        // 设置 PERL 环境变量而不是修改 PATH（避免污染 MSYS2 的 GCC 等工具）
+        if (setUserPerlEnv(PERL_DEFAULT_EXECUTABLE)) {
+          console.log(chalk.green('  ✅ 已设置 PERL 环境变量指向 Strawberry Perl'))
+          console.log(chalk.gray('  💡 这样不会影响 MSYS2/Cygwin 的其他工具'))
+          return true
+        }
+      }
+    }
+    console.log(chalk.gray('  💡 建议安装 Strawberry Perl: https://strawberryperl.com/'))
+    return false
   }
 
+  // 情况3：PATH 中没有 perl，检查磁盘上是否有 Strawberry Perl
   if (hasStrawberryOnDisk()) {
-    console.log(chalk.blue('  检测到 C:\\Strawberry\\perl\\bin\\perl.exe，正在临时调整 PATH...'))
-    preferStrawberryPerlForSession()
-    const fallbackInfo = tryGetPerlInfo()
-    if (isStrawberryPerl(fallbackInfo)) {
+    const fallbackInfo = tryGetPerlInfo(PERL_DEFAULT_EXECUTABLE)
+    if (isNativeWindowsPerl(fallbackInfo)) {
+      // 设置 PERL 环境变量
+      setUserPerlEnv(PERL_DEFAULT_EXECUTABLE)
       addToUserPath(PERL_DEFAULT_PATH)
-      console.log(chalk.green('  ✅ 已切换到 Strawberry Perl，请重新打开 PowerShell/cmd 使 PATH 生效'))
       return true
     }
   }
