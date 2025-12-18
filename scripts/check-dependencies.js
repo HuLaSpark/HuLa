@@ -28,6 +28,11 @@ const WINDOWS_PATHS = {
 
 // 默认安装路径（winget 安装的固定路径）
 const PERL_DEFAULT_PATH = 'C:\\Strawberry\\perl\\bin'
+const PERL_DEFAULT_EXECUTABLE = join(PERL_DEFAULT_PATH, 'perl.exe')
+const REQUIRED_PERL_OS = 'MSWin32'
+const REQUIRED_PERL_ARCH_KEYWORD = 'mswin32-x64-multi-thread'
+const REQUIRED_PERL_VENDOR = 'strawberry'
+const PERL_INFO_ARGS = '-MConfig -e "print join(q{|}, $Config{osname}, $Config{archname}, $Config{prefix})"'
 
 // 错误信息映射
 const ERROR_MESSAGES = {
@@ -77,36 +82,88 @@ const checkWebView2 = () => {
   }
 }
 
+const quoteIfNeeded = (value) => {
+  if (!value) return ''
+  if (value.startsWith('"') && value.endsWith('"')) return value
+  return value.includes(' ') ? `"${value}"` : value
+}
+
 /**
- * 检查 winget 包是否已安装
- * @param {string} packageId winget 包 ID
- * @returns {boolean}
+ * 读取当前 perl 的平台信息
+ * @param {string} [executable] 指定 perl 可执行文件
+ * @returns {{osname: string, archname: string, prefix: string}|null}
  */
-const isWingetPackageInstalled = (packageId) => {
+const tryGetPerlInfo = (executable = 'perl') => {
   try {
-    const result = execSync(`winget list --id ${packageId}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] })
-    return result.includes(packageId)
+    const command = `${quoteIfNeeded(executable)} ${PERL_INFO_ARGS}`
+    const output = execSync(command, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim()
+    const [osname = '', archname = '', prefix = ''] = output.split('|')
+    return { osname, archname, prefix }
   } catch {
-    return false
+    return null
   }
 }
 
 /**
- * 检查 Perl 是否安装
+ * 判断 perl 是否为原生 64 位 Strawberry Perl
+ * @param {{osname: string, archname: string, prefix: string}|null} info
+ * @returns {boolean}
+ */
+const isStrawberryPerl = (info) => {
+  if (!info) return false
+  const arch = info.archname?.toLowerCase() || ''
+  const prefix = info.prefix?.toLowerCase() || ''
+  return (
+    info.osname === REQUIRED_PERL_OS &&
+    arch.includes(REQUIRED_PERL_ARCH_KEYWORD) &&
+    prefix.includes(REQUIRED_PERL_VENDOR)
+  )
+}
+
+const hasStrawberryOnDisk = () => existsSync(PERL_DEFAULT_EXECUTABLE)
+
+/**
+ * 将 Strawberry Perl 置顶到当前进程 PATH（仅影响当前脚本）
+ */
+const preferStrawberryPerlForSession = () => {
+  if (!process.env.PATH) return
+  const normalized = PERL_DEFAULT_PATH.toLowerCase()
+  const parts = process.env.PATH.split(';').filter(Boolean)
+  const filtered = parts.filter((segment) => segment.toLowerCase() !== normalized)
+  process.env.PATH = [PERL_DEFAULT_PATH, ...filtered].join(';')
+}
+
+/**
+ * 检查 Perl 是否安装且为 Strawberry Perl
  * @returns {boolean}
  */
 const checkPerl = () => {
-  try {
-    execSync('perl -v', { stdio: 'ignore' })
+  const info = tryGetPerlInfo()
+  if (isStrawberryPerl(info)) {
     return true
-  } catch {
-    // 检查默认安装路径
-    if (existsSync(join(PERL_DEFAULT_PATH, 'perl.exe'))) {
+  }
+
+  if (info) {
+    console.log(
+      chalk.yellow(`  ⚠️ 检测到 perl (${info.archname || 'unknown'})，并非 Strawberry Perl (MSWin32-x64-multi-thread)`)
+    )
+    console.log(chalk.gray(`  当前 perl prefix: ${info.prefix || '未知'}`))
+  } else {
+    console.log(chalk.yellow('  ⚠️ 未检测到可用的 perl 命令'))
+  }
+
+  if (hasStrawberryOnDisk()) {
+    console.log(chalk.blue('  检测到 C:\\Strawberry\\perl\\bin\\perl.exe，正在临时调整 PATH...'))
+    preferStrawberryPerlForSession()
+    const fallbackInfo = tryGetPerlInfo()
+    if (isStrawberryPerl(fallbackInfo)) {
+      addToUserPath(PERL_DEFAULT_PATH)
+      console.log(chalk.green('  ✅ 已切换到 Strawberry Perl，请重新打开 PowerShell/cmd 使 PATH 生效'))
       return true
     }
-    // 检查 winget 是否已安装
-    return isWingetPackageInstalled('StrawberryPerl.StrawberryPerl')
   }
+
+  return false
 }
 
 /**
@@ -155,7 +212,7 @@ const installStrawberryPerl = async () => {
 
     // 添加到 PATH
     addToUserPath(PERL_DEFAULT_PATH)
-    addToUserPath('C:\\Strawberry\\c\\bin')
+    preferStrawberryPerlForSession()
 
     console.log(chalk.green('  ✅ Strawberry Perl 安装成功！'))
     return true

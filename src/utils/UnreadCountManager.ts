@@ -92,13 +92,14 @@ export class UnreadCountManager {
     },
     feedUnreadCount?: number
   ): Promise<void> {
+    // 计算所有类型的未读总数
     const messageUnread = Math.max(0, unReadMark.newMsgUnreadCount || 0)
     const friendUnread = Math.max(0, unReadMark.newFriendUnreadCount || 0)
     const groupUnread = Math.max(0, unReadMark.newGroupUnreadCount || 0)
     const feedUnread = Math.max(0, feedUnreadCount || 0)
     const badgeTotal = messageUnread + friendUnread + groupUnread + feedUnread
 
-    // 在 macOS 上更新 Dock 图标徽章
+    // 在 macOS 上更新 Dock 图标徽章（显示所有类型未读总数）
     if (isMac()) {
       const count = badgeTotal > 0 ? badgeTotal : undefined
       // 使用 getByLabel 获取 home 窗口，即使窗口隐藏也能正常设置徽章
