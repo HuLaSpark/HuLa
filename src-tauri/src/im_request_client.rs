@@ -431,6 +431,7 @@ pub enum ImUrl {
     ModelUpdate,
     ModelDelete,
     ModelGet,
+    ModelRemainingUsage,
     ModelPage,
     ModelSimpleList,
 
@@ -709,6 +710,7 @@ impl ImUrl {
             ImUrl::ModelUpdate => (http::Method::PUT, "ai/model/update"),
             ImUrl::ModelDelete => (http::Method::DELETE, "ai/model/delete"),
             ImUrl::ModelGet => (http::Method::GET, "ai/model/get"),
+            ImUrl::ModelRemainingUsage => (http::Method::GET, "ai/model/get-remaining-usage"),
             ImUrl::ModelPage => (http::Method::GET, "ai/model/page"),
             ImUrl::ModelSimpleList => (http::Method::GET, "ai/model/simple-list"),
 
@@ -1006,6 +1008,7 @@ impl ImUrl {
             "modelUpdate" => Ok(ImUrl::ModelUpdate),
             "modelDelete" => Ok(ImUrl::ModelDelete),
             "modelGet" => Ok(ImUrl::ModelGet),
+            "modelRemainingUsage" => Ok(ImUrl::ModelRemainingUsage),
             "modelPage" => Ok(ImUrl::ModelPage),
             "modelSimpleList" => Ok(ImUrl::ModelSimpleList),
 
@@ -1033,6 +1036,7 @@ impl ImUrl {
 
             // ================ 平台配置 ================
             "platformList" => Ok(ImUrl::PlatformList),
+            "modelRemainingUsage" => Ok(ImUrl::ModelRemainingUsage),
             "platformAddModel" => Ok(ImUrl::PlatformAddModel),
 
             // ================ AI 工具 ================

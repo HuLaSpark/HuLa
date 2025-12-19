@@ -839,7 +839,11 @@ export enum ImUrlEnum {
   CONVERSATION_UPDATE_MY = 'conversationUpdateMy',
   /** 删除会话 */
   CONVERSATION_DELETE_MY = 'conversationDeleteMy',
-  /** 模型页面 */
+  /** 获得模型 */
+  MODEL_GET = 'modelGet',
+  /** 获得模型剩余使用次数 */
+  MODEL_REMAINING_USAGE = 'modelRemainingUsage',
+  /** 获得模型分页 */
   MODEL_PAGE = 'modelPage',
   /** 创建模型 */
   MODEL_CREATE = 'modelCreate',
