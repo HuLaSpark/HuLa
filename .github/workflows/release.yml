@@ -74,7 +74,8 @@ jobs:
             args: ""
           - platform: "windows-latest"
             args: ""
-
+    outputs:
+      appVersion: ${{ steps.set_output.outputs.appVersion }}
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
