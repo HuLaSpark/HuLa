@@ -1,5 +1,44 @@
 # Changelog
 
+## [3.0.7](https://github.com/HuLaSpark/HuLa/compare/v3.0.6...v3.0.7) (2025-12-19)
+
+### ✨ Features | 新功能
+
+* **component:** :sparkles: add upgradelink ([15ca9a2](https://github.com/HuLaSpark/HuLa/commit/15ca9a2c7c76dbd0cc6edeab715a7a539b338741))
+* **layout:** :sparkles: add some page layouts to resize ([d069fe7](https://github.com/HuLaSpark/HuLa/commit/d069fe7f3bdf7df751ee93854ec75c3ac523d71e)), closes [#393](https://github.com/HuLaSpark/HuLa/issues/393)
+* **plugin:** :sparkles: add ai stop reply ([61c6108](https://github.com/HuLaSpark/HuLa/commit/61c61083b98b7609f7a1a4c55c71497f3aadce41))
+* **sqlcipher:** :sparkles: add sqlcipher for sqlite encryption ([9aae783](https://github.com/HuLaSpark/HuLa/commit/9aae783f8cffe1da5d3bb49dbfa17910837e4d67)), closes [#438](https://github.com/HuLaSpark/HuLa/issues/438)
+* **vscode:** add i18n-ally configuration and update extensions ([5278ab4](https://github.com/HuLaSpark/HuLa/commit/5278ab435e36e0a3db15f9b9415191f69455b825))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat:** :bug: fix incorrect variable usage in currently selected room ([63748bd](https://github.com/HuLaSpark/HuLa/commit/63748bdad0643eaa11a0b31d4a8be1074dd28dfa))
+* **emoji:** :bug: fix a problem where emoticons were stuck when sent continuously ([38724e8](https://github.com/HuLaSpark/HuLa/commit/38724e8e10cabb6e1eee9cc0851ad3b11efa5dc7))
+* **emoji:** :bug: fix emoji emoji list stuttering issue ([1c8ebfd](https://github.com/HuLaSpark/HuLa/commit/1c8ebfdf8a1cb172ee5941d487eeac48067f95a7))
+* **favicon.ico:** :bug: fix error due to missing favicon.ico ([c08f89a](https://github.com/HuLaSpark/HuLa/commit/c08f89a57bb85dec3ac1e841630ea536e7965352))
+* **group:** :bug: fix group member status sorting problem ([c90b871](https://github.com/HuLaSpark/HuLa/commit/c90b871cc9c727b817d2028aa1c6cefc8ef62668))
+* **group:** :bug: fix group members online status and show unknown users ([3951265](https://github.com/HuLaSpark/HuLa/commit/395126591dcbb67bc93456546cffd0be027c2403))
+* **perl:** :bug: handle 8.3 short filename format in Strawberry Perl prefix check ([34e9c4d](https://github.com/HuLaSpark/HuLa/commit/34e9c4dc2d3a2ed7e69246eed171500603bf1dbf))
+* **unread count:** :bug: fix inaccurate unread count on mac dock ([3f45dc7](https://github.com/HuLaSpark/HuLa/commit/3f45dc786242542cdbe3c3943fda81cf65ab36f3))
+* **unread:** :bug: fix unread count not clearing when clicking session in full plmatfor view ([21fda09](https://github.com/HuLaSpark/HuLa/commit/21fda09cbc4b3913b6bcafcbc623a64688b1ac68))
+* **UnreadCount:** :bug: continue to repair session check unread count unerased ([433cad4](https://github.com/HuLaSpark/HuLa/commit/433cad4f9f3d849e580a908c9e876edcff497511))
+* **unreadCount:** :bug: fix dock icon unread count not displayed on mac ([960978c](https://github.com/HuLaSpark/HuLa/commit/960978c465fb2889e95a4d7c63548fb429ff96a3))
+* **win:** :bug: add and install Perl script to fix win startup problems ([0a658a7](https://github.com/HuLaSpark/HuLa/commit/0a658a77e0c246703111d1fbb86e86ffca0bc1ac))
+* **win:** :bug: fix win10 multi-screen high resolution layout confusion due to useFixedScale ([0f2854a](https://github.com/HuLaSpark/HuLa/commit/0f2854aa8db56a17a3995cfa48b137fa229b1f7f)), closes [#389](https://github.com/HuLaSpark/HuLa/issues/389)
+
+### ⚡️ Performance Improvements | 性能优化
+
+* **chat:** :zap: increase message list size limit and memory footprint ([9638de0](https://github.com/HuLaSpark/HuLa/commit/9638de05b639b0c92de79ef23fdfad50690f605e))
+* **common:** :zap: optimize message storage and timer for some uncleaned footprint ([e0e7a9b](https://github.com/HuLaSpark/HuLa/commit/e0e7a9bf4b84d259e2c98e47f5fefec45b6b77ad))
+* **DPI:** :zap: add monitor-aware window size clamping to prevent oversized windows ([97074ac](https://github.com/HuLaSpark/HuLa/commit/97074ac9f4bee44361e6a64b1bb68d6e6c675f1d))
+* **Keychain:** :zap: mac does not use Keychain to save keys by default ([4483307](https://github.com/HuLaSpark/HuLa/commit/44833079f86a63ff24e394d83dc8b080af3f4543))
+* **layout:** :zap: optimize group member loading ([76ab5f5](https://github.com/HuLaSpark/HuLa/commit/76ab5f5ae1cb459d5252ef2265787267af96de4f))
+* **media:** :zap: optimize multimedia presentation on PC and mobile ([54902c9](https://github.com/HuLaSpark/HuLa/commit/54902c9649cebcf4cdc70b45ff82e0d44aff691a))
+* **moblie:** :zap: optimize mobile text bubble display ([2cab73a](https://github.com/HuLaSpark/HuLa/commit/2cab73afd872cfd156a49c0611743ca550d79e68))
+* **pc circle of friends:** :zap: optimize page layout and style of PC circle of friends ([25bf49d](https://github.com/HuLaSpark/HuLa/commit/25bf49d8e3e0eaefa5cd7d832d67bd8706db4348))
+* **PC circle of friends:** :zap: optimize the scroll bar layout of the PC friend circle ([11dff28](https://github.com/HuLaSpark/HuLa/commit/11dff28bbdc3c05d168a41bbc91b771182f10c30))
+* **pc list scroll:** :zap: optimize message list scrolling sometimes without bottoming ([3488b3a](https://github.com/HuLaSpark/HuLa/commit/3488b3adf51abb656c46ac743eadd6393e4b061c))
+
 ## [3.0.6](https://github.com/HuLaSpark/HuLa/compare/v3.0.5...v3.0.6) (2025-12-07)
 
 ### ✨ Features | 新功能
