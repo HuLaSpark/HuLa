@@ -45,5 +45,12 @@ rustflags = [
 
 # Windows OpenSSL 编译需要原生 Windows Perl (Strawberry Perl)
 # winget 安装的默认路径，避免与 MSYS2/Cygwin 的 perl 冲突
-[target.'cfg(target_os = "windows")'.env]
+[target.x86_64-pc-windows-msvc.env]
 PERL = "C:/Strawberry/perl/bin/perl.exe"
+
+[target.i686-pc-windows-msvc.env]
+PERL = "C:/Strawberry/perl/bin/perl.exe"
+
+[target.aarch64-pc-windows-msvc.env]
+PERL = "C:/Strawberry/perl/bin/perl.exe"
+
