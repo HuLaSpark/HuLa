@@ -1028,6 +1028,14 @@ export async function modelDelete(params: { id: string }) {
   })
 }
 
+// 获得模型剩余使用次数
+export async function getModelRemainingUsage(modelId: string) {
+  return await imRequest({
+    url: ImUrlEnum.MODEL_REMAINING_USAGE,
+    params: { id: modelId }
+  })
+}
+
 // ==================== AI 图片生成 ====================
 
 export async function imageMyPage(params?: { pageNo?: number; pageSize?: number; prompt?: string; status?: number }) {

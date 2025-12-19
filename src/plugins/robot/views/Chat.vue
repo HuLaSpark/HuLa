@@ -51,6 +51,12 @@
               <n-tag v-if="selectedModel && selectedModel.type === 4" size="small" type="warning">视频</n-tag>
               <n-tag v-if="selectedModel && selectedModel.type === 7" size="small" type="warning">文生视频</n-tag>
               <n-tag v-if="selectedModel && selectedModel.type === 8" size="small" type="success">图生视频</n-tag>
+
+              <!-- 剩余次数显示 -->
+              <n-tag v-if="remainingUsage !== null" size="small" :type="remainingUsageTagType" round>
+                剩余次数: {{ remainingUsageDisplay }}
+              </n-tag>
+
               <n-tag
                 v-else-if="!selectedModel"
                 size="small"
@@ -881,6 +887,7 @@ import { ThemeEnum, AiMsgContentTypeEnum } from '@/enums'
 import 'markstream-vue/index.css'
 import {
   modelPage,
+  getModelRemainingUsage,
   conversationCreateMy,
   conversationUpdateMy,
   conversationDeleteMy,
@@ -937,6 +944,25 @@ const currentChat = ref({
   messageCount: 0,
   createTime: 0
 })
+
+/** 模型剩余使用次数 */
+const remainingUsage = ref<number | null>(null)
+const remainingUsageDisplay = computed(() => {
+  if (remainingUsage.value === null) return ''
+  if (remainingUsage.value === -1) return '无限'
+  return String(remainingUsage.value)
+})
+const remainingUsageTagType = computed(() => {
+  if (remainingUsage.value === -1) return 'success'
+  if ((remainingUsage.value || 0) > 0) return 'info'
+  return 'error'
+})
+
+/** 加载模型剩余使用次数 */
+const loadRemainingUsage = async (modelId: string) => {
+  if (!modelId) return
+  remainingUsage.value = await getModelRemainingUsage(modelId)
+}
 
 // 计算是否是暗色主题，处理空值和未初始化的情况
 const isDarkTheme = computed(() => {
@@ -1378,6 +1404,18 @@ const selectedModel = ref<any>(null)
 const reasoningEnabled = ref(false)
 const supportsReasoning = computed(() => Boolean(selectedModel.value?.supportsReasoning))
 
+watch(
+  selectedModel,
+  (model) => {
+    remainingUsage.value = null
+    const m = model as any
+    if (m && m.id) {
+      void loadRemainingUsage(m.id)
+    }
+  },
+  { immediate: true }
+)
+
 // 模型分页数据
 const modelPagination = ref({
   pageNo: 1,
@@ -1809,6 +1847,12 @@ const sendAIMessage = async (content: string, model: any) => {
                 }
               })
               .catch(() => {})
+
+            // 更新模型剩余使用次数
+            if (model && model.id) {
+              loadRemainingUsage(model.id)
+            }
+
             if (!messageList.value[aiMessageIndex].reasoningContent) {
               messageListByConversationId({ conversationId: currentChat.value.id, pageNo: 1, pageSize: 100 })
                 .then((list: any[]) => {
@@ -2465,6 +2509,10 @@ const selectModel = async (model: any) => {
 
   // 可以通过mitt通知其他组件模型已选择
   useMitt.emit('model-selected', model)
+
+  if (model && model.id) {
+    void loadRemainingUsage(model.id)
+  }
 }
 
 // 处理模型分页变化
@@ -2788,6 +2836,8 @@ useMitt.on('chat-active', async (e) => {
     const model = modelList.value.find((m: any) => String(m.id) === String(modelId))
     if (model) {
       selectedModel.value = model
+      // 加载剩余次数
+      loadRemainingUsage(model.id)
       // 如果是音频模型，加载支持的声音列表
       if (model.type === 3) {
         await loadAudioVoices(model)
@@ -2891,6 +2941,7 @@ const handleRefreshModelList = async () => {
       const oldType = selectedModel.value.type
       // 更新为新的模型对象
       selectedModel.value = { ...updatedModel }
+      loadRemainingUsage(updatedModel.id)
       console.log('已更新 selectedModel:', selectedModel.value)
 
       // 如果模型类型从 8 改为其他类型，清空参考图片
