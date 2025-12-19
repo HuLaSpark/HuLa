@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { LogicalSize } from '@tauri-apps/api/dpi'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { UserAttentionType } from '@tauri-apps/api/window'
+import { UserAttentionType, primaryMonitor, type Monitor } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
 import { assign } from 'es-toolkit/compat'
 import { CallTypeEnum, EventEnum, RoomTypeEnum } from '@/enums'
@@ -10,6 +10,24 @@ import { isCompatibility, isDesktop, isMac, isWindows, isWindows10 } from '@/uti
 
 /** 判断是兼容的系统 */
 const isCompatibilityMode = computed(() => isCompatibility())
+const WINDOW_SAFE_PADDING = 32
+const MIN_LOGICAL_WIDTH = 320
+const MIN_LOGICAL_HEIGHT = 200
+
+const clampSizeToMonitor = (width: number, height: number, monitor?: Monitor | null) => {
+  if (!monitor) {
+    return { width, height }
+  }
+
+  const scaleFactor = monitor.scaleFactor ?? 1
+  const maxLogicalWidth = Math.max(MIN_LOGICAL_WIDTH, monitor.size.width / scaleFactor - WINDOW_SAFE_PADDING)
+  const maxLogicalHeight = Math.max(MIN_LOGICAL_HEIGHT, monitor.size.height / scaleFactor - WINDOW_SAFE_PADDING)
+
+  return {
+    width: Math.min(width, Math.floor(maxLogicalWidth)),
+    height: Math.min(height, Math.floor(maxLogicalHeight))
+  }
+}
 
 // Mac 端用于模拟父窗口禁用态的透明蒙层
 const MAC_MODAL_OVERLAY_ID = 'mac-modal-overlay'
@@ -118,16 +136,21 @@ export const useWindow = () => {
       url += `?${searchParams.toString()}`
     }
 
+    const monitor = await primaryMonitor()
+    const clampedSize = clampSizeToMonitor(width, height, monitor)
+    const clampedMinWidth = Math.min(minW, clampedSize.width)
+    const clampedMinHeight = Math.min(minH, clampedSize.height)
+
     const webview = new WebviewWindow(label, {
       title: title,
       url: url,
       fullscreen: false,
       resizable: resizable,
       center: true,
-      width: width,
-      height: height,
-      minHeight: minH,
-      minWidth: minW,
+      width: clampedSize.width,
+      height: clampedSize.height,
+      minHeight: clampedMinHeight,
+      minWidth: clampedMinWidth,
       skipTaskbar: false,
       decorations: !isCompatibilityMode.value,
       transparent: transparent || isCompatibilityMode.value,
@@ -262,15 +285,20 @@ export const useWindow = () => {
     }
 
     // 创建新窗口
+    const monitor = await primaryMonitor()
+    const clampedSize = clampSizeToMonitor(width, height, monitor)
+    const clampedMinWidth = Math.min(options?.minWidth ?? 500, clampedSize.width)
+    const clampedMinHeight = Math.min(options?.minHeight ?? 500, clampedSize.height)
+
     const modalWindow = new WebviewWindow(label, {
       url: `/${label}`,
       title: title,
-      width: width,
-      height: height,
+      width: clampedSize.width,
+      height: clampedSize.height,
       resizable: false,
       center: true,
-      minWidth: options?.minWidth ?? 500,
-      minHeight: options?.minHeight ?? 500,
+      minWidth: clampedMinWidth,
+      minHeight: clampedMinHeight,
       focus: true,
       minimizable: false,
       parent: parentWindow ? parentWindow : parent,
@@ -345,8 +373,10 @@ export const useWindow = () => {
       return Promise.resolve()
     }
     const webview = await WebviewWindow.getByLabel(label)
+    const monitor = await primaryMonitor()
+    const clampedSize = clampSizeToMonitor(width, height, monitor)
     // 创建一个新的尺寸对象
-    const newSize = new LogicalSize(width, height)
+    const newSize = new LogicalSize(clampedSize.width, clampedSize.height)
     // 调用窗口的 setSize 方法进行尺寸调整
     await webview?.setSize(newSize).catch((error) => {
       console.error('无法调整窗口大小:', error)
