@@ -42,3 +42,8 @@ rustflags = [
     "-C", "link-arg=-llog",
     "-C", "link-arg=-landroid",
 ]
+
+# Windows OpenSSL 编译需要原生 Windows Perl (Strawberry Perl)
+# winget 安装的默认路径，避免与 MSYS2/Cygwin 的 perl 冲突
+[env]
+PERL = "C:/Strawberry/perl/bin/perl.exe"
