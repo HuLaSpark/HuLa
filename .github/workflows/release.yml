@@ -239,8 +239,53 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }} --config release-tauri-config.json
 
+  publish-release:
+    needs: publish-tauri
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog for current version
+        id: changelog
+        run: |
+          # 从 CHANGELOG.md 中提取最新版本的内容
+          # 匹配从第一个 ## [version] 到下一个 ## [version] 之间的内容
+          CHANGELOG_CONTENT=$(awk '/^## \[/{if(found) exit; found=1} found' CHANGELOG.md)
+
+          # 将内容写入文件以保留格式
+          echo "$CHANGELOG_CONTENT" > /tmp/release_notes.md
+
+          # 输出到 GITHUB_OUTPUT（使用 EOF 分隔符处理多行）
+          {
+            echo 'body<<EOF'
+            echo "$CHANGELOG_CONTENT"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 获取当前 tag 对应的 draft release
+          RELEASE=$(gh api repos/${{ github.repository }}/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}" and .draft == true)')
+          if [ -n "$RELEASE" ]; then
+            RELEASE_ID=$(echo "$RELEASE" | jq -r '.id')
+            echo "Publishing draft release with ID: $RELEASE_ID"
+
+            # 使用 changelog 内容更新 release body 并发布
+            gh api -X PATCH repos/${{ github.repository }}/releases/$RELEASE_ID \
+              -f draft=false \
+              -f body="$(cat /tmp/release_notes.md)"
+
+            echo "Release published successfully with changelog"
+          else
+            echo "No draft release found for tag ${{ github.ref_name }}, it may already be published"
+          fi
+
   upgradeLink-upload:
-    needs:  publish-tauri  # 依赖于 publish-tauri作业完成
+    needs: publish-release  # 依赖于 publish-release 作业完成（确保 release 已正式发布）
     permissions:
       contents: write
     runs-on: ubuntu-latest
