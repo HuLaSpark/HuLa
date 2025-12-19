@@ -117,130 +117,25 @@ const isNativeWindowsPerl = (info) => {
 }
 
 /**
- * 判断 perl 是否为 Cygwin/MSYS 版本（不适用于 OpenSSL 编译）
- * @param {{osname: string, archname: string, prefix: string}|null} info
- * @returns {boolean}
- */
-const isCygwinOrMsysPerl = (info) => {
-  if (!info) return false
-  const arch = info.archname?.toLowerCase() || ''
-  return arch.includes('cygwin') || arch.includes('msys')
-}
-
-/**
- * 设置 PERL 用户环境变量（避免修改 PATH 顺序导致污染其他工具）
- * @param {string} perlPath perl 可执行文件完整路径
- * @returns {boolean}
- */
-const setUserPerlEnv = (perlPath) => {
-  try {
-    // 检查是否已设置
-    const currentPerl = execSync("powershell -Command \"[Environment]::GetEnvironmentVariable('PERL', 'User')\"", {
-      encoding: 'utf8'
-    }).trim()
-    if (currentPerl.toLowerCase() === perlPath.toLowerCase()) {
-      return true
-    }
-    // 设置 PERL 环境变量
-    execSync(`powershell -Command "[Environment]::SetEnvironmentVariable('PERL', '${perlPath}', 'User')"`, {
-      stdio: 'pipe'
-    })
-    // 同时设置当前进程
-    process.env.PERL = perlPath
-    return true
-  } catch {
-    return false
-  }
-}
-
-const hasStrawberryOnDisk = () => existsSync(PERL_DEFAULT_EXECUTABLE)
-
-/**
- * 将 Strawberry Perl 置顶到当前进程 PATH（仅影响当前脚本）
- */
-const preferStrawberryPerlForSession = () => {
-  if (!process.env.PATH) return
-  const normalized = PERL_DEFAULT_PATH.toLowerCase()
-  const parts = process.env.PATH.split(';').filter(Boolean)
-  const filtered = parts.filter((segment) => segment.toLowerCase() !== normalized)
-  process.env.PATH = [PERL_DEFAULT_PATH, ...filtered].join(';')
-}
-
-/**
- * 检查 Perl 是否安装且为原生 64 位 Windows Perl
+ * 检查 Perl 是否安装，优先使用用户环境中的 Perl
  * @returns {boolean}
  */
 const checkPerl = () => {
-  // 检查 PATH 中的 perl
+  // 1. 先检查用户 PATH 中是否有原生 Windows Perl
   const info = tryGetPerlInfo()
-
-  // 情况1：PATH 中已是原生 Windows Perl，直接通过
   if (isNativeWindowsPerl(info)) {
     return true
   }
 
-  // 情况2：PATH 中是 Cygwin/MSYS Perl，需要特殊处理
-  if (isCygwinOrMsysPerl(info)) {
-    console.log(chalk.yellow(`  ⚠️ 检测到 Cygwin/MSYS Perl (${info.archname})，无法用于编译 OpenSSL`))
-
-    // 检查磁盘上是否有 Strawberry Perl
-    if (hasStrawberryOnDisk()) {
-      const strawberryInfo = tryGetPerlInfo(PERL_DEFAULT_EXECUTABLE)
-      if (isNativeWindowsPerl(strawberryInfo)) {
-        // 设置 PERL 环境变量而不是修改 PATH（避免污染 MSYS2 的 GCC 等工具）
-        if (setUserPerlEnv(PERL_DEFAULT_EXECUTABLE)) {
-          console.log(chalk.green('  ✅ 已设置 PERL 环境变量指向 Strawberry Perl'))
-          console.log(chalk.gray('  💡 这样不会影响 MSYS2/Cygwin 的其他工具'))
-          return true
-        }
-      }
-    }
-    console.log(chalk.gray('  💡 建议安装 Strawberry Perl: https://strawberryperl.com/'))
-    return false
-  }
-
-  // 情况3：PATH 中没有 perl，检查磁盘上是否有 Strawberry Perl
-  if (hasStrawberryOnDisk()) {
+  // 2. 检查默认路径是否存在 Strawberry Perl
+  if (existsSync(PERL_DEFAULT_EXECUTABLE)) {
     const fallbackInfo = tryGetPerlInfo(PERL_DEFAULT_EXECUTABLE)
     if (isNativeWindowsPerl(fallbackInfo)) {
-      // 设置 PERL 环境变量
-      setUserPerlEnv(PERL_DEFAULT_EXECUTABLE)
-      addToUserPath(PERL_DEFAULT_PATH)
       return true
     }
   }
 
   return false
-}
-
-/**
- * 添加路径到用户 PATH 环境变量
- * @param {string} newPath 要添加的路径
- */
-const addToUserPath = (newPath) => {
-  try {
-    // 获取当前用户 PATH
-    const currentPath = execSync("powershell -Command \"[Environment]::GetEnvironmentVariable('PATH', 'User')\"", {
-      encoding: 'utf8'
-    }).trim()
-
-    // 检查路径是否已存在
-    if (currentPath.toLowerCase().includes(newPath.toLowerCase())) {
-      return true
-    }
-
-    // 添加新路径
-    const updatedPath = currentPath ? `${currentPath};${newPath}` : newPath
-    execSync(`powershell -Command "[Environment]::SetEnvironmentVariable('PATH', '${updatedPath}', 'User')"`, {
-      stdio: 'inherit'
-    })
-
-    // 同时更新当前进程的 PATH
-    process.env.PATH = `${process.env.PATH};${newPath}`
-    return true
-  } catch {
-    return false
-  }
 }
 
 /**
@@ -257,11 +152,8 @@ const installStrawberryPerl = async () => {
       }
     )
 
-    // 添加到 PATH
-    addToUserPath(PERL_DEFAULT_PATH)
-    preferStrawberryPerlForSession()
-
     console.log(chalk.green('  ✅ Strawberry Perl 安装成功！'))
+    console.log(chalk.gray('  💡 .cargo/config.toml 已预配置 PERL 路径，无需额外配置'))
     return true
   } catch (error) {
     console.log(chalk.red(`  ❌ Perl 安装失败: ${error.message}`))
@@ -466,9 +358,6 @@ async function main() {
 
   if (results.every(Boolean)) {
     console.log(chalk.green('\n✅ 所有环境检查通过！'))
-    if (isWindows) {
-      console.log(chalk.gray('\n💡 提示：如果刚安装了 Perl，可能需要重启终端或重启电脑使 PATH 生效'))
-    }
     process.exit(0)
   } else {
     console.log(chalk.red('\n❌ 环境依赖检查失败，请按照上述提示安装或更新依赖。'))
