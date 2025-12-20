@@ -1,1 +1,1 @@
-E:/HuLa/HuLa/.rules
+.rules
