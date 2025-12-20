@@ -1,0 +1,127 @@
+# HuLa Project Context
+
+## Overview
+HuLa is a modern, cross-platform Instant Messaging (IM) system. It leverages **Tauri v2** for the application container, **Vite 7** for fast frontend tooling, **Vue 3** for the user interface, and **TypeScript** for type safety. The backend logic is implemented in **Rust**.
+
+The project supports:
+- **Desktop:** Windows, macOS, Linux
+- **Mobile:** Android, iOS
+
+## Tech Stack
+
+### Frontend
+- **Framework:** Vue 3 (Composition API)
+- **Language:** TypeScript
+- **Build Tool:** Vite 7
+- **State Management:** Pinia (with persistence plugins)
+- **Routing:** Vue Router
+- **Styling:** UnoCSS, Sass
+- **UI Libraries:** Naive UI (Desktop), Vant (Mobile)
+- **I18n:** vue-i18n
+
+### Backend (Rust / Tauri)
+- **Core:** Tauri v2
+- **Database:** SQLite (managed via SeaORM with SQLCipher support)
+- **Async Runtime:** Tokio
+- **HTTP Client:** Reqwest
+- **WebSocket:** tokio-tungstenite
+- **Audio:** Rodio
+
+## Development Workflow
+
+### Prerequisites
+- Node.js (v20+ recommended)
+- pnpm (v10+ recommended)
+- Rust (latest stable)
+- Android Studio / Xcode (for mobile development)
+
+### Key Commands
+
+| Action | Command | Description |
+| :--- | :--- | :--- |
+| **Install Dependencies** | `pnpm install` | Installs Node.js dependencies. |
+| **Start Desktop Dev** | `pnpm tauri:dev` | Starts the Tauri development server for desktop. |
+| **Build Desktop** | `pnpm tauri:build` | Builds the production application for desktop (interactive). |
+| **Commit Changes** | `pnpm commit` | Interactive git commit using Commitizen. |
+| **Lint/Format** | `pnpm check` | Checks code using Biome. |
+| **Run Tests** | `pnpm test:run` | Runs unit tests with Vitest. |
+
+### Directory Structure
+
+- **`src/`**: Frontend source code.
+    - **`views/`**: Page components.
+    - **`stores/`**: Pinia stores.
+    - **`services/`**: API and service layers (e.g., WebSocket adapter).
+    - **`components/`**: Reusable Vue components.
+    - **`layout/`**: App layout structures.
+- **`src-tauri/`**: Rust backend source code.
+    - **`src/`**: Main Rust application logic.
+    - **`entity/`**: SeaORM entity definitions.
+    - **`migration/`**: Database migrations.
+    - **`tauri.conf.json`**: Tauri configuration.
+- **`tauri-plugin-hula/`**: Custom local Tauri plugin.
+
+## Coding Style & Naming Conventions
+
+- Indent 2 spaces, LF endings, trim whitespace (see `.editorconfig`).
+- Format/lint with Biome: `pnpm check` (read-only) / `pnpm check:write` (fixes). Vue templates also use Prettier: `pnpm format:vue` or `pnpm format:all`.
+- Prefer import aliases: `@/` → `src/`, `~/` → repo root.
+- Naming: components `PascalCase.vue`, composables `useXxx.ts`, Pinia stores in `src/stores/`.
+- **Commits:** Use `pnpm commit` to enforce Conventional Commits.
+- **Styling:** Use UnoCSS utility classes where possible.
+- **State:** Use Pinia for global state; prefer Composition API `<script setup>`.
+- **Database:** Use SeaORM entities for database interactions.
+
+## Architecture Notes
+- **Communication:** Real-time messaging uses WebSockets (`tokio-tungstenite` on Rust side).
+- **Security:** SQLCipher is used for encrypted local storage.
+- **Plugins:** Extensive use of Tauri plugins (both official and custom) for native capabilities.
+
+## Security & Configuration
+
+- Don’t add secrets to tracked files. Use `.env.local` for personal tokens/keys.
+- Package installs default to the registry in `.npmrc`; if it’s unavailable, override locally: `pnpm config set registry https://registry.npmjs.org/`.
+
+## Important
+
+- Do not prefix unused variables with an underscore, delete them instead
+- Do not use emojis in commit messages, logs, or documentation
+- Never change the .rules file unless the user specifically asks for it
+
+## Pinia
+
+This project uses Pinia for state management with specific patterns:
+
+- Always create stores with the setup-style `defineStore('name', () => { ... })` for better type safety and composition.
+- Use `storeToRefs` when destructuring state so reactivity is preserved.
+- Group business logic inside the store's actions; components should only call actions/state.
+- When a store depends on another store, import and call the other store factory inside the setup to share a single instance.
+- Use `pinia-plugin-persistedstate` (already registered globally) for stores that must survive reloads—opt in per store via `persist: true`.
+
+### Store Access Patterns
+
+- Access other stores inside Pinia actions by instantiating the store at the top of the action: `const settings = useEditorSettingsStore();`
+- Prefer reading dependent store state inside actions rather than passing parameters through components.
+- Keep all imperative logic inside actions; components should remain declarative and simple.
+- Avoid exporting raw refs outside of the store unless absolutely necessary; expose derived state through getters instead.
+
+### CSS Variables & UnoCSS
+
+Theme tokens live in `src/styles/scss/global/variable.scss`, but prefer inline UnoCSS utilities for simple light/dark styling.
+
+**Defining Tokens**
+- Default to per-element classes such as `bg-[lightColor] dark:bg-[darkColor]` or `text-[lightText] dark:text-[darkText]` so colors stay close to the component.
+- Promote a color to `variable.scss` only when it is reused across multiple components or represents a semantic token (e.g. menu background).
+- Keep light values on `:root` and dark overrides under `html[data-theme="dark"]` to leverage the existing data attribute toggle.
+- When adding gradient or complex values, still store them as a variable (see `--bg-menu`) and document them inline in `variable.scss`.
+
+**Using Tokens with UnoCSS**
+- Prefer UnoCSS bracket syntax to consume tokens: `bg-[--center-bg-color]`, `text-[--text-color]`, `border-[--line-color]`.
+- For multi-property helpers, apply directives are available because `@unocss/transformer-directives` is enabled: `@apply text-[--text-color]`.
+- When a component needs conditional theming, toggle `data-theme` on `<html>` (light/dark) or add scoped data attributes (e.g. `data-theme="compact"`) and extend `variable.scss` with the selector.
+
+
+
+
+
+

@@ -26,8 +26,6 @@ src-tauri/target
 .history/
 
 /coverage
-.cursorrules
-.claude/
 
 target
 .claude/
@@ -36,8 +34,6 @@ target
 db.sqlite
 .idea
 .qoder
-AGENTS.md
-GEMINI.md
 
 src/typings/components.pc.d.ts
 src/typings/components.mobile.d.ts
