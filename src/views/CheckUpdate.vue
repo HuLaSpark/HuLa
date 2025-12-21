@@ -304,6 +304,10 @@ const init = async () => {
 
 onMounted(async () => {
   await init()
+  if (import.meta.env.DEV) {
+    loading.value = false
+    return
+  }
   const url = `https://gitee.com/api/v5/repos/HuLaSpark/HuLa/releases/tags/v${currentVersion.value}?access_token=${import.meta.env.VITE_GITEE_TOKEN}`
   await getCommitLog(url)
   await checkUpdate()

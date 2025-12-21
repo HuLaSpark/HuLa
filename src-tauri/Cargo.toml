@@ -150,6 +150,7 @@ screenshots = "0.8.10"
 [target."cfg(target_os =\"macos\")".dependencies]
 objc2-app-kit = "0.3.2"
 objc2 = "0.6.3"
+objc2-core-foundation = "0.3.2"
 core-foundation = "0.10.1"
 core-graphics = "0.25.0"
 libc = "0.2"

@@ -11,6 +11,8 @@ use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 use objc2::rc::Retained;
 #[cfg(target_os = "macos")]
 use objc2_app_kit::NSWindow;
+#[cfg(target_os = "macos")]
+use objc2_core_foundation::{CGPoint, CGRect};
 #[cfg(target_os = "windows")]
 use serde::Serialize;
 #[cfg(target_os = "macos")]
@@ -171,6 +173,61 @@ fn set_window_movable_state(ns_window: &NSWindow, movable: bool) {
     ns_window.setMovableByWindowBackground(movable);
 }
 
+#[cfg(target_os = "macos")]
+fn apply_traffic_lights_spacing(ns_window: &NSWindow, spacing: f64) -> Result<(), String> {
+    use objc2_app_kit::NSWindowButton;
+
+    let close = ns_window
+        .standardWindowButton(NSWindowButton::CloseButton)
+        .ok_or_else(|| "CloseButton not found".to_string())?;
+    let minimize = ns_window
+        .standardWindowButton(NSWindowButton::MiniaturizeButton)
+        .ok_or_else(|| "MiniaturizeButton not found".to_string())?;
+    let zoom = ns_window
+        .standardWindowButton(NSWindowButton::ZoomButton)
+        .ok_or_else(|| "ZoomButton not found".to_string())?;
+
+    let close_frame: CGRect = unsafe { objc2::msg_send![&*close, frame] };
+    let min_frame: CGRect = unsafe { objc2::msg_send![&*minimize, frame] };
+    let zoom_frame: CGRect = unsafe { objc2::msg_send![&*zoom, frame] };
+
+    let new_min_x = close_frame.origin.x + close_frame.size.width + spacing;
+    let new_zoom_x = new_min_x + min_frame.size.width + spacing;
+
+    let _: () = unsafe {
+        objc2::msg_send![
+            &*minimize,
+            setFrameOrigin: CGPoint {
+                x: new_min_x,
+                y: min_frame.origin.y
+            }
+        ]
+    };
+    let _: () = unsafe {
+        objc2::msg_send![
+            &*zoom,
+            setFrameOrigin: CGPoint {
+                x: new_zoom_x,
+                y: zoom_frame.origin.y
+            }
+        ]
+    };
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn apply_macos_traffic_lights_spacing_default<R: Runtime>(
+    window_label: &str,
+    handle: AppHandle<R>,
+) -> Result<(), String> {
+    const DEFAULT_SPACING: f64 = 6.0;
+
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
+    apply_traffic_lights_spacing(&ns_window, DEFAULT_SPACING)
+}
+
 /// 隐藏Mac窗口的标题栏按钮（红绿灯按钮）和标题
 ///
 /// # 参数
@@ -230,6 +287,21 @@ pub fn show_title_bar_buttons(window_label: &str, handle: AppHandle) -> Result<(
     Ok(())
 }
 
+#[tauri::command]
+#[cfg(target_os = "macos")]
+pub fn set_macos_traffic_lights_spacing(
+    window_label: &str,
+    spacing: f64,
+    handle: AppHandle,
+) -> Result<(), String> {
+    if !(0.0..=30.0).contains(&spacing) {
+        return Err("Invalid spacing value".to_string());
+    }
+    let webview_window = get_webview_window(&handle, window_label)?;
+    let ns_window = get_nswindow_from_webview_window(&webview_window)?;
+    apply_traffic_lights_spacing(&ns_window, spacing)
+}
+
 /// 设置 macOS 窗口是否可拖动
 #[tauri::command]
 #[cfg(target_os = "macos")]
@@ -257,15 +329,18 @@ pub fn set_window_level_above_menubar(window_label: &str, handle: AppHandle) -> 
 }
 
 #[cfg(target_os = "macos")]
-fn get_webview_window(handle: &AppHandle, window_label: &str) -> Result<WebviewWindow, String> {
+fn get_webview_window<R: Runtime>(
+    handle: &AppHandle<R>,
+    window_label: &str,
+) -> Result<WebviewWindow<R>, String> {
     handle
         .get_webview_window(window_label)
         .ok_or_else(|| format!("Window '{}' not found", window_label))
 }
 
 #[cfg(target_os = "macos")]
-fn get_nswindow_from_webview_window(
-    webview_window: &WebviewWindow,
+fn get_nswindow_from_webview_window<R: Runtime>(
+    webview_window: &WebviewWindow<R>,
 ) -> Result<Retained<NSWindow>, String> {
     webview_window
         .ns_window()

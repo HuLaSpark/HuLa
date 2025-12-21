@@ -13,6 +13,7 @@ const isCompatibilityMode = computed(() => isCompatibility())
 const WINDOW_SAFE_PADDING = 32
 const MIN_LOGICAL_WIDTH = 320
 const MIN_LOGICAL_HEIGHT = 200
+const MAC_TRAFFIC_LIGHTS_SPACING = 6
 
 const clampSizeToMonitor = (width: number, height: number, monitor?: Monitor | null) => {
   if (!monitor) {
@@ -161,6 +162,14 @@ export const useWindow = () => {
     })
 
     await webview.once('tauri://created', async () => {
+      if (isMac()) {
+        try {
+          await invoke('set_macos_traffic_lights_spacing', {
+            windowLabel: label,
+            spacing: MAC_TRAFFIC_LIGHTS_SPACING
+          })
+        } catch {}
+      }
       if (wantCloseWindow) {
         const win = await WebviewWindow.getByLabel(wantCloseWindow)
         win?.close()
@@ -334,6 +343,12 @@ export const useWindow = () => {
         } catch (error) {
           console.error('设置子窗口不可拖动失败:', error)
         }
+        try {
+          await invoke('set_macos_traffic_lights_spacing', {
+            windowLabel: label,
+            spacing: MAC_TRAFFIC_LIGHTS_SPACING
+          })
+        } catch {}
         attachMacModalOverlay(label)
       }
     })

@@ -22,6 +22,13 @@ if (process.env.NODE_ENV === 'development') {
     /**! 控制台打印项目版本信息(不需要可手动关闭)*/
     module.consolePrint()
   })
+
+  if (isMobile()) {
+    import('eruda').then((module) => {
+      const eruda = 'default' in module ? module.default : module
+      eruda.init()
+    })
+  }
 }
 
 export const forceUpdateMessageTop = (topValue: number) => {

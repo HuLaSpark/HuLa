@@ -147,6 +147,19 @@ export const isWindows10 = (): boolean => PlatformDetector.isWindows10
  */
 export const isMac = (): boolean => PlatformDetector.osType === 'macos'
 
+export const isMac26 = (): boolean => {
+  if (!isMac()) return false
+  const osVersion = getOSVersion()
+  if (!osVersion) return false
+  const numbers = osVersion
+    .match(/\d+/g)
+    ?.map((num) => Number.parseInt(num, 10))
+    .filter((num) => !Number.isNaN(num))
+  if (!numbers || numbers.length === 0) return false
+  const [major] = numbers
+  return major >= 26
+}
+
 /**
  * 是否为 Linux 系统
  */
@@ -184,6 +197,7 @@ export const Platform = {
   isWindows,
   isWindows10,
   isMac,
+  isMac26,
   isLinux,
   isAndroid,
   isIOS,

@@ -1,4 +1,6 @@
 use crate::common::init::{CustomInit, init_common_plugins};
+#[cfg(target_os = "macos")]
+use crate::desktops::common_cmd::apply_macos_traffic_lights_spacing_default;
 use tauri::{Manager, Runtime, WindowEvent};
 use tauri_plugin_autostart::MacosLauncher;
 
@@ -60,6 +62,13 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
     fn init_window_event(self) -> Self {
         self.on_window_event(|window, event: &WindowEvent| match event {
             WindowEvent::Focused(flag) => {
+                #[cfg(target_os = "macos")]
+                if *flag {
+                    let _ = apply_macos_traffic_lights_spacing_default(
+                        window.label(),
+                        window.app_handle().clone(),
+                    );
+                }
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 #[cfg(not(target_os = "macos"))]
                 if !window.label().eq("tray") && *flag {
@@ -127,7 +136,15 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
                     // 如果有home窗口，说明是登录成功后的正常关闭，允许关闭
                 }
             }
-            WindowEvent::Resized(_ps) => {}
+            WindowEvent::Resized(_ps) => {
+                #[cfg(target_os = "macos")]
+                {
+                    let _ = apply_macos_traffic_lights_spacing_default(
+                        window.label(),
+                        window.app_handle().clone(),
+                    );
+                }
+            }
             _ => (),
         })
     }
