@@ -1,24 +1,15 @@
+#[path = "src/mobiles/ios/build_support.rs"]
+mod ios_build_support;
+
 use std::{env, fs, io};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    compile_ios_splash();
+    ios_build_support::add_clang_runtime_search_path();
+    ios_build_support::compile_ios_splash();
     ensure_frontend_dist()?;
     tauri_build::build();
 
     Ok(())
-}
-
-fn compile_ios_splash() {
-    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("ios") {
-        return;
-    }
-
-    println!("cargo:rerun-if-changed=gen/apple/Sources/hula/SplashScreen.mm");
-
-    cc::Build::new()
-        .file("gen/apple/Sources/hula/SplashScreen.mm")
-        .flag("-fobjc-arc")
-        .compile("hula_ios_splash");
 }
 
 fn ensure_frontend_dist() -> Result<(), Box<dyn std::error::Error>> {

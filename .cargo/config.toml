@@ -10,37 +10,53 @@ index = "https://rsproxy.cn/crates.io-index"
 [net]
 git-fetch-with-cli = true
 
+[env]
+CFLAGS_aarch64_apple_darwin = "-fno-modules"
+CFLAGS_x86_64_apple_darwin = "-fno-modules"
+
 # Android NDK 链接配置
 [target.aarch64-linux-android]
 linker = "aarch64-linux-android26-clang"
 rustflags = [
-    "-C", "link-arg=-lc++_shared",
-    "-C", "link-arg=-llog",
-    "-C", "link-arg=-landroid",
+    "-C",
+    "link-arg=-lc++_shared",
+    "-C",
+    "link-arg=-llog",
+    "-C",
+    "link-arg=-landroid",
 ]
 
 [target.armv7-linux-androideabi]
 linker = "armv7a-linux-androideabi26-clang"
 rustflags = [
-    "-C", "link-arg=-lc++_shared",
-    "-C", "link-arg=-llog",
-    "-C", "link-arg=-landroid",
+    "-C",
+    "link-arg=-lc++_shared",
+    "-C",
+    "link-arg=-llog",
+    "-C",
+    "link-arg=-landroid",
 ]
 
 [target.i686-linux-android]
 linker = "i686-linux-android26-clang"
 rustflags = [
-    "-C", "link-arg=-lc++_shared",
-    "-C", "link-arg=-llog",
-    "-C", "link-arg=-landroid",
+    "-C",
+    "link-arg=-lc++_shared",
+    "-C",
+    "link-arg=-llog",
+    "-C",
+    "link-arg=-landroid",
 ]
 
 [target.x86_64-linux-android]
 linker = "x86_64-linux-android26-clang"
 rustflags = [
-    "-C", "link-arg=-lc++_shared",
-    "-C", "link-arg=-llog",
-    "-C", "link-arg=-landroid",
+    "-C",
+    "link-arg=-lc++_shared",
+    "-C",
+    "link-arg=-llog",
+    "-C",
+    "link-arg=-landroid",
 ]
 
 # Windows OpenSSL 编译需要原生 Windows Perl (Strawberry Perl)
@@ -53,4 +69,3 @@ PERL = "C:/Strawberry/perl/bin/perl.exe"
 
 [target.aarch64-pc-windows-msvc.env]
 PERL = "C:/Strawberry/perl/bin/perl.exe"
-

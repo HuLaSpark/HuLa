@@ -10,8 +10,8 @@ use common_cmd::get_windows_scale_info;
 use common_cmd::{audio, default_window_icon, screenshot, set_height};
 #[cfg(target_os = "macos")]
 use common_cmd::{
-    hide_title_bar_buttons, set_window_level_above_menubar, set_window_movable,
-    show_title_bar_buttons,
+    hide_title_bar_buttons, set_macos_traffic_lights_spacing, set_window_level_above_menubar,
+    set_window_movable, show_title_bar_buttons,
 };
 #[cfg(target_os = "macos")]
 use desktops::app_event;
@@ -414,6 +414,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         hide_title_bar_buttons,
         #[cfg(target_os = "macos")]
         show_title_bar_buttons,
+        #[cfg(target_os = "macos")]
+        set_macos_traffic_lights_spacing,
         #[cfg(target_os = "macos")]
         set_window_level_above_menubar,
         #[cfg(target_os = "macos")]

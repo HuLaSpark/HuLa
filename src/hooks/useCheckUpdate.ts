@@ -22,6 +22,10 @@ export const useCheckUpdate = () => {
    * @param initialCheck 是否是初始检查，默认为false。初始检查时只显示强制更新提示，不显示普通更新提示
    */
   const checkUpdate = async (closeWin: string, initialCheck: boolean = false) => {
+    if (import.meta.env.DEV) {
+      return
+    }
+
     await check({
       timeout: 5000 /* 接口请求时长 5秒 */,
       headers: {
