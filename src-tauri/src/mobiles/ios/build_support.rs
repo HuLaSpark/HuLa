@@ -10,7 +10,11 @@ pub(crate) fn add_clang_runtime_search_path() {
     println!("cargo:rerun-if-env-changed=TARGET");
 
     let target = env::var("TARGET").unwrap_or_default();
-    let sdk = if target.contains("ios-sim") {
+    let is_simulator = target.contains("apple-ios-sim")
+        || target.starts_with("x86_64-apple-ios")
+        || target.starts_with("i386-apple-ios");
+
+    let sdk = if is_simulator {
         "iphonesimulator"
     } else {
         "iphoneos"
