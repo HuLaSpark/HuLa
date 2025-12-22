@@ -114,6 +114,7 @@ import router from '@/router'
 import { updateSettings } from '@/services/tauriCommand'
 import { useSettingStore } from '@/stores/setting'
 import type { ProxySettings } from '@/typings/global'
+import { addSlashToHead } from '@/utils/StringUtils.ts'
 
 const { t } = useI18n()
 const settingStore = useSettingStore()
@@ -204,7 +205,7 @@ const handleSave = async () => {
         apiType: savedProxy.apiType,
         apiIp: savedProxy.apiIp,
         apiPort: savedProxy.apiPort,
-        apiSuffix: savedProxy.apiSuffix ? '/' + savedProxy.apiSuffix : ''
+        apiSuffix: savedProxy.apiSuffix ? addSlashToHead(savedProxy.apiSuffix) : ''
       }
     } else {
       // 保存到本地存储
@@ -213,7 +214,7 @@ const handleSave = async () => {
         wsType: savedProxy.wsType,
         wsIp: savedProxy.wsIp,
         wsPort: savedProxy.wsPort,
-        wsSuffix: savedProxy.wsSuffix ? '/' + savedProxy.wsSuffix : ''
+        wsSuffix: savedProxy.wsSuffix ? addSlashToHead(savedProxy.wsSuffix) : ''
       }
     }
     const settings = JSON.stringify(proxySettings)
