@@ -1,9 +1,10 @@
+import { invoke } from '@tauri-apps/api/core'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useDebounceFn } from '@vueuse/core'
 import { sumBy } from 'es-toolkit'
 import { NotificationTypeEnum } from '@/enums'
 import type { SessionItem } from '@/services/types'
-import { isMac } from '@/utils/PlatformConstants'
+import { isIOS, isMac } from '@/utils/PlatformConstants'
 
 /**
  * 统一的未读计数管理器
@@ -99,13 +100,22 @@ export class UnreadCountManager {
     const feedUnread = Math.max(0, feedUnreadCount || 0)
     const badgeTotal = messageUnread + friendUnread + groupUnread + feedUnread
 
+    const countValue = badgeTotal > 0 ? badgeTotal : undefined
+
     // 在 macOS 上更新 Dock 图标徽章（显示所有类型未读总数）
     if (isMac()) {
-      const count = badgeTotal > 0 ? badgeTotal : undefined
       // 使用 getByLabel 获取 home 窗口，即使窗口隐藏也能正常设置徽章
       const homeWindow = await WebviewWindow.getByLabel('home')
       if (homeWindow) {
-        await homeWindow.setBadgeCount(count)
+        await homeWindow.setBadgeCount(countValue)
+      }
+    }
+
+    if (isIOS()) {
+      try {
+        await invoke('set_ios_badge', { count: countValue ?? null })
+      } catch (error) {
+        console.warn('[UnreadCountManager] Failed to set iOS badge', error)
       }
     }
 

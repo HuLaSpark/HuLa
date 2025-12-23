@@ -46,17 +46,15 @@
 
     <div class="flex flex-1 gap-2 flex-col bg-white z-1 custom-rounded">
       <!-- 我的消息条 -->
-      <div class="grid grid-cols-[4rem_1fr_24px] py-15px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
+      <div
+        class="grid grid-cols-[4rem_1fr_24px] items-center gap-8px py-15px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
         <div class="h-full flex items-center text-14px">{{ t('mobile_contact.my_chat') }}</div>
-        <div @click="toMessage" class="h-full flex items-center justify-end overflow-hidden">
-          <n-avatar
-            v-if="contactStore.requestFriendsList.length > 0"
-            :class="index > 0 ? '-ml-2' : ''"
-            v-for="(avatar, index) in avatars"
-            :key="avatar"
-            round
-            size="small"
-            :src="avatar" />
+        <div @click="toMessage" class="h-full flex items-center justify-end">
+          <span
+            v-if="contactUnreadCount > 0"
+            class="px-4px py-4px rounded-999px bg-#c14053 text-white text-12px font-600 min-w-20px text-center">
+            {{ contactUnreadCount > 99 ? '99+' : contactUnreadCount }}
+          </span>
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
           <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
@@ -168,6 +166,7 @@ import { useMessage } from '@/hooks/useMessage.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import router from '@/router'
 import { useContactStore } from '@/stores/contacts.ts'
+import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
@@ -255,14 +254,25 @@ const activeItem = ref('')
 const detailsShow = ref(false)
 const shrinkStatus = ref(false)
 const groupStore = useGroupStore()
+const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
 const { stateList } = storeToRefs(userStatusStore)
 
-const avatarSrc = (url: string) => AvatarUtils.getAvatarUrl(url)
+const contactUnreadCount = computed(
+  () => globalStore.unReadMark.newFriendUnreadCount + globalStore.unReadMark.newGroupUnreadCount
+)
 
-const toMessage = () => {
-  router.push('/mobile/mobileMy/myMessages')
+const toMessage = async () => {
+  try {
+    await Promise.all([contactStore.getApplyPage('friend', true, true), contactStore.getApplyPage('group', true, true)])
+    await contactStore.getApplyUnReadCount()
+  } catch (error) {
+    console.error('刷新通知并标记已读失败', error)
+    window.$message?.error?.('刷新通知失败，请稍后再试')
+  } finally {
+    router.push('/mobile/mobileMy/myMessages')
+  }
 }
 
 /** 群聊列表 */

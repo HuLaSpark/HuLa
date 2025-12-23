@@ -1,5 +1,43 @@
 <template>
   <div class="flex flex-col h-full flex-1 bg-white">
+    <!-- 固定顶部区域 -->
+    <Transition name="header-fade">
+      <div
+        v-if="isHeaderFixed"
+        class="fixed backdrop-blur-md left-0 right-0 z-100 flex items-center justify-between"
+        :style="{
+          height: 'env(safe-area-inset-top, 0px)',
+          paddingTop: '36px',
+          background: 'rgba(220, 220, 220, 0.6)'
+        }">
+        <div class="pl-24px pt-16px">
+          <n-button text @click="openNotificationPopup" class="relative text-#303030">
+            <template #icon>
+              <div class="relative">
+                <svg class="size-22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span
+                  v-if="feedNotificationStore.notificationStats.unreadCount > 0"
+                  class="absolute -top-8px -right-8px w-20px h-20px rounded-full bg-#ff6b6b text-white text-10px flex items-center justify-center font-600">
+                  {{
+                    feedNotificationStore.notificationStats.unreadCount > 99
+                      ? '99+'
+                      : feedNotificationStore.notificationStats.unreadCount
+                  }}
+                </span>
+              </div>
+            </template>
+          </n-button>
+        </div>
+        <div class="flex-1 flex justify-center pt-12px text-16px font-600 text-#303030">我的社区</div>
+        <div class="pr-24px opacity-0 pointer-events-none">
+          <svg class="w-24px h-24px" viewBox="0 0 24 24" fill="none"></svg>
+        </div>
+      </div>
+    </Transition>
+
     <!-- 动态列表区域 -->
     <van-pull-refresh
       class="flex-1 overflow-hidden"
@@ -14,27 +52,29 @@
             <img class="w-full h-full object-contain bg-#90909048 dark:bg-#111" src="/hula.png" alt="" />
           </div>
           <!-- 左上角通知按钮 -->
-          <div class="absolute left-20px top-20px">
-            <n-button text type="primary" @click="openNotificationPopup" class="relative">
-              <template #icon>
-                <div class="relative">
-                  <svg class="w-24px h-24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
-                  <span
-                    v-if="feedNotificationStore.notificationStats.unreadCount > 0"
-                    class="absolute -top-8px -right-8px w-20px h-20px rounded-full bg-#ff6b6b text-white text-10px flex items-center justify-center font-600">
-                    {{
-                      feedNotificationStore.notificationStats.unreadCount > 99
-                        ? '99+'
-                        : feedNotificationStore.notificationStats.unreadCount
-                    }}
-                  </span>
-                </div>
-              </template>
-            </n-button>
-          </div>
+          <Transition name="header-fade">
+            <div v-if="!isHeaderFixed" class="absolute left-24px" style="top: env(safe-area-inset-top, 0px)">
+              <n-button text @click="openNotificationPopup" class="relative">
+                <template #icon>
+                  <div class="relative">
+                    <svg class="w-24px h-24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span
+                      v-if="feedNotificationStore.notificationStats.unreadCount > 0"
+                      class="absolute -top-8px -right-8px w-20px h-20px rounded-full bg-#ff6b6b text-white text-10px flex items-center justify-center font-600">
+                      {{
+                        feedNotificationStore.notificationStats.unreadCount > 99
+                          ? '99+'
+                          : feedNotificationStore.notificationStats.unreadCount
+                      }}
+                    </span>
+                  </div>
+                </template>
+              </n-button>
+            </div>
+          </Transition>
 
           <div class="flex absolute right-20px bottom-0 gap-15px">
             <div class="text-white items-center flex">
@@ -84,9 +124,9 @@ const feedNotificationStore = useFeedNotificationStore()
 const { feedOptions } = storeToRefs(feedStore)
 const notificationPopupRef = ref()
 
-const scrollbarRef = ref()
 const loading = ref(false)
 const isEnablePullRefresh = ref(true) // 是否启用下拉刷新，现在设置为滚动到顶才启用
+const isHeaderFixed = ref(false) // 顶部区域是否固定
 
 let scrollTop = 0 // 记住当前滑动到哪了
 
@@ -140,12 +180,14 @@ const handleScroll = (event: any) => {
   const scrollHeight = target.scrollHeight
   const clientHeight = target.clientHeight
 
-  // 控制下拉刷新的启用状态
+  // 控制下拉刷新与顶部固定
   if (scrollTop < 200) {
     enablePullRefresh(scrollTop)
   } else {
     disablePullRefresh()
   }
+
+  isHeaderFixed.value = scrollTop >= 40
 
   // 距离底部100px时触发加载
   if (scrollHeight - scrollTop - clientHeight < 100) {
@@ -196,5 +238,13 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-// 自定义样式
+.header-fade-enter-active,
+.header-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.header-fade-enter-from,
+.header-fade-leave-to {
+  opacity: 0;
+}
 </style>

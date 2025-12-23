@@ -38,33 +38,43 @@
                   : avatarSrc(groupDetailsMap[item.roomId]?.avatar || '/default-group-avatar.png')
               " />
           </div>
-          <div class="flex-1 flex flex-col gap-10px">
+          <div class="flex-1 flex flex-col gap-10px min-w-0">
             <div
               @click="isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)"
               class="flex justify-between text-14px text-#2DA38D">
               {{ getUserInfo(item)?.name || t('mobile_mymessage.unknown_user') }}
             </div>
-            <div class="flex justify-between text-gray-500 text-12px">
-              <span>
+            <div class="flex text-gray-500 text-12px min-w-0">
+              <span class="truncate w-full block">
                 {{ applyMsg(item) }}
               </span>
             </div>
-            <div v-if="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500">
-              <div class="whitespace-nowrap">{{ t('mobile_mymessage.friend_request_message') }}</div>
-              <n-ellipsis :tooltip="true" expand-trigger="click" line-clamp="2" style="max-width: 100%">
+            <div v-if="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500 min-w-0">
+              <div class="whitespace-nowrap flex-shrink-0">{{ t('mobile_mymessage.friend_request_message') }}</div>
+              <n-ellipsis
+                class="flex-1 min-w-0"
+                :tooltip="true"
+                expand-trigger="click"
+                :line-clamp="1"
+                style="max-width: 100%">
                 {{ item.content }}
               </n-ellipsis>
             </div>
-            <div v-else class="flex gap-2 flex-1 text-12px text-gray-500">
-              <div class="whitespace-nowrap">处理人:</div>
-              <n-ellipsis :tooltip="true" expand-trigger="click" line-clamp="2" style="max-width: 100%">
+            <div v-else class="flex gap-2 flex-1 text-12px text-gray-500 min-w-0">
+              <div class="whitespace-nowrap flex-shrink-0">处理人:</div>
+              <n-ellipsis
+                class="flex-1 min-w-0"
+                :tooltip="true"
+                expand-trigger="click"
+                :line-clamp="1"
+                style="max-width: 100%">
                 {{ groupStore.getUserInfo(item.senderId)?.name || t('mobile_mymessage.unknown_user') }}
               </n-ellipsis>
             </div>
           </div>
           <div
             v-if="isFriendApplyOrGroupInvite(item)"
-            class="flex w-17 max-h-64px flex-col items-center justify-center">
+            class="flex min-w-70px w-70px max-h-64px flex-col items-center justify-center flex-shrink-0">
             <n-flex
               align="center"
               :size="10"
