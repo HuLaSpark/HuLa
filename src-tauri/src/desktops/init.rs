@@ -64,10 +64,8 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
             WindowEvent::Focused(flag) => {
                 #[cfg(target_os = "macos")]
                 if *flag {
-                    let _ = apply_macos_traffic_lights_spacing_default(
-                        window.label(),
-                        window.app_handle().clone(),
-                    );
+                    let app_handle = window.app_handle();
+                    let _ = apply_macos_traffic_lights_spacing_default(window.label(), &app_handle);
                 }
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 #[cfg(not(target_os = "macos"))]
@@ -139,10 +137,8 @@ impl<R: Runtime> DesktopCustomInit for tauri::Builder<R> {
             WindowEvent::Resized(_ps) => {
                 #[cfg(target_os = "macos")]
                 {
-                    let _ = apply_macos_traffic_lights_spacing_default(
-                        window.label(),
-                        window.app_handle().clone(),
-                    );
+                    let app_handle = window.app_handle();
+                    let _ = apply_macos_traffic_lights_spacing_default(window.label(), &app_handle);
                 }
             }
             _ => (),
