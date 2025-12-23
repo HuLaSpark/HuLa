@@ -51,6 +51,8 @@ import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { useTauriListener } from '@/hooks/useTauriListener'
+import { updateSettings } from '@/services/tauriCommand.ts'
+import { useI18n } from 'vue-i18n'
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
   : null
@@ -773,6 +775,26 @@ useMitt.on(MittEnum.MSG_INIT, async () => {
     }
   })
 })
+
+// 初始化的时候需要加载一次用户在localStorage中保存的代理设置
+const { t } = useI18n()
+const setConfigProxy = async () => {
+  const proxySettingsStr = localStorage.getItem('proxySettings')
+  // 如果用户没有设置代理，则不需要设置
+  if (!proxySettingsStr) {
+    return
+  }
+  const proxySettings = JSON.parse(proxySettingsStr as string)
+  const baseUrl =
+    proxySettings.apiType + '://' + proxySettings.apiIp + ':' + proxySettings.apiPort + proxySettings.apiSuffix
+  const wsUrl = proxySettings.wsType + '://' + proxySettings.wsIp + ':' + proxySettings.wsPort + proxySettings.wsSuffix
+
+  await updateSettings({ baseUrl, wsUrl }).catch((err) => {
+    window.$message.error(t('login.network.messages.save_failed', { error: err }))
+  })
+}
+// 在整个应用挂载前，运行一次这段代码
+onBeforeMount(setConfigProxy)
 </script>
 <style lang="scss">
 /* 修改naive-ui select 组件的样式 */
