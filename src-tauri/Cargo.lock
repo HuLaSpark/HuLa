@@ -2872,6 +2872,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "libsqlite3-sys",
+ "md-5",
  "migration",
  "mime_guess",
  "moka",

@@ -385,6 +385,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::markdown_command::{get_readme_html, parse_markdown};
     #[cfg(mobile)]
     use crate::command::set_complete;
+    use crate::command::upload_command::{qiniu_upload_resumable, upload_file_put};
     use crate::command::user_command::{
         get_user_tokens, save_user_info, update_token, update_user_last_opt_time,
     };
@@ -478,6 +479,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // Markdown 相关命令
         parse_markdown,
         get_readme_html,
+        upload_file_put,
+        qiniu_upload_resumable,
         #[cfg(mobile)]
         set_complete,
         #[cfg(mobile)]

@@ -14,10 +14,9 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
-import { fixFileMimeType, getMessageTypeByFile } from '@/utils/FileType.ts'
-import { generateVideoThumbnail } from '@/utils/VideoThumbnail'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
+import { isPathUploadFile, type PathUploadFile, type UploadFile } from '@/utils/FileType'
 import { isMac, isMobile, isWindows } from '@/utils/PlatformConstants'
 import { type SelectionRange, useCommon } from './useCommon.ts'
 import { globalFileUploadQueue } from './useFileUploadQueue.ts'
@@ -71,18 +70,26 @@ export const useMsgInput = (messageInputDom: Ref) => {
   const groupStore = useGroupStore()
   const chatStore = useChatStore()
   const globalStore = useGlobalStore()
-  const { uploadToQiniu } = useUpload()
   const { getCursorSelectionRange, updateSelectionRange, focusOn } = useCursorManager()
-  const {
-    triggerInputEvent,
-    insertNode,
-    getMessageContentType,
-    getEditorRange,
-    imgPaste,
-    saveCacheFile,
-    reply,
-    userUid
-  } = useCommon()
+  const { triggerInputEvent, insertNode, getMessageContentType, getEditorRange, imgPaste, reply, userUid } = useCommon()
+
+  const createRafProgressUpdater = (tempMsgId: string) => {
+    let scheduled = false
+    let latest = 0
+    return (value: number) => {
+      latest = value
+      if (scheduled) return
+      scheduled = true
+      requestAnimationFrame(() => {
+        scheduled = false
+        chatStore.updateMsg({
+          msgId: tempMsgId,
+          status: MessageStatusEnum.SENDING,
+          uploadProgress: latest
+        })
+      })
+    }
+  }
   const settingStore = useSettingStore()
   const { chat } = storeToRefs(settingStore)
   /** 艾特选项的key  */
@@ -797,27 +804,17 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
   }
 
-  // ==================== 视频文件处理函数 ====================
-  const processVideoFile = async (
+  // ==================== 通用文件处理函数 ====================
+  const processGenericFile = async (
     file: File,
     tempMsgId: string,
     messageStrategy: any,
     targetRoomId: string
   ): Promise<void> => {
-    const tempMsg = messageStrategy.buildMessageType(
-      tempMsgId,
-      {
-        url: URL.createObjectURL(file),
-        size: file.size,
-        fileName: file.name,
-        thumbUrl: '',
-        thumbWidth: 300,
-        thumbHeight: 150,
-        thumbSize: 0
-      },
-      globalStore,
-      userUid
-    )
+    const msg = await messageStrategy.getMsg('', reply, [file])
+    const messageBody = messageStrategy.buildMessageBody(msg, reply)
+
+    const tempMsg = messageStrategy.buildMessageType(tempMsgId, { ...messageBody, url: '' }, globalStore, userUid)
     tempMsg.message.roomId = targetRoomId
     tempMsg.message.status = MessageStatusEnum.SENDING
     chatStore.pushMsg(tempMsg)
@@ -828,44 +825,27 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
 
     try {
-      const [videoPath, thumbnailFile] = await Promise.all([
-        saveCacheFile(file, 'video/'),
-        generateVideoThumbnail(file)
-      ])
+      const updateProgress = createRafProgressUpdater(tempMsgId)
+      const progressCallback = (pct: number) => {
+        if (!isProgressActive) return
+        updateProgress(pct)
+      }
 
-      const localThumbUrl = URL.createObjectURL(thumbnailFile)
-      chatStore.updateMsg({
-        msgId: tempMsgId,
-        status: MessageStatusEnum.SENDING,
-        body: { ...tempMsg.message.body, thumbUrl: localThumbUrl, thumbSize: thumbnailFile.size }
+      const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
+        provider: UploadProviderEnum.QINIU
       })
-
-      const videoUploadResult = await messageStrategy.uploadFile(videoPath, { provider: UploadProviderEnum.QINIU })
-      const qiniuConfig = videoUploadResult.config
-
-      const { progress, onChange } = messageStrategy.getUploadProgress()
-      onChange((event: string) => {
-        if (!isProgressActive || event !== 'progress') return
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING,
-          uploadProgress: progress.value
-        })
-      })
-
-      const [videoUploadResponse, thumbnailUploadResponse] = await Promise.all([
-        messageStrategy.doUpload(videoPath, videoUploadResult.uploadUrl, {
-          provider: UploadProviderEnum.QINIU,
-          ...qiniuConfig
-        }),
-        uploadToQiniu(thumbnailFile, qiniuConfig.scene || 'CHAT', qiniuConfig, true)
-      ])
+      const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, { ...config, progressCallback })
 
       cleanup()
 
-      const finalVideoUrl = videoUploadResponse?.qiniuUrl || videoUploadResult.downloadUrl
-      const finalThumbnailUrl =
-        thumbnailUploadResponse?.downloadUrl || `${qiniuConfig.domain}/${thumbnailUploadResponse?.key}`
+      messageBody.url = config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
+      delete messageBody.path
+
+      chatStore.updateMsg({
+        msgId: tempMsgId,
+        body: messageBody,
+        status: MessageStatusEnum.SENDING
+      })
 
       const successChannel = new Channel<any>()
       const errorChannel = new Channel<string>()
@@ -890,101 +870,45 @@ export const useMsgInput = (messageInputDom: Ref) => {
         data: {
           id: tempMsgId,
           roomId: targetRoomId,
-          msgType: MsgEnum.VIDEO,
-          body: {
-            url: finalVideoUrl,
-            size: file.size,
-            fileName: file.name,
-            thumbUrl: finalThumbnailUrl,
-            thumbWidth: 300,
-            thumbHeight: 150,
-            thumbSize: thumbnailFile.size,
-            localPath: videoPath,
-            senderUid: userUid.value
-          }
+          msgType: MsgEnum.FILE,
+          body: messageBody
         },
         successChannel,
         errorChannel
       })
 
-      URL.revokeObjectURL(tempMsg.message.body.url)
-      URL.revokeObjectURL(localThumbUrl)
+      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       cleanup()
       throw error
     }
   }
 
-  // ==================== 图片文件处理函数 ====================
-  const processImageFile = async (
-    file: File,
+  const processGenericPathFile = async (
+    file: PathUploadFile,
     tempMsgId: string,
     messageStrategy: any,
     targetRoomId: string
   ): Promise<void> => {
-    const msg = await messageStrategy.getMsg('', reply, [file])
-    const messageBody = messageStrategy.buildMessageBody(msg, reply)
-
-    const tempMsg = messageStrategy.buildMessageType(tempMsgId, messageBody, globalStore, userUid)
-    tempMsg.message.roomId = targetRoomId
-    tempMsg.message.status = MessageStatusEnum.SENDING
-    chatStore.pushMsg(tempMsg)
-    const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
-      provider: UploadProviderEnum.QINIU
-    })
-    const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
-
-    messageBody.url = config?.provider === UploadProviderEnum.QINIU ? doUploadResult?.qiniuUrl : downloadUrl
-    delete messageBody.path
-
-    chatStore.updateMsg({
-      msgId: tempMsgId,
-      body: messageBody,
-      status: MessageStatusEnum.SENDING
-    })
-
-    const successChannel = new Channel<any>()
-    const errorChannel = new Channel<string>()
-
-    successChannel.onmessage = (message) => {
-      chatStore.updateMsg({
-        msgId: tempMsgId,
-        status: MessageStatusEnum.SUCCESS,
-        newMsgId: message.message.id,
-        body: message.message.body,
-        timeBlock: message.timeBlock
-      })
-      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    const MAX_UPLOAD_SIZE = 500 * 1024 * 1024
+    if (file.size > MAX_UPLOAD_SIZE) {
+      throw new Error('文件大小不能超过500MB')
     }
 
-    errorChannel.onmessage = () => {
-      chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
-      useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+    const msg = {
+      type: MsgEnum.FILE,
+      path: file.path,
+      fileName: file.name,
+      size: file.size,
+      mimeType: file.type,
+      reply: reply.value.content
+        ? {
+            content: reply.value.content,
+            key: reply.value.key
+          }
+        : undefined
     }
 
-    await invoke(TauriCommand.SEND_MSG, {
-      data: {
-        id: tempMsgId,
-        roomId: targetRoomId,
-        msgType: MsgEnum.IMAGE,
-        body: messageBody
-      },
-      successChannel,
-      errorChannel
-    })
-
-    URL.revokeObjectURL(msg.url)
-    chatStore.updateSessionLastActiveTime(targetRoomId)
-  }
-
-  // ==================== 通用文件处理函数 ====================
-  const processGenericFile = async (
-    file: File,
-    tempMsgId: string,
-    messageStrategy: any,
-    targetRoomId: string
-  ): Promise<void> => {
-    const msg = await messageStrategy.getMsg('', reply, [file])
     const messageBody = messageStrategy.buildMessageBody(msg, reply)
 
     const tempMsg = messageStrategy.buildMessageType(tempMsgId, { ...messageBody, url: '' }, globalStore, userUid)
@@ -998,20 +922,16 @@ export const useMsgInput = (messageInputDom: Ref) => {
     }
 
     try {
-      const { progress, onChange } = messageStrategy.getUploadProgress()
-      onChange((event: string) => {
-        if (!isProgressActive || event !== 'progress') return
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SENDING,
-          uploadProgress: progress.value
-        })
-      })
+      const updateProgress = createRafProgressUpdater(tempMsgId)
+      const progressCallback = (pct: number) => {
+        if (!isProgressActive) return
+        updateProgress(pct)
+      }
 
       const { uploadUrl, downloadUrl, config } = await messageStrategy.uploadFile(msg.path, {
         provider: UploadProviderEnum.QINIU
       })
-      const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, config)
+      const doUploadResult = await messageStrategy.doUpload(msg.path, uploadUrl, { ...config, progressCallback })
 
       cleanup()
 
@@ -1159,57 +1079,93 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * 发送文件的函数（优化版 - 并发处理，逐个显示）
    * @param files 要发送的文件数组
    */
-  const sendFilesDirect = async (files: File[]) => {
+  const sendFilesDirect = async (files: UploadFile[]) => {
     const targetRoomId = globalStore.currentSessionRoomId
 
     // 初始化文件上传队列
     globalFileUploadQueue.initQueue(files)
 
-    // 创建并发限制器（同时处理3个文件）
+    const baseTempId = Date.now()
+    const jobs = files.map((file, index) => {
+      const fileId = globalFileUploadQueue.queue.items[index]?.id
+      const tempMsgId = String(baseTempId * 1000 + index)
+
+      if (isPathUploadFile(file)) {
+        return { file, fileId, tempMsgId }
+      }
+      return { file, fileId, tempMsgId }
+    })
+
+    // 先把「文件消息」占位插入消息列表，避免大文件准备/上传前的空窗期
+    const fileStrategy = messageStrategyMap[MsgEnum.FILE]
+    const replyPayload = reply.value.content
+      ? {
+          body: reply.value.content,
+          id: reply.value.key,
+          username: reply.value.accountName,
+          type: MsgEnum.FILE
+        }
+      : undefined
+
+    for (const job of jobs) {
+      const tempMsg = fileStrategy.buildMessageType(
+        job.tempMsgId,
+        {
+          url: '',
+          fileName: job.file.name,
+          size: job.file.size,
+          mimeType: job.file.type,
+          replyMsgId: reply.value.content ? reply.value.key : undefined,
+          reply: replyPayload
+        },
+        globalStore,
+        userUid
+      )
+      tempMsg.message.roomId = targetRoomId
+      tempMsg.message.status = MessageStatusEnum.SENDING
+      tempMsg.uploadProgress = 0
+      void chatStore.pushMsg(tempMsg)
+    }
+    useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+
+    // 让 UI 先渲染占位消息，再开始耗时上传/分片逻辑
+    await nextTick()
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve())
+    })
+
+    // 控制并发数，避免同时上传过多文件拖慢渲染与交互
     const limit = pLimit(3)
 
     // 并发处理所有文件
-    const tasks = files.map((file, index) => {
-      const fileId = globalFileUploadQueue.queue.items[index]?.id
-
+    const tasks = jobs.map((job) => {
       return limit(async () => {
-        let msgType: MsgEnum = MsgEnum.TEXT
-        let tempMsgId = ''
+        const tempMsgId = job.tempMsgId
 
         try {
           // 更新队列状态
-          if (fileId) {
-            globalFileUploadQueue.updateFileStatus(fileId, 'uploading', 0)
+          if (job.fileId) {
+            globalFileUploadQueue.updateFileStatus(job.fileId, 'uploading', 0)
           }
 
-          // 文件类型处理
-          const processedFile = fixFileMimeType(file)
-          msgType = getMessageTypeByFile(processedFile)
-          if (msgType === MsgEnum.VOICE) msgType = MsgEnum.FILE
-
-          // 生成唯一消息ID
-          tempMsgId = `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
-          const messageStrategy = messageStrategyMap[msgType]
-
-          // 根据类型调用对应处理函数，传递固定的 roomId
-          if (msgType === MsgEnum.VIDEO) {
-            await processVideoFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
-          } else if (msgType === MsgEnum.IMAGE) {
-            await processImageFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
-          } else if (msgType === MsgEnum.FILE) {
-            await processGenericFile(processedFile, tempMsgId, messageStrategy, targetRoomId)
+          if (isPathUploadFile(job.file)) {
+            const messageStrategy = messageStrategyMap[MsgEnum.FILE]
+            await processGenericPathFile(job.file, tempMsgId, messageStrategy, targetRoomId)
+          } else {
+            const messageStrategy = messageStrategyMap[MsgEnum.FILE]
+            await processGenericFile(job.file, tempMsgId, messageStrategy, targetRoomId)
           }
 
           // 成功 - 更新队列状态
-          if (fileId) {
-            globalFileUploadQueue.updateFileStatus(fileId, 'completed', 100)
+          if (job.fileId) {
+            globalFileUploadQueue.updateFileStatus(job.fileId, 'completed', 100)
           }
         } catch (error) {
-          console.error(`${file.name} 发送失败:`, error)
+          console.error(`${job.file.name} 发送失败:`, error)
 
           // 失败 - 更新队列和消息状态
-          if (fileId) {
-            globalFileUploadQueue.updateFileStatus(fileId, 'failed', 0)
+          if (job.fileId) {
+            globalFileUploadQueue.updateFileStatus(job.fileId, 'failed', 0)
           }
 
           if (tempMsgId) {
@@ -1219,7 +1175,7 @@ export const useMsgInput = (messageInputDom: Ref) => {
             })
           }
 
-          window.$message.error(`${file.name} 发送失败`)
+          window.$message.error(`${job.file.name} 发送失败`)
         }
       })
     })

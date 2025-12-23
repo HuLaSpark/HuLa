@@ -6,7 +6,7 @@ import pLimit from 'p-limit'
 import { defineStore } from 'pinia'
 import { useRoute } from 'vue-router'
 import { ErrorType } from '@/common/exception'
-import { MittEnum, type MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
+import { MittEnum, MessageStatusEnum, MsgEnum, RoomTypeEnum, StoresEnum, TauriCommand } from '@/enums'
 import type { MarkItemType, MessageType, RevokedMsgType, SessionItem } from '@/services/types'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useFeedStore } from '@/stores/feed.ts'
@@ -191,6 +191,16 @@ export const useChatStore = defineStore(
     // 消息加载状态
     const messageOptions = reactive<Record<string, { isLast: boolean; isLoading: boolean; cursor: string }>>({})
 
+    // 切换会话时保留本地临时消息（例如上传中的文件消息），避免 reload 消息列表时丢失
+    const transientStatuses = new Set<MessageStatusEnum>([
+      MessageStatusEnum.PENDING,
+      MessageStatusEnum.SENDING,
+      MessageStatusEnum.FAILED
+    ])
+    const shouldKeepTransientMessage = (msg?: MessageType) => {
+      return msg?.message?.status ? transientStatuses.has(msg.message.status) : false
+    }
+
     // 回复消息的映射关系
     const replyMapping = reactive<Record<string, Record<string, string[]>>>({})
     // 存储撤回的消息内容和时间
@@ -283,9 +293,25 @@ export const useChatStore = defineStore(
         if (roomId !== currentRoomId) {
           // 只清空消息内容，保留响应式对象结构
           for (const msgId in messageMap[roomId]) {
+            const msg = messageMap[roomId][msgId]
+            if (shouldKeepTransientMessage(msg)) continue
             delete messageMap[roomId][msgId]
           }
         }
+      }
+    }
+
+    // 清空指定房间消息，但保留本地临时消息（上传/发送中或失败）
+    const clearRoomMessagesExceptTransient = (roomId: string) => {
+      if (!messageMap[roomId]) {
+        messageMap[roomId] = {}
+        return
+      }
+
+      for (const msgId in messageMap[roomId]) {
+        const msg = messageMap[roomId][msgId]
+        if (shouldKeepTransientMessage(msg)) continue
+        delete messageMap[roomId][msgId]
       }
     }
 
@@ -315,9 +341,7 @@ export const useChatStore = defineStore(
       cleanupExpiredRecalledMessages()
 
       // 1. 清空当前房间的旧消息数据
-      if (messageMap[roomId]) {
-        messageMap[roomId] = {}
-      }
+      clearRoomMessagesExceptTransient(roomId)
 
       // 2. 重置消息加载状态
       currentMessageOptions.value = {
@@ -1018,7 +1042,8 @@ export const useChatStore = defineStore(
       newMsgId,
       body,
       uploadProgress,
-      timeBlock
+      timeBlock,
+      roomId
     }: {
       msgId: string
       status: MessageStatusEnum
@@ -1026,37 +1051,46 @@ export const useChatStore = defineStore(
       body?: any
       uploadProgress?: number
       timeBlock?: number
+      roomId?: string
     }) => {
-      const msg = currentMessageMap.value?.[msgId]
-      if (msg) {
-        msg.message.status = status
-        // 只在 timeBlock 有值时才更新，避免覆盖原有值
-        if (timeBlock !== undefined) {
-          msg.timeBlock = timeBlock
-        }
-        if (newMsgId) {
-          msg.message.id = newMsgId
-        }
-        if (body) {
-          msg.message.body = body
-        }
-        if (uploadProgress !== undefined) {
-          console.log(`更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
-          // 确保响应式更新，创建新的消息对象
-          const updatedMsg = { ...msg, uploadProgress }
-          if (currentMessageMap.value) {
-            currentMessageMap.value[msg.message.id] = updatedMsg
-          }
-          // 强制触发响应式更新
-          messageMap[globalStore.currentSessionRoomId] = { ...currentMessageMap.value }
-        } else {
-          if (currentMessageMap.value) {
-            currentMessageMap.value[msg.message.id] = msg
-          }
-        }
-        if (newMsgId && msgId !== newMsgId && currentMessageMap.value) {
-          delete currentMessageMap.value[msgId]
-        }
+      const resolvedRoomId =
+        (roomId && messageMap[roomId]?.[msgId] ? roomId : undefined) ??
+        (messageMap[globalStore.currentSessionRoomId]?.[msgId] ? globalStore.currentSessionRoomId : undefined) ??
+        findRoomIdByMsgId(msgId)
+
+      if (!resolvedRoomId) return
+
+      const roomMessages = messageMap[resolvedRoomId]
+      if (!roomMessages) return
+
+      const msg = roomMessages[msgId]
+      if (!msg) return
+
+      msg.message.status = status
+      // 只在 timeBlock 有值时才更新，避免覆盖原有值
+      if (timeBlock !== undefined) {
+        msg.timeBlock = timeBlock
+      }
+      if (body) {
+        msg.message.body = body
+      }
+
+      const nextMsgId = newMsgId ?? msg.message.id
+      if (newMsgId) {
+        msg.message.id = newMsgId
+      }
+
+      if (uploadProgress !== undefined) {
+        console.log(`更新消息进度: ${uploadProgress}% (消息ID: ${msgId})`)
+        roomMessages[nextMsgId] = { ...msg, uploadProgress }
+        messageMap[resolvedRoomId] = { ...roomMessages }
+      } else {
+        roomMessages[nextMsgId] = msg
+      }
+
+      if (newMsgId && msgId !== newMsgId) {
+        delete roomMessages[msgId]
+        messageMap[resolvedRoomId] = { ...roomMessages }
       }
     }
 

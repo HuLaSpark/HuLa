@@ -120,6 +120,9 @@ Theme tokens live in `src/styles/scss/global/variable.scss`, but prefer inline U
 - For multi-property helpers, apply directives are available because `@unocss/transformer-directives` is enabled: `@apply text-[--text-color]`.
 - When a component needs conditional theming, toggle `data-theme` on `<html>` (light/dark) or add scoped data attributes (e.g. `data-theme="compact"`) and extend `variable.scss` with the selector.
 
+### language
+- The language of the reply is determined based on the language of the user's question. For example, if a user asks a question in simplified Chinese, reply in simplified Chinese.
+
 
 
 

@@ -569,7 +569,11 @@ export enum TauriCommand {
   /** AI 消息流式发送 */
   AI_MESSAGE_SEND_STREAM = 'ai_message_send_stream',
   /** 生成 MinIO 预签名 URL */
-  GENERATE_MINIO_PRESIGNED_URL = 'generate_minio_presigned_url'
+  GENERATE_MINIO_PRESIGNED_URL = 'generate_minio_presigned_url',
+  /** 通过 Rust 端 PUT 上传本地文件 */
+  UPLOAD_FILE_PUT = 'upload_file_put',
+  /** 通过 Rust 端七牛分片上传本地文件 */
+  QINIU_UPLOAD_RESUMABLE = 'qiniu_upload_resumable'
 }
 
 // 通话状态枚举

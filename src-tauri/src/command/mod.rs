@@ -13,6 +13,7 @@ pub mod message_mark_command;
 pub mod request_command;
 pub mod room_member_command;
 pub mod setting_command;
+pub mod upload_command;
 pub mod user_command;
 
 // A custom task for setting the state of a setup task

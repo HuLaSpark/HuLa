@@ -785,12 +785,18 @@ const handleViewAnnouncement = (): void => {
 }
 
 // 监听滚动到底部的事件
-useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, async () => {
-  // 只有消息数量超过60条才进行重置和刷新
-  if (chatStore.chatMessageList.length > 20) {
-    chatStore.clearRedundantMessages(globalStore.currentSessionRoomId)
-  }
-  scrollToBottom()
+let scrollBottomScheduled = false
+useMitt.on(MittEnum.CHAT_SCROLL_BOTTOM, () => {
+  if (scrollBottomScheduled) return
+  scrollBottomScheduled = true
+  requestAnimationFrame(() => {
+    scrollBottomScheduled = false
+    // 只有消息数量超过60条才进行重置和刷新
+    if (chatStore.chatMessageList.length > 60) {
+      chatStore.clearRedundantMessages(globalStore.currentSessionRoomId)
+    }
+    scrollToBottom()
+  })
 })
 
 onMounted(() => {

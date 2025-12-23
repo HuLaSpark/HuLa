@@ -73,13 +73,14 @@
 import { formatBytes } from '@/utils/Formatting'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
 import { useI18n } from 'vue-i18n'
+import type { UploadFile } from '@/utils/FileType'
 
 const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
     show: boolean
-    files: File[]
+    files: UploadFile[]
   }>(),
   {
     show: false,
@@ -89,7 +90,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
-  (e: 'confirm', files: File[]): void
+  (e: 'confirm', files: UploadFile[]): void
   (e: 'cancel'): void
 }>()
 
@@ -98,7 +99,7 @@ const visible = computed({
   set: (value: boolean) => emit('update:show', value)
 })
 
-const fileList = ref<File[]>([])
+const fileList = ref<UploadFile[]>([])
 
 watch(
   () => props.files,

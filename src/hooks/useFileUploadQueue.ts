@@ -1,4 +1,5 @@
 import { computed, reactive, readonly } from 'vue'
+import type { UploadFile } from '@/utils/FileType'
 
 export type FileUploadItem = {
   id: string
@@ -49,7 +50,7 @@ export const useFileUploadQueue = () => {
   /**
    * 初始化队列
    */
-  const initQueue = (files: File[]) => {
+  const initQueue = (files: UploadFile[]) => {
     queue.items = files.map((file, index) => ({
       id: `${Date.now()}_${index}`,
       name: file.name,
