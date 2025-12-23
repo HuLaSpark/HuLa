@@ -53,9 +53,11 @@ pub(crate) fn compile_ios_splash() {
     }
 
     println!("cargo:rerun-if-changed=gen/apple/Sources/hula/SplashScreen.mm");
+    println!("cargo:rerun-if-changed=gen/apple/Sources/hula/BadgeBridge.mm");
 
     cc::Build::new()
         .file("gen/apple/Sources/hula/SplashScreen.mm")
+        .file("gen/apple/Sources/hula/BadgeBridge.mm")
         .flag("-fobjc-arc")
-        .compile("hula_ios_splash");
+        .compile("hula_ios_helpers");
 }

@@ -4,7 +4,7 @@
       <HeaderBar
         ref="headerBar"
         :room-name="currentSession?.remark || currentSession?.name || ''"
-        :msg-count="1002"
+        :msg-count="globalUnreadCount"
         :is-official="globalStore.currentSessionRoomId === '1'"
         @room-name-click="handleRoomNameClick" />
     </template>
@@ -53,9 +53,7 @@ defineOptions({
 
 const globalStore = useGlobalStore()
 const { currentSession } = storeToRefs(globalStore)
-
-const footerBar = ref<any>()
-const headerBar = ref<any>()
+const globalUnreadCount = computed(() => globalStore.unReadMark.newMsgUnreadCount ?? 0)
 
 const props = defineProps<{
   uid?: ''

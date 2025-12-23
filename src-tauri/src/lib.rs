@@ -2,8 +2,7 @@
 #[cfg(desktop)]
 mod desktops;
 use crate::common::files_meta::get_files_meta;
-#[cfg(desktop)]
-use common::init::CustomInit;
+use crate::common::init::CustomInit;
 #[cfg(target_os = "windows")]
 use common_cmd::get_windows_scale_info;
 #[cfg(desktop)]
@@ -54,9 +53,9 @@ use serde::{Deserialize, Serialize};
 
 // 移动端依赖
 #[cfg(mobile)]
-use common::init::CustomInit;
-#[cfg(mobile)]
 mod mobiles;
+#[cfg(target_os = "ios")]
+use mobiles::ios::badge::{request_ios_badge_authorization, set_ios_badge};
 #[cfg(mobile)]
 use mobiles::splash;
 
@@ -485,6 +484,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         set_complete,
         #[cfg(mobile)]
         hide_splash_screen,
+        #[cfg(target_os = "ios")]
+        set_ios_badge,
+        #[cfg(target_os = "ios")]
+        request_ios_badge_authorization,
         #[cfg(target_os = "ios")]
         set_webview_keyboard_adjustment,
         is_app_state_ready,

@@ -15,18 +15,18 @@ members = [".", "entity", "migration"]
 entity = { path = "entity" }
 
 [profile.dev]
-opt-level = 0   # 无优化
-debug = true    # 开启调试信息
+opt-level = 0          # 无优化
+debug = true           # 开启调试信息
 overflow-checks = true # 整数溢出检查
-incremental = true # 启用增量编译
+incremental = true     # 启用增量编译
 
 [profile.release]
-panic = "abort"   # 崩溃时直接终止
-codegen-units = 1 # 一个接一个地编译包，这样编译器就可以更好地优化
-lto = true        # 启用链接到优化
-opt-level = 3     # 最大优化
-strip = true      # 删除调试符号
-debug = false     # 关闭调试信息
+panic = "abort"    # 崩溃时直接终止
+codegen-units = 1  # 一个接一个地编译包，这样编译器就可以更好地优化
+lto = true         # 启用链接到优化
+opt-level = 3      # 最大优化
+strip = true       # 删除调试符号
+debug = false      # 关闭调试信息
 incremental = true # 启用增量编译
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -112,7 +112,9 @@ futures = "0.3"
 bytes = "1.11"
 dotenv = "0.15.0"
 pulldown-cmark = "0.13"
-libsqlite3-sys = { version = "0.30.1", features = ["bundled-sqlcipher-vendored-openssl"] }
+libsqlite3-sys = { version = "0.30.1", features = [
+    "bundled-sqlcipher-vendored-openssl",
+] }
 md-5 = "0.10"
 
 # WebSocket 相关依赖

@@ -7,14 +7,20 @@ import vResize from '@/directives/v-resize'
 import vSlide from '@/directives/v-slide.ts'
 import router from '@/router'
 import { pinia } from '@/stores'
-import { initializePlatform } from '@/utils/PlatformConstants'
+import { initializePlatform, isIOS, isMobile } from '@/utils/PlatformConstants'
 import { startWebVitalObserver } from '@/utils/WebVitalsObserver'
 import { invoke } from '@tauri-apps/api/core'
-import { isMobile } from '@/utils/PlatformConstants'
 import App from '@/App.vue'
 
 initializePlatform()
 startWebVitalObserver()
+
+if (isIOS()) {
+  invoke('request_ios_badge_authorization').catch((error) => {
+    console.warn('[HuLaBadge] 请求 iOS 角标权限失败', error)
+  })
+}
+
 import('@/services/webSocketAdapter')
 
 if (process.env.NODE_ENV === 'development') {
