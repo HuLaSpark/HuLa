@@ -1,5 +1,5 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { BaseDirectory, create, exists, mkdir } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, create, exists, mkdir, readFile } from '@tauri-apps/plugin-fs'
 import { info } from '@tauri-apps/plugin-log'
 import GraphemeSplitter from 'grapheme-splitter'
 import type { Ref } from 'vue'
@@ -12,8 +12,10 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { removeTag } from '@/utils/Formatting'
+import { SUPPORTED_IMAGE_EXTENSIONS, getFileExtension } from '@/utils/FileType'
 import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
 import { getImageCache } from '@/utils/PathUtil.ts'
+import { isPathUploadFile, type UploadFile } from '@/utils/FileType'
 import { isMobile } from '@/utils/PlatformConstants'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 
@@ -797,7 +799,7 @@ export const useCommon = () => {
    * @param dom 输入框dom
    * @param showFileModal 显示文件弹窗的回调函数
    */
-  const handlePaste = async (e: any, dom: HTMLElement, showFileModal?: (files: File[]) => void) => {
+  const handlePaste = async (e: any, dom: HTMLElement, showFileModal?: (files: UploadFile[]) => void) => {
     e.preventDefault()
     if (e.clipboardData.files.length > 0) {
       // 使用通用文件处理函数
@@ -861,9 +863,9 @@ export const useCommon = () => {
    * @param resetCallback 重置回调函数（可选）
    */
   const processFiles = async (
-    files: File[],
+    files: UploadFile[],
     dom: HTMLElement,
-    showFileModal?: (files: File[]) => void,
+    showFileModal?: (files: UploadFile[]) => void,
     resetCallback?: () => void
   ) => {
     if (!files) return
@@ -875,31 +877,37 @@ export const useCommon = () => {
     }
 
     // 分类文件：图片 or 其他文件
-    const imageFiles: File[] = []
-    const otherFiles: File[] = []
+    const imageFiles: UploadFile[] = []
+    const otherFiles: UploadFile[] = []
 
     for (const file of files) {
       // 检查文件大小
       const fileSizeInMB = file.size / 1024 / 1024
-      if (fileSizeInMB > 100) {
-        window.$message.warning(`文件 ${file.name} 超过100MB`)
+      if (fileSizeInMB > 500) {
+        window.$message.warning(`文件 ${file.name} 超过500MB`)
         continue
       }
 
-      const fileType = file.type
+      const mimeType = file.type || ''
+      const extension = getFileExtension(file.name)
+      const isImage =
+        (mimeType.startsWith('image/') || SUPPORTED_IMAGE_EXTENSIONS.includes(extension as any)) &&
+        extension !== 'svg' &&
+        !mimeType.includes('svg')
 
-      // 加上includes用于保底判断文件类型不是mime时的处理逻辑
-      if (fileType.startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileType)) {
-        imageFiles.push(file)
-      } else {
-        // 视频和其他文件通过弹窗处理
-        otherFiles.push(file)
-      }
+      if (isImage) imageFiles.push(file)
+      else otherFiles.push(file)
     }
 
     // 处理图片文件（直接插入输入框）
     for (const file of imageFiles) {
-      await imgPaste(file, dom)
+      if (isPathUploadFile(file)) {
+        const fileData = await readFile(file.path)
+        const fileObj = new File([fileData], file.name, { type: file.type })
+        await imgPaste(fileObj, dom)
+      } else {
+        await imgPaste(file, dom)
+      }
     }
 
     // 处理其他文件（显示弹窗）

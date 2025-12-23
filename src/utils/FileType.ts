@@ -1,6 +1,26 @@
 import { MsgEnum } from '@/enums'
 
 /**
+ * 上传文件类型（支持浏览器 File 与 Tauri 路径文件）
+ */
+export type PathUploadFile = {
+  kind: 'path'
+  path: string
+  name: string
+  size: number
+  type: string
+}
+
+export type UploadFile = File | PathUploadFile
+
+/**
+ * 判断文件是否为 PathUploadFile
+ */
+export const isPathUploadFile = (file: UploadFile): file is PathUploadFile => {
+  return typeof file === 'object' && (file as PathUploadFile).kind === 'path'
+}
+
+/**
  * 支持的视频扩展名（统一定义）
  */
 export const SUPPORTED_VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'wmv', 'mkv', 'flv', 'webm', 'm4v'] as const

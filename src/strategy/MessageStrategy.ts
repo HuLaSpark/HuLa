@@ -259,10 +259,8 @@ class ImageMessageStrategyImpl extends AbstractMessageStrategy {
 
       // 将文件保存到缓存目录
       const tempPath = `temp-image-${Date.now()}-${file.name}`
-      const arrayBuffer = await file.arrayBuffer()
-      const uint8Array = new Uint8Array(arrayBuffer)
       const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-      await writeFile(tempPath, uint8Array, { baseDir })
+      await writeFile(tempPath, file.stream(), { baseDir })
 
       return {
         type: this.msgType,
@@ -564,8 +562,8 @@ class LocationMessageStrategyImpl extends AbstractMessageStrategy {
  * 处理文件消息
  */
 class FileMessageStrategyImpl extends AbstractMessageStrategy {
-  // 最大上传文件大小 100MB
-  private readonly MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+  // 最大上传文件大小 500MB
+  private readonly MAX_UPLOAD_SIZE = 500 * 1024 * 1024
   private _uploadHook: ReturnType<typeof useUpload> | null = null
 
   constructor() {
@@ -587,7 +585,7 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
   private async validateFile(file: File): Promise<File> {
     // 检查文件大小
     if (file.size > this.MAX_UPLOAD_SIZE) {
-      throw new AppException('文件大小不能超过100MB')
+      throw new AppException('文件大小不能超过500MB')
     }
     return file
   }
@@ -637,10 +635,8 @@ class FileMessageStrategyImpl extends AbstractMessageStrategy {
     const tempPath = `temp-file-${Date.now()}-${validatedFile.name}`
 
     // 将文件保存到临时位置
-    const arrayBuffer = await validatedFile.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
     const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-    await writeFile(tempPath, uint8Array, { baseDir })
+    await writeFile(tempPath, validatedFile.stream(), { baseDir })
 
     return {
       type: this.msgType,
@@ -863,10 +859,8 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
 
       // 将文件保存到缓存目录
       const tempPath = `temp-video-${Date.now()}-${file.name}`
-      const arrayBuffer = await file.arrayBuffer()
-      const uint8Array = new Uint8Array(arrayBuffer)
       const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-      await writeFile(tempPath, uint8Array, { baseDir })
+      await writeFile(tempPath, validatedFile.stream(), { baseDir })
 
       return {
         type: this.msgType,
@@ -1018,13 +1012,9 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       // 将File对象写入临时文件，然后使用现有的doUpload方法
       const tempPath = `temp-thumbnail-${Date.now()}-${thumbnailFile.name}`
 
-      // 将File对象转换为ArrayBuffer，然后写入临时文件
-      const arrayBuffer = await thumbnailFile.arrayBuffer()
-      const uint8Array = new Uint8Array(arrayBuffer)
-
       // 写入临时文件
       const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.AppCache
-      await writeFile(tempPath, uint8Array, { baseDir })
+      await writeFile(tempPath, thumbnailFile.stream(), { baseDir })
 
       // enableDeduplication启用文件去重，使用哈希值计算
       const result = await this.uploadHook.doUpload(tempPath, uploadUrl, { ...options, enableDeduplication: true })

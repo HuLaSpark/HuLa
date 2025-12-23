@@ -1,7 +1,8 @@
 import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
-import { copyFile, readFile } from '@tauri-apps/plugin-fs'
+import { copyFile, stat } from '@tauri-apps/plugin-fs'
 import type { FilesMeta } from '@/services/types'
+import type { PathUploadFile } from '@/utils/FileType'
 import { extractFileName } from '@/utils/Formatting'
 import { useUserStore } from '../stores/user'
 import { getFilesMeta } from './PathUtil'
@@ -23,7 +24,7 @@ class FileUtil {
    * filesMeta: 选中的文件元数据列表
    */
   static async openAndCopyFile(): Promise<{
-    files: File[]
+    files: PathUploadFile[]
     filesMeta: FilesMeta
   } | null> {
     // 获取文件路径列表
@@ -35,11 +36,12 @@ class FileUtil {
     if (!selected) {
       return null
     }
-    const filesMeta = await getFilesMeta<FilesMeta>(selected)
-    await FileUtil.copyUploadFile(selected, filesMeta)
+    const selectedPaths = Array.isArray(selected) ? selected : [selected]
+    const filesMeta = await getFilesMeta<FilesMeta>(selectedPaths)
+    void FileUtil.copyUploadFile(selectedPaths, filesMeta)
 
     return {
-      files: await FileUtil.map2File(selected, filesMeta),
+      files: await FileUtil.map2PathUploadFile(selectedPaths, filesMeta),
       filesMeta: filesMeta
     }
   }
@@ -55,30 +57,42 @@ class FileUtil {
     for (const filePathStr of files) {
       const fileMeta = filesMeta.find((f) => f.path === filePathStr)
       if (fileMeta) {
-        copyFile(filePathStr, await join(userResourceDir, fileMeta.name))
+        try {
+          await copyFile(filePathStr, await join(userResourceDir, fileMeta.name))
+        } catch (error) {
+          console.error('[FileUtil] 复制文件失败:', error)
+        }
       }
     }
   }
 
   /**
-   * 将选中的文件路径列表和文件元数据列表转换为 File 对象列表
+   * 将选中的文件路径列表和文件元数据列表转换为路径文件对象列表
    * @param files 选中的文件路径列表
    * @param filesMeta 选中的文件元数据列表
-   * @returns File 对象列表
+   * @returns 路径文件对象列表
    */
-  static async map2File(files: string[], filesMeta: FilesMeta): Promise<File[]> {
+  static async map2PathUploadFile(files: string[], filesMeta: FilesMeta): Promise<PathUploadFile[]> {
     return await Promise.all(
       files.map(async (path) => {
-        const fileData = await readFile(path)
-        const fileName = extractFileName(path)
-        const blob = new Blob([new Uint8Array(fileData)])
-
-        // 找到对应路径的文件，并且获取其类型
         const fileMeta = filesMeta.find((f) => f.path === path)
-        const fileType = fileMeta?.mime_type || fileMeta?.file_type
+        const fileName = fileMeta?.name || extractFileName(path)
+        const fileType = fileMeta?.mime_type || 'application/octet-stream'
 
-        // 最后手动传入blob中，因为blob无法自动判断文件类型
-        return new File([blob], fileName, { type: fileType })
+        let size = 0
+        try {
+          size = (await stat(path)).size
+        } catch (error) {
+          console.error('[FileUtil] 获取文件大小失败:', error)
+        }
+
+        return {
+          kind: 'path',
+          path,
+          name: fileName,
+          size,
+          type: fileType
+        }
       })
     )
   }
