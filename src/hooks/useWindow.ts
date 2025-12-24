@@ -185,6 +185,7 @@ export const useWindow = () => {
       hiddenTitle: true, // mac隐藏标题栏
       visible: visible,
       theme: resolveWindowTheme(),
+      dragDropEnabled: true, // 启用文件拖放
       ...(isWindows10() ? { shadow: false } : {})
     })
 
@@ -343,6 +344,7 @@ export const useWindow = () => {
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
       visible: false,
+      dragDropEnabled: true, // 启用文件拖放
       ...(isWindows10() ? { shadow: false } : {})
     })
 
