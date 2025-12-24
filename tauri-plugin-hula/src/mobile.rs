@@ -31,14 +31,4 @@ impl<R: Runtime> Hula<R> {
       .run_mobile_plugin("ping", payload)
       .map_err(Into::into)
   }
-
-  pub fn get_or_create_sqlite_key(
-    &self,
-    payload: SqliteKeyRequest,
-  ) -> crate::Result<SqliteKeyResponse> {
-    self
-      .0
-      .run_mobile_plugin("getOrCreateSqliteKey", payload)
-      .map_err(Into::into)
-  }
 }

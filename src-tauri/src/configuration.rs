@@ -1,4 +1,3 @@
-use crate::common::sqlcipher;
 use crate::error::CommonError;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::path::PathBuf;
@@ -108,16 +107,10 @@ impl DatabaseSettings {
         };
         info!("Database path: {:?}", db_path);
 
-        // 设备绑定的 SQLCipher 密钥（存储在系统安全存储/Keychain/Keystore）
-        let sqlcipher_key = sqlcipher::get_or_create_sqlcipher_key(app_handle).await?;
-        // 兼容旧版本明文库：首次启动时自动迁移为加密库
-        sqlcipher::ensure_sqlite_encrypted(&db_path, &sqlcipher_key).await?;
-
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 
         // 配置数据库连接选项
         let mut opt = ConnectOptions::new(db_url);
-        opt.sqlcipher_key(sqlcipher_key);
         opt.max_connections(20) // 降低最大连接数，避免资源浪费
             .min_connections(2) // 降低最小连接数
             .connect_timeout(Duration::from_secs(30)) // 增加连接超时时间
