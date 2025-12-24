@@ -2,15 +2,13 @@ import chalk from 'chalk'
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
 import { platform } from 'os'
-import { join } from 'path'
 
 // 环境安装指南
 const INSTALL_GUIDES = {
   'Node.js': 'https://nodejs.org/zh-cn/download/',
   pnpm: 'https://pnpm.io/zh/installation',
   Rust: 'https://www.rust-lang.org/tools/install',
-  'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/',
-  Perl: 'https://strawberryperl.com/'
+  'WebView2 Runtime': 'https://developer.microsoft.com/microsoft-edge/webview2/'
 }
 
 // 更新指南
@@ -25,13 +23,6 @@ const WINDOWS_PATHS = {
     'C:\\Program Files\\Microsoft\\EdgeWebView\\Application'
   ]
 }
-
-// 默认安装路径（winget 安装的固定路径）
-const PERL_DEFAULT_PATH = 'C:\\Strawberry\\perl\\bin'
-const PERL_DEFAULT_EXECUTABLE = join(PERL_DEFAULT_PATH, 'perl.exe')
-const REQUIRED_PERL_OS = 'MSWin32'
-const REQUIRED_PERL_ARCH_KEYWORD = 'mswin32-x64-multi-thread'
-const PERL_INFO_ARGS = '-MConfig -e "print join(q{|}, $Config{osname}, $Config{archname}, $Config{prefix})"'
 
 // 错误信息映射
 const ERROR_MESSAGES = {
@@ -81,100 +72,12 @@ const checkWebView2 = () => {
   }
 }
 
-const quoteIfNeeded = (value) => {
-  if (!value) return ''
-  if (value.startsWith('"') && value.endsWith('"')) return value
-  return value.includes(' ') ? `"${value}"` : value
-}
-
-/**
- * 读取当前 perl 的平台信息
- * @param {string} [executable] 指定 perl 可执行文件
- * @returns {{osname: string, archname: string, prefix: string}|null}
- */
-const tryGetPerlInfo = (executable = 'perl') => {
-  try {
-    const command = `${quoteIfNeeded(executable)} ${PERL_INFO_ARGS}`
-    const output = execSync(command, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim()
-    const [osname = '', archname = '', prefix = ''] = output.split('|')
-    return { osname, archname, prefix }
-  } catch {
-    return null
-  }
-}
-
-/**
- * 判断 perl 是否为原生 64 位 Windows Perl（适用于 OpenSSL 编译）
- * 支持 Strawberry Perl、ActivePerl 等原生 64 位 Windows Perl
- * @param {{osname: string, archname: string, prefix: string}|null} info
- * @returns {boolean}
- */
-const isNativeWindowsPerl = (info) => {
-  if (!info) return false
-  const arch = info.archname?.toLowerCase() || ''
-  // 核心要求：原生 64 位 Windows Perl，不能是 Cygwin/MSYS 版本
-  return info.osname === REQUIRED_PERL_OS && arch.includes(REQUIRED_PERL_ARCH_KEYWORD)
-}
-
-/**
- * 检查 Perl 是否安装，优先使用用户环境中的 Perl
- * @returns {boolean}
- */
-const checkPerl = () => {
-  // 1. 先检查用户 PATH 中是否有原生 Windows Perl
-  const info = tryGetPerlInfo()
-  if (isNativeWindowsPerl(info)) {
-    return true
-  }
-
-  // 2. 检查默认路径是否存在 Strawberry Perl
-  if (existsSync(PERL_DEFAULT_EXECUTABLE)) {
-    const fallbackInfo = tryGetPerlInfo(PERL_DEFAULT_EXECUTABLE)
-    if (isNativeWindowsPerl(fallbackInfo)) {
-      return true
-    }
-  }
-
-  return false
-}
-
-/**
- * 安装 Strawberry Perl（使用 winget）
- * @returns {Promise<boolean>}
- */
-const installStrawberryPerl = async () => {
-  try {
-    console.log(chalk.blue('  正在使用 winget 安装 Strawberry Perl...'))
-    execSync(
-      'winget install --id StrawberryPerl.StrawberryPerl --accept-source-agreements --accept-package-agreements',
-      {
-        stdio: 'inherit'
-      }
-    )
-
-    console.log(chalk.green('  ✅ Strawberry Perl 安装成功！'))
-    console.log(chalk.gray('  💡 .cargo/config.toml 已预配置 PERL 路径，无需额外配置'))
-    return true
-  } catch (error) {
-    console.log(chalk.red(`  ❌ Perl 安装失败: ${error.message}`))
-    console.log(chalk.gray(`  请手动安装: ${INSTALL_GUIDES.Perl}`))
-    return false
-  }
-}
-
 // Windows 特定的检查
 const windowsChecks = [
   {
     name: 'WebView2 Runtime',
     checkInstalled: checkWebView2,
     isRequired: true
-  },
-  {
-    name: 'Perl',
-    checkInstalled: checkPerl,
-    installer: installStrawberryPerl,
-    isRequired: true,
-    description: 'OpenSSL 编译依赖'
   }
 ]
 
