@@ -20,7 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import {
   darkTheme,
   dateEnUS,
@@ -35,6 +36,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
+import { isDesktop } from '@/utils/PlatformConstants'
 
 const { notificMax, messageMax } = defineProps<{
   notificMax?: number
@@ -67,23 +69,61 @@ const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 定义不需要显示消息提示的窗口
 const noMessageWindows = ['tray', 'notify', 'capture', 'update', 'checkupdate']
 
-/** 跟随系统主题模式切换主题 */
-const followOS = () => {
-  globalTheme.value = prefers.matches ? darkTheme : lightTheme
-  document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-  themes.value.content = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+const setWindowTheme = (theme: 'light' | 'dark' | null) => {
+  if (!isDesktop()) return
+  getCurrentWebviewWindow()
+    .setTheme(theme)
+    .catch(() => {})
+  WebviewWindow.getAll()
+    .then((windows) => Promise.allSettled(windows.map((win) => win.setTheme(theme))))
+    .catch(() => {})
 }
 
+const applyTheme = (dark: boolean) => {
+  globalTheme.value = dark ? darkTheme : lightTheme
+  document.documentElement.dataset.theme = dark ? ThemeEnum.DARK : ThemeEnum.LIGHT
+  themes.value.content = dark ? ThemeEnum.DARK : ThemeEnum.LIGHT
+}
+
+/** 跟随系统主题模式切换主题 */
+const followOS = () => {
+  applyTheme(prefers.matches)
+}
+
+let prefersListenerAttached = false
+let unlistenTauriTheme: (() => void) | null = null
 watchEffect(() => {
   if (themes.value.pattern === ThemeEnum.OS) {
+    setWindowTheme(null)
     followOS()
-    themes.value.pattern = ThemeEnum.OS
-    prefers.addEventListener('change', followOS)
+    if (!prefersListenerAttached) {
+      prefers.addEventListener('change', followOS)
+      prefersListenerAttached = true
+    }
+    if (!unlistenTauriTheme) {
+      getCurrentWindow()
+        .onThemeChanged(({ payload: theme }) => {
+          if (themes.value.pattern !== ThemeEnum.OS) return
+          applyTheme(theme === 'dark')
+        })
+        .then((unlisten) => {
+          unlistenTauriTheme = unlisten
+        })
+        .catch(() => {})
+    }
   } else {
     // 判断content是否是深色还是浅色
     document.documentElement.dataset.theme = themes.value.content || ThemeEnum.LIGHT
     globalTheme.value = themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme
-    prefers.removeEventListener('change', followOS)
+    setWindowTheme(themes.value.content === ThemeEnum.DARK ? 'dark' : 'light')
+    if (prefersListenerAttached) {
+      prefers.removeEventListener('change', followOS)
+      prefersListenerAttached = false
+    }
+    if (unlistenTauriTheme) {
+      unlistenTauriTheme()
+      unlistenTauriTheme = null
+    }
   }
 })
 
