@@ -413,5 +413,9 @@
     "success": "Group chat created",
     "fail": "Failed to create group chat",
     "required_tag": "Required"
+  },
+  "file_drop": {
+    "title": "Release to send files",
+    "desc": "Drag and drop images or files, the current session will receive them"
   }
 }

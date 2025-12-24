@@ -393,6 +393,17 @@ const handleFileCancel = () => {
   pendingFiles.value = []
 }
 
+// 处理全局拖拽文件
+const handleGlobalFilesDrop = async (files: UploadFile[]) => {
+  if (!files?.length || !messageInputDom.value) return
+  try {
+    await processFiles(files, messageInputDom.value, showFileModalCallback)
+  } catch (error) {
+    console.error('处理拖拽文件失败:', error)
+    window.$message?.error?.('处理拖拽文件失败')
+  }
+}
+
 /** 位置选择完成的回调 */
 const handleLocationSelected = async (locationData: any) => {
   await sendLocationDirect(locationData)
@@ -671,6 +682,7 @@ defineExpose({
 /** 移动端专用适配事件（结束） */
 
 onMounted(async () => {
+  useMitt.on(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop)
   if (isMobile()) {
     listenMobileClosePanel()
   }
@@ -753,7 +765,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keydown', disableSelectAll)
-
+  useMitt.off(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop)
   if (isMobile()) {
     removeMobileClosePanel()
   }

@@ -194,7 +194,7 @@
 
     <!-- 邮箱验证码输入弹窗 -->
     <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
-      <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
+      <div class="bg-#f0f0f0 dark:bg-#303030 w-380px h-fit box-border flex flex-col">
         <div
           v-if="isMac()"
           @click="emailCodeModal = false"
@@ -212,7 +212,7 @@
         </svg>
         <n-flex vertical class="w-full h-fit">
           <n-flex vertical :size="10" class="p-24px">
-            <p class="text-(16px #303030) mb-10px">{{ t('auth.register.email_modal.title') }}</p>
+            <p class="text-(16px [--text-color]) mb-10px">{{ t('auth.register.email_modal.title') }}</p>
             <p class="text-(12px #808080) leading-5 mb-10px">
               {{ t('auth.register.email_modal.desc', { email: info.email }) }}
             </p>

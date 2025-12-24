@@ -116,6 +116,8 @@ export enum MittEnum {
   MOBILE_RTC_CALL_REQUEST = 'mobileRtcCallRequest',
   /** 移动端关闭输入框面板 */
   MOBILE_CLOSE_PANEL = 'mobileClosePanel',
+  /** 全局文件拖拽 */
+  GLOBAL_FILES_DROP = 'globalFilesDrop',
   /** 切换会话 */
   MSG_INIT = 'msg_init',
   /** 会话切换完成*/

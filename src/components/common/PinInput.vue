@@ -11,6 +11,7 @@
         autoCorrect="off"
         autoCapitalize="off"
         :class="[
+          'bg-#fefefe dark:bg-#404040',
           'text-center rounded-8px',
           'border-(2px solid transparent)',
           'focus:border-(2px solid #13987f)',

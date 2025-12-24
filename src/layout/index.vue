@@ -1,5 +1,8 @@
 <template>
-  <div id="layout" class="relative flex min-w-310px bg-[--right-bg-color] h-full">
+  <div
+    id="layout"
+    class="relative flex min-w-310px bg-[--right-bg-color] h-full"
+    :class="{ 'is-dragging-files': isDraggingFiles }">
     <div class="flex flex-1 min-h-0">
       <!-- 使用keep-alive包裹异步组件 -->
       <keep-alive>
@@ -15,12 +18,24 @@
     <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
       <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
     </div>
+
+    <transition name="drag-upload">
+      <div
+        v-if="isDraggingFiles"
+        class="pointer-events-none absolute inset-0 z-999 flex flex-col items-center justify-center bg-black/30 text-center text-#fff">
+        <div class="rounded-16px border border-white/60 bg-white/15 px-40px py-20px backdrop-blur-md">
+          <p class="text-18px font-semibold tracking-wide">{{ t('home.file_drop.title') }}</p>
+          <p class="mt-6px text-13px text-white/80">{{ t('home.file_drop.desc') }}</p>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
+import { useI18n } from 'vue-i18n'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useCheckUpdate } from '@/hooks/useCheckUpdate'
 import { useLogin } from '@/hooks/useLogin'
@@ -32,6 +47,7 @@ import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { MittEnum, MsgEnum, NotificationTypeEnum, TauriCommand } from '@/enums'
 import { clearListener, initListener, readCountQueue } from '@/utils/ReadCountQueue'
 import { emitTo, listen } from '@tauri-apps/api/event'
+import type { UnlistenFn } from '@tauri-apps/api/event'
 import { UserAttentionType } from '@tauri-apps/api/window'
 import type { MessageType } from '@/services/types.ts'
 import { WsResponseMessageType } from '@/services/wsType.ts'
@@ -46,7 +62,11 @@ import { audioManager } from '@/utils/AudioManager'
 import { useOverlayController } from '@/hooks/useOverlayController'
 import { useGroupStore } from '@/stores/group'
 import { RoomTypeEnum } from '@/enums'
+import { getFilesMeta } from '@/utils/PathUtil'
+import FileUtil from '@/utils/FileUtil'
+import type { FilesMeta } from '@/services/types'
 
+const { t } = useI18n()
 const route = useRoute()
 const userStore = useUserStore()
 const chatStore = useChatStore()
@@ -197,6 +217,8 @@ const globalStore = useGlobalStore()
 const contactStore = useContactStore()
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate()
 const shrinkStatus = ref(false)
+const isDraggingFiles = ref(false)
+const tauriFileDropUnlisteners: UnlistenFn[] = []
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../workers/timer.worker.ts', import.meta.url))
@@ -391,6 +413,67 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
   globalStore.updateGlobalUnreadCount()
 })
 
+const cleanupNativeFileDropListeners = () => {
+  while (tauriFileDropUnlisteners.length > 0) {
+    const unlisten = tauriFileDropUnlisteners.pop()
+    unlisten?.()
+  }
+}
+
+const buildPathUploadFiles = async (paths: string[]) => {
+  if (!paths?.length) return []
+  try {
+    const filesMeta = (await getFilesMeta<FilesMeta>(paths)) ?? []
+    return await FileUtil.map2PathUploadFile(paths, filesMeta)
+  } catch (error) {
+    console.error('[layout] 解析拖拽文件元数据失败:', error)
+    window.$message?.error?.('解析拖拽文件失败')
+    return []
+  }
+}
+
+const handleNativeFileDrop = async (paths: string[]) => {
+  if (!paths?.length) return
+  try {
+    const pathFiles = await buildPathUploadFiles(paths)
+    if (pathFiles.length > 0) {
+      useMitt.emit(MittEnum.GLOBAL_FILES_DROP, pathFiles)
+    } else {
+      window.$message?.error?.('无法识别拖拽的文件')
+    }
+  } catch (error) {
+    console.error('[layout] 处理原生拖拽文件失败:', error)
+  } finally {
+    isDraggingFiles.value = false
+  }
+}
+
+const setupNativeFileDropListeners = async () => {
+  try {
+    const unlisten = await appWindow.onDragDropEvent((event) => {
+      // 只有选中会话时才响应拖拽事件
+      if (!globalStore.currentSessionRoomId) return
+
+      if (event.payload.type === 'enter') {
+        const paths = event.payload.paths || []
+        if (paths.length > 0) {
+          isDraggingFiles.value = true
+        }
+      } else if (event.payload.type === 'over') {
+        isDraggingFiles.value = true
+      } else if (event.payload.type === 'drop') {
+        const paths = event.payload.paths || []
+        handleNativeFileDrop(paths)
+      } else if (event.payload.type === 'leave') {
+        isDraggingFiles.value = false
+      }
+    })
+    tauriFileDropUnlisteners.push(unlisten)
+  } catch (error) {
+    console.error('[layout] 注册原生文件拖拽监听失败:', error)
+  }
+}
+
 listen('relogin', async () => {
   info('收到重新登录事件')
   await resetLoginState()
@@ -456,9 +539,12 @@ onMounted(async () => {
     await homeWindow.center()
     await homeWindow.show()
   }
+
+  await setupNativeFileDropListeners()
 })
 
 onUnmounted(() => {
+  cleanupNativeFileDropListeners()
   clearListener()
   // 清除Web Worker计时器
   timerWorker.postMessage({
@@ -468,3 +554,16 @@ onUnmounted(() => {
   timerWorker.terminate()
 })
 </script>
+
+<style scoped>
+.drag-upload-enter-active,
+.drag-upload-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.drag-upload-enter-from,
+.drag-upload-leave-to {
+  opacity: 0;
+  transform: none;
+}
+</style>
