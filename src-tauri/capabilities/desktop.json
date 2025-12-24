@@ -13,6 +13,8 @@
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
     "core:window:allow-set-resizable",
-    "core:window:allow-set-badge-count"
+    "core:window:allow-set-badge-count",
+    "core:window:allow-set-theme",
+    "core:window:allow-theme"
   ]
 }

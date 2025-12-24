@@ -4,8 +4,9 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { UserAttentionType, primaryMonitor, type Monitor } from '@tauri-apps/api/window'
 import { info } from '@tauri-apps/plugin-log'
 import { assign } from 'es-toolkit/compat'
-import { CallTypeEnum, EventEnum, RoomTypeEnum } from '@/enums'
+import { CallTypeEnum, EventEnum, RoomTypeEnum, ThemeEnum } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
+import { useSettingStore } from '@/stores/setting'
 import { isCompatibility, isDesktop, isMac, isWindows, isWindows10 } from '@/utils/PlatformConstants'
 
 /** 判断是兼容的系统 */
@@ -80,6 +81,31 @@ const detachMacModalOverlay = (label: string) => {
 
 export const useWindow = () => {
   const globalStore = useGlobalStore()
+  const settingStore = useSettingStore()
+
+  const resolveSystemTheme = (): 'light' | 'dark' => {
+    if (typeof window === 'undefined') return 'light'
+    if (typeof window.matchMedia !== 'function') return 'light'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+
+  const normalizeTheme = (theme?: unknown): 'light' | 'dark' | null => {
+    if (theme === ThemeEnum.DARK) return 'dark'
+    if (theme === ThemeEnum.LIGHT) return 'light'
+    return null
+  }
+
+  const resolveWindowTheme = (): 'light' | 'dark' => {
+    if (settingStore.themes.pattern === ThemeEnum.OS) {
+      return resolveSystemTheme()
+    }
+
+    return (
+      normalizeTheme(settingStore.themes.content) ??
+      normalizeTheme(document?.documentElement?.dataset?.theme) ??
+      resolveSystemTheme()
+    )
+  }
   /**
    * 创建窗口
    * @param title 窗口标题
@@ -158,6 +184,7 @@ export const useWindow = () => {
       titleBarStyle: 'overlay', // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
       visible: visible,
+      theme: resolveWindowTheme(),
       ...(isWindows10() ? { shadow: false } : {})
     })
 
