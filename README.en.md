@@ -47,6 +47,12 @@
     <a href="https://www.bestpractices.dev/en/projects/9692">
       <img src="https://bestpractices.coreinfrastructure.org/projects/9692/badge" alt="CII Best Practices">
     </a>
+    <a href="https://hulaspark.com">
+      <img src="public/hulaspark-badge.svg" alt="HuLaSpark">
+    </a>
+    <a href="https://discord.gg/WhSkvhNEeE">
+      <img src="https://img.shields.io/badge/-Discord-5865F2?logo=discord&logoColor=white&labelColor=555555" alt="Discord">
+    </a>
   </p>
 </div>
 
@@ -392,6 +398,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-10-16 | **xx豪** | `¥101` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
+| 2025-10-15 | **三愿** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-10-15 | **兵** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-08-13 | **zhongjing** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |

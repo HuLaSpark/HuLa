@@ -1,11 +1,10 @@
-import { Channel, invoke } from '@tauri-apps/api/core'
 import { readImage, readText } from '@tauri-apps/plugin-clipboard-manager'
 import { useDebounceFn } from '@vueuse/core'
 import pLimit from 'p-limit'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { nextTick } from 'vue'
-import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, TauriCommand, UploadSceneEnum } from '@/enums'
+import { LimitEnum, MessageStatusEnum, MittEnum, MsgEnum, UploadSceneEnum } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import type { AIModel } from '@/services/types.ts'
 import type { BaseUserItem } from '@/stores/cached.ts'
@@ -13,6 +12,7 @@ import { useChatStore } from '@/stores/chat.ts'
 import { useGlobalStore } from '@/stores/global.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting.ts'
+import { useMessageSender } from '@/hooks/useMessageSender'
 import { messageStrategyMap } from '@/strategy/MessageStrategy.ts'
 import { processClipboardImage } from '@/utils/ImageUtils.ts'
 import { getReplyContent } from '@/utils/MessageReply.ts'
@@ -418,6 +418,8 @@ export const useMsgInput = (messageInputDom: Ref) => {
 
   /** 处理发送信息事件 */
   // TODO 输入框中的内容当我切换消息的时候需要记录之前输入框的内容 (nyh -> 2024-03-01 07:03:43)
+  const { sendWithTracking } = useMessageSender()
+
   const send = async () => {
     const targetRoomId = globalStore.currentSessionRoomId
     // 判断输入框中的图片或者文件数量是否超过限制
@@ -541,44 +543,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
           status: MessageStatusEnum.SENDING
         })
       }
-      // 发送消息到服务器 - 使用 channel 方式
-      const successChannel = new Channel<any>()
-      const errorChannel = new Channel<string>()
-
-      // 监听成功响应
-      successChannel.onmessage = (message) => {
-        chatStore.updateMsg({
-          msgId: message.oldMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: message.message.id,
-          body: message.message.body,
-          timeBlock: message.timeBlock
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      // 监听错误响应
-      errorChannel.onmessage = (msgId) => {
-        chatStore.updateMsg({
-          msgId: msgId,
-          status: MessageStatusEnum.FAILED
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
+      await sendWithTracking({
+        tempMsgId,
+        payload: {
           id: tempMsgId,
           roomId: targetRoomId,
           msgType: msg.type,
           body: messageBody
-        },
-        successChannel,
-        errorChannel
+        }
       })
-
-      // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(targetRoomId)
 
       // 消息发送成功后释放预览URL
       if ((msg.type === MsgEnum.IMAGE || msg.type === MsgEnum.EMOJI) && msg.url.startsWith('blob:')) {
@@ -847,37 +820,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
         status: MessageStatusEnum.SENDING
       })
 
-      const successChannel = new Channel<any>()
-      const errorChannel = new Channel<string>()
-
-      successChannel.onmessage = (message) => {
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: message.message.id,
-          body: message.message.body,
-          timeBlock: message.timeBlock
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      errorChannel.onmessage = () => {
-        chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
+      await sendWithTracking({
+        tempMsgId,
+        payload: {
           id: tempMsgId,
           roomId: targetRoomId,
           msgType: MsgEnum.FILE,
           body: messageBody
-        },
-        successChannel,
-        errorChannel
+        }
       })
-
-      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       cleanup()
       throw error
@@ -944,37 +895,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
         status: MessageStatusEnum.SENDING
       })
 
-      const successChannel = new Channel<any>()
-      const errorChannel = new Channel<string>()
-
-      successChannel.onmessage = (message) => {
-        chatStore.updateMsg({
-          msgId: tempMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: message.message.id,
-          body: message.message.body,
-          timeBlock: message.timeBlock
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      errorChannel.onmessage = () => {
-        chatStore.updateMsg({ msgId: tempMsgId, status: MessageStatusEnum.FAILED })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
+      await sendWithTracking({
+        tempMsgId,
+        payload: {
           id: tempMsgId,
           roomId: targetRoomId,
           msgType: MsgEnum.FILE,
           body: messageBody
-        },
-        successChannel,
-        errorChannel
+        }
       })
-
-      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       cleanup()
       throw error
@@ -1277,58 +1206,19 @@ export const useMsgInput = (messageInputDom: Ref) => {
           status: MessageStatusEnum.SENDING
         })
 
-        const sendData = {
-          id: tempMsgId,
-          roomId: targetRoomId,
-          msgType: MsgEnum.VOICE,
-          body: messageBody
-        }
-
-        try {
-          // 发送消息到服务器 - 使用 channel 方式
-          const voiceSuccessChannel = new Channel<any>()
-          const voiceErrorChannel = new Channel<string>()
-
-          // 监听成功响应
-          voiceSuccessChannel.onmessage = (message) => {
-            chatStore.updateMsg({
-              msgId: message.oldMsgId,
-              status: MessageStatusEnum.SUCCESS,
-              newMsgId: message.message.id,
-              body: message.message.body,
-              timeBlock: message.timeBlock
-            })
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
+        await sendWithTracking({
+          tempMsgId,
+          payload: {
+            id: tempMsgId,
+            roomId: targetRoomId,
+            msgType: MsgEnum.VOICE,
+            body: messageBody
           }
+        })
 
-          // 监听错误响应
-          voiceErrorChannel.onmessage = (msgId) => {
-            chatStore.updateMsg({
-              msgId: msgId,
-              status: MessageStatusEnum.FAILED
-            })
-            useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-          }
-
-          await invoke(TauriCommand.SEND_MSG, {
-            data: sendData,
-            successChannel: voiceSuccessChannel,
-            errorChannel: voiceErrorChannel
-          })
-
-          // 更新会话最后活动时间
-          chatStore.updateSessionLastActiveTime(targetRoomId)
-
-          // 释放本地预览URL
-          if (msg.url.startsWith('asset://')) {
-            // asset:// 协议不需要手动释放
-          }
-        } catch (apiError: any) {
-          chatStore.updateMsg({
-            msgId: tempMsgId,
-            status: MessageStatusEnum.FAILED
-          })
-          throw new Error(`发送消息失败: ${apiError.message || apiError}`)
+        // 释放本地预览URL
+        if (msg.url.startsWith('asset://')) {
+          // asset:// 协议不需要手动释放
         }
       } catch (uploadError) {
         chatStore.updateMsg({
@@ -1372,44 +1262,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
         status: MessageStatusEnum.SENDING
       })
 
-      // 发送消息到服务器 - 使用 channel 方式
-      const successChannel = new Channel<any>()
-      const errorChannel = new Channel<string>()
-
-      // 监听成功响应
-      successChannel.onmessage = (message) => {
-        chatStore.updateMsg({
-          msgId: message.oldMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: message.message.id,
-          body: message.message.body,
-          timeBlock: message.timeBlock
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      // 监听错误响应
-      errorChannel.onmessage = (msgId) => {
-        chatStore.updateMsg({
-          msgId: msgId,
-          status: MessageStatusEnum.FAILED
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
+      await sendWithTracking({
+        tempMsgId,
+        payload: {
           id: tempMsgId,
           roomId: targetRoomId,
           msgType: MsgEnum.LOCATION,
           body: messageBody
-        },
-        successChannel,
-        errorChannel
+        }
       })
-
-      // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       console.error('位置消息发送失败:', error)
     }
@@ -1444,44 +1305,15 @@ export const useMsgInput = (messageInputDom: Ref) => {
         status: MessageStatusEnum.SENDING
       })
 
-      // 发送消息到服务器 - 使用 channel 方式
-      const successChannel = new Channel<any>()
-      const errorChannel = new Channel<string>()
-
-      // 监听成功响应
-      successChannel.onmessage = (message) => {
-        chatStore.updateMsg({
-          msgId: message.oldMsgId,
-          status: MessageStatusEnum.SUCCESS,
-          newMsgId: message.message.id,
-          body: message.message.body,
-          timeBlock: message.timeBlock
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      // 监听错误响应
-      errorChannel.onmessage = (msgId) => {
-        chatStore.updateMsg({
-          msgId: msgId,
-          status: MessageStatusEnum.FAILED
-        })
-        useMitt.emit(MittEnum.CHAT_SCROLL_BOTTOM)
-      }
-
-      await invoke(TauriCommand.SEND_MSG, {
-        data: {
+      await sendWithTracking({
+        tempMsgId,
+        payload: {
           id: tempMsgId,
           roomId: targetRoomId,
           msgType: MsgEnum.EMOJI,
           body: messageBody
-        },
-        successChannel,
-        errorChannel
+        }
       })
-
-      // 更新会话最后活动时间
-      chatStore.updateSessionLastActiveTime(targetRoomId)
     } catch (error) {
       console.error('[useMsgInput] 表情包消息发送失败:', error)
       throw error

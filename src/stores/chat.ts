@@ -26,6 +26,19 @@ type RecalledMessage = {
   originalType: MsgEnum
 }
 
+// 自定义转发群二维码
+type CustomForwardTask = {
+  id: string
+  type: MsgEnum.IMAGE
+  fileName: string
+  mimeType: string
+  bytes: Uint8Array
+  previewUrl: string
+  width: number
+  height: number
+  size: number
+}
+
 // 定义每页加载的消息数量
 export const pageSize = 20
 
@@ -209,6 +222,9 @@ export const useChatStore = defineStore(
     const expirationTimers: Record<string, boolean> = {}
     const isMsgMultiChoose = ref<boolean>(false)
     const msgMultiChooseMode = ref<'normal' | 'forward'>('normal')
+
+    // 自定义转发群二维码
+    const customForwardTask = ref<CustomForwardTask | null>(null)
 
     // 当前聊天室的消息Map计算属性
     const currentMessageMap = computed(() => {
@@ -1349,6 +1365,10 @@ export const useChatStore = defineStore(
       msgMultiChooseMode.value = flag ? mode : 'normal'
     }
 
+    const setCustomForwardTask = (task: CustomForwardTask | null) => {
+      customForwardTask.value = task
+    }
+
     // 重置所有会话选择状态
     const resetSessionSelection = () => {
       sessionList.value.forEach((session) => {
@@ -1406,6 +1426,8 @@ export const useChatStore = defineStore(
       clearMsgCheck,
       setMsgMultiChoose,
       msgMultiChooseMode,
+      customForwardTask,
+      setCustomForwardTask,
       resetSessionSelection,
       checkMsgExist,
       clearRedundantMessages

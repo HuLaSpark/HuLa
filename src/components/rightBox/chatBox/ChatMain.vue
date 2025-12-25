@@ -2,14 +2,14 @@
   <div class="flex flex-col overflow-hidden h-full relative">
     <!-- 网络状态提示 -->
     <n-flex
-      v-if="!networkStatus.isOnline.value"
+      v-if="networkBanner"
       align="center"
       justify="center"
       class="z-999 w-full h-40px rounded-4px text-(12px [--danger-text]) bg-[--danger-bg] flex-shrink-0">
       <svg class="size-16px">
         <use href="#cloudError"></use>
       </svg>
-      {{ t('home.chat_main.network_offline') }}
+      {{ networkBanner.text }}
     </n-flex>
 
     <!-- 置顶公告提示 -->
@@ -271,6 +271,21 @@ const newMsgCountLabel = computed(() => {
   return currentNewMsgCount.value.count > 99 ? '99+' : String(currentNewMsgCount.value.count)
 })
 const currentRoomId = computed(() => globalStore.currentSessionRoomId ?? null)
+const networkBanner = computed(() => {
+  if (!networkStatus.browserOnline.value) {
+    return { text: t('home.chat_main.network_offline') }
+  }
+
+  if (networkStatus.isWsConnecting.value) {
+    return { text: t('home.chat_main.network_connecting') }
+  }
+
+  if (networkStatus.wsOnline.value === false) {
+    return { text: t('home.chat_main.network_ws_offline') }
+  }
+
+  return null
+})
 const computeMsgHover = computed(() => (item: MessageType) => {
   if (!chatStore.isMsgMultiChoose || !isMessageMultiSelectEnabled(item.message.type)) {
     return false
