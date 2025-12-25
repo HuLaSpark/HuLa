@@ -397,7 +397,7 @@ Execute **pnpm run commit** to invoke _git commit_ interaction, complete informa
 | 2025-04-20 | **姜兴(Simon)** | `¥188` | ![WeChat](https://img.shields.io/badge/WeChat-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-02-17 | **禾硕** | `¥168` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
 | 2025-10-16 | **xx豪** | `¥101` | ![Alipay](https://img.shields.io/badge/Alipay-1677FF?style=flat&logo=alipay&logoColor=white) |
-| 2025-10-15 | **三愿** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
+| 2025-12-25 | **三愿** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-10-15 | **兵** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-08-13 | **zhongjing** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
 | 2025-07-15 | **粉兔** | `¥100` | ![WeChat](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white) |
