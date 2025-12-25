@@ -4,7 +4,7 @@
     class="relative flex-center gap-22px h-full">
     <!-- 功能模块 -->
     <div class="flex items-start gap-14px">
-      <div class="flex flex-col items-center gap-14px w-64px" v-for="opt in opts">
+      <div class="flex flex-col items-center gap-14px w-64px" v-for="opt in toolOptions">
         <n-button :disabled="opt.disabled" secondary circle @click="opt.click" class="size-46px mx-auto">
           <template #icon>
             <svg class="size-22px">
@@ -88,12 +88,18 @@
 
             <span class="w-full h-1px bg-[--line-color] my-8px"></span>
 
-            <div class="flex-1 flex-col-center">
-              <ChatMultiMsg :content-list="msgContents" :msg-ids="msgIds" />
-              <n-input
-                class="my-12px border-(solid 1px [--line-color])"
-                :placeholder="t('message.multi_choose.leave_message_placeholder')" />
-              <div class="w-full flex justify-between">
+            <div class="flex-1 flex flex-col justify-between">
+              <div class="flex-1 flex-col-center gap-12px">
+                <template v-if="isCustomImageTask">
+                  <div class="custom-task-card" @click="handlePreviewCustomImage">
+                    <div class="image-wrapper">
+                      <img :src="customForwardTask?.previewUrl" alt="custom-forward" />
+                    </div>
+                  </div>
+                </template>
+                <ChatMultiMsg v-else :content-list="msgContents" :msg-ids="msgIds" />
+              </div>
+              <div class="w-full flex justify-between mt-12px pt-12px border-t-(1px solid [--line-color])">
                 <n-button secondary class="w-100px h-30px" @click="showModal = false">
                   {{ t('message.multi_choose.cancel_button') }}
                 </n-button>
@@ -140,7 +146,7 @@
 
 <script setup lang="ts">
 import { ErrorType } from '@/common/exception'
-import { MergeMessageType, MittEnum, RoomTypeEnum, TauriCommand } from '@/enums'
+import { MergeMessageType, MittEnum, MsgEnum, RoomTypeEnum, TauriCommand } from '@/enums'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global'
@@ -149,9 +155,12 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import { mergeMsg } from '@/utils/ImRequestUtils'
 import { isMessageMultiSelectEnabled } from '@/utils/MessageSelect'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { sendMessageWithChannel } from '@/utils/MessageSender'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { useI18n } from 'vue-i18n'
 import type { MsgId } from '@/typings/global'
+import { useCustomForwardTask } from '@/hooks/useCustomForwardTask'
+import { useImageViewer } from '@/hooks/useImageViewer'
 import ChatMultiMsg from './ChatMultiMsg.vue'
 
 const { t } = useI18n()
@@ -162,6 +171,7 @@ const showModal = ref(false)
 const showDeleteConfirm = ref(false)
 const searchText = ref('')
 const isDeleting = ref(false)
+const isForwarding = ref(false)
 const selectedSessions = computed(() => chatStore.sessionList.filter((session) => session.isCheck === true))
 const selectedMsgs = computed(() =>
   chatStore.chatMessageList.filter((msg) => msg.isCheck === true && isMessageMultiSelectEnabled(msg.message.type))
@@ -258,7 +268,14 @@ const handleBatchDelete = async () => {
   }
 }
 
-const opts = computed(() => [
+const { clearCustomForwardTask, resetMultiChooseState, buildCustomTaskImageBody } = useCustomForwardTask()
+const { openImageViewer } = useImageViewer()
+const customForwardTask = computed(() => chatStore.customForwardTask)
+const isCustomImageTask = computed(
+  () => customForwardTask.value?.type === MsgEnum.IMAGE && Boolean(customForwardTask.value?.previewUrl)
+)
+
+const toolOptions = computed(() => [
   {
     text: t('message.multi_choose.single_forward'),
     icon: '#share-three',
@@ -312,6 +329,7 @@ const opts = computed(() => [
 
 watch(showModal, (visible, previous) => {
   if (!visible && previous) {
+    clearCustomForwardTask()
     if (chatStore.msgMultiChooseMode === 'forward') {
       chatStore.setMsgMultiChoose(false)
     }
@@ -329,29 +347,66 @@ const handleRemoveSession = (roomId: string) => {
   }
 }
 
-const sendMsg = async () => {
-  const selectedRoomIds = selectedSessions.value.map((item) => item.roomId)
-  const selectedMsgIds = selectedMsgs.value.map((item) => item.message.id)
+const handlePreviewCustomImage = () => {
+  const task = customForwardTask.value
+  if (!task?.previewUrl) return
+  openImageViewer(task.previewUrl, [MsgEnum.IMAGE], [task.previewUrl])
+}
 
-  await mergeMsg({
-    roomIds: selectedRoomIds,
-    type: mergeMessageType,
-    messageIds: selectedMsgIds,
-    fromRoomId: globalStore.currentSessionRoomId
-  })
-    .then(() => {
-      window.$message.success(t('message.multi_choose.forward_success'))
+const sendCustomForwardTask = async (roomIds: string[]) => {
+  const task = chatStore.customForwardTask
+  if (!task) return
+  const messageBody = await buildCustomTaskImageBody()
+
+  for (const roomId of roomIds) {
+    const tempMsgId = `CF_${roomId}_${Date.now()}`
+    await sendMessageWithChannel({
+      data: {
+        id: tempMsgId,
+        roomId,
+        msgType: MsgEnum.IMAGE,
+        body: {
+          ...messageBody,
+          reply: undefined,
+          replyMsgId: undefined
+        }
+      }
     })
-    .catch((e) => {
-      console.error('消息转发失败', e)
-      window.$message.error(t('message.multi_choose.forward_failed'))
-    })
-    .finally(() => {
-      showModal.value = false
-      chatStore.clearMsgCheck()
-      chatStore.setMsgMultiChoose(false)
-      chatStore.resetSessionSelection()
-    })
+    chatStore.updateSessionLastActiveTime(roomId)
+  }
+}
+
+const sendMsg = async () => {
+  if (isForwarding.value) return
+  const selectedRoomIds = selectedSessions.value.map((item) => item.roomId)
+  if (!selectedRoomIds.length) {
+    window.$message?.warning(t('message.multi_choose.search_placeholder'))
+    return
+  }
+
+  const hasCustomTask = Boolean(chatStore.customForwardTask)
+
+  try {
+    isForwarding.value = true
+    if (hasCustomTask) {
+      await sendCustomForwardTask(selectedRoomIds)
+    } else {
+      const selectedMsgIds = selectedMsgs.value.map((item) => item.message.id)
+      await mergeMsg({
+        roomIds: selectedRoomIds,
+        type: mergeMessageType,
+        messageIds: selectedMsgIds,
+        fromRoomId: globalStore.currentSessionRoomId
+      })
+    }
+    window.$message.success(t('message.multi_choose.forward_success'))
+  } catch (error) {
+    console.error('消息转发失败', error)
+    window.$message.error(t('message.multi_choose.forward_failed'))
+  } finally {
+    isForwarding.value = false
+    cleanupSelectionState()
+  }
 }
 
 useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: MergeMessageType }) => {
@@ -362,6 +417,31 @@ useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: 
     showModal.value = true
   }
 })
+
+const cleanupSelectionState = () => {
+  clearCustomForwardTask()
+  showModal.value = false
+  resetMultiChooseState()
+}
+
+watch(
+  () => [chatStore.isMsgMultiChoose, chatStore.msgMultiChooseMode] as const,
+  ([isMulti, mode]) => {
+    if (isMulti && mode === 'forward' && !showModal.value) {
+      showModal.value = true
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => globalStore.currentSessionRoomId,
+  (roomId) => {
+    if (roomId === '1' && chatStore.isMsgMultiChoose && chatStore.msgMultiChooseMode === 'forward') {
+      cleanupSelectionState()
+    }
+  }
+)
 </script>
 <style scoped>
 /**! 修改naive-ui复选框的样式 */
@@ -369,5 +449,35 @@ useMitt.on(MittEnum.MSG_MULTI_CHOOSE, (payload?: { action?: string; mergeType?: 
   border-radius: 50%;
   width: 16px;
   height: 16px;
+}
+
+.custom-task-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 126px;
+  min-height: 168px;
+  padding: 12px;
+  border: 1px solid var(--line-color);
+  border-radius: 16px;
+  background-color: var(--bg-popover);
+  cursor: pointer;
+}
+
+.custom-task-card .image-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+}
+
+.custom-task-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 </style>

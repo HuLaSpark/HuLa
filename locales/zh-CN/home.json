@@ -204,7 +204,18 @@
       }
     },
     "qr": {
-      "tip": "扫描二维码加入群聊"
+      "tip": "扫描二维码加入群聊",
+      "group_id_label": "群号：",
+      "actions": {
+        "forward": "转发",
+        "copy_group_id": "复制群号",
+        "save_image": "保存图片"
+      },
+      "toast": {
+        "group_id_copied": "群号已复制",
+        "save_success": "图片已保存",
+        "save_failed": "保存失败"
+      }
     },
     "toast": {
       "copy_success": "复制成功 {account}",
@@ -366,6 +377,8 @@
   },
   "chat_main": {
     "network_offline": "当前网络不可用，请检查你的网络设置",
+    "network_connecting": "正在连接服务器...",
+    "network_ws_offline": "服务器连接已断开，正在重试",
     "announcement": {
       "view_all": "查看全部"
     },
