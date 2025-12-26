@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { useFeedStore } from '@/stores/feed'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 
 type NavItem = {
   label: string
@@ -32,12 +33,13 @@ type NavItem = {
   actionIcon: string
 }
 
+const { t } = useI18n()
 const route = useRoute()
 const feedStore = useFeedStore()
 const { unreadCount: feedUnreadCount } = storeToRefs(feedStore)
 
 const getUnReadCount = (label: string) => {
-  if (label === '社区') {
+  if (label === t('mobile_tabbar.items.contacts')) {
     return feedUnreadCount.value
   }
   return 0
@@ -52,25 +54,25 @@ const getUnReadCount = (label: string) => {
 
 const navItems: NavItem[] = [
   {
-    label: '消息',
+    label: t('mobile_tabbar.items.messages'),
     path: '/mobile/message',
     icon: 'message',
     actionIcon: 'message-action'
   },
   {
-    label: '联系人',
+    label: t('mobile_tabbar.items.contacts'),
     path: '/mobile/friends',
     icon: 'avatar',
     actionIcon: 'avatar-action'
   },
   {
-    label: '社区',
+    label: t('mobile_tabbar.items.community'),
     path: '/mobile/community',
     icon: 'fire',
     actionIcon: 'fire-action'
   },
   {
-    label: '我的',
+    label: t('mobile_tabbar.items.me'),
     path: '/mobile/my',
     icon: 'wode',
     actionIcon: 'wode-action'

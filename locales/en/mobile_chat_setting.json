@@ -1,0 +1,61 @@
+{
+  "title": "{t} Settings",
+  "type": {
+    "group": "Group",
+    "single_chat": "Chat"
+  },
+  "group_members_title": "Group Members",
+  "member_count": "{count} members",
+  "group_invite_member": "Invite",
+  "manage_group_members": "Manage Group Members",
+  "search_history": "Search Chat History",
+  "id_card": {
+    "type": {
+      "group": "Group",
+      "single_chat": "Chat"
+    },
+    "qr_code_label": "{t} / QR Code"
+  },
+  "group_notice": {
+    "title": "Announcement"
+  },
+  "group_name": "Group Name",
+  "input": {
+    "group_name": "Enter the group nickname",
+    "group_alias": "Enter the group alias",
+    "remark": "The name is only visible to you."
+  },
+  "group_alias": "My Alias in Group",
+  "remark": "Remark",
+  "remar_kprivate_visible": "(Only you)",
+  "setting_type": "{t} Settings",
+  "silent": "Mute Notifications",
+  "pintop": "Sticky",
+  "delete_chat_history": "Delete Chat History",
+  "disband_group": "Disband Group",
+  "leave_group": "Leave Group",
+  "delete_friend": "Delete Friend",
+  "copy_id": "Copied {id} successfully",
+  "confirm_disband_group": "Are you sure you want to disband this group?",
+  "confirm_leave_group": "Are you sure you want to leave this group?",
+  "confirm_delete_friend": "Are you sure you want to delete this friend?",
+  "session_not_exist": "The current conversation does not exist",
+  "disband_channel_failed": "Failed to disband the channel",
+  "group_disbanded": "Group has been disbanded",
+  "leave_channel_failed": "Failed to leave the channel",
+  "group_left": "You have left the group",
+  "get_friend_info_failed": "Failed to get friend information",
+  "delete_friend_success": "Friend deleted successfully",
+  "session_not_ready": "The current conversation information is not ready",
+  "unpinned_success": "Unpinned successfully",
+  "pinned_success": "Pinned successfully",
+  "pin_failed": "Failed to pin",
+  "group_note_updated": "Group note updated successfully",
+  "remark_updated": "{n} remark update successful",
+  "group_name_updated": "Group name updated successfully",
+  "setting_failed": "Setting failed",
+  "messages_muted": "Messages muted",
+  "messages_unmuted": "Messages unmuted",
+  "notifications_silent": "Messages allowed, notifications off",
+  "notifications_enabled": "Notifications enabled"
+}

@@ -1,0 +1,9 @@
+{
+  "title": "编辑生日",
+  "options": {
+    "display_birthday_tag": "显示生日标签",
+    "displsy_age": "显示年龄",
+    "display_constellation": "显示星座"
+  },
+  "save_btn": "保存"
+}

@@ -1,0 +1,61 @@
+{
+  "title": "{t} 设置",
+  "type": {
+    "group": "群聊",
+    "single_chat": "聊天"
+  },
+  "group_members_title": "群成员",
+  "member_count": "{count} 位成员",
+  "group_invite_member": "邀请成员",
+  "manage_group_members": "管理群成员",
+  "search_history": "查找聊天记录",
+  "id_card": {
+    "type": {
+      "group": "群",
+      "single_chat": "聊天"
+    },
+    "qr_code_label": "{t}号 / 二维码"
+  },
+  "group_notice": {
+    "title": "群公告"
+  },
+  "group_name": "群名称",
+  "input": {
+    "group_name": "请输入群名称",
+    "group_alias": "请输入群内昵称",
+    "remark": "该名称仅自己可见"
+  },
+  "group_alias": "我在群里的昵称",
+  "remark": "备注",
+  "remar_kprivate_visible": "（仅自己可见）",
+  "setting_type": "{t} 设置",
+  "silent": "消息免打扰",
+  "pintop": "置顶",
+  "delete_chat_history": "删除聊天记录",
+  "disband_group": "解散群聊",
+  "leave_group": "退出群聊",
+  "delete_friend": "删除好友",
+  "copy_id": "复制 {id} 成功",
+  "confirm_disband_group": "确定要解散群聊吗？",
+  "confirm_leave_group": "确定要退出群聊吗？",
+  "confirm_delete_friend": "确定要删除好友吗？",
+  "session_not_exist": "当前会话不存在",
+  "disband_channel_failed": "无法解散频道",
+  "group_disbanded": "群聊已解散",
+  "leave_channel_failed": "无法退出频道",
+  "group_left": "已退出群聊",
+  "get_friend_info_failed": "无法获取好友信息",
+  "delete_friend_success": "删除好友成功",
+  "session_not_ready": "当前会话信息未就绪",
+  "unpinned_success": "已取消置顶",
+  "pinned_success": "已置顶",
+  "pin_failed": "置顶失败",
+  "group_note_updated": "群备注更新成功",
+  "remark_updated": "{n} 备注更新成功",
+  "group_name_updated": "群名称更新成功",
+  "setting_failed": "设置失败",
+  "messages_muted": "已屏蔽消息",
+  "messages_unmuted": "已取消屏蔽",
+  "notifications_silent": "已设置接收消息但不提醒",
+  "notifications_enabled": "已允许消息提醒"
+}

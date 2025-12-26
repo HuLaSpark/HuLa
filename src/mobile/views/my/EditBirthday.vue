@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="编辑生日" />
+        :room-name="t('mobile_edit_brithday.title')" />
     </template>
 
     <template #container>
@@ -23,7 +23,7 @@
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
-                <div class="text-14px">展示生日标签</div>
+                <div class="text-14px">{{ t('mobile_edit_brithday.options.display_birthday_tag') }}</div>
                 <n-switch />
               </div>
             </div>
@@ -34,13 +34,13 @@
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
-                <div class="text-14px">展示年龄</div>
+                <div class="text-14px">{{ t('mobile_edit_brithday.options.displsy_age') }}</div>
                 <n-switch />
               </div>
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
-                <div class="text-14px">展示星座</div>
+                <div class="text-14px">{{ t('mobile_edit_brithday.options.display_constellation') }}</div>
                 <n-switch />
               </div>
             </div>
@@ -59,7 +59,7 @@
                 text-align: center;
                 display: inline-block;
               ">
-              保存
+              {{ t('mobile_edit_brithday.save_btn') }}
             </div>
           </div>
         </div>
@@ -68,6 +68,10 @@
   </AutoFixHeightPage>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
 
 <style lang="scss" scoped></style>

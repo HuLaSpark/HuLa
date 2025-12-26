@@ -1,0 +1,21 @@
+{
+  "account": "ID",
+  "unlocked_count_park": {
+    "text1": "已点亮",
+    "text2": "枚勋章"
+  },
+  "no_medal": "还没有勋章~",
+  "follower": "粉丝",
+  "follow": "关注",
+  "like": "点赞",
+  "edit_profile": "编辑资料",
+  "remove_user": "移除",
+  "add_friend": "添加好友",
+  "open_bot": "打开助手",
+  "chat": "聊天",
+  "delete_user": {
+    "success": "删除好友成功",
+    "failed": "删除好友失败"
+  },
+  "not_found": "没有找到好友哦"
+}

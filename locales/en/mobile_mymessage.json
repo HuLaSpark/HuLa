@@ -1,0 +1,41 @@
+{
+  "title": "Messages",
+  "accept": "Accept",
+  "approved": "Approved",
+  "refused": "Refused",
+  "agreed": "Agreed",
+  "declined": "Declined",
+  "pending": "Pending",
+  "ignored": "Ignored",
+  "notification": {
+    "friend": "Friend Notifications",
+    "group": "Group Notifications"
+  },
+  "friend_request_message": "Message: ",
+  "unknown_user": "Unknown",
+  "empty_require": "No friend requests available",
+  "empty_group_require": "No group application notifications available",
+  "menu": {
+    "decline": "Decline",
+    "ignore": "Ignore"
+  },
+  "friend_request_status": {
+    "accepted": "Your request has been accepted",
+    "verifying": "Verifying your invitation",
+    "sent": "Sent a friend request"
+  },
+  "loading": "loading{tail}",
+  "group": {
+    "apply_to_join": "Apply to join [{name}]",
+    "invited_to_join": "Invited {inviter} to join [{group}]",
+    "joined_group": "Joined [{group}] successfully",
+    "invited_curr_to_join": "Invited you to join [{group}]",
+    "kicked_out": "Kicked out of [{group}] by {operator}",
+    "set_as_admin": "Set as an admin of [{group}] by the group owner",
+    "removed_as_admin": "Removed as admin of [{group}] by the group owner"
+  },
+  "tab": {
+    "friend_messages": "Friend Messages",
+    "group_messages": "Group Messages"
+  }
+}

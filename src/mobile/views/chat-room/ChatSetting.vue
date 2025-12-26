@@ -5,7 +5,7 @@
         :isOfficial="false"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        :room-name="title + '设置'" />
+        :room-name="t('mobile_chat_setting.title', { t: title })" />
     </template>
 
     <template #container>
@@ -59,13 +59,14 @@
             <div class="p-[15px_15px_0px_15px] flex flex-col">
               <!-- 群号 -->
               <div class="flex justify-between items-center">
-                <div class="text-14px">群聊成员</div>
+                <div class="text-14px">{{ t('mobile_chat_setting.group_members_title') }}</div>
                 <div @click="toGroupChatMember" class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <div>
-                    有
-                    <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
-                    位成员
-                  </div>
+                  <i18n-t keypath="mobile_chat_setting.member_count">
+                    <template #count>
+                      <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
+                    </template>
+                  </i18n-t>
+
                   <div>
                     <svg class="w-14px h-14px iconpark-icon">
                       <use href="#right"></use>
@@ -98,7 +99,7 @@
                     <use href="#plus"></use>
                   </svg>
                 </div>
-                <div>邀请</div>
+                <div>{{ t('mobile_chat_setting.group_invite_member') }}</div>
               </div>
             </div>
           </div>
@@ -108,13 +109,13 @@
             v-if="isGroup && groupStore.isAdminOrLord() && globalStore.currentSessionRoomId !== '1'"
             class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
             @click="toManageGroupMember">
-            管理群成员
+            {{ t('mobile_chat_setting.manage_group_members') }}
           </div>
 
           <div
             class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
             @click="handleSearchChatContent">
-            查找聊天内容
+            {{ t('mobile_chat_setting.search_history') }}
           </div>
           <!-- 群公告 -->
           <div class="flex bg-white rounded-10px w-full h-auto shadow">
@@ -124,7 +125,15 @@
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 @click="handleCopy(activeItem?.account || '')"
                 class="flex justify-between py-15px items-center">
-                <div class="text-14px">{{ isGroup ? '群号/二维码' : 'Hula号/二维码' }}</div>
+                <div class="text-14px">
+                  {{
+                    t('mobile_chat_setting.id_card.qr_code_label', {
+                      t: isGroup
+                        ? t('mobile_chat_setting.id_card.type.group')
+                        : t('mobile_chat_setting.id_card.type.single_chat')
+                    })
+                  }}
+                </div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <div>{{ activeItem?.account || '' }}</div>
                   <div>
@@ -137,14 +146,15 @@
 
               <!-- 公告内容 -->
               <div @click="goToNotice" v-if="isGroup" class="pt-15px flex flex-col text-14px gap-10px">
-                <div>群公告</div>
+                <div>{{ t('mobile_chat_setting.group_notice.title') }}</div>
                 <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
                   {{ announList.length > 0 ? announList[0]?.content : '' }}
                 </div>
               </div>
 
-              <div v-if="isGroup && groupStore.isAdminOrLord()" class="flex justify-between py-15px items-center">
-                <div class="text-14px">本群昵称</div>
+              <!-- v-if="isGroup && groupStore.isAdminOrLord()"  -->
+              <div class="flex justify-between py-15px items-center">
+                <div class="text-14px">{{ t('mobile_chat_setting.group_name') }}</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
                     style="
@@ -157,12 +167,12 @@
                     "
                     v-model="nameValue"
                     @blur="handleGroupInfoUpdate"
-                    placeholder="请输入群昵称" />
+                    :placeholder="t('mobile_chat_setting.input.group_name')" />
                 </div>
               </div>
 
               <div v-if="isGroup" class="flex justify-between py-15px items-center">
-                <div class="text-14px">我的群昵称</div>
+                <div class="text-14px">{{ t('mobile_chat_setting.group_alias') }}</div>
                 <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                   <input
                     style="
@@ -175,7 +185,7 @@
                     "
                     v-model="nicknameValue"
                     @blur="handleInfoUpdate"
-                    placeholder="请输入我的群昵称" />
+                    :placeholder="t('mobile_chat_setting.input.group_alias')" />
                 </div>
               </div>
             </div>
@@ -183,8 +193,8 @@
           <!-- 备注 -->
           <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
-              <span>{{ title + '备注' }}</span>
-              <span class="text-#6E6E6E">（仅自己可见）</span>
+              <span>{{ t('mobile_chat_setting.remark') }}</span>
+              <span class="text-#6E6E6E ml-1">{{ t('mobile_chat_setting.remar_kprivate_visible') }}</span>
             </div>
             <div class="rounded-10px flex w-full bg-white shadow">
               <div class="w-full px-15px">
@@ -192,25 +202,27 @@
                   v-model="remarkValue"
                   class="h-50px w-full"
                   style="border: none; outline: none; font-size: 14px"
-                  :placeholder="'请输入' + title + '备注'"
+                  :placeholder="t('mobile_chat_setting.input.remark')"
                   @blur="handleInfoUpdate" />
               </div>
             </div>
           </div>
           <div class="flex bg-white rounded-10px w-full h-auto shadow">
             <div class="px-15px flex flex-col w-full">
-              <div class="pt-15px text-14px text-#6E6E6E">{{ title }}设置</div>
+              <div class="pt-15px text-14px text-#6E6E6E">
+                {{ t('mobile_chat_setting.setting_type', { t: title }) }}
+              </div>
               <!-- 群号 -->
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
-                <div class="text-14px">设置为置顶</div>
+                <div class="text-14px">{{ t('mobile_chat_setting.pintop') }}</div>
                 <n-switch :value="!!activeItem?.top" @update:value="handleTop" />
               </div>
               <div
                 style="border-bottom: 1px solid; border-color: #ebebeb"
                 class="flex justify-between py-12px items-center">
-                <div class="text-14px">消息免打扰</div>
+                <div class="text-14px">{{ t('mobile_chat_setting.silent') }}</div>
                 <n-switch
                   @update:value="handleNotification"
                   :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
@@ -218,13 +230,21 @@
             </div>
           </div>
           <div class="shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full mb-20px">
-            <div class="p-15px">删除聊天记录</div>
+            <div class="p-15px">{{ t('mobile_chat_setting.delete_chat_history') }}</div>
           </div>
-          <!-- 解散群聊、退出群聊、删除好友按钮 -->
-          <div v-if="isGroup && globalStore.currentSessionRoomId !== '1'" class="mt-auto flex justify-center mb-20px">
-            <n-button type="error" @click="handleExit">
-              {{ isGroup ? (isLord ? '解散群聊' : '退出群聊') : '删除好友' }}
+          <div class="mt-auto flex justify-center mb-20px">
+            <!-- 解散群聊、退出群聊、删除好友按钮 -->
+            <n-button v-if="isGroup && globalStore.currentSessionRoomId !== '1'" type="error" @click="handleExit">
+              {{
+                isGroup
+                  ? isLord
+                    ? t('mobile_chat_setting.disband_group')
+                    : t('mobile_chat_setting.leave_group')
+                  : t('mobile_chat_setting.delete_friend')
+              }}
             </n-button>
+            <!-- 保留底部空间 -->
+            <div class="h-1px"></div>
           </div>
         </div>
       </div>
@@ -256,10 +276,13 @@ import {
   updateRoomInfo
 } from '@/utils/ImRequestUtils'
 import { toFriendInfoPage } from '@/utils/RouterUtils'
+import { useI18n, I18nT } from 'vue-i18n'
 
 defineOptions({
   name: 'mobileChatSetting'
 })
+
+const { t } = useI18n()
 
 const dialog = useDialog()
 const userStore = useUserStore()
@@ -271,7 +294,9 @@ const contactStore = useContactStore()
 const { currentSessionRoomId } = storeToRefs(globalStore)
 const { persistMyRoomInfo } = useMyRoomInfoUpdater()
 
-const title = computed(() => (isGroup.value ? '群' : '好友'))
+const title = computed(() =>
+  isGroup.value ? t('mobile_chat_setting.type.group') : t('mobile_chat_setting.type.single_chat')
+)
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
 const isLord = computed(() => {
@@ -329,7 +354,7 @@ const handleCrop = async (cropBlob: Blob) => {
 const handleCopy = (val: string) => {
   if (val) {
     navigator.clipboard.writeText(val)
-    window.$message.success(`复制成功 ${val}`)
+    window.$message.success(t('mobile_chat_setting.copy_id', { id: val }))
   }
 }
 
@@ -363,36 +388,40 @@ const goToNotice = () => {
 async function handleExit() {
   dialog.error({
     title: '提示',
-    content: isGroup.value ? (isLord.value ? '确定要解散群聊吗？' : '确定要退出群聊吗？') : '删除好友',
-    positiveText: '确定',
-    negativeText: '取消',
+    content: isGroup.value
+      ? isLord.value
+        ? t('mobile_chat_setting.confirm_disband_group')
+        : t('mobile_chat_setting.confirm_leave_group')
+      : t('mobile_chat_setting.confirm_delete_friend'),
+    positiveText: t('components.common.confirm'),
+    negativeText: t('components.common.cancel'),
     onPositiveClick: async () => {
       const session = activeItem.value
       if (!session) {
-        window.$message.warning('当前会话不存在')
+        window.$message.warning(t('mobile_chat_setting.session_not_exist'))
         return
       }
       try {
         if (isGroup.value) {
           if (isLord.value) {
             if (currentSessionRoomId.value === '1') {
-              window.$message.warning('无法解散频道')
+              window.$message.warning(t('mobile_chat_setting.disband_channel_failed'))
               return
             }
 
             groupStore.exitGroup(currentSessionRoomId.value).then(() => {
-              window.$message.success('已解散群聊')
+              window.$message.success(t('mobile_chat_setting.group_disbanded'))
               // 删除当前的会话
               useMitt.emit(MittEnum.DELETE_SESSION, currentSessionRoomId.value)
             })
           } else {
             if (currentSessionRoomId.value === '1') {
-              window.$message.warning('无法退出频道')
+              window.$message.warning(t('mobile_chat_setting.leave_channel_failed'))
               return
             }
 
             groupStore.exitGroup(currentSessionRoomId.value).then(() => {
-              window.$message.success('已退出群聊')
+              window.$message.success(t('mobile_chat_setting.group_left'))
               // 删除当前的会话
               useMitt.emit(MittEnum.DELETE_SESSION, currentSessionRoomId.value)
             })
@@ -400,11 +429,11 @@ async function handleExit() {
         } else {
           const detailId = session.detailId
           if (!detailId) {
-            window.$message.warning('无法获取好友信息')
+            window.$message.warning(t('mobile_chat_setting.get_friend_info_failed'))
             return
           }
           await deleteFriend({ targetUid: detailId })
-          window.$message.success('删除好友成功')
+          window.$message.success(t('mobile_chat_setting.delete_friend_success'))
         }
 
         router.push('/mobile/message')
@@ -433,7 +462,7 @@ const clickInfo = () => {
   } else {
     const detailId = activeItem.value?.detailId
     if (!detailId) {
-      window.$message.warning('当前会话信息未就绪')
+      window.$message.warning(t('mobile_chat_setting.session_not_ready'))
       return
     }
     router.push(`/mobile/mobileFriends/friendInfo/${detailId}`)
@@ -481,10 +510,12 @@ const handleTop = (value: boolean) => {
     .then(() => {
       // 更新本地会话状态
       chatStore.updateSession(currentSessionRoomId.value, { top: value })
-      window.$message.success(value ? '已置顶' : '已取消置顶')
+      window.$message.success(
+        value ? t('mobile_chat_setting.pinned_success') : t('mobile_chat_setting.unpinned_success')
+      )
     })
     .catch(() => {
-      window.$message.error('置顶失败')
+      window.$message.error(t('mobile_chat_setting.pin_failed'))
     })
 }
 
@@ -516,7 +547,7 @@ const handleInfoUpdate = async () => {
 
     const detailId = activeItem.value?.detailId
     if (!detailId) {
-      window.$message.warning('无法获取好友信息')
+      window.$message.warning(t('mobile_chat_setting.get_friend_info_failed'))
       return
     }
     await modifyFriendRemark({
@@ -530,7 +561,8 @@ const handleInfoUpdate = async () => {
     // 更新初始值
     initialRemarkValue.value = remarkValue.value
   }
-  window.$message.success(title.value + '备注更新成功')
+
+  window.$message.success(t('mobile_chat_setting.remark_updated', { n: title.value }))
 }
 
 // 处理群名称更新
@@ -551,7 +583,7 @@ const handleGroupInfoUpdate = async () => {
 
   // 更新初始值
   initialNameValue.value = nameValue.value
-  window.$message.success('群名称更新成功')
+  window.$message.success(t('mobile_chat_setting.group_name_updated'))
 }
 
 // 获取群组详情和成员信息
@@ -602,10 +634,12 @@ const handleShield = (value: boolean) => {
         globalStore.updateCurrentSessionRoomId(tempRoomId)
       })
 
-      window.$message.success(value ? '已屏蔽消息' : '已取消屏蔽')
+      window.$message.success(
+        value ? t('mobile_chat_setting.messages_muted') : t('mobile_chat_setting.messages_unmuted')
+      )
     })
     .catch(() => {
-      window.$message.error('设置失败')
+      window.$message.error(t('mobile_chat_setting.setting_failed'))
     })
 }
 
@@ -638,10 +672,12 @@ const handleNotification = (value: boolean) => {
         chatStore.updateTotalUnreadCount()
       }
 
-      window.$message.success(value ? '已设置接收消息但不提醒' : '已允许消息提醒')
+      window.$message.success(
+        value ? t('mobile_chat_setting.notifications_silent') : t('mobile_chat_setting.notifications_enabled')
+      )
     })
     .catch(() => {
-      window.$message.error('设置失败')
+      window.$message.error(t('mobile_chat_setting.setting_failed'))
     })
 }
 

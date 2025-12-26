@@ -1,0 +1,23 @@
+{
+  "title": "个人资料",
+  "nickname": "昵称",
+  "gender": "性别",
+  "brithday": "生日",
+  "region": "地区",
+  "phone": "手机号",
+  "bio": "个人简介",
+  "placeholder": {
+    "nickname": "请输入昵称",
+    "gender": "点击选择性别",
+    "brithday": "请选择生日",
+    "region": "点击选择地区",
+    "phone": "请输入手机号",
+    "bio": "请输入个人简介"
+  },
+  "save_btn": "保存",
+  "change_avatar": "更换头像",
+  "genders": {
+    "male": "男",
+    "female": "女"
+  }
+}

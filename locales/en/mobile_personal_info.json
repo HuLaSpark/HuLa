@@ -1,0 +1,21 @@
+{
+  "account": "ID",
+  "unlocked_count_park": {
+    "text1": "Unlocked",
+    "text2": "badges"
+  },
+  "no_medal": "No medals yet~",
+  "follower": "Followers",
+  "follow": "Following",
+  "like": "Like",
+  "edit_profile": "Edit profile",
+  "remove_user": "Remove",
+  "add_friend": "Add friend",
+  "open_bot": "Open Bot",
+  "chat": "Chat",
+  "delete_user": {
+    "success": "Friend deleted successfully",
+    "failed": "Failed to delete friend"
+  },
+  "not_found": "No friends found"
+}

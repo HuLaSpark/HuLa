@@ -6,12 +6,11 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="设置" />
+        :room-name="t('mobile_setting.title')" />
     </template>
 
     <template #container>
       <img src="@/assets/mobile/chat-home/background.webp" class="w-100% absolute top-0 -z-1" alt="hula" />
-
       <div class="flex flex-col z-1">
         <div class="flex flex-col p-20px gap-20px">
           <!-- 设置项 -->
@@ -36,7 +35,7 @@
           <!-- 退出登录按钮 -->
           <div class="mt-auto flex justify-center mb-20px">
             <n-button type="error" @click="handleLogout" :disabled="isLoggingOut" :loading="isLoggingOut">
-              退出登录
+              {{ t('mobile_setting.button.logout') }}
             </n-button>
           </div>
         </div>
@@ -55,7 +54,9 @@ import { useLogin } from '@/hooks/useLogin'
 import { showDialog } from 'vant'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
 import router from '@/router'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const globalStore = useGlobalStore()
 const { isTrayMenuShow } = storeToRefs(globalStore)
 const settingStore = useSettingStore()
@@ -65,7 +66,7 @@ const userStore = useUserStore()
 const settings = reactive([
   {
     key: 'notifications',
-    label: '消息通知',
+    label: t('mobile_setting.silent_label'),
     type: 'switch',
     value: computed({
       get: () => true,
@@ -76,7 +77,7 @@ const settings = reactive([
   },
   {
     key: 'username',
-    label: '昵称',
+    label: t('mobile_setting.nickname'),
     type: 'input',
     value: computed({
       get: () => userStore.userInfo?.name || '',
@@ -85,29 +86,40 @@ const settings = reactive([
   },
   {
     key: 'theme',
-    label: '界面主题',
+    label: t('mobile_setting.theme'),
     type: 'select',
     value: computed({
       get: () => settingStore.themes.content,
       set: (val) => settingStore.toggleTheme(val)
     }),
     options: [
-      { label: '浅色', value: ThemeEnum.LIGHT },
-      { label: '深色', value: ThemeEnum.DARK }
+      { label: t('mobile_setting.themes.light'), value: ThemeEnum.LIGHT },
+      { label: t('mobile_setting.themes.dark'), value: ThemeEnum.DARK }
     ]
   },
   {
     key: 'language',
-    label: '应用语言',
+    label: t('mobile_setting.language'),
     type: 'select',
     value: computed({
-      get: () => 'zh',
-      set: () => {}
+      get: () => settingStore.page.lang,
+      set: (v) => {
+        settingStore.page.lang = v
+      }
     }),
     options: [
-      { label: '中文', value: 'zh' },
-      { label: 'English', value: 'en' },
-      { label: '日本語', value: 'ja' }
+      {
+        label: 'Automatic',
+        value: 'AUTO'
+      },
+      {
+        label: '简体中文',
+        value: 'zh-CN'
+      },
+      {
+        label: 'English',
+        value: 'en'
+      }
     ]
   }
 ])

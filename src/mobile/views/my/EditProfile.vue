@@ -8,7 +8,7 @@
           :hidden-right="true"
           :enable-default-background="false"
           :enable-shadow="false"
-          room-name="编辑资料" />
+          :room-name="t('mobile_edit_profile.title')" />
       </template>
 
       <template #container>
@@ -25,7 +25,9 @@
                   round />
                 <div
                   class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
-                <div class="absolute bottom-25% text-center w-full text-12px text-white">更换头像</div>
+                <div class="absolute bottom-25% text-center w-full text-12px text-white">
+                  {{ t('mobile_edit_profile.change_avatar') }}
+                </div>
               </div>
               <input
                 ref="fileInput"
@@ -47,9 +49,9 @@
                   :disabled="true"
                   v-model="localUserInfo.name"
                   name="昵称"
-                  label="昵称"
-                  placeholder="请输入昵称"
-                  :rules="[{ required: true, message: '请填写昵称' }]" />
+                  :label="t('mobile_edit_profile.nickname')"
+                  :placeholder="t('mobile_edit_profile.placeholder.nickname')"
+                  :rules="[{ required: true, message: t('mobile_edit_profile.placeholder.nickname') }]" />
 
                 <!-- 性别 -->
                 <van-field
@@ -57,8 +59,8 @@
                   is-link
                   readonly
                   name="picker"
-                  label="性别"
-                  placeholder="点击选择性别"
+                  :label="t('mobile_edit_profile.gender')"
+                  :placeholder="t('mobile_edit_profile.placeholder.gender')"
                   @click="pickerState.gender = true" />
 
                 <van-popup v-model:show="pickerState.gender" position="bottom">
@@ -71,9 +73,9 @@
                 <!-- 生日 -->
                 <van-field
                   v-model="birthday"
-                  name="生日"
-                  label="生日"
-                  placeholder="请选择生日"
+                  :name="t('mobile_edit_profile.brithday')"
+                  :label="t('mobile_edit_profile.brithday')"
+                  :placeholder="t('mobile_edit_profile.placeholder.brithday')"
                   is-link
                   readonly
                   @click="toEditBirthday" />
@@ -84,8 +86,8 @@
                   is-link
                   readonly
                   name="area"
-                  label="地区选择"
-                  placeholder="点击选择省市区"
+                  :label="t('mobile_edit_profile.brithday')"
+                  :placeholder="t('mobile_edit_profile.placeholder.brithday')"
                   @click="pickerState.region = true" />
                 <van-popup v-model:show="pickerState.region" position="bottom">
                   <van-area
@@ -100,17 +102,17 @@
                   v-model="localUserInfo.phone"
                   type="tel"
                   name="手机号"
-                  label="手机号"
-                  placeholder="请输入手机号"
+                  :label="t('mobile_edit_profile.phone')"
+                  :placeholder="t('mobile_edit_profile.placeholder.phone')"
                   :rules="[{ required: false, message: '请填写手机号' }]" />
 
                 <!-- 简介 -->
                 <van-field
                   v-model="localUserInfo.resume"
                   name="简介"
-                  label="简介"
+                  :label="t('mobile_edit_profile.bio')"
+                  :placeholder="t('mobile_edit_profile.placeholder.bio')"
                   type="textarea"
-                  placeholder="请输入个人简介"
                   rows="3"
                   autosize
                   @click="toEditBio" />
@@ -131,7 +133,7 @@
                     display: inline-block;
                   "
                   type="submit">
-                  保存
+                  {{ t('mobile_edit_profile.save_btn') }}
                 </button>
               </div>
             </van-form>
@@ -152,7 +154,9 @@ import { useLoginHistoriesStore } from '@/stores/loginHistory'
 import { useUserStore } from '@/stores/user.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { ModifyUserInfo } from '@/utils/ImRequestUtils'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const genderText = computed(() => {
   const item = pickerColumn.value.gender.find((i) => i.value === localUserInfo.value.sex)
   return item ? item.text : ''
@@ -164,8 +168,8 @@ const birthday = ref('')
 
 const pickerColumn = ref({
   gender: [
-    { text: '男', value: 1 },
-    { text: '女', value: 2 }
+    { text: t('mobile_edit_profile.genders.male'), value: 1 },
+    { text: t('mobile_edit_profile.genders.female'), value: 2 }
   ]
 })
 

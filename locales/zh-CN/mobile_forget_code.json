@@ -1,0 +1,49 @@
+{
+  "title": "忘记密码",
+  "steps": {
+    "verify_email": "验证邮箱",
+    "set_new_password": "设置密码",
+    "done": "完成"
+  },
+  "input": {
+    "label": {
+      "email": "邮箱",
+      "email_verification_code": "验证码",
+      "new_pass": "新密码",
+      "confirm_password": "确认密码"
+    },
+    "email": "邮箱",
+    "email_code": "验证码",
+    "new_pass": "请输入新密码（{len} 个字符）",
+    "confirm_password": "请再次输入密码"
+  },
+  "validation": {
+    "minlength": "至少 {len} 个字符",
+    "valid_characters": "由英文字母和数字组成",
+    "must_special_char": "必须包含特殊字符",
+    "passwords_match": "密码一致"
+  },
+  "button": {
+    "send_email_code": "发送验证码",
+    "next": "下一步",
+    "go_back_setp": "返回",
+    "submit": "提交"
+  },
+  "password_reset_success": "密码重置成功",
+  "password_reset_success_desc": "您现在可以使用新密码登录",
+  "rules": {
+    "email_require": "请输入邮箱地址",
+    "email_invalid": "请输入有效的邮箱地址",
+    "email_code_require": "请输入发送到邮箱的验证码",
+    "code_length": "验证码必须为 {len} 位",
+
+    "new_pass_require": "请输入新密码",
+    "new_pass_length": "密码必须为 {len} 个字符",
+
+    "confirm_pass_require": "请确认密码",
+    "pass_not_match": "两次输入的密码不一致"
+  },
+  "too_many_requests": "请求过于频繁，请在 {s} 秒后再试",
+  "code_sent_email": "验证码已发送至您的邮箱",
+  "email_resend_in": "{seconds}秒后重新获取"
+}

@@ -1,0 +1,49 @@
+{
+  "title": "Forget password",
+  "steps": {
+    "verify_email": "Verify Email",
+    "set_new_password": "Set Password",
+    "done": "Done"
+  },
+  "input": {
+    "label": {
+      "email": "Email",
+      "email_verification_code": "Verification code",
+      "new_pass": "New password",
+      "confirm_password": "Confirm Password"
+    },
+    "email": "Email",
+    "email_code": "Code",
+    "new_pass": "Please enter a new password ({len} characters)",
+    "confirm_password": "Please enter the password again"
+  },
+  "validation": {
+    "minlength": "At least {len} characters",
+    "valid_characters": "Composed of English and numbers",
+    "must_special_char": "There must be a special character",
+    "passwords_match": "Passwords match"
+  },
+  "button": {
+    "send_email_code": "Send code",
+    "next": "Next",
+    "go_back_setp": "Back",
+    "submit": "Submit"
+  },
+  "password_reset_success": "Password reset successfully",
+  "password_reset_success_desc": "You can now log in with your new password",
+  "rules": {
+    "email_require": "Please enter your email address",
+    "email_invalid": "Please enter a valid email address",
+    "email_code_require": "Please enter the verification code sent to your email",
+    "code_length": "Verification code must be {len} digits",
+
+    "new_pass_require": "Please enter a new password",
+    "new_pass_length": "Password must be {len} characters",
+
+    "confirm_pass_require": "Please confirm your password",
+    "pass_not_match": "Passwords do not match"
+  },
+  "too_many_requests": "Too many requests. Please try again in {s} seconds",
+  "code_sent_email": "Verification code has been sent to your email",
+  "email_resend_in": "Resend in {seconds}s"
+}

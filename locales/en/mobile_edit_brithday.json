@@ -1,0 +1,9 @@
+{
+  "title": "Edit Brithday",
+  "options": {
+    "display_birthday_tag": "Display Birthday Tag",
+    "displsy_age": "Display Age",
+    "display_constellation": "Display Constellations"
+  },
+  "save_btn": "SAVE"
+}
