@@ -99,7 +99,7 @@
     "@vue-office/excel": "^1.7.14",
     "@vue-office/pdf": "^2.0.10",
     "@vue-office/pptx": "^1.0.1",
-    "@vueuse/components": "^14.0.0",
+    "@vueuse/components": "^14.1.0",
     "colorthief": "^2.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.19",
