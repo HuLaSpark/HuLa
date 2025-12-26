@@ -20,8 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentWindow } from '@tauri-apps/api/window'
-import { getCurrentWebviewWindow, WebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import {
   darkTheme,
   dateEnUS,
@@ -36,7 +35,6 @@ import {
 import { useI18n } from 'vue-i18n'
 import { ThemeEnum } from '@/enums'
 import { useSettingStore } from '@/stores/setting.ts'
-import { isDesktop } from '@/utils/PlatformConstants'
 
 const { notificMax, messageMax } = defineProps<{
   notificMax?: number
@@ -64,67 +62,68 @@ const resolveNaiveLocale = (lang: string): NaiveLocalePack => naiveLocaleMap[lan
 const currentNaiveLocale = computed(() => resolveNaiveLocale(locale.value).locale)
 const currentNaiveDateLocale = computed(() => resolveNaiveLocale(locale.value).dateLocale)
 /**监听深色主题颜色变化*/
-const globalTheme = ref<any>(themes.value.content)
+const globalTheme = ref<any>(themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme)
 const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 定义不需要显示消息提示的窗口
 const noMessageWindows = ['tray', 'notify', 'capture', 'update', 'checkupdate']
 
-const setWindowTheme = (theme: 'light' | 'dark' | null) => {
-  if (!isDesktop()) return
-  getCurrentWebviewWindow()
-    .setTheme(theme)
-    .catch(() => {})
-  WebviewWindow.getAll()
-    .then((windows) => Promise.allSettled(windows.map((win) => win.setTheme(theme))))
-    .catch(() => {})
+const isValidContent = (theme?: string) => theme === ThemeEnum.DARK || theme === ThemeEnum.LIGHT
+
+const applyThemeContent = (theme: ThemeEnum) => {
+  globalTheme.value = theme === ThemeEnum.DARK ? darkTheme : lightTheme
+  document.documentElement.dataset.theme = theme
 }
 
-const applyTheme = (dark: boolean) => {
-  globalTheme.value = dark ? darkTheme : lightTheme
-  document.documentElement.dataset.theme = dark ? ThemeEnum.DARK : ThemeEnum.LIGHT
-  themes.value.content = dark ? ThemeEnum.DARK : ThemeEnum.LIGHT
+const syncOsTheme = () => {
+  if (themes.value.pattern !== ThemeEnum.OS) return
+  settingStore.syncOsTheme()
 }
 
-/** 跟随系统主题模式切换主题 */
-const followOS = () => {
-  applyTheme(prefers.matches)
+const handlePrefersChange = () => {
+  syncOsTheme()
 }
 
 let prefersListenerAttached = false
-let unlistenTauriTheme: (() => void) | null = null
-watchEffect(() => {
-  if (themes.value.pattern === ThemeEnum.OS) {
-    setWindowTheme(null)
-    followOS()
-    if (!prefersListenerAttached) {
-      prefers.addEventListener('change', followOS)
-      prefersListenerAttached = true
+const attachPrefersListener = () => {
+  if (prefersListenerAttached) return
+  prefers.addEventListener('change', handlePrefersChange)
+  prefersListenerAttached = true
+}
+
+const detachPrefersListener = () => {
+  if (!prefersListenerAttached) return
+  prefers.removeEventListener('change', handlePrefersChange)
+  prefersListenerAttached = false
+}
+
+watch(
+  () => themes.value.pattern,
+  (pattern) => {
+    if (pattern === ThemeEnum.OS) {
+      syncOsTheme()
+      attachPrefersListener()
+      return
     }
-    if (!unlistenTauriTheme) {
-      getCurrentWindow()
-        .onThemeChanged(({ payload: theme }) => {
-          if (themes.value.pattern !== ThemeEnum.OS) return
-          applyTheme(theme === 'dark')
-        })
-        .then((unlisten) => {
-          unlistenTauriTheme = unlisten
-        })
-        .catch(() => {})
+    detachPrefersListener()
+    settingStore.normalizeThemeState()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => themes.value.content,
+  (content) => {
+    if (!isValidContent(content)) {
+      settingStore.normalizeThemeState()
+      return
     }
-  } else {
-    // 判断content是否是深色还是浅色
-    document.documentElement.dataset.theme = themes.value.content || ThemeEnum.LIGHT
-    globalTheme.value = themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme
-    setWindowTheme(themes.value.content === ThemeEnum.DARK ? 'dark' : 'light')
-    if (prefersListenerAttached) {
-      prefers.removeEventListener('change', followOS)
-      prefersListenerAttached = false
-    }
-    if (unlistenTauriTheme) {
-      unlistenTauriTheme()
-      unlistenTauriTheme = null
-    }
-  }
+    applyThemeContent(content as ThemeEnum)
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => {
+  detachPrefersListener()
 })
 
 const commonTheme: GlobalThemeOverrides = {
