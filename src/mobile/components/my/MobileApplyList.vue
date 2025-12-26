@@ -50,7 +50,7 @@
               </span>
             </div>
             <div v-if="isFriendApplyOrGroupInvite(item)" class="flex gap-2 flex-1 text-12px text-gray-500 min-w-0">
-              <div class="whitespace-nowrap flex-shrink-0">{{ t('mobile_mymessage.friend_request_message') }}</div>
+              <div class="whitespace-nowrap flex-shrink-0">留言:</div>
               <n-ellipsis
                 class="flex-1 min-w-0"
                 :tooltip="true"
