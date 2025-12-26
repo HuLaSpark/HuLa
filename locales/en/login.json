@@ -140,5 +140,47 @@
       "save_success": "Network settings saved",
       "save_failed": "Failed to save network settings: {error}"
     }
+  },
+  "mobile": {
+    "welcome_title": "HI, Welcome",
+    "tabs": {
+      "login": "Login",
+      "register": "Register"
+    },
+    "forget_code": "Forget",
+    "btn": {
+      "login": "Login"
+    },
+    "input": {
+      "account_placeholder": "Enter HuLa account",
+      "code_placeholder": "Enter password"
+    },
+    "register": {
+      "input": {
+        "nickname": "Nickname",
+        "password": "Password",
+        "confirm_password": "Confirm Password",
+        "email": "Email",
+        "email_verification_code": "Enter email verification code"
+      },
+      "btn": {
+        "register": "Register",
+        "next": "Next",
+        "send_email_code": "Send code",
+        "resend_in": "Resend in {seconds}s"
+      },
+      "pass_validate_info": {
+        "minlength": "At least {len} characters",
+        "valid_characters": "Composed of English and numbers",
+        "must_special_char": "There must be a special character"
+      }
+    },
+    "email_invalid": "Invalid email.",
+    "code_sent_email": "Verification code sent. Please check your email.",
+    "code_send_failed_with_reason": "Failed to send verification code: {reason}",
+    "code_send_failed_retry": "Failed to send verification code. Please try again later.",
+    "complete_info_before_register": "Please complete your information before registering.",
+    "register_success": "Registration successful.",
+    "register_fail": "Registration failed."
   }
 }

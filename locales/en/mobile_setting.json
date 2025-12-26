@@ -1,0 +1,14 @@
+{
+  "title": "Settings",
+  "silent_label": "Notification",
+  "nickname": "Nickname",
+  "theme": "Theme",
+  "language": "Language",
+  "button": {
+    "logout": "Log Out"
+  },
+  "themes": {
+    "dark": "Dark",
+    "light": "Light"
+  }
+}

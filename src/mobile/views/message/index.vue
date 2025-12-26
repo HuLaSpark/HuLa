@@ -33,11 +33,13 @@
                   sans-serif;
               "
               class="text-(16px [--text-color])">
-              {{ userStore.userInfo?.name ? userStore.userInfo.name : '无名字' }}
+              {{ userStore.userInfo?.name ? userStore.userInfo.name : t('mobile_home.noname') }}
             </p>
             <p class="text-(10px [--text-color])">
               {{
-                userStore.userInfo?.uid ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || '中国' : '中国'
+                userStore.userInfo?.uid
+                  ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || t('mobile_home.china')
+                  : t('mobile_home.china')
               }}
             </p>
           </n-flex>
@@ -69,7 +71,7 @@
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
-          placeholder="搜索"
+          :placeholder="t('mobile_home.input.search')"
           @focus="lockScroll"
           @blur="unlockScroll">
           <template #prefix>
@@ -141,18 +143,22 @@
                 <div
                   class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center"
                   @click="handleToggleTop(item)">
-                  {{ item.top ? '取消置顶' : '置顶' }}
+                  {{ item.top ? t('mobile_home.chat.unpin') : t('mobile_home.chat.pintop') }}
                 </div>
                 <div
                   :class="(item?.unreadCount ?? 0) > 0 ? 'bg-#909090' : 'bg-#fbb160'"
                   class="h-full text-14px w-80px text-white flex items-center justify-center"
                   @click="handleToggleReadStatus((item?.unreadCount ?? 0) > 0, item)">
-                  {{ (item?.unreadCount ?? 0) > 0 ? '标记为已读' : '标记为未读' }}
+                  {{
+                    (item?.unreadCount ?? 0) > 0
+                      ? t('mobile_home.chat.mark_as_read')
+                      : t('mobile_home.chat.mark_as_unread')
+                  }}
                 </div>
                 <div
                   class="h-full text-14px w-80px bg-#d5304f text-white flex items-center justify-center"
                   @click="handleDelete(item)">
-                  删除
+                  {{ t('mobile_home.chat.delete') }}
                 </div>
               </div>
             </template>
@@ -167,12 +173,14 @@
         :style="{ top: longPressState.longPressMenuTop + 'px' }"
         class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
         <div class="flex justify-between p-18px text-16px gap-22px rounded-16px bg-#4e4e4e whitespace-nowrap">
-          <div class="text-white" @click="handleDelete(currentLongPressItem)">删除</div>
+          <div class="text-white" @click="handleDelete(currentLongPressItem)">{{ t('mobile_home.menu.delete') }}</div>
           <div class="text-white" @click="handleToggleTop(currentLongPressItem)">
-            {{ currentLongPressItem?.top ? '取消置顶' : '置顶' }}
+            {{ currentLongPressItem?.top ? t('mobile_home.menu.unpin') : t('mobile_home.menu.pintop') }}
           </div>
           <div class="text-white" @click="handleToggleReadStatus((currentLongPressItem?.unreadCount ?? 0) > 0)">
-            {{ (currentLongPressItem?.unreadCount ?? 0) > 0 ? '已读' : '未读' }}
+            {{
+              (currentLongPressItem?.unreadCount ?? 0) > 0 ? t('mobile_home.menu.read') : t('mobile_home.menu.unread')
+            }}
           </div>
         </div>
         <div class="flex w-full justify-center h-15px">
@@ -204,7 +212,9 @@ import { formatTimestamp } from '@/utils/ComputedTime.ts'
 import { vOnLongPress } from '@vueuse/components'
 import { markMsgRead, setSessionTop } from '@/utils/ImRequestUtils'
 import { useContactStore } from '@/stores/contacts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const loading = ref(false)
 const count = ref(0)
 const currentLongPressItem = ref<SessionItem | null>(null)
@@ -372,7 +382,8 @@ const handleToggleReadStatus = async (markAsRead: boolean, sessionItem?: Session
 
   try {
     const unreadCount = markAsRead ? 0 : 1
-    const successMsg = markAsRead ? '已标记为已读' : '已标记为未读'
+
+    const successMsg = markAsRead ? t('mobile_home.marked_as_read') : t('mobile_home.marked_as_unread')
 
     // 更新未读计数（乐观更新，失败时回滚）
     chatStore.updateSession(item.roomId, {
@@ -392,7 +403,7 @@ const handleToggleReadStatus = async (markAsRead: boolean, sessionItem?: Session
     })
     globalStore.updateGlobalUnreadCount()
 
-    const errorMsg = markAsRead ? '标记已读失败' : '标记未读失败'
+    const errorMsg = markAsRead ? t('mobile_home.mark_as_read_failed') : t('mobile_home.mark_as_unread_failed')
     window.$message.error(errorMsg)
     console.error(errorMsg, error)
   } finally {
@@ -445,12 +456,12 @@ const renderImgIcon = (src: string) => {
 const uiViewsData = ref({
   addOptions: [
     {
-      label: '发起群聊',
+      label: t('menu.start_group_chat'),
       key: '/mobile/mobileFriends/startGroupChat',
       icon: renderImgIcon(groupChatIcon)
     },
     {
-      label: '加好友/群',
+      label: t('menu.add_contact'),
       key: '/mobile/mobileFriends/addFriends',
       icon: renderImgIcon(addFriendIcon)
     }

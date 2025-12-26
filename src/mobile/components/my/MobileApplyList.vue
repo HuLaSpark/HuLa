@@ -5,7 +5,11 @@
       align="center"
       justify="space-between"
       class="color-[--text-color] px-20px py-10px">
-      <p class="text-16px">{{ props.type === 'friend' ? '好友通知' : '群通知' }}</p>
+      <p class="text-16px">
+        {{
+          props.type === 'friend' ? t('mobile_mymessage.notification.friend') : t('mobile_mymessage.notification.group')
+        }}
+      </p>
       <svg class="size-18px cursor-pointer">
         <use href="#delete"></use>
       </svg>
@@ -38,7 +42,7 @@
             <div
               @click="isCurrentUser(item.senderId) ? (currentUserId = item.operateId) : (currentUserId = item.senderId)"
               class="flex justify-between text-14px text-#2DA38D">
-              {{ getUserInfo(item)?.name || '未知用户' }}
+              {{ getUserInfo(item)?.name || t('mobile_mymessage.unknown_user') }}
             </div>
             <div class="flex text-gray-500 text-12px min-w-0">
               <span class="truncate w-full block">
@@ -64,7 +68,7 @@
                 expand-trigger="click"
                 :line-clamp="1"
                 style="max-width: 100%">
-                {{ groupStore.getUserInfo(item.senderId)?.name || '未知用户' }}
+                {{ groupStore.getUserInfo(item.senderId)?.name || t('mobile_mymessage.unknown_user') }}
               </n-ellipsis>
             </div>
           </div>
@@ -76,7 +80,7 @@
               :size="10"
               v-if="item.status === RequestNoticeAgreeStatus.UNTREATED && !isCurrentUser(item.senderId)">
               <n-button size="small" secondary :loading="loadingMap[item.applyId]" @click="handleAgree(item)">
-                接受
+                {{ t('mobile_mymessage.accept') }}
               </n-button>
             </n-flex>
             <n-dropdown
@@ -91,22 +95,24 @@
               </n-icon>
             </n-dropdown>
             <span class="text-(12px #64a29c)" v-else-if="item.status === RequestNoticeAgreeStatus.ACCEPTED">
-              已同意
+              {{ t('mobile_mymessage.approved') }}
             </span>
             <span class="text-(12px #c14053)" v-else-if="item.status === RequestNoticeAgreeStatus.REJECTED">
-              已拒绝
+              {{ t('mobile_mymessage.refused') }}
             </span>
-            <span class="text-(12px #909090)" v-else-if="item.status === RequestNoticeAgreeStatus.IGNORE">已忽略</span>
+            <span class="text-(12px #909090)" v-else-if="item.status === RequestNoticeAgreeStatus.IGNORE">
+              {{ t('mobile_mymessage.ignored') }}
+            </span>
             <span
               class="text-(12px #64a29c)"
               :class="{ 'text-(12px #c14053)': item.status === RequestNoticeAgreeStatus.REJECTED }"
               v-else-if="isCurrentUser(item.senderId)">
               {{
                 isAccepted(item)
-                  ? '已同意'
+                  ? t('mobile_mymessage.agreed')
                   : item.status === RequestNoticeAgreeStatus.REJECTED
-                    ? '对方已拒绝'
-                    : '等待验证'
+                    ? t('mobile_mymessage.declined')
+                    : t('mobile_mymessage.pending')
               }}
             </span>
           </div>
@@ -116,7 +122,10 @@
 
     <!-- 空数据提示 -->
     <n-flex v-if="applyList.length === 0" vertical justify="center" align="center" class="py-40px">
-      <n-empty :description="props.type === 'friend' ? '暂无好友申请' : '暂无群通知'" />
+      <n-empty
+        :description="
+          props.type === 'friend' ? t('mobile_mymessage.empty_require') : t('mobile_mymessage.empty_group_require')
+        " />
     </n-flex>
   </n-flex>
 </template>
@@ -129,7 +138,9 @@ import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useGroupStore } from '@/stores/group'
 import { getGroupInfo } from '@/utils/ImRequestUtils'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const contactStore = useContactStore()
 const groupStore = useGroupStore()
@@ -195,32 +206,36 @@ const getGroupDetail = async (roomId: string) => {
 // 异步获取群组信息的计算属性
 const applyMsg = computed(() => (item: any) => {
   if (props.type === 'friend') {
-    return isCurrentUser(item.senderId) ? (isAccepted(item) ? '已同意你的请求' : '正在验证你的邀请') : '请求加为好友'
+    return isCurrentUser(item.senderId)
+      ? isAccepted(item)
+        ? t('mobile_mymessage.friend_request_status.accepted')
+        : t('mobile_mymessage.friend_request_status.verifying')
+      : t('mobile_mymessage.friend_request_status.sent')
   } else {
     const groupDetail = groupDetailsMap.value[item.roomId]
     if (!groupDetail) {
       if (item.roomId && !loadingGroups.value.has(item.roomId)) {
         getGroupDetail(item.roomId)
       }
-      return '加载中...'
+      return t('mobile_mymessage.loading', { tail: '...' })
     }
 
     if (item.eventType === NoticeType.GROUP_APPLY) {
-      return '申请加入 [' + groupDetail.name + ']'
+      return t('mobile_mymessage.group.apply_to_join', { name: groupDetail.name })
     } else if (item.eventType === NoticeType.GROUP_INVITE) {
-      const inviter = groupStore.getUserInfo(item.operateId)?.name || '未知用户'
-      return '邀请' + inviter + '加入 [' + groupDetail.name + ']'
+      const inviter = groupStore.getUserInfo(item.operateId)?.name || t('mobile_mymessage.unknown_user')
+      return t('mobile_mymessage.group.invited_to_join', { inviter, group: groupDetail.name })
     } else if (isFriendApplyOrGroupInvite(item)) {
       return isCurrentUser(item.senderId)
-        ? '已同意加入 [' + groupDetail.name + ']'
-        : '邀请你加入 [' + groupDetail.name + ']'
+        ? t('mobile_mymessage.group.joined_group', { group: groupDetail.name })
+        : t('mobile_mymessage.group.invited_curr_to_join', { group: groupDetail.name })
     } else if (item.eventType === NoticeType.GROUP_MEMBER_DELETE) {
-      const operator = groupStore.getUserInfo(item.senderId)?.name || '未知用户'
-      return '已被' + operator + '踢出 [' + groupDetail.name + ']'
+      const operator = groupStore.getUserInfo(item.senderId)?.name || t('mobile_mymessage.unknown_user')
+      return t('mobile_mymessage.group.kicked_out', { operator, group: groupDetail.name })
     } else if (item.eventType === NoticeType.GROUP_SET_ADMIN) {
-      return '已被群主设置为 [' + groupDetail.name + '] 的管理员'
+      return t('mobile_mymessage.group.set_as_admin', { group: groupDetail.name })
     } else if (item.eventType === NoticeType.GROUP_RECALL_ADMIN) {
-      return '已被群主取消 [' + groupDetail.name + '] 的管理员权限'
+      return t('mobile_mymessage.group.removed_as_admin', { group: groupDetail.name })
     }
   }
 })
@@ -228,11 +243,11 @@ const applyMsg = computed(() => (item: any) => {
 // 下拉菜单选项
 const dropdownOptions = [
   {
-    label: '拒绝',
+    label: t('mobile_mymessage.menu.decline'),
     key: 'reject'
   },
   {
-    label: '忽略',
+    label: t('mobile_mymessage.menu.decline'),
     key: 'ignore'
   }
 ]

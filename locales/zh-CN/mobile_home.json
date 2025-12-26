@@ -1,0 +1,27 @@
+{
+  "menu": {
+    "start_group_chat": "发起群聊",
+    "add_contact": "添加联系人",
+    "pintop": "置顶",
+    "unpin": "取消置顶",
+    "read": "已读",
+    "unread": "未读",
+    "delete": "删除"
+  },
+  "input": {
+    "search": "搜索"
+  },
+  "noname": "无名",
+  "china": "中国",
+  "chat": {
+    "unpin": "取消置顶",
+    "pintop": "置顶",
+    "mark_as_read": "已读",
+    "mark_as_unread": "未读",
+    "delete": "删除"
+  },
+  "marked_as_read": "已标记为已读",
+  "marked_as_unread": "已标记为未读",
+  "mark_as_read_failed": "标记已读失败",
+  "mark_as_unread_failed": "标记未读失败"
+}

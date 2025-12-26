@@ -1,0 +1,23 @@
+{
+  "title": "Profile",
+  "nickname": "Nickname",
+  "gender": "Gender",
+  "brithday": "Brithday",
+  "region": "Region",
+  "phone": "Phone",
+  "bio": "Bio",
+  "placeholder": {
+    "nickname": "Enter a nickname",
+    "gender": "Click to select gender",
+    "brithday": "Please select a birthday",
+    "region": "Click to select region",
+    "phone": "Enter a phone number",
+    "bio": "Please enter a personal introduction"
+  },
+  "save_btn": "SAVE",
+  "change_avatar": "Change",
+  "genders": {
+    "male": "Male",
+    "female": "Female"
+  }
+}

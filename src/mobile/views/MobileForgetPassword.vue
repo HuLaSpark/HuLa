@@ -5,27 +5,26 @@
       :hidden-right="true"
       :enable-default-background="false"
       :enable-shadow="false"
-      room-name="忘记密码" />
-
+      :room-name="t('mobile_forget_code.title')" />
     <n-config-provider :theme="lightTheme" class="bg-#fff rounded-8px select-none cursor-default">
       <n-flex vertical class="w-full size-full">
         <!-- 步骤条 -->
         <n-steps size="small" class="w-full px-40px mt-20px" :current="currentStep" :status="stepStatus">
-          <n-step title="验证邮箱" description="" />
-          <n-step title="设置新密码" description="" />
-          <n-step title="完成" description="" />
+          <n-step :title="t('mobile_forget_code.steps.verify_email')" description="" />
+          <n-step :title="t('mobile_forget_code.steps.set_new_password')" description="" />
+          <n-step :title="t('mobile_forget_code.steps.done')" description="" />
         </n-steps>
 
         <!-- 第一步：验证邮箱 -->
         <div v-if="currentStep === 1" class="w-full max-w-300px mx-auto mt-30px">
           <n-form ref="formRef" :model="formData" :rules="emailRules">
             <!-- 邮箱输入 -->
-            <n-form-item path="email" label="邮箱账号">
+            <n-form-item path="email" :label="t('mobile_forget_code.input.label.email')">
               <n-input
                 :allow-input="noSideSpace"
                 class="border-(1px solid #90909080)"
                 v-model:value="formData.email"
-                placeholder="请输入您的邮箱"
+                :placeholder="t('mobile_forget_code.input.email')"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
@@ -34,13 +33,13 @@
             </n-form-item>
 
             <!-- 邮箱验证码 -->
-            <n-form-item path="emailCode" label="邮箱验证码">
+            <n-form-item path="emailCode" :label="t('mobile_forget_code.input.label.email_verification_code')">
               <n-flex :size="8">
                 <n-input
                   :allow-input="noSideSpace"
                   class="border-(1px solid #90909080)"
                   v-model:value="formData.emailCode"
-                  placeholder="请输入邮箱验证码"
+                  :placeholder="t('mobile_forget_code.input.email_code')"
                   spellCheck="false"
                   autoComplete="off"
                   autoCorrect="off"
@@ -65,7 +64,7 @@
               style="color: #fff"
               @click="verifyEmail"
               class="mt-10px w-full gradient-button">
-              下一步
+              {{ t('mobile_forget_code.button.next') }}
             </n-button>
           </n-form>
         </div>
@@ -74,7 +73,7 @@
         <div v-if="currentStep === 2" class="w-full max-w-300px mx-auto mt-30px">
           <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
             <!-- 新密码 -->
-            <n-form-item path="password" label="新密码">
+            <n-form-item path="password" :label="t('mobile_forget_code.input.label.new_pass')">
               <n-flex vertical :size="8" class="w-full">
                 <n-input
                   :allow-input="noSideSpace"
@@ -82,7 +81,7 @@
                   v-model:value="passwordForm.password"
                   type="password"
                   show-password-on="click"
-                  placeholder="请输入6-16位新密码"
+                  :placeholder="t('mobile_forget_code.input.new_pass', { len: '6-16' })"
                   maxlength="16"
                   spellCheck="false"
                   autoComplete="off"
@@ -92,22 +91,22 @@
                 <n-flex vertical :size="4" class="space-y-4px">
                   <Validation
                     :value="passwordForm.password"
-                    message="密码长度为6-16位"
+                    :message="t('mobile_forget_code.validation.minlength', { len: '6-16' })"
                     :validator="validateMinLength" />
                   <Validation
                     :value="passwordForm.password"
-                    message="由英文和数字构成"
+                    :message="t('mobile_forget_code.validation.valid_characters')"
                     :validator="validateAlphaNumeric" />
                   <Validation
                     :value="passwordForm.password"
-                    message="必须有一个特殊字符"
+                    :message="t('mobile_forget_code.validation.must_special_char')"
                     :validator="validateSpecialChar" />
                 </n-flex>
               </n-flex>
             </n-form-item>
 
             <!-- 确认密码 -->
-            <n-form-item path="confirmPassword" label="确认密码">
+            <n-form-item path="confirmPassword" :label="t('mobile_forget_code.input.label.confirm_password')">
               <n-flex vertical :size="8" class="w-full">
                 <n-input
                   :allow-input="noSideSpace"
@@ -115,7 +114,7 @@
                   v-model:value="passwordForm.confirmPassword"
                   type="password"
                   show-password-on="click"
-                  placeholder="请再次输入密码"
+                  :placeholder="t('mobile_forget_code.input.confirm_password')"
                   spellCheck="false"
                   autoComplete="off"
                   autoCorrect="off"
@@ -125,21 +124,21 @@
                 <n-flex vertical :size="4">
                   <Validation
                     :value="passwordForm.confirmPassword"
-                    message="两次密码输入一致"
+                    :message="t('mobile_forget_code.validation.passwords_match')"
                     :validator="(value: string) => value === passwordForm.password && value !== ''" />
                 </n-flex>
               </n-flex>
             </n-form-item>
 
             <n-flex :size="16" class="mt-30px">
-              <n-button @click="goBack" class="flex-1">上一步</n-button>
+              <n-button @click="goBack" class="flex-1">{{ t('mobile_forget_code.button.go_back_setp') }}</n-button>
               <n-button
                 :loading="submitLoading"
                 tertiary
                 style="color: #fff"
                 @click="submitNewPassword"
                 class="flex-1 gradient-button">
-                提交
+                {{ t('mobile_forget_code.button.submit') }}
               </n-button>
             </n-flex>
           </n-form>
@@ -154,8 +153,8 @@
         </n-icon> -->
           <img class="size-98px" src="/emoji/party-popper.webp" alt="" />
 
-          <div class="mt-16px text-18px">密码修改成功</div>
-          <div class="mt-16px text-14px text-#666">您已成功重置密码，可以使用新密码登录</div>
+          <div class="mt-16px text-18px">{{ t('mobile_forget_code.password_reset_success') }}</div>
+          <div class="mt-16px text-14px text-#666">{{ t('mobile_forget_code.password_reset_success_desc') }}</div>
         </div>
       </n-flex>
     </n-config-provider>
@@ -168,12 +167,15 @@ import Validation from '@/components/common/Validation.vue'
 import { forgetPassword, getCaptcha, sendCaptcha } from '@/utils/ImRequestUtils'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'
 import router from '@/router'
+import { useI18n } from 'vue-i18n'
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.meta.url))
 
+const { t } = useI18n()
+
 // 步骤状态
-const currentStep = ref(1)
+const currentStep = ref(3)
 const stepStatus = ref<'error' | 'finish' | 'process' | 'wait' | undefined>('process')
 
 // 第一步表单数据
@@ -187,7 +189,7 @@ const formData = ref({
 // 图片验证码相关
 const captchaImage = ref('')
 const sendBtnDisabled = ref(false)
-const emailCodeBtnText = ref('发送验证码')
+const emailCodeBtnText = ref(t('mobile_forget_code.button.send_email_code'))
 const countDown = ref(60)
 const verifyLoading = ref(false)
 // 发送验证码loading状态
@@ -208,16 +210,16 @@ const CAPTCHA_TIMER_ID = 'captcha_cooldown_timer'
 // 邮箱校验规则
 const emailRules = {
   email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { required: true, message: t('mobile_forget_code.rules.email_require'), trigger: 'blur' },
     {
       pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
-      message: '请输入正确的邮箱格式',
+      message: t('mobile_forget_code.rules.email_invalid'),
       trigger: 'blur'
     }
   ],
   emailCode: [
-    { required: true, message: '请输入邮箱验证码', trigger: 'input' },
-    { min: 6, max: 6, message: '验证码长度为6位', trigger: 'blur' }
+    { required: true, message: t('mobile_forget_code.rules.email_code_require'), trigger: 'input' },
+    { min: 6, max: 6, message: t('mobile_forget_code.rules.code_length', { len: 6 }), trigger: 'blur' }
   ]
 }
 
@@ -232,16 +234,16 @@ const submitLoading = ref(false)
 // 密码校验规则
 const passwordRules = {
   password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 16, message: '密码长度为6-16位', trigger: 'blur' }
+    { required: true, message: t('mobile_forget_code.rules.new_pass_require'), trigger: 'blur' },
+    { min: 6, max: 16, message: t('mobile_forget_code.rules.new_pass_length', { len: '6-16' }), trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
+    { required: true, message: t('mobile_forget_code.rules.confirm_pass_require'), trigger: 'blur' },
     {
       validator: (_: any, value: string) => {
         return value === passwordForm.value.password
       },
-      message: '两次输入的密码不一致',
+      message: 'mobile_forget_code.rules.pass_not_matcht',
       trigger: 'blur'
     }
   ]
@@ -263,7 +265,7 @@ const getCaptchaImage = async () => {
   // 检查是否可以获取新的验证码
   if (captchaInCooldown.value) {
     // 显示剩余冷却时间
-    window.$message.warning(`请求过于频繁，${captchaCooldownRemaining.value}秒后再试`)
+    window.$message.warning(t('mobile_forget_code.too_many_requests', { s: captchaCooldownRemaining.value }))
     return
   }
 
@@ -293,12 +295,12 @@ const getCaptchaImage = async () => {
 const sendEmailCode = async () => {
   // 邮箱校验
   if (!formData.value.email) {
-    window.$message.warning('请先输入邮箱')
+    window.$message.warning(t('mobile_forget_code.rules.email_require'))
     return
   }
 
   if (!/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(formData.value.email)) {
-    window.$message.warning('请输入正确的邮箱格式')
+    window.$message.warning(t('mobile_forget_code.rules.email_invalid'))
     return
   }
 
@@ -313,12 +315,12 @@ const sendEmailCode = async () => {
       templateCode: 'PASSWORD_EDIT'
     })
 
-    window.$message.success('验证码已发送至您的邮箱')
+    window.$message.success(t('mobile_forget_code.code_sent_email'))
 
     // 接口成功返回后才开始倒计时 - 使用 Web Worker
     sendBtnDisabled.value = true
     countDown.value = 60
-    emailCodeBtnText.value = `${countDown.value}秒后重新获取`
+    emailCodeBtnText.value = t('mobile_forget_code.email_resend_in', { seconds: countDown.value })
 
     // 发送消息给 Worker 开始计时
     timerWorker.postMessage({
@@ -400,11 +402,11 @@ timerWorker.onmessage = (e) => {
       // 更新倒计时显示
       const secondsRemaining = Math.ceil(remainingTime / 1000)
       countDown.value = secondsRemaining
-      emailCodeBtnText.value = `${secondsRemaining}秒后重新获取`
+      emailCodeBtnText.value = t('mobile_forget_code.email_resend_in', { seconds: secondsRemaining })
     } else if (type === 'timeout') {
       // 计时结束
       sendBtnDisabled.value = false
-      emailCodeBtnText.value = '重新获取'
+      emailCodeBtnText.value = t('mobile_forget_code.button.send_email_code')
     }
   } else if (msgId === CAPTCHA_TIMER_ID) {
     // 图片验证码冷却计时器消息处理
@@ -424,7 +426,7 @@ timerWorker.onerror = (error) => {
   console.error('[Timer Worker Error]', error)
   // 发生错误时恢复按钮状态
   sendBtnDisabled.value = false
-  emailCodeBtnText.value = '重新获取'
+  emailCodeBtnText.value = t('mobile_forget_code.button.send_email_code')
 }
 
 // 页面加载时获取验证码

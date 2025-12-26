@@ -1,0 +1,41 @@
+{
+  "title": "消息",
+  "accept": "同意",
+  "approved": "已同意",
+  "refused": "已拒绝",
+  "agreed": "已同意",
+  "declined": "已拒绝",
+  "pending": "等待验证",
+  "ignored": "已忽略",
+  "notification": {
+    "friend": "好友通知",
+    "group": "群通知"
+  },
+  "friend_request_message": "留言：",
+  "unknown_user": "未知用户",
+  "empty_require": "暂无好友请求",
+  "empty_group_require": "暂无群申请通知",
+  "menu": {
+    "decline": "拒绝",
+    "ignore": "忽略"
+  },
+  "friend_request_status": {
+    "accepted": "你的请求已被同意",
+    "verifying": "正在验证你的邀请",
+    "sent": "已发送好友请求"
+  },
+  "loading": "加载中{tail}",
+  "group": {
+    "apply_to_join": "申请加入 [{name}]",
+    "invited_to_join": "{inviter} 邀请你加入 [{group}]",
+    "joined_group": "已加入 [{group}]",
+    "invited_curr_to_join": "邀请你加入 [{group}]",
+    "kicked_out": "已被 {operator} 踢出 [{group}]",
+    "set_as_admin": "已被群主设置为 [{group}] 的管理员",
+    "removed_as_admin": "已被群主取消 [{group}] 的管理员权限"
+  },
+  "tab": {
+    "friend_messages": "好友消息",
+    "group_messages": "群聊消息"
+  }
+}

@@ -49,5 +49,7 @@
   "dissolve_group": "Disband group",
   "leave_group": "Leave Group",
   "today": "Today",
-  "yesterday": "Yesterday"
+  "yesterday": "Yesterday",
+  "start_group_chat": "New Chat",
+  "add_contact": "Add Contact"
 }

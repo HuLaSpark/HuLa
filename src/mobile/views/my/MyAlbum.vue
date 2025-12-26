@@ -7,7 +7,7 @@
           class="bg-white"
           style="border-bottom: 1px solid; border-color: #dfdfdf"
           :hidden-right="true"
-          room-name="我的相册" />
+          :room-name="t('mobile_photo.title')" />
       </template>
 
       <template #container>
@@ -23,7 +23,7 @@
               <svg class="iconpark-icon w-60px h-60px text-gray">
                 <use href="#xiangce"></use>
               </svg>
-              <div class="text-gray text-14px">暂无图片</div>
+              <div class="text-gray text-14px">{{ t('mobile_photo.empty') }}</div>
             </div>
 
             <!-- 图片网格 -->
@@ -33,7 +33,7 @@
                 :key="index"
                 class="overflow-hidden bg-gray-100 aspect-square cursor-pointer"
                 @click="handleImageClick(image)">
-                <img :src="image.displayUrl" class="w-full h-full object-cover" alt="相册图片" />
+                <img :src="image.displayUrl" class="w-full h-full object-cover" :alt="t('mobile_photo.image_alt')" />
               </div>
             </div>
           </div>
@@ -55,7 +55,9 @@
 import { useFileStore } from '@/stores/file'
 import { useGlobalStore } from '@/stores/global'
 import ImagePreview from '@/mobile/components/ImagePreview.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const fileStore = useFileStore()
 const globalStore = useGlobalStore()
 
@@ -109,7 +111,7 @@ const getAllImages = async () => {
   } catch (error) {
     console.error('获取图片失败:', error)
     if (window.$message) {
-      window.$message.error('获取图片失败')
+      window.$message.error(t('mobile_photo.image_load_failed'))
     }
   } finally {
     loading.value = false

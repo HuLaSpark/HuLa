@@ -2,7 +2,7 @@
   <MobileLayout :backgroundImage="'/login_bg.png'" :safeAreaTop="false" :safeAreaBottom="false">
     <div class="h-full flex-col-center gap-40px">
       <div class="flex-center absolute top-13vh left-36px">
-        <p class="text-(20px #333)">HI, 欢迎来到</p>
+        <p class="text-(20px #333)">{{ t('login.mobile.welcome_title') }}</p>
         <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
       </div>
 
@@ -15,7 +15,7 @@
               'z-999 w-100px text-center transition-all duration-300 ease-out',
               activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
             ]">
-            登录
+            {{ t('login.mobile.tabs.login') }}
           </div>
           <div
             @click="activeTab = 'register'"
@@ -23,7 +23,7 @@
               'z-999 w-100px text-center transition-all duration-300 ease-out',
               activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
             ]">
-            注册
+            {{ t('login.mobile.tabs.register') }}
           </div>
           <!-- 选中条 -->
           <div
@@ -51,7 +51,7 @@
           autoCapitalize="off"
           :placeholder="accountPH"
           @focus="accountPH = ''"
-          @blur="accountPH = '输入HuLa账号'"
+          @blur="accountPH = t('login.mobile.input.account_placeholder')"
           clearable>
           <template #suffix>
             <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
@@ -98,11 +98,11 @@
           autoCapitalize="off"
           :placeholder="passwordPH"
           @focus="passwordPH = ''"
-          @blur="passwordPH = '输入HuLa密码'"
+          @blur="passwordPH = t('login.mobile.input.code_placeholder')"
           clearable />
 
         <n-flex justify="flex-end" :size="6">
-          <n-button text color="#13987f" @click="handleForgetPassword">忘记密码</n-button>
+          <n-button text color="#13987f" @click="handleForgetPassword">{{ t('login.mobile.forget_code') }}</n-button>
         </n-flex>
 
         <n-button
@@ -119,10 +119,14 @@
         <n-flex align="center" justify="center" :style="agreementStyle" :size="6" class="absolute bottom-0 w-[80%]">
           <n-checkbox v-model:checked="protocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
-            <span>已阅读并同意</span>
-            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">服务协议</span>
-            <span>和</span>
-            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+            <span>{{ t('login.term.checkout.text1') }}</span>
+            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
+              {{ t('login.term.checkout.text2') }}
+            </span>
+            <span>{{ t('login.term.checkout.text3') }}</span>
+            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
+              {{ t('login.term.checkout.text4') }}
+            </span>
           </div>
         </n-flex>
       </n-flex>
@@ -142,7 +146,7 @@
           :allow-input="noSideSpace"
           :placeholder="registerNamePH"
           @focus="registerNamePH = ''"
-          @blur="registerNamePH = '输入HuLa昵称'"
+          @blur="registerNamePH = t('login.mobile.register.input.nickname')"
           clearable />
 
         <n-input
@@ -159,7 +163,7 @@
           :allow-input="noSideSpace"
           :placeholder="registerPasswordPH"
           @focus="registerPasswordPH = ''"
-          @blur="registerPasswordPH = '设置密码'"
+          @blur="registerPasswordPH = t('login.mobile.register.input.password')"
           clearable />
 
         <n-input
@@ -176,24 +180,37 @@
           :allow-input="noSideSpace"
           :placeholder="confirmPasswordPH"
           @focus="confirmPasswordPH = ''"
-          @blur="confirmPasswordPH = '确认密码'"
+          @blur="confirmPasswordPH = t('login.mobile.register.input.confirm_password')"
           clearable />
 
         <!-- 密码提示信息 -->
         <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
-          <Validation :value="registerInfo.password" message="最少6位" :validator="validateMinLength" />
-          <Validation :value="registerInfo.password" message="由英文和数字构成" :validator="validateAlphaNumeric" />
-          <Validation :value="registerInfo.password" message="必须有一个特殊字符" :validator="validateSpecialChar" />
+          <Validation
+            :value="registerInfo.password"
+            :message="t('login.mobile.register.pass_validate_info.minlength', { len: 6 })"
+            :validator="validateMinLength" />
+          <Validation
+            :value="registerInfo.password"
+            :message="t('login.mobile.register.pass_validate_info.valid_characters')"
+            :validator="validateAlphaNumeric" />
+          <Validation
+            :value="registerInfo.password"
+            :message="t('login.mobile.register.pass_validate_info.must_special_char')"
+            :validator="validateSpecialChar" />
         </n-flex>
 
         <!-- 协议 -->
         <n-flex align="center" justify="center" :size="6" class="mt-10px">
           <n-checkbox v-model:checked="registerProtocol" />
           <div class="text-12px color-#909090 cursor-default lh-14px">
-            <span>已阅读并同意</span>
-            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">服务协议</span>
-            <span>和</span>
-            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">HuLa隐私保护指引</span>
+            <span>{{ t('login.term.checkout.text1') }}</span>
+            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
+              {{ t('login.term.checkout.text2') }}
+            </span>
+            <span>{{ t('login.term.checkout.text3') }}</span>
+            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
+              {{ t('login.term.checkout.text4') }}
+            </span>
           </div>
         </n-flex>
 
@@ -204,7 +221,7 @@
           style="color: #fff"
           class="w-full mt-8px mb-50px gradient-button"
           @click="handleRegisterStep">
-          <span>下一步</span>
+          <span>{{ t('login.mobile.register.btn.next') }}</span>
         </n-button>
       </n-flex>
 
@@ -219,7 +236,7 @@
           clearable
           type="text"
           @focus="registerEmailPH = ''"
-          @blur="registerEmailPH = '输入邮箱'" />
+          @blur="registerEmailPH = t('login.mobile.register.input.email')" />
 
         <!-- 邮箱验证码 -->
         <div class="flex justify-between items-center gap-10px">
@@ -235,7 +252,7 @@
             :allow-input="noSideSpace"
             :placeholder="registerCodePH"
             @focus="registerCodePH = ''"
-            @blur="registerCodePH = '输入邮箱验证码'"
+            @blur="registerCodePH = t('login.mobile.register.input.email_verification_code')"
             clearable />
 
           <n-button
@@ -256,7 +273,7 @@
           style="color: #fff"
           class="w-full mt-8px mb-50px gradient-button"
           @click="handleRegisterStep">
-          <span>注册</span>
+          <span>{{ t('login.mobile.register.btn.register') }}</span>
         </n-button>
       </n-flex>
     </div>
@@ -280,10 +297,12 @@ import { WsResponseMessageType } from '../services/wsType'
 import { useSettingStore } from '../stores/setting'
 import { clearListener } from '../utils/ReadCountQueue'
 import { useLogin } from '../hooks/useLogin'
+import { useI18n } from 'vue-i18n'
 
 // 本地注册信息类型，扩展API类型以包含确认密码
 interface LocalRegisterInfo extends RegisterUserReq {}
 
+const { t } = useI18n()
 const loginHistoriesStore = useLoginHistoriesStore()
 const { loginHistories } = loginHistoriesStore
 const mobileStore = useMobileStore()
@@ -313,17 +332,17 @@ const registerInfo = ref<LocalRegisterInfo>({
 })
 
 // 登录相关的占位符和状态
-const accountPH = ref('输入HuLa账号')
-const passwordPH = ref('输入HuLa密码')
+const accountPH = ref(t('login.mobile.input.account_placeholder'))
+const passwordPH = ref(t('login.mobile.input.code_placeholder'))
 const protocol = ref(true)
 const arrowStatus = ref(false)
 
 // 注册相关的占位符和状态
-const registerNamePH = ref('输入HuLa昵称')
-const registerEmailPH = ref('输入邮箱')
-const registerPasswordPH = ref('设置密码')
-const confirmPasswordPH = ref('确认密码')
-const registerCodePH = ref('输入邮箱验证码')
+const registerNamePH = ref(t('login.mobile.register.input.nickname'))
+const registerEmailPH = ref(t('login.mobile.register.input.email'))
+const registerPasswordPH = ref(t('login.mobile.register.input.password'))
+const confirmPasswordPH = ref(t('login.mobile.register.input.confirm_password'))
+const registerCodePH = ref(t('login.mobile.register.input.email_verification_code'))
 const registerProtocol = ref(true)
 const registerLoading = ref(false)
 const sendCodeLoading = ref(false)
@@ -334,9 +353,10 @@ const { normalLogin, loading, loginText, loginDisabled, info: userInfo } = useLo
 
 const sendCodeButtonText = computed(() => {
   if (sendCodeCountdown.value > 0) {
-    return `${sendCodeCountdown.value}秒后重新发送`
+    const s = sendCodeCountdown.value
+    return t('login.mobile.register.btn.resend_in', { seconds: s })
   }
-  return '发送验证码'
+  return t('login.mobile.register.btn.send_email_code')
 })
 
 const sendCodeDisabled = computed(() => {
@@ -485,8 +505,8 @@ const resetLoginForm = () => {
     uid: '',
     name: ''
   }
-  accountPH.value = '输入HuLa账号'
-  passwordPH.value = '输入HuLa密码'
+  accountPH.value = t('login.mobile.input.account_placeholder')
+  passwordPH.value = t('login.mobile.input.code_placeholder')
   arrowStatus.value = false
 }
 
@@ -504,11 +524,12 @@ const resetRegisterForm = () => {
     key: 'REGISTER_EMAIL'
   } as LocalRegisterInfo
   currentStep.value = 1
-  registerNamePH.value = '输入HuLa昵称'
-  registerEmailPH.value = '输入邮箱'
-  registerPasswordPH.value = '设置密码'
-  confirmPasswordPH.value = '确认密码'
-  registerCodePH.value = '输入邮箱验证码'
+  registerNamePH.value = t('login.mobile.register.input.nickname')
+  registerEmailPH.value = t('login.mobile.register.input.email')
+  registerPasswordPH.value = t('login.mobile.register.input.password')
+  confirmPasswordPH.value = t('login.mobile.register.input.confirm_password')
+  registerCodePH.value = t('login.mobile.register.input.email_verification_code')
+
   sendCodeLoading.value = false
   stopSendCodeCountdown()
 }
@@ -526,7 +547,7 @@ const handleRegisterStep = async () => {
 /** 发送邮箱验证码 */
 const handleSendEmailCode = async () => {
   if (!isEmailValid.value) {
-    window.$message.warning('请输入正确的邮箱')
+    window.$message.warning(t('login.mobile.email_invalid'))
     return
   }
 
@@ -541,11 +562,11 @@ const handleSendEmailCode = async () => {
       operationType: 'register',
       templateCode: 'REGISTER_EMAIL'
     })
-    window.$message.success('验证码已发送，请查收邮箱')
+    window.$message.success(t('login.mobile.code_sent_email'))
     startSendCodeCountdown()
   } catch (error) {
-    console.error('发送验证码错误：', error)
-    window.$message.error('验证码发送失败，请稍后再试')
+    console.error(t('login.mobile.code_send_failed_with_reason', { reason: error }))
+    window.$message.error(t('login.mobile.code_send_failed_retry'))
   } finally {
     sendCodeLoading.value = false
   }
@@ -554,7 +575,7 @@ const handleSendEmailCode = async () => {
 /** 完成注册 */
 const handleRegisterComplete = async () => {
   if (!isStep2Valid.value) {
-    window.$message.warning('请完善信息后再注册')
+    window.$message.warning(t('login.mobile.complete_info_before_register'))
     return
   }
 
@@ -575,14 +596,13 @@ const handleRegisterComplete = async () => {
     // 关闭弹窗并切换到登录页面
     activeTab.value = 'login'
     userInfo.value.account = registerInfo.value.nickName || registerInfo.value.email
-
-    window.$message.success('注册成功')
+    window.$message.success(t('login.mobile.register_success'))
 
     // 重置注册表单
     resetRegisterForm()
   } catch (error) {
     // 处理注册失败
-    window.$message.error((error as any) || '注册失败')
+    window.$message.error((error as any) || t('login.mobile.register_fail'))
     console.error(error)
   } finally {
     registerLoading.value = false
@@ -696,7 +716,7 @@ onMounted(async () => {
 
   useMitt.on(WsResponseMessageType.NO_INTERNET, () => {
     loginDisabled.value = true
-    loginText.value = '服务异常断开'
+    loginText.value = t('login.status.service_disconnected')
   })
 
   if (login.value.autoLogin) {

@@ -7,9 +7,11 @@
           <div class="flex flex-col flex-1 p-20px gap-20px">
             <div class="flex items-center">
               <div class="py-15px flex gap-10px w-full items-center justify-end">
-                <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 w-50px h-24px">
+                <div class="bg-#E7EFE6 flex flex-wrap ps-2 items-center rounded-full gap-1 h-24px px-2">
                   <span class="w-12px h-12px rounded-15px bg-#079669"></span>
-                  <span class="text-bold-style" style="font-size: 12px; color: #373838">在线</span>
+                  <span class="text-bold-style" style="font-size: 12px; color: #373838">
+                    {{ t('mobile_my.online') }}
+                  </span>
                 </div>
                 <svg @click="toSettings" class="iconpark-icon h-32px w-32px block"><use href="#wode-shezhi"></use></svg>
                 <svg @click="toScanQRCode" class="iconpark-icon h-32px w-32px block"><use href="#saoma"></use></svg>
@@ -27,7 +29,7 @@
                 <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
                   <div class="font-bold text-18px text-#373838">{{ userStore.userInfo!.name }}</div>
                   <div class="mt-2 text-bold-style line-height-22px line-clamp-2">
-                    {{ userStore.userInfo!.resume || '用户很懒没写简介~' }}
+                    {{ userStore.userInfo!.resume || t('mobile_my.default_bio') }}
                   </div>
                 </div>
 
@@ -62,20 +64,22 @@
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
+import { useI18n } from 'vue-i18n'
 
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const options = ref([
   {
     icon: 'xiangce',
-    label: '相册',
+    label: t('mobile_my.photos'),
     onClick: () => {
       router.push('/mobile/mobileMy/myAlbum')
     }
   },
   {
     icon: 'shoucang',
-    label: '收藏',
+    label: t('mobile_my.favorites'),
     onClick: () => {
       // TODO: 跳转到收藏页面
       console.log('收藏')
@@ -83,7 +87,7 @@ const options = ref([
   },
   {
     icon: 'wenjian',
-    label: '文件',
+    label: t('mobile_my.files'),
     onClick: () => {
       // TODO: 跳转到文件页面
       console.log('文件')
@@ -91,7 +95,7 @@ const options = ref([
   },
   {
     icon: 'gexingzhuangban',
-    label: '个性装扮',
+    label: t('mobile_my.appearance'),
     onClick: () => {
       // TODO: 跳转到个性装扮页面
       console.log('个性装扮')
@@ -99,7 +103,7 @@ const options = ref([
   },
   {
     icon: 'robot',
-    label: 'AI助手',
+    label: t('mobile_my.intelligent'),
     onClick: () => {
       router.push('/mobile/mobileMy/aiAssistant')
     }

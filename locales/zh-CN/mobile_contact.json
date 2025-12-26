@@ -1,0 +1,17 @@
+{
+  "title": "联系人",
+  "input": {
+    "search": "搜索"
+  },
+  "my_chat": "我的消息",
+  "tab": {
+    "contacts": "好友",
+    "group": "群聊"
+  },
+  "friend": {
+    "title": "我的好友"
+  },
+  "group": {
+    "title": "我的群聊"
+  }
+}

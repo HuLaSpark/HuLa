@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="我的消息" />
+        :room-name="t('mobile_mymessage.title')" />
     </template>
 
     <template #container>
@@ -28,17 +28,21 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const onUpdate = (newTab: string) => {
   console.log('已更新：', newTab)
 }
 
 const tabOptions = reactive([
   {
-    tab: '好友消息',
+    tab: t('mobile_mymessage.tab.friend_messages'),
     name: 'friend-message'
   },
   {
-    tab: '群聊消息',
+    tab: t('mobile_mymessage.tab.group_messages'),
     name: 'group-message'
   }
 ])

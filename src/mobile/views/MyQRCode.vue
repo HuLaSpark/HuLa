@@ -7,7 +7,7 @@
       :hidden-right="true"
       :enable-default-background="false"
       :enable-shadow="false"
-      room-name="个人二维码" />
+      :room-name="t('mobile_personal_info_qr.title')" />
 
     <!-- 页面全部内容 -->
     <div class="flex flex-col flex-1 items-center p-15px z-2 my-15">
@@ -21,7 +21,7 @@
             <div
               class="flex flex-col text-#4e4e4e h-auto gap-8px overflow-hidden justify-center text-18px whitespace-normal break-words max-w-46">
               <div class="font-bold">{{ userInfo?.name }}</div>
-              <div class="text-16px">账号:{{ userInfo?.account }}</div>
+              <div class="text-16px">{{ t('mobile_personal_info_qr.account') }}:{{ userInfo?.account }}</div>
             </div>
           </div>
 
@@ -39,7 +39,7 @@
               :error-correction-level="qrErrorCorrectionLevel" />
           </div>
 
-          <div class="flex justify-center text-gray">扫我添加好友哦~</div>
+          <div class="flex justify-center text-gray">{{ t('mobile_personal_info_qr.scan_to_add') }}</div>
         </div>
       </div>
     </div>
@@ -49,7 +49,9 @@
 <script setup lang="ts">
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { useUserStore } from '@/stores/user'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const qrCodeBgColor = ref('#FFFFFF')
 const qrCodeType = ref('canvas' as const)
 const qrErrorCorrectionLevel = ref('H' as const)

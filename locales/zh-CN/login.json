@@ -140,5 +140,47 @@
       "save_success": "网络设置保存成功",
       "save_failed": "网络设置失败：{error}"
     }
-  }
+  },
+  "mobile": {
+    "welcome_title": "HI, 欢迎",
+    "tabs": {
+      "login": "登录",
+      "register": "注册"
+    },
+    "forget_code": "忘记密码",
+    "btn": {
+      "login": "登录"
+    },
+    "input": {
+      "account_placeholder": "账号",
+      "code_placeholder": "密码"
+    },
+    "register": {
+      "input": {
+        "nickname": "昵称",
+        "password": "密码",
+        "confirm_password": "确认密码",
+        "email": "邮箱",
+        "email_verification_code": "邮箱验证吗"
+      },
+      "btn": {
+        "register": "注册",
+        "next": "下一步",
+        "send_email_code": "发送验证码",
+        "resend_in": "{seconds}秒后重试"
+      },
+      "pass_validate_info": {
+        "minlength": "至少 {len} 个字符",
+        "valid_characters": "由英语和数字组成",
+        "must_special_char": "必须有一个特殊字符"
+      }
+    }
+  },
+  "email_invalid": "无效的邮箱地址。",
+  "code_sent_email": "验证码已发送，请查收邮箱",
+  "code_send_failed_with_reason": "验证码发送失败: {reason}",
+  "code_send_failed_retry": "验证码发送失败，请稍后再试",
+  "complete_info_before_register": "请完善信息后再注册",
+  "register_success": "注册成功",
+  "register_fail": "注册失败"
 }

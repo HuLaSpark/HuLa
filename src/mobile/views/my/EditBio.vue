@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="编辑简介" />
+        :room-name="t('mobile_edit_bio.title')" />
     </template>
 
     <template #container>
@@ -18,7 +18,7 @@
               <n-input
                 v-model:value="localBio"
                 type="textarea"
-                placeholder="介绍一下你自己~"
+                :placeholder="t('mobile_edit_bio.placeholder')"
                 class="w-full"
                 :autosize="bioAutosize"
                 :maxlength="300"
@@ -40,7 +40,7 @@
                 display: inline-block;
               "
               @click="handleSave">
-              保存
+              {{ t('mobile_edit_bio.save_btn') }}
             </div>
           </div>
         </div>
@@ -52,7 +52,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user.ts'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const bioAutosize = { minRows: 5, maxRows: 20 }
 

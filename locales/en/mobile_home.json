@@ -1,0 +1,25 @@
+{
+  "menu": {
+    "pintop": "Pin Top",
+    "unpin": "Unpin",
+    "read": "Read",
+    "unread": "Unread",
+    "delete": "Delete"
+  },
+  "input": {
+    "search": "Search"
+  },
+  "noname": "No Name",
+  "china": "China",
+  "chat": {
+    "unpin": "Unpin",
+    "pintop": "Pin Top",
+    "mark_as_read": "Read",
+    "mark_as_unread": "Unread",
+    "delete": "Delete"
+  },
+  "marked_as_read": "Marked as Read",
+  "marked_as_unread": "Marked as Unread",
+  "mark_as_read_failed": "Failed to mark as read",
+  "mark_as_unread_failed": "Failed to mark as unread"
+}

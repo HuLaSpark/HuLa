@@ -32,7 +32,7 @@
 
         <!-- 账号 -->
         <div class="flex flex-warp gap-2 items-center">
-          <span class="text-bold-style">账号:{{ userDetailInfo!.account }}</span>
+          <span class="text-bold-style">{{ t('mobile_personal_info.account') }}:{{ userDetailInfo!.account }}</span>
           <span v-if="isMyPage" @click="toMyQRCode" class="pe-15px">
             <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>
@@ -47,11 +47,11 @@
             <div class="text-10px absolute inset-0 flex ps-2 items-center justify-around text-white font-medium">
               <span class="flex items-center">
                 <div v-if="(userStore.userInfo?.itemIds?.length ?? 0) > 0">
-                  <span class="font-bold">已点亮</span>
+                  <span class="font-bold">{{ t('mobile_personal_info.unlocked_count_park.text1') }}</span>
                   <span class="medal-number">{{ userStore.userInfo?.itemIds?.length }}</span>
-                  <span class="font-bold">枚勋章</span>
+                  <span class="font-bold">{{ t('mobile_personal_info.unlocked_count_park.text2') }}</span>
                 </div>
-                <span v-else>还没勋章哦~</span>
+                <span v-else>{{ t('mobile_personal_info.no_medal') }}</span>
               </span>
 
               <span class="flex ms-3">
@@ -77,17 +77,17 @@
         <div class="flex flex-warp gap-2 items-center">
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">920.13W</div>
-            <div class="fans-title">粉丝</div>
+            <div class="fans-title">{{ t('mobile_personal_info.follower') }}</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">120</div>
-            <div class="fans-title">关注</div>
+            <div class="fans-title">{{ t('mobile_personal_info.follow') }}</div>
           </div>
           <div class="h-20px w-1px bg-gray-300"></div>
           <div class="min-w-10 flex flex-col items-center">
             <div class="fans-number">43.15W</div>
-            <div class="fans-title">点赞</div>
+            <div class="fans-title">{{ t('mobile_personal_info.like') }}</div>
           </div>
         </div>
         <div class="flex-1 justify-end flex items-center gap-3">
@@ -96,7 +96,7 @@
             @click="toEditProfile"
             v-if="props.isMyPage && !isBotUser(uid)"
             class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
-            编辑资料
+            {{ t('mobile_personal_info.edit_profile') }}
           </n-button>
           <n-button
             :loading="loading"
@@ -105,16 +105,17 @@
             :color="'#d5304f'"
             v-if="!props.isMyPage && isMyFriend && !isBotUser(uid)"
             class="px-5 py-10px font-bold text-center rounded-full text-12px">
-            删除
+            {{ t('mobile_personal_info.remove_user') }}
           </n-button>
 
           <n-button
             type="primary"
             :disabled="loading"
-            v-if="!props.isMyPage && !isMyFriend && !isBotUser(uid)"
             @click="handleAddFriend"
+            v-if="!props.isMyPage && !isMyFriend && !isBotUser(uid)"
             class="px-5 py-10px font-bold text-center rounded-full text-12px">
-            +&nbsp;添加好友
+            +&nbsp;
+            {{ t('mobile_personal_info.add_friend') }}
           </n-button>
           <n-button
             type="primary"
@@ -122,7 +123,7 @@
             :disabled="loading"
             v-if="!props.isMyPage && isMyFriend"
             class="px-5 py-10px text-center font-bold rounded-full text-12px">
-            {{ isBotUser(uid) ? '打开助手' : '私聊' }}
+            {{ isBotUser(uid) ? t('mobile_personal_info.open_bot') : t('mobile_personal_info.chat') }}
           </n-button>
         </div>
       </div>
@@ -145,6 +146,7 @@ import { useContactStore } from '@/stores/contacts'
 import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { getSessionDetailWithFriends } from '@/utils/ImRequestUtils'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   isShow: {
@@ -163,6 +165,7 @@ const props = defineProps({
   }
 })
 
+const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 const userStatusStore = useUserStatusStore()
@@ -266,8 +269,6 @@ onMounted(() => {
 
 const currentState = computed(() => userStatusStore.currentState)
 
-const animatedBox = ref<HTMLElement | null>(null)
-
 const loading = ref(false)
 
 const handleDelete = () => {
@@ -285,16 +286,16 @@ const handleDelete = () => {
           await contactStore.onDeleteFriend(userDetailInfo.value.uid)
           isMyFriend.value = false
           chatStore.getSessionList(true)
-          window.$message.success('已删除好友')
+          window.$message.success(t('mobile_personal_info.delete_user.success'))
           router.back()
         } catch (error) {
-          window.$message.warning('删除失败')
+          window.$message.warning(t('mobile_personal_info.delete_user.failed'))
           console.error('删除好友失败：', error)
         } finally {
           loading.value = false
         }
       } else {
-        window.$message.warning('没有找到好友哦')
+        window.$message.warning(t('mobile_personal_info.not_found'))
       }
     })
     .catch(() => {
