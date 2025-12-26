@@ -44,10 +44,10 @@ const getUnReadCount = (label: string) => {
   if (label === '消息') {
     return globalStore.unReadMark.newMsgUnreadCount
   }
-  if (label === '联系人') {
+  if (label === t('mobile_tabbar.items.contacts')) {
     return globalStore.unReadMark.newFriendUnreadCount + globalStore.unReadMark.newGroupUnreadCount
   }
-  if (label === t('mobile_tabbar.items.contacts')) {
+  if (label === '社区') {
     return feedUnreadCount.value
   }
   return 0
