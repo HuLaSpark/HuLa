@@ -170,48 +170,9 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { NoticeType } from '@/services/types'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-/**
- * 获取当前用户查询视角
- * @param item 通知消息
- */
-const getUserInfo = (item: any) => {
-  switch (item.eventType) {
-    case NoticeType.FRIEND_APPLY:
-    case NoticeType.GROUP_INVITE:
-    case NoticeType.GROUP_MEMBER_DELETE: {
-      return groupStore.getUserInfo(item.operateId)!
-    }
-    case NoticeType.ADD_ME:
-    case NoticeType.GROUP_INVITE_ME:
-    case NoticeType.GROUP_SET_ADMIN:
-    case NoticeType.GROUP_APPLY:
-    case NoticeType.GROUP_RECALL_ADMIN: {
-      return groupStore.getUserInfo(item.senderId)!
-    }
-  }
-}
-
-const avatars = computed(() => {
-  const seen = new Set()
-  const unique = []
-
-  for (const item of contactStore.requestFriendsList) {
-    const avatar = avatarSrc(getUserInfo(item)!.avatar!)
-    if (!seen.has(avatar)) {
-      seen.add(avatar)
-      unique.push(avatar)
-    }
-
-    if (unique.length >= 6) break
-  }
-
-  return unique
-})
-
 /**
  * 渲染图片图标的函数工厂
  * @param {string} src - 图标图片路径

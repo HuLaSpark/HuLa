@@ -1,3 +1,4 @@
+import Foundation
 import Tauri
 
 class PingArgs: Decodable {
