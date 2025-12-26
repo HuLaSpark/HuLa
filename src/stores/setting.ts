@@ -11,6 +11,22 @@ const getDefaultShortcuts = () => {
   }
 }
 
+const normalizeTheme = (theme: string) => {
+  if (theme === ThemeEnum.DARK) return ThemeEnum.DARK
+  if (theme === ThemeEnum.LIGHT) return ThemeEnum.LIGHT
+  return ThemeEnum.LIGHT
+}
+
+const resolveOsTheme = () => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return ThemeEnum.LIGHT
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
+}
+
+const setDocumentTheme = (theme: string) => {
+  if (typeof document === 'undefined') return
+  document.documentElement.dataset.theme = theme
+}
+
 // TODO 使用indexDB或sqlite缓存数据，还需要根据每个账号来进行配置 (nyh -> 2024-03-26 01:22:12)
 const isDesktopComputed = computed(() => isDesktop())
 export const useSettingStore = defineStore(StoresEnum.SETTING, {
@@ -59,22 +75,57 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
   actions: {
     /** 初始化主题 */
     initTheme(theme: string) {
-      this.themes.content = theme
-      document.documentElement.dataset.theme = theme
-      this.themes.pattern = theme
+      const nextPattern = theme === ThemeEnum.OS ? ThemeEnum.OS : normalizeTheme(theme)
+      const nextContent = theme === ThemeEnum.OS ? resolveOsTheme() : normalizeTheme(theme)
+      this.$patch((state) => {
+        state.themes.pattern = nextPattern
+        state.themes.content = nextContent
+      })
+      setDocumentTheme(nextContent)
     },
     /** 切换主题 */
     toggleTheme(theme: string) {
       if (theme === ThemeEnum.OS) {
-        this.themes.pattern = theme
-        const os = matchMedia('(prefers-color-scheme: dark)').matches ? ThemeEnum.DARK : ThemeEnum.LIGHT
-        document.documentElement.dataset.theme = os
-        this.themes.content = os
-      } else {
-        this.themes.content = theme
-        document.documentElement.dataset.theme = theme
-        this.themes.pattern = theme
+        const os = resolveOsTheme()
+        this.$patch((state) => {
+          state.themes.pattern = ThemeEnum.OS
+          state.themes.content = os
+        })
+        setDocumentTheme(os)
+        return
       }
+      const nextTheme = normalizeTheme(theme)
+      this.$patch((state) => {
+        state.themes.pattern = nextTheme
+        state.themes.content = nextTheme
+      })
+      setDocumentTheme(nextTheme)
+    },
+    /** 同步系统主题到内容（仅在跟随系统时生效） */
+    syncOsTheme() {
+      if (this.themes.pattern !== ThemeEnum.OS) return
+      const os = resolveOsTheme()
+      if (this.themes.content !== os) {
+        this.$patch((state) => {
+          state.themes.content = os
+        })
+      }
+      setDocumentTheme(os)
+    },
+    /** 兜底修正主题状态 */
+    normalizeThemeState() {
+      if (this.themes.pattern === ThemeEnum.OS) {
+        this.syncOsTheme()
+        return
+      }
+      const nextTheme = normalizeTheme(this.themes.pattern || this.themes.content)
+      if (this.themes.pattern !== nextTheme || this.themes.content !== nextTheme) {
+        this.$patch((state) => {
+          state.themes.pattern = nextTheme
+          state.themes.content = nextTheme
+        })
+      }
+      setDocumentTheme(nextTheme)
     },
     /** 切换登录设置 */
     toggleLogin(autoLogin: boolean, autoStartup: boolean) {
