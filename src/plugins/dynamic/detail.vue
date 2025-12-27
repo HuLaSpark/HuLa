@@ -1,13 +1,13 @@
 <template>
-  <div class="dynamic-detail-page h-full flex flex-col bg-gradient-to-br from-#f8f9fa to-#e9ecef">
+  <div class="dynamic-detail-page h-full flex flex-col text-[--text-color]">
     <ActionBar :shrink="false" :max-w="false"></ActionBar>
-    <!-- 顶部导航栏 -->
+    <!-- 顶部导航-->
     <div
       data-tauri-drag-region
-      class="flex items-center justify-between px-24px py-16px bg-white/80 backdrop-blur-md border-b border-#e5e5e5 shadow-sm">
+      class="detail-header flex items-center justify-between px-24px py-16px backdrop-blur-md shadow-sm">
       <div class="flex items-center gap-16px">
         <div
-          class="cursor-pointer hover:bg-#13987F/10 p-8px rounded-8px transition-all duration-200 active:scale-95"
+          class="cursor-pointer hover:bg-#13987F/10 dark:hover:bg-#13987f/20 p-8px rounded-8px transition-all duration-200 active:scale-95"
           @click="goBack">
           <svg class="size-20px text-[--text-color] rotate-180">
             <use href="#right"></use>
@@ -15,12 +15,12 @@
         </div>
         <div class="flex items-center gap-10px">
           <div class="w-4px h-20px bg-#13987F rounded-full"></div>
-          <span class="text-18px font-700 text-#333">{{ t('dynamic.page.detail.title') }}</span>
+          <span class="text-18px font-700 text-[--text-color]">{{ t('dynamic.page.detail.title') }}</span>
         </div>
       </div>
     </div>
 
-    <!-- 动态详情内容 -->
+    <!-- 动态详情内?-->
     <div v-if="feedId" class="flex-1 detail-scroll-container px-24px py-24px">
       <div class="max-w-900px mx-auto">
         <DynamicDetail :feed-id="feedId" mode="pc" @preview-image="previewImage" @video-play="handleVideoPlay" />
@@ -31,11 +31,11 @@
         <div class="relative inline-block mb-16px">
           <div
             class="w-80px h-80px rounded-full bg-gradient-to-br from-#13987F/20 to-#13987F/5 flex items-center justify-center animate-pulse">
-            <div class="text-40px">⏳</div>
+            <div class="text-40px">...</div>
           </div>
         </div>
-        <div class="text-15px text-#666 font-500">{{ t('dynamic.common.loading_title') }}</div>
-        <div class="text-12px text-#999 mt-6px">{{ t('dynamic.common.loading_desc') }}</div>
+        <div class="text-15px font-500 text-[--text-color]">{{ t('dynamic.common.loading_title') }}</div>
+        <div class="text-12px text-#999 dark:text-#b5b5b5 mt-6px">{{ t('dynamic.common.loading_desc') }}</div>
       </div>
     </div>
   </div>
@@ -118,6 +118,28 @@ const handleVideoPlay = (url: string) => {
 .dynamic-detail-page {
   width: 100%;
   height: 100%;
+  --detail-bg-from: #f8f9fa;
+  --detail-bg-to: #e9ecef;
+  --detail-header-bg: rgba(255, 255, 255, 0.8);
+  --detail-header-border: #e5e5e5;
+  --detail-scroll-thumb: rgba(144, 144, 144, 0.3);
+  --detail-scroll-thumb-hover: rgba(144, 144, 144, 0.5);
+  --detail-scroll-track: transparent;
+  background: linear-gradient(135deg, var(--detail-bg-from), var(--detail-bg-to));
+}
+
+html[data-theme='dark'] .dynamic-detail-page {
+  --detail-bg-from: #1b1b1b;
+  --detail-bg-to: #0f0f0f;
+  --detail-header-bg: rgba(30, 30, 30, 0.9);
+  --detail-header-border: #2a2a2a;
+  --detail-scroll-thumb: rgba(255, 255, 255, 0.2);
+  --detail-scroll-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+.detail-header {
+  background: var(--detail-header-bg);
+  border-bottom: 1px solid var(--detail-header-border);
 }
 
 /* 自定义滚动条样式 */
@@ -133,7 +155,7 @@ const handleVideoPlay = (url: string) => {
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(144, 144, 144, 0.3);
+    background-color: var(--detail-scroll-thumb);
     border-radius: 3px;
     transition-property: opacity, background-color;
     transition-duration: 0.3s;
@@ -141,11 +163,11 @@ const handleVideoPlay = (url: string) => {
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(144, 144, 144, 0.5);
+    background-color: var(--detail-scroll-thumb-hover);
   }
 
   &::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--detail-scroll-track);
   }
 }
 </style>

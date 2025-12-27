@@ -64,7 +64,6 @@
     },
     "stats": {
       "liked_by": "赞过的人：",
-      "views": "浏览",
       "like": "赞",
       "liked": "已赞",
       "comments": "评论 ({count})"
@@ -75,7 +74,6 @@
       "delete": "删除"
     },
     "dropdown": {
-      "copy": "复制链接",
       "report": "举报",
       "delete": "删除动态"
     },

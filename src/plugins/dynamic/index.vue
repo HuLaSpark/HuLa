@@ -4,13 +4,13 @@
     <div class="flex flex-col h-32vh relative" data-tauri-drag-region>
       <div class="flex h-95% w-full relative" data-tauri-drag-region>
         <ActionBar
-          style="position: absolute; top: 8px; right: 16px"
+          :style="actionBarStyle"
           :shrink="false"
           :max-w="true"
           :icon-color="'white'"
           :top-win-label="WebviewWindow.getCurrent().label"
           :current-label="WebviewWindow.getCurrent().label">
-          <div data-tauri-drag-region class="w-fit flex-center gap-16px">
+          <div data-tauri-drag-region class="w-fit flex-center gap-16px" :style="actionButtonsStyle">
             <div class="cursor-pointer ms-15px" @click="handleInfoTip">
               <n-popover trigger="hover">
                 <template #trigger>
@@ -275,6 +275,7 @@ import { useFeedStore } from '@/stores/feed.ts'
 import { useGroupStore } from '@/stores/group.ts'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime'
+import { isWindows } from '@/utils/PlatformConstants'
 import type { FriendItem } from '@/services/types'
 import { storeToRefs } from 'pinia'
 import DynamicList from '@/components/common/DynamicList.vue'
@@ -287,6 +288,30 @@ const feedStore = useFeedStore()
 const groupStore = useGroupStore()
 
 const { unreadCount } = storeToRefs(feedStore)
+const actionBarStyle = computed(() => {
+  if (isWindows()) {
+    return {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      right: '0'
+    }
+  }
+  return {
+    position: 'absolute',
+    top: '8px',
+    right: '16px'
+  }
+})
+
+const actionButtonsStyle = computed(() => {
+  if (isWindows()) {
+    return {
+      marginTop: '12px'
+    }
+  }
+  return {}
+})
 
 const showCommentModal = ref(false)
 const currentComments = ref<CommentItem[]>([])
