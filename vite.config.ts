@@ -15,6 +15,7 @@ import { getComponentsDirs, getComponentsDtsPath } from './build/config/componen
 import { createManualChunks } from './build/config/chunks'
 import { atStartup } from './build/config/console'
 import { getRootPath, getSrcPath } from './build/config/getPath'
+import packageJson from './package.json'
 
 function getLocalIP() {
   const interfaces = os.networkInterfaces()
@@ -30,7 +31,6 @@ function getLocalIP() {
 }
 
 // 读取 package.json 依赖
-const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'))
 const dependencies = Object.keys(packageJson.dependencies || {})
 
 // 预先获取本地IP
