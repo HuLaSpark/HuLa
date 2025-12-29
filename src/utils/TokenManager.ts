@@ -1,4 +1,5 @@
 import { TauriCommand } from '@/enums'
+import { getUserDetail } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 
 /**
@@ -12,13 +13,25 @@ export class TokenManager {
    * @param refreshToken 新的刷新令牌
    * @returns Promise<void>
    */
-  static async updateToken(token: string, refreshToken: string): Promise<void> {
+  static async updateToken(token: string, refreshToken: string, uid?: string): Promise<void> {
     try {
+      let targetUid = uid || ''
+      if (!targetUid) {
+        try {
+          const user = await getUserDetail()
+          targetUid = user?.uid || user?.id || ''
+        } catch (_) {
+          // ignore detail fetch error here
+        }
+      }
       await invokeWithErrorHandler(
         TauriCommand.UPDATE_TOKEN,
         {
-          token,
-          refresh_token: refreshToken
+          req: {
+            uid: targetUid,
+            token,
+            refreshToken
+          }
         },
         {
           customErrorMessage: '更新 token 失败',
@@ -38,12 +51,13 @@ export class TokenManager {
    * @param refreshToken 新的刷新令牌
    * @returns Promise<boolean> 成功返回 true，失败返回 false
    */
-  static async updateTokenSilently(token: string, refreshToken: string): Promise<boolean> {
+  static async updateTokenSilently(token: string, refreshToken: string, uid?: string): Promise<boolean> {
     try {
       await invokeWithErrorHandler(
         TauriCommand.UPDATE_TOKEN,
         {
-          tokenInfo: {
+          req: {
+            uid: uid || '',
             token,
             refreshToken
           }

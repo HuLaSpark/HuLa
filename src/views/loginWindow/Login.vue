@@ -183,6 +183,12 @@
               @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
               {{ t('login.option.items.forget') }}
             </div>
+            <div class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px" @click="giteeLogin()">
+              Gitee登录
+            </div>
+            <div class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px" @click="githubLogin()">
+              GitHub登录
+            </div>
             <div
               v-if="!isCompatibility()"
               @click="router.push('/network')"
@@ -242,7 +248,7 @@ const arrowStatus = ref(false)
 const moreShow = ref(false)
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
-const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
+const { normalLogin, giteeLogin, githubLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
 
 const driverSteps = computed<DriverStepConfig[]>(() => [
   {
