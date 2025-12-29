@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/jsconfig",
+  "$schema": "https://json.schemastore.org/package",
   "name": "hula",
   "type": "module",
   "version": "3.0.7",

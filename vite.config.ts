@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { fileURLToPath, URL } from 'node:url'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -14,7 +13,6 @@ import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
 import { atStartup } from './build/config/console'
-import { getRootPath, getSrcPath } from './build/config/getPath'
 import packageJson from './package.json'
 
 function getLocalIP() {
@@ -61,7 +59,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
 
     // 无效IP或特殊地址的情况
     return config.TAURI_ENV_PLATFORM === 'ios'
-      ? rawIP
+      ? (rawIP ?? '127.0.0.1')
       : config.TAURI_ENV_PLATFORM === 'android'
         ? '0.0.0.0'
         : '127.0.0.1'
@@ -74,11 +72,11 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     resolve: {
       alias: {
         // 配置主路径别名@
-        '@': getSrcPath(),
-        // 配置移动端路径别名@
-        '#': getSrcPath('src/mobile'),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        // 配置移动端路径别名#
+        '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
         // 配置路径别名~(根路径)
-        '~': getRootPath()
+        '~': fileURLToPath(new URL('.', import.meta.url))
       }
     },
     css: {
