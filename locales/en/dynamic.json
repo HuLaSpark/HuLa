@@ -58,7 +58,6 @@
     },
     "stats": {
       "liked_by": "Liked by:",
-      "views": "Views",
       "like": "Like",
       "liked": "Liked",
       "comments": "Comments ({count})"
@@ -69,7 +68,6 @@
       "delete": "Delete"
     },
     "dropdown": {
-      "copy": "Copy link",
       "report": "Report",
       "delete": "Delete feed"
     },

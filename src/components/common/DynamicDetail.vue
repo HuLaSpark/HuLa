@@ -1,7 +1,7 @@
 <template>
   <div
-    class="max-w-full h-full overflow-y-auto overflow-x-hidden"
-    :class="mode === 'mobile' ? 'p-16px bg-white' : 'p-24px bg-white rounded-8px'">
+    class="max-w-full h-full overflow-y-auto overflow-x-hidden rounded-8px bg-[--center-bg-color] text-[--text-color]"
+    :class="mode === 'mobile' ? 'p-16px' : 'p-24px'">
     <!-- 加载状态 -->
     <div v-if="loading" class="flex items-center justify-center h-full py-80px">
       <div class="flex flex-col items-center gap-16px">
@@ -12,8 +12,8 @@
           </div>
         </div>
         <div class="flex flex-col items-center gap-8px">
-          <span class="text-15px text-#666 font-500">{{ t('dynamic.common.loading_title') }}</span>
-          <span class="text-12px text-#999">{{ t('dynamic.common.loading_desc') }}</span>
+          <span class="text-15px font-500 text-[--text-color]">{{ t('dynamic.common.loading_title') }}</span>
+          <span class="text-12px text-[--reply-color]">{{ t('dynamic.common.loading_desc') }}</span>
         </div>
       </div>
     </div>
@@ -22,20 +22,19 @@
     <div v-else-if="feedDetail" class="w-full max-w-full overflow-hidden animate-fadeIn">
       <!-- 头部 - 用户信息 -->
       <div
-        class="flex items-center gap-12px mb-20px p-16px rounded-12px bg-gradient-to-r from-#f8f9fa to-#ffffff border border-#e5e5e5 shadow-sm">
+        class="flex items-center gap-12px mb-20px p-16px rounded-12px shadow-sm bg-#e3e3e340 dark:bg-#303030 border border-[--line-color]">
         <div class="relative">
           <n-avatar
             :size="mode === 'mobile' ? 52 : 60"
             round
             :src="getUserAvatar(feedDetail)"
             class="ring-2 ring-#13987F/20" />
-          <div class="absolute bottom-0 right-0 w-16px h-16px bg-#52c41a rounded-full border-2 border-white"></div>
         </div>
         <div class="flex-1 min-w-0">
-          <div class="text-17px font-700 text-#333 truncate mb-6px">
+          <div class="text-17px font-700 text-[--text-color] truncate mb-6px">
             {{ getUserName(feedDetail) }}
           </div>
-          <div class="flex items-center gap-8px text-13px text-#999">
+          <div class="flex items-center gap-8px text-13px text-[--reply-color]">
             <svg class="w-14px h-14px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <circle cx="12" cy="12" r="10" stroke-width="2" />
               <path d="M12 6v6l4 2" stroke-width="2" stroke-linecap="round" />
@@ -48,7 +47,7 @@
       <!-- 动态内容 -->
       <div class="relative">
         <div
-          class="pl-20px pr-8px py-12px text-16px text-#333 leading-loose mb-20px whitespace-pre-wrap break-words bg-#fafafa rounded-8px border-l-4 border-#13987F/30">
+          class="pl-20px pr-8px py-12px text-16px text-[--text-color] leading-loose mb-20px whitespace-pre-wrap break-words bg-#e3e3e340 dark:bg-#303030 border border-[--line-color] border-l-4 border-l-#13987F/30 rounded-8px">
           {{ feedDetail.content }}
         </div>
       </div>
@@ -61,7 +60,7 @@
             <img
               :src="feedDetail.urls[0]"
               :alt="t('dynamic.common.image_alt')"
-              class="w-full max-w-full h-auto max-h-500px object-contain cursor-pointer bg-gradient-to-br from-#f5f5f5 to-#e5e5e5 block transform group-hover:scale-105 transition-transform duration-300"
+              class="w-full max-w-full h-auto max-h-500px object-contain cursor-pointer bg-#e3e3e340 dark:bg-#303030 block transform group-hover:scale-105 transition-transform duration-300"
               @click.stop="handlePreviewImage(feedDetail.urls, 0)" />
             <div
               class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none"></div>
@@ -89,7 +88,7 @@
           <div
             v-for="(img, idx) in feedDetail.urls.slice(0, 9)"
             :key="idx"
-            class="aspect-square overflow-hidden rounded-8px bg-gradient-to-br from-#f5f5f5 to-#e5e5e5 cursor-pointer w-full group relative shadow-md hover:shadow-lg transition-all duration-300"
+            class="aspect-square overflow-hidden rounded-8px bg-#e3e3e340 dark:bg-#303030 cursor-pointer w-full group relative shadow-md hover:shadow-lg transition-all duration-300"
             @click.stop="handlePreviewImage(feedDetail.urls, idx)">
             <img
               :src="img"
@@ -108,7 +107,7 @@
       <!-- 视频区域 -->
       <div
         v-else-if="feedDetail.videoUrl"
-        class="mb-20px relative rounded-12px overflow-hidden cursor-pointer bg-gradient-to-br from-#f5f5f5 to-#e5e5e5 w-full max-w-full group shadow-lg hover:shadow-xl transition-all duration-300"
+        class="mb-20px relative rounded-12px overflow-hidden cursor-pointer bg-#e3e3e340 dark:bg-#303030 w-full max-w-full group shadow-lg hover:shadow-xl transition-all duration-300"
         @click.stop="handleVideoPlay(feedDetail.videoUrl)">
         <img
           :src="feedDetail.videoUrl"
@@ -143,10 +142,12 @@
       </div>
 
       <!-- 底部操作栏 -->
-      <div class="pt-20px mt-20px border-t-2 border-#f0f0f0">
+      <div class="pt-20px mt-20px border-t-2 border-[--line-color]">
         <!-- 点赞用户头像显示 - 固定高度防止闪烁 -->
         <div class="mb-16px min-h-48px flex items-center gap-8px">
-          <span v-if="(feedDetail.likeList || []).length > 0" class="text-13px text-#999 font-500 flex-shrink-0">
+          <span
+            v-if="(feedDetail.likeList || []).length > 0"
+            class="text-13px text-[--reply-color] font-500 flex-shrink-0">
             {{ t('dynamic.detail.stats.liked_by') }}
           </span>
           <div v-if="(feedDetail.likeList || []).length > 0" class="flex items-center -space-x-12px flex-wrap">
@@ -160,17 +161,10 @@
           </div>
         </div>
         <!-- 动态统计信息 - 固定高度防止闪烁 -->
-        <div class="flex items-center justify-between mb-16px text-13px text-#999 min-h-24px">
+        <div class="flex items-center justify-between mb-16px text-13px text-[--reply-color] min-h-24px">
           <div class="flex items-center gap-16px">
-            <div class="flex items-center gap-6px">
-              <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2" />
-                <circle cx="12" cy="12" r="3" stroke-width="2" />
-              </svg>
-              <span>{{ t('dynamic.detail.stats.views') }}</span>
-            </div>
             <div v-if="feedDetail.likeCount" class="flex items-center gap-6px">
-              <span>👍 {{ t('dynamic.detail.stats.like') }} {{ feedDetail.likeCount }}</span>
+              <span>{{ t('dynamic.detail.stats.like') }} {{ feedDetail.likeCount }}</span>
             </div>
             <div v-if="feedDetail.commentCount" class="flex items-center gap-6px">
               <span>{{ t('dynamic.detail.stats.comments', { count: feedDetail.commentCount }) }}</span>
@@ -182,10 +176,14 @@
           <!-- 点赞按钮 -->
           <div
             class="flex items-center justify-center gap-6px py-10px px-16px rounded-8px cursor-pointer transition-all duration-200"
-            :class="feedDetail.hasLiked ? 'bg-#ff6b6b/10 text-#ff6b6b' : 'hover:bg-#f5f5f5 text-#666'"
+            :class="
+              feedDetail.hasLiked
+                ? 'bg-#ff6b6b/10 text-#ff6b6b'
+                : 'hover:bg-[--bg-left-menu-hover] text-[--reply-color]'
+            "
             @click.stop="handleToggleLike">
             <svg class="w-18px h-18px" :class="{ 'heart-filled': feedDetail.hasLiked }">
-              <use href="#heart"></use>
+              <use :href="feedDetail.hasLiked ? '#dianzan' : '#weidianzan'"></use>
             </svg>
             <span class="text-14px font-500">
               {{ feedDetail.hasLiked ? t('dynamic.detail.stats.liked') : t('dynamic.detail.stats.like') }}
@@ -193,7 +191,7 @@
           </div>
           <!-- 评论按钮 -->
           <div
-            class="flex items-center justify-center gap-6px py-10px px-16px rounded-8px cursor-pointer hover:bg-#f5f5f5 transition-all duration-200 text-#666"
+            class="flex items-center justify-center gap-6px py-10px px-16px rounded-8px cursor-pointer hover:bg-[--bg-left-menu-hover] transition-all duration-200 text-[--reply-color]"
             @click.stop="showCommentInput = true">
             <svg class="w-18px h-18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -203,7 +201,7 @@
           <!-- 更多操作 -->
           <n-dropdown :options="getMoreOptions(feedDetail)" @select="handleMoreAction(feedDetail, $event)">
             <div
-              class="flex items-center justify-center py-10px px-16px rounded-8px cursor-pointer hover:bg-#f5f5f5 transition-all duration-200 text-#666"
+              class="flex items-center justify-center py-10px px-16px rounded-8px cursor-pointer hover:bg-[--bg-left-menu-hover] transition-all duration-200 text-[--reply-color]"
               @click.stop>
               <svg class="w-18px h-18px" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="5" r="2" />
@@ -216,26 +214,31 @@
       </div>
 
       <!-- 评论列表 -->
-      <div v-if="commentList.length > 0" class="mt-20px pt-20px border-t-2 border-#f0f0f0">
-        <div class="text-14px font-600 mb-16px text-#333">
+      <div v-if="commentList.length > 0" class="mt-20px pt-20px border-t-2 border-[--line-color]">
+        <div class="text-14px font-600 mb-16px text-[--text-color]">
           {{ t('dynamic.detail.stats.comments', { count: feedDetail.commentCount || 0 }) }}
         </div>
         <div class="space-y-12px">
-          <div v-for="comment in commentList" :key="comment.id" class="p-12px bg-#f5f5f5 rounded-8px">
+          <div
+            v-for="comment in commentList"
+            :key="comment.id"
+            class="p-12px rounded-8px bg-#e3e3e340 dark:bg-#303030 border border-[--line-color]">
             <div class="flex items-start gap-8px">
               <n-avatar :size="32" round :src="getCommentUserAvatar(comment)" />
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-4px">
-                  <span class="text-13px font-500 text-#333">{{ getCommentUserName(comment) }}</span>
-                  <span class="text-12px text-#999">{{ formatTimestamp(comment.createTime) }}</span>
+                  <span class="text-13px font-500 text-[--text-color]">{{ getCommentUserName(comment) }}</span>
+                  <span class="text-12px text-[--reply-color]">{{ formatTimestamp(comment.createTime) }}</span>
                 </div>
                 <!-- 如果是回复评论，显示被回复人信息 -->
-                <div v-if="comment.replyUserName" class="text-12px text-#999 mb-4px">
+                <div v-if="comment.replyUserName" class="text-12px text-[--reply-color] mb-4px">
                   {{ t('dynamic.detail.actions.reply') }}
                   <span class="font-500">{{ comment.replyUserName }}</span>
                 </div>
-                <div class="text-13px text-#666 break-words">{{ comment.content }}</div>
-                <div class="flex items-center gap-12px mt-8px text-12px text-#999">
+                <div class="text-(14px [--chat-text-color]) break-words py-4px pr-4px leading-normal">
+                  {{ comment.content }}
+                </div>
+                <div class="flex items-center gap-12px mt-8px text-12px text-[--reply-color]">
                   <span class="cursor-pointer hover:text-#13987F" @click="handleReplyComment(comment)">
                     {{ t('dynamic.detail.actions.reply') }}
                   </span>
@@ -254,12 +257,16 @@
     </div>
 
     <!-- 空状态 -->
-    <div v-else class="flex flex-col items-center justify-center h-full text-#999 py-80px">
-      <svg class="w-80px h-80px mb-16px text-#d0d0d0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <div v-else class="flex flex-col items-center justify-center h-full text-[--reply-color] py-80px">
+      <svg
+        class="w-80px h-80px mb-16px text-#d0d0d0 dark:text-#555"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor">
         <circle cx="12" cy="12" r="10" stroke-width="2" />
         <path d="M12 8v4M12 16h.01" stroke-width="2" stroke-linecap="round" />
       </svg>
-      <span class="text-15px">{{ t('dynamic.detail.empty') }}</span>
+      <span class="text-15px text-[--text-color]">{{ t('dynamic.detail.empty') }}</span>
     </div>
   </div>
 
@@ -274,11 +281,13 @@
     @positive-click="handleSubmitComment"
     @negative-click="showCommentInput = false">
     <div class="space-y-12px">
-      <div v-if="replyingComment" class="p-12px bg-#f5f5f5 rounded-8px border-l-4 border-#13987F">
-        <div class="text-12px text-#999 mb-4px">
+      <div
+        v-if="replyingComment"
+        class="p-12px rounded-8px bg-#e3e3e340 dark:bg-#303030 border border-[--line-color] border-l-4 border-l-#13987F/30">
+        <div class="text-12px text-[--reply-color] mb-4px">
           {{ t('dynamic.detail.modal.replying', { name: getCommentUserName(replyingComment) }) }}
         </div>
-        <div class="text-13px text-#666">{{ replyingComment.content }}</div>
+        <div class="text-13px text-[--text-color]">{{ replyingComment.content }}</div>
       </div>
       <n-input
         v-model:value="commentContent"
@@ -337,10 +346,6 @@ const getUserName = (feed: FeedItem) => {
 
 const getMoreOptions = (feed: FeedItem) => {
   const options = [
-    {
-      label: t('dynamic.detail.dropdown.copy'),
-      key: 'copy'
-    },
     {
       label: t('dynamic.detail.dropdown.report'),
       key: 'report'
