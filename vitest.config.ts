@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 
+import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -7,7 +8,6 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig } from 'vitest/config'
 import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
-import { getRootPath, getSrcPath } from './build/config/getPath'
 
 const testPlatform = process.env.TAURI_ENV_PLATFORM
 const testComponentsDirs = getComponentsDirs(testPlatform)
@@ -35,8 +35,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': getSrcPath(),
-      '~': getRootPath()
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
+      '~': fileURLToPath(new URL('.', import.meta.url))
     }
   },
   test: {
