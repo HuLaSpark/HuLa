@@ -207,6 +207,12 @@ export type UserItem = {
   itemIds?: string[]
   /** 用户状态 */
   userStateId?: string
+  /** 是否绑定 Gitee */
+  linkedGitee?: boolean
+  /** 是否绑定 GitHub */
+  linkedGithub?: boolean
+  /** 已绑定的 OAuth 提供商 */
+  oauthProviders?: ('gitee' | 'github')[]
 }
 
 export type GroupStatisticType = {

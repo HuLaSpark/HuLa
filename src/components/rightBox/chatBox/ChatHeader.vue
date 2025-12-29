@@ -284,7 +284,13 @@
                     <n-flex vertical justify="center" align="center" :size="10">
                       <n-avatar round :size="30" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
 
-                      <p class="text-(10px --text-color center) w-30px truncate">{{ item.name }}</p>
+                      <p class="text-(10px --text-color center) w-30px truncate">
+                        {{ item.name }}
+                      </p>
+                      <n-flex align="center" justify="center" :size="4" class="w-30px">
+                        <Icon v-if="item.linkedGithub" icon="mdi:github" class="text-12px" />
+                        <Icon v-if="item.linkedGitee" icon="simple-icons:gitee" class="text-12px" />
+                      </n-flex>
                     </n-flex>
                   </template>
                 </n-flex>
@@ -620,6 +626,7 @@ import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImR
 import { canvasToImageBytes } from '@/utils/Canvas2Dom'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import { Icon } from '@iconify/vue'
 
 // 转发群二维码尺寸
 const QR_IMAGE_SIZE = 200

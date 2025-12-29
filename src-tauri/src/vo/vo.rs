@@ -28,6 +28,8 @@ pub struct LoginReq {
     pub system_type: String,
     pub device_type: String,
     pub client_id: String,
+    pub code: Option<String>,
+    pub redirect_uri: Option<String>,
     pub account: String,
     pub password: String,
     #[serde(default)]
