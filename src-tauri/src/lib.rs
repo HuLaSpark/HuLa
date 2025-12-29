@@ -85,6 +85,8 @@ use crate::command::message_command::{
     update_message_recall_status,
 };
 use crate::command::message_mark_command::save_message_mark;
+use crate::command::oauth_command::OauthServerState;
+use crate::command::oauth_command::start_oauth_server;
 
 #[cfg(desktop)]
 use tauri::Listener;
@@ -360,6 +362,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 write_lock: Arc::new(Mutex::new(())),
                 stream_tasks: Arc::new(Mutex::new(std::collections::HashMap::new())),
             });
+            app_handle.manage(OauthServerState::default());
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
                 tracing::warn!("Failed to emit app-state-ready event: {}", e);
@@ -475,6 +478,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         // AI 相关命令
         ai_message_send_stream,
         ai_message_cancel_stream,
+        // OAuth
+        start_oauth_server,
         // Markdown 相关命令
         parse_markdown,
         get_readme_html,

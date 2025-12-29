@@ -10,6 +10,7 @@ pub mod file_manager_command;
 pub mod markdown_command;
 pub mod message_command;
 pub mod message_mark_command;
+pub mod oauth_command;
 pub mod request_command;
 pub mod room_member_command;
 pub mod setting_command;
