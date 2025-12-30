@@ -44,51 +44,83 @@ export const useSessionUnreadStore = defineStore(StoresEnum.SESSION_UNREAD, () =
     return lastReadActiveTimeStore.value[uid]
   }
 
-  /** 将缓存中的未读数应用到会话列表，并补齐缺失的缓存 */
-  const apply = (uid: string | undefined, sessions: SessionItem[]) => {
+  /**
+   * 将缓存中的未读数应用到会话列表，并补齐缺失的缓存
+   * @returns 返回需要更新的会话映射 { roomId: newUnreadCount }
+   */
+  const apply = (uid: string | undefined, sessions: SessionItem[]): Record<string, number> => {
+    const updates: Record<string, number> = {}
+
     if (!uid || sessions.length === 0) {
-      return
+      return updates
     }
     const cache = ensureUserCache(uid)
     const lastReadCache = ensureLastReadCache(uid)
     if (!cache) {
-      return
+      return updates
     }
 
     sessions.forEach((session) => {
       const activeTime = session.activeTime || 0
       const lastReadTime = lastReadCache?.[session.roomId] || 0
       const currentUnread = sanitizeCount(session.unreadCount)
+      const cached = cache[session.roomId]
+      const cachedCount = typeof cached === 'number' ? sanitizeCount(cached) : undefined
 
-      // 如果本地记录的最后已读活跃时间不小于当前会话活跃时间，认为是陈旧未读，直接清零
-      if (lastReadTime > 0 && (activeTime === 0 || activeTime <= lastReadTime) && currentUnread > 0) {
-        console.log('[SessionUnread][apply] clear stale unread by lastRead', session.roomId, {
-          activeTime,
-          lastReadTime,
-          serverUnread: currentUnread
-        })
-        session.unreadCount = 0
+      // 情况1：有lastReadTime记录，且activeTime <= lastReadTime（用户已读过所有消息）
+      // 此时服务端返回的未读数可能是脏数据（已读状态同步延迟），应该清零
+      if (lastReadTime > 0 && activeTime > 0 && activeTime <= lastReadTime) {
+        // 如果服务端返回的未读数不为0，需要生成更新来修正它
+        if (currentUnread !== 0) {
+          updates[session.roomId] = 0
+        }
+        // 确保本地缓存也是0
         cache[session.roomId] = 0
         return
       }
 
-      const cached = cache[session.roomId]
+      // 情况2：有lastReadTime记录，且activeTime > lastReadTime（有新消息产生）
+      // 此时应该信任服务端的未读数，因为本地缓存可能是脏数据
+      if (lastReadTime > 0 && activeTime > lastReadTime) {
+        // 如果服务端返回的值与本地缓存不一致，需要生成更新
+        if (currentUnread !== cache[session.roomId]) {
+          updates[session.roomId] = currentUnread
+        }
+        // 确保本地缓存与服务端一致
+        cache[session.roomId] = currentUnread
+        return
+      }
+
+      // 情况3：如果activeTime为0（可能是旧数据或初始化状态），且有lastReadTime记录，清零
+      if (lastReadTime > 0 && activeTime === 0) {
+        // 如果服务端返回的未读数不为0，需要生成更新来修正它
+        if (currentUnread !== 0) {
+          updates[session.roomId] = 0
+        }
+        // 确保本地缓存也是0
+        cache[session.roomId] = 0
+        return
+      }
+
+      // 情况3：没有lastReadTime记录（首次加载或从未标记已读）
+      // 这种情况下，使用 Math.max 作为兜底策略，防止未读数丢失
       const serverCount = sanitizeCount(session.unreadCount)
       if (typeof cached === 'number') {
-        const cachedCount = sanitizeCount(cached)
-        const finalCount = Math.max(cachedCount, serverCount)
+        const finalCount = Math.max(cachedCount!, serverCount)
         if (session.unreadCount !== finalCount) {
-          session.unreadCount = finalCount
-        }
-        if (cachedCount !== finalCount) {
+          updates[session.roomId] = finalCount
           cache[session.roomId] = finalCount
         }
       } else {
         const finalCount = serverCount
-        session.unreadCount = finalCount
+        if (session.unreadCount !== finalCount) {
+          updates[session.roomId] = finalCount
+        }
         cache[session.roomId] = finalCount
       }
     })
+
+    return updates
   }
 
   /** 更新单个会话的未读数，并同步写入缓存映射 */

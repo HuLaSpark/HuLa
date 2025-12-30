@@ -28,6 +28,7 @@ import {
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
+import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isIOS, isMobile, isWindows10 } from '@/utils/PlatformConstants'
@@ -76,6 +77,8 @@ const settingStore = useSettingStore()
 const { themes, lockScreen, page, login } = storeToRefs(settingStore)
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
+// 提前初始化网络状态监听，确保不错过 WebSocket 状态变化事件
+useNetworkStatus()
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus', '/capture'])
@@ -564,15 +567,6 @@ const handleWebsocketEvent = async (event: any) => {
   const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
   const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
 
-  console.log('[WS] state change', {
-    prev: previousState,
-    next: nextState,
-    isReconnectionFlag,
-    hasRecoveredFromDrop,
-    shouldHandleReconnect,
-    raw: payload
-  })
-
   lastWsConnectionState = nextState || previousState
 
   if (!shouldHandleReconnect) return
@@ -597,11 +591,6 @@ const handleWebsocketEvent = async (event: any) => {
       const currentSession = chatStore.getSession(currentRoomId)
       // 重连后如果当前会话仍有未读，补一次已读上报和本地清零，避免气泡卡住
       if (currentSession?.unreadCount) {
-        try {
-          await ImRequestUtils.markMsgRead(currentRoomId)
-        } catch (error) {
-          console.error('[Network] 重连后上报已读失败:', error)
-        }
         chatStore.markSessionRead(currentRoomId)
       }
     }
