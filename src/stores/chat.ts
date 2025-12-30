@@ -74,13 +74,21 @@ export const useChatStore = defineStore(
     const sessionOptions = reactive({ isLast: false, isLoading: false, cursor: '' })
     // 消息同步加载状态（用于显示同步中的提示）
     const syncLoading = ref(false)
+    // store 初始化时强制重置 syncLoading，防止从持久化中恢复错误状态
+    syncLoading.value = false
 
     // 持久化的未读数同步回内存里的会话对象，确保刷新或切账号后还能看到旧的未读状态
     const syncPersistedUnreadCounts = (targetSessions: SessionItem[] = sessionList.value) => {
       if (!targetSessions.length) {
         return
       }
-      sessionUnreadStore.apply(userStore.userInfo?.uid, targetSessions)
+      // apply 方法返回需要更新的会话映射，通过 updateSession 触发响应式更新
+      const updates = sessionUnreadStore.apply(userStore.userInfo?.uid, targetSessions)
+
+      // 使用 updateSession 统一更新，确保响应式正确触发
+      for (const [roomId, unreadCount] of Object.entries(updates)) {
+        updateSession(roomId, { unreadCount })
+      }
     }
 
     // 更新本地缓存里的某个会话未读数
@@ -154,9 +162,9 @@ export const useChatStore = defineStore(
             activeTime: session.activeTime
           })
           updateSession(session.roomId, { unreadCount: 0 })
-          // 补一次已读上报，避免下一次刷新又回灌
+          // 补一次已读上报，通过队列执行避免并发触发限流
           promises.push(
-            markMsgRead(session.roomId).catch((error) => {
+            markMsgReadQueue(() => markMsgRead(session.roomId)).catch((error) => {
               console.error('[chat] 补偿已读上报失败:', error)
             })
           )
@@ -164,12 +172,14 @@ export const useChatStore = defineStore(
       }
 
       if (promises.length) {
-        await Promise.allSettled(promises)
-        requestUnreadCountUpdate()
+        // 补偿请求在后台执行，不阻塞主流程，避免 syncLoading 卡住
+        Promise.allSettled(promises).then(() => {
+          requestUnreadCountUpdate()
+        })
       }
     }
 
-    // 使用本地记录的“最后已读活跃时间”兜底清理陈旧未读，避免重登时短暂闪现
+    // 使用本地记录的"最后已读活跃时间"兜底清理陈旧未读，避免重登时短暂闪现
     const reconcileUnreadWithReadHistory = async () => {
       const promises: Promise<unknown>[] = []
 
@@ -186,7 +196,7 @@ export const useChatStore = defineStore(
           })
           updateSession(session.roomId, { unreadCount: 0 })
           promises.push(
-            markMsgRead(session.roomId).catch((error) => {
+            markMsgReadQueue(() => markMsgRead(session.roomId)).catch((error) => {
               console.error('[chat] 基于已读历史的补偿上报失败:', error)
             })
           )
@@ -194,8 +204,10 @@ export const useChatStore = defineStore(
       }
 
       if (promises.length) {
-        await Promise.allSettled(promises)
-        requestUnreadCountUpdate()
+        // 补偿请求在后台执行，不阻塞主流程，避免 syncLoading 卡住
+        Promise.allSettled(promises).then(() => {
+          requestUnreadCountUpdate()
+        })
       }
     }
 
@@ -385,12 +397,9 @@ export const useChatStore = defineStore(
         }
       }
 
-      // 标记当前会话已读
+      // 无论什么情况，切换到会话后就标记已读
       if (globalStore.currentSessionRoomId) {
-        const session = resolveSessionByRoomId(globalStore.currentSessionRoomId)
-        if (session?.unreadCount) {
-          markSessionRead(globalStore.currentSessionRoomId)
-        }
+        markSessionRead(globalStore.currentSessionRoomId)
       }
 
       // 重置当前回复的消息
@@ -531,10 +540,7 @@ export const useChatStore = defineStore(
       try {
         if (sessionOptions.isLoading) return
         sessionOptions.isLoading = true
-        // 避免显示上次会话的陈旧未读，在同步期间先清零消息未读，待拉取完成后再计算
         globalStore.unreadReady = false
-        globalStore.unReadMark.newMsgUnreadCount = 0
-        unreadCountManager.refreshBadge(globalStore.unReadMark, feedStore.unreadCount)
         const prevSessions =
           sessionList.value.length > 0
             ? sessionList.value.reduce(
@@ -579,21 +585,16 @@ export const useChatStore = defineStore(
 
         sortAndUniqueSessionList()
 
-        // 补偿陈旧未读后再一次性更新未读角标，避免加载过程闪现旧数据
-        await reconcileStaleUnread(prevSessions)
-        await reconcileUnreadWithReadHistory()
-        await clearCurrentSessionUnread()
+        // 补偿陈旧未读在后台执行，不阻塞主流程，避免 syncLoading 卡住
+        reconcileStaleUnread(prevSessions)
+        reconcileUnreadWithReadHistory()
+        clearCurrentSessionUnread()
         updateTotalUnreadCount()
         // 如果当前会话仍被服务器标记为未读，主动上报并清零，避免气泡卡住
         const currentRoomId = globalStore.currentSessionRoomId
         if (currentRoomId) {
           const currentSession = resolveSessionByRoomId(currentRoomId)
           if (currentSession?.unreadCount) {
-            try {
-              await markMsgRead(currentRoomId)
-            } catch (error) {
-              console.error('[chat] 会话列表同步后上报已读失败:', error)
-            }
             markSessionRead(currentRoomId)
             // 清除当前会话未读后，需要重新计算总未读数，确保程序坞图标正确更新
             updateTotalUnreadCount()
@@ -625,24 +626,25 @@ export const useChatStore = defineStore(
 
     // 更新会话
     const updateSession = (roomId: string, data: Partial<SessionItem>) => {
-      const session = resolveSessionByRoomId(roomId)
-      if (session) {
-        const updatedSession = { ...session, ...data }
+      const index = sessionList.value.findIndex((s) => s.roomId === roomId)
+      if (index !== -1) {
+        // 不修改原对象，直接创建新对象避免污染旧引用
+        const oldSession = sessionList.value[index]
+        const updatedSession = { ...oldSession, ...data }
 
-        // 同步更新 sessionList
-        const index = sessionList.value.findIndex((s) => s.roomId === roomId)
-        if (index !== -1) {
-          sessionList.value[index] = updatedSession
-        } else {
-          console.warn('[updateSession] 会话不在 sessionList 中:', roomId)
-        }
+        // 创建新数组，替换指定位置的元素
+        const newList = [...sessionList.value]
+        newList[index] = updatedSession
 
-        // 同步更新 sessionMap
+        // 整体替换数组，强制触发响应式
+        sessionList.value = newList
+
+        // 更新 sessionMap 引用
         sessionMap.value[roomId] = updatedSession
 
-        if ('unreadCount' in data && typeof updatedSession.unreadCount === 'number') {
-          console.log('[updateSession] 更新未读数:', roomId, updatedSession.unreadCount)
-          persistUnreadCount(roomId, updatedSession.unreadCount)
+        if ('unreadCount' in data && typeof data.unreadCount === 'number') {
+          console.log('[updateSession] 更新未读数:', roomId, data.unreadCount)
+          persistUnreadCount(roomId, data.unreadCount)
           requestUnreadCountUpdate(roomId)
         }
 
@@ -669,10 +671,12 @@ export const useChatStore = defineStore(
 
     const addSession = async (roomId: string) => {
       const resp = await getSessionDetail({ id: roomId })
-      syncPersistedUnreadCounts([resp])
+      // 先插入会话到列表，确保后续的 updateSession 能找到会话
       sessionList.value.unshift(resp)
       // 同步更新 sessionMap
       sessionMap.value[roomId] = resp
+      // 再同步未读数，此时 updateSession 可以正确找到会话并应用未读数修正
+      syncPersistedUnreadCounts([resp])
       sortAndUniqueSessionList()
     }
 
@@ -1110,29 +1114,51 @@ export const useChatStore = defineStore(
       }
     }
 
+    // 防止短时间内重复调用的缓存
+    const markSessionReadLock = new Set<string>()
+
+    // 创建请求队列限制器，确保 markMsgRead 请求串行执行，避免触发服务器限流
+    const markMsgReadQueue = pLimit(1)
+
     // 标记已读数为 0
     const markSessionRead = (roomId: string) => {
+      // 避免短时间内重复调用
+      if (markSessionReadLock.has(roomId)) {
+        return
+      }
+
       const session = resolveSessionByRoomId(roomId)
       if (!session) {
         console.log('[markSessionRead] 会话不存在:', roomId)
         return
       }
-      if (session.unreadCount === 0) {
-        console.log('[markSessionRead] 未读数已为0，跳过:', roomId)
-        requestUnreadCountUpdate(roomId)
-        return
-      }
 
-      console.log('[markSessionRead] 清除未读数:', roomId, '当前未读数:', session.unreadCount)
+      // 加锁，防止重复调用
+      markSessionReadLock.add(roomId)
 
-      // 记录已读时的活跃时间，用于重登时识别陈旧未读
+      // 1. 记录已读时的活跃时间，用于重登时识别陈旧未读
       const activeTime = session.activeTime || Date.now()
       lastReadActiveTime.value[roomId] = activeTime
       sessionUnreadStore.setLastRead(userStore.userInfo?.uid, roomId, activeTime)
 
+      // 2. 强制清除缓存（必须在 updateSession 之前，确保缓存先清零）
+      persistUnreadCount(roomId, 0)
+
+      // 3. 强制更新 Store 中的未读数
       updateSession(roomId, { unreadCount: 0 })
-      // 立即刷新全局未读，避免等待防抖
+
+      // 4. 上报服务器已读（通过队列串行执行，避免并发请求触发限流）
+      markMsgReadQueue(() => markMsgRead(roomId)).catch((err) => {
+        console.error('[markSessionRead] 已读上报失败:', err)
+      })
+
+      // 5. 立即刷新全局未读，避免等待防抖
       updateTotalUnreadCount()
+
+      // 延迟解锁，避免快速重复点击
+      setTimeout(() => {
+        markSessionReadLock.delete(roomId)
+      }, 500)
     }
 
     // 清理当前会话的未读（用于重连/重登后仍停留在该会话时的兜底）
@@ -1141,12 +1167,6 @@ export const useChatStore = defineStore(
       if (!roomId) return
       const session = resolveSessionByRoomId(roomId)
       if (!session?.unreadCount) return
-
-      try {
-        await markMsgRead(roomId)
-      } catch (error) {
-        console.error('[chat] 补偿上报已读失败:', error)
-      }
       markSessionRead(roomId)
     }
 
