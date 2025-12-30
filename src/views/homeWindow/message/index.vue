@@ -175,7 +175,6 @@ import { useBotStore } from '@/stores/bot'
 import { useNetworkStatus } from '@/hooks/useNetworkStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import { formatTimestamp } from '@/utils/ComputedTime.ts'
-import { markMsgRead } from '@/utils/ImRequestUtils'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -366,14 +365,8 @@ watch(
         const session = chatStore.getSession(currentRoomId)
         // 如果选中的会话有未读数，则延迟2秒后清空并上报
         if (session?.unreadCount && session.unreadCount > 0) {
-          clearUnreadTimer = setTimeout(async () => {
+          clearUnreadTimer = setTimeout(() => {
             chatStore.markSessionRead(currentRoomId)
-            // 调用已读上报接口
-            try {
-              await markMsgRead(currentRoomId)
-            } catch (error) {
-              console.error('[message] 路由切换时已读上报失败:', error)
-            }
             clearUnreadTimer = null
           }, 2000) // 等待2秒
         }

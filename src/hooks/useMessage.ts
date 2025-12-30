@@ -7,7 +7,7 @@ import { useGlobalStore } from '@/stores/global.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useGroupStore } from '@/stores/group'
 import { useUserStore } from '@/stores/user'
-import { exitGroup, notification, setSessionTop, shield, markMsgRead } from '@/utils/ImRequestUtils'
+import { exitGroup, notification, setSessionTop, shield } from '@/utils/ImRequestUtils'
 import { invokeWithErrorHandler } from '../utils/TauriInvokeHandler'
 import { useI18n } from 'vue-i18n'
 
@@ -60,19 +60,12 @@ export const useMessage = () => {
     msgBoxShow.value = true
     // 更新当前会话信息
     const roomId = item.roomId
-    console.log('[handleMsgClick] 点击会话:', roomId, '传入的未读数:', item.unreadCount)
+    console.log('[handleMsgClick] 点击会话:', roomId, 'UI未读数:', item.unreadCount)
 
     globalStore.updateCurrentSessionRoomId(roomId)
 
-    // 先清空本地未读标记（立即更新UI），再异步上报已读（不阻塞），避免后续同步群成员失败导致未读气泡残留
-    const currentSession = chatStore.getSession(roomId)
-    console.log('[handleMsgClick] 获取到的会话未读数:', currentSession?.unreadCount)
-
-    if (currentSession?.unreadCount && currentSession.unreadCount > 0) {
-      console.log('[handleMsgClick] 开始清除未读数:', roomId)
-      chatStore.markSessionRead(roomId)
-      markMsgRead(roomId).catch((err) => console.error('[useMessage] 已读上报失败:', err))
-    }
+    chatStore.getSession(roomId)
+    chatStore.markSessionRead(roomId)
 
     // 再根据是否存在自身成员做一次兜底刷新，防止批量切换账号后看到旧数据
     try {
