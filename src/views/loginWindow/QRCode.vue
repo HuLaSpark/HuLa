@@ -4,11 +4,11 @@
     <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
-      <img src="/hula.png" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />
+      <img src="/hula.png" class="w-100px h-40px drop-shadow-xl" alt="" data-tauri-drag-region />
     </n-flex>
 
     <!-- 二维码 -->
-    <n-flex justify="center" class="mt-25px" data-tauri-drag-region>
+    <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
       <n-skeleton v-if="loading" style="border-radius: 12px" :width="204" :height="204" :sharp="false" size="medium" />
       <div v-else class="relative">
         <n-qr-code
@@ -55,8 +55,13 @@
       {{ loadText }}
     </n-flex>
 
+    <!-- 第三方登录 -->
+    <div class="w-full pb-22px pt-14px">
+      <ThirdPartyLogin :extra-disabled="thirdPartyExtraDisabled" :login-context="loginContext" />
+    </div>
+
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
+    <n-flex justify="center" class="text-14px" data-tauri-drag-region>
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">
         {{ t('login.qr.actions.account_login') }}
       </div>
@@ -76,12 +81,14 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useWindow } from '@/hooks/useWindow.ts'
 import router from '@/router'
+import { useLogin } from '@/hooks/useLogin'
 import { getEnhancedFingerprint } from '@/services/fingerprint'
 import { loginCommand } from '@/services/tauriCommand'
 import { TauriCommand } from '@/enums'
 import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting'
 import { checkQRStatus, generateQRCode } from '@/utils/ImRequestUtils'
+import ThirdPartyLogin, { type ThirdPartyLoginContext } from './ThirdPartyLogin.vue'
 
 const globalStore = useGlobalStore()
 const settingStore = useSettingStore()
@@ -119,6 +126,16 @@ const scanStatus = ref<{
 const scanStatusText = computed(() =>
   scanStatus.value.textKey ? t(`login.qr.overlay.${scanStatus.value.textKey}`) : ''
 )
+
+// 第三方登录相关逻辑
+const { giteeLogin, githubLogin, loading: loginLoading, loginDisabled } = useLogin()
+const loginContext: ThirdPartyLoginContext = {
+  giteeLogin,
+  githubLogin,
+  loading: loginLoading,
+  loginDisabled
+}
+const thirdPartyExtraDisabled = computed(() => loading.value)
 
 /** 刷新二维码 */
 const refreshQRCode = () => {
