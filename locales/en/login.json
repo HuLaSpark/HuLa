@@ -34,6 +34,12 @@
     "acc_pss": "Account & Password Login"
   },
   "register": "Register Account",
+  "third_party": {
+    "title": "OAuth Login / Sign Up",
+    "gitee": "Login with Gitee",
+    "github": "Login with GitHub",
+    "gitcode": "Login with GitCode"
+  },
   "qr_code_expired": "QR code expired",
   "qr_code_expired_hint": "Please try again later",
   "qr_code_scan_hint": "Please use HuLa App to scan the QR code",

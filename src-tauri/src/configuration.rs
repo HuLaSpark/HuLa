@@ -1,5 +1,6 @@
 use crate::error::CommonError;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use std::io::Read;
 use std::path::PathBuf;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
@@ -82,30 +83,38 @@ impl DatabaseSettings {
         app_handle: &AppHandle,
     ) -> Result<DatabaseConnection, CommonError> {
         // 数据库路径配置：
-        let db_path = if cfg!(debug_assertions) && cfg!(desktop) {
-            // 桌面端开发环境：使用项目根目录
-            let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            path.push("db.sqlite");
-            path
-        } else {
-            // SQLite 无法连接 asset://localhost/ 这样的虚拟协议，必须使用真实文件系统路径
-            match app_handle.path().app_data_dir() {
-                Ok(app_data_dir) => {
-                    if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
-                        tracing::warn!("Failed to create app_data_dir: {}", create_err);
-                    }
-                    let db_path = app_data_dir.join("db.sqlite");
-                    info!("Mobile: Using app_data_dir database path: {:?}", db_path);
-                    db_path
+        let db_path = match app_handle.path().app_data_dir() {
+            Ok(app_data_dir) => {
+                if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
+                    tracing::warn!("Failed to create app_data_dir: {}", create_err);
                 }
-                Err(e) => {
-                    let error_msg = format!("Mobile: Failed to get app_data_dir: {}", e);
-                    tracing::error!("{}", error_msg);
-                    return Err(CommonError::RequestError(error_msg).into());
-                }
+                let db_path = app_data_dir.join("db.sqlite");
+                info!("Using app_data_dir database path: {:?}", db_path);
+                db_path
+            }
+            Err(e) => {
+                let error_msg = format!("Failed to get app_data_dir: {}", e);
+                tracing::error!("{}", error_msg);
+                return Err(CommonError::RequestError(error_msg).into());
             }
         };
         info!("Database path: {:?}", db_path);
+
+        if db_path.exists() {
+            let mut header = [0u8; 16];
+            let need_repair = match std::fs::File::open(&db_path) {
+                Ok(mut f) => {
+                    let _ = f.read(&mut header);
+                    header != *b"SQLite format 3\0"
+                }
+                Err(_) => false,
+            };
+            if need_repair {
+                let backup = db_path.with_extension("corrupted");
+                let _ =
+                    std::fs::rename(&db_path, &backup).or_else(|_| std::fs::remove_file(&db_path));
+            }
+        }
 
         let db_url = format!("sqlite:{}?mode=rwc", db_path.display());
 
@@ -121,10 +130,31 @@ impl DatabaseSettings {
             .sqlx_logging(cfg!(debug_assertions))
             .sqlx_logging_level(tracing::log::LevelFilter::Info);
 
-        let db: DatabaseConnection = Database::connect(opt)
-            .await
-            .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
-        Ok(db)
+        match Database::connect(opt).await {
+            Ok(db) => Ok(db),
+            Err(e) => {
+                let msg = e.to_string();
+                if msg.contains("file is not a database") || msg.contains("code: 26") {
+                    let _ = std::fs::remove_file(&db_path);
+                    let mut opt2 =
+                        ConnectOptions::new(format!("sqlite:{}?mode=rwc", db_path.display()));
+                    opt2.max_connections(20)
+                        .min_connections(2)
+                        .connect_timeout(Duration::from_secs(30))
+                        .acquire_timeout(Duration::from_secs(30))
+                        .idle_timeout(Duration::from_secs(600))
+                        .max_lifetime(Duration::from_secs(1800))
+                        .sqlx_logging(cfg!(debug_assertions))
+                        .sqlx_logging_level(tracing::log::LevelFilter::Info);
+                    let db = Database::connect(opt2)
+                        .await
+                        .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
+                    Ok(db)
+                } else {
+                    Err(anyhow::anyhow!("Database connection failed: {}", e).into())
+                }
+            }
+        }
     }
 }
 

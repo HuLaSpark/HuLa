@@ -1,4 +1,4 @@
-import { emit } from '@tauri-apps/api/event'
+import { emit, listen } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useRouter } from 'vue-router'
 import { EventEnum, MittEnum, TauriCommand } from '@/enums'
@@ -28,6 +28,8 @@ import { info as logInfo } from '@tauri-apps/plugin-log'
 import { ensureAppStateReady } from '@/utils/AppStateReady'
 import { useI18nGlobal } from '../services/i18n'
 import { useInitialSyncStore } from '@/stores/initialSync'
+import { openExternalUrl } from './useLinkSegments'
+import { TokenManager } from '@/utils/TokenManager'
 
 export const useLogin = () => {
   const { resizeWindow } = useWindow()
@@ -56,8 +58,8 @@ export const useLogin = () => {
   let router: ReturnType<typeof useRouter> | null = null
   try {
     router = useRouter()
-  } catch (e) {
-    console.warn('[useLogin] 无法获取 router 实例,可能不在组件上下文中:', e)
+  } catch (_e) {
+    void logInfo('[useLogin] 无法获取 router 实例,可能不在组件上下文中')
   }
 
   /** 网络连接是否正常 */
@@ -113,20 +115,22 @@ export const useLogin = () => {
 
         // 调整托盘大小
         await resizeWindow('tray', 130, 44)
-      } catch (error) {
-        console.error('创建登录窗口失败:', error)
+      } catch (_error) {
+        void logInfo('创建登录窗口失败')
       }
     } else {
       try {
         await sendLogoutEvent()
         // 发送登出事件
         await emit(EventEnum.LOGOUT)
-      } catch (error) {
-        console.error('登出失败:', error)
+      } catch (_error) {
+        void logInfo('登出失败')
         window.$message.error('登出失败')
       }
     }
   }
+
+  // const { openExternalUrl } = useLinkSegments()
 
   /** 重置登录的状态 */
   const resetLoginState = async (isAutoLogin = false) => {
@@ -199,8 +203,8 @@ export const useLogin = () => {
       chatStore.setAllSessionMsgList(20),
       groupStore.setGroupDetails(),
       cachedStore.getAllBadgeList()
-    ]).catch((error) => {
-      console.warn('[useLogin] 增量预热任务失败:', error)
+    ]).catch(() => {
+      void logInfo('[useLogin] 增量预热任务失败')
     })
   }
 
@@ -222,8 +226,8 @@ export const useLogin = () => {
     userStore.userInfo = account
     loginHistoriesStore.addLoginHistory(account)
     // 初始化表情列表并在后台预取本地缓存（使用 worker + 并发限制）
-    void emojiStore.initEmojis().catch((error) => {
-      console.warn('[login] 初始化表情失败:', error)
+    void emojiStore.initEmojis().catch(() => {
+      void logInfo('[login] 初始化表情失败')
     })
 
     // 在 sqlite 中存储用户信息
@@ -248,8 +252,8 @@ export const useLogin = () => {
     const isInitialSync = options?.isInitialSync ?? !initialSyncStore.isSynced(account.uid)
 
     // 登录后立即预热表情本地缓存（异步，不阻塞后续流程）
-    void emojiStore.prefetchEmojiToLocal().catch((error) => {
-      console.warn('[login] 预热表情缓存失败:', error)
+    void emojiStore.prefetchEmojiToLocal().catch(() => {
+      void logInfo('[login] 预热表情缓存失败')
     })
 
     if (isInitialSync) {
@@ -285,8 +289,8 @@ export const useLogin = () => {
     if (isDesktop()) {
       const registerWindow = await WebviewWindow.getByLabel('register')
       if (registerWindow) {
-        await registerWindow.close().catch((error) => {
-          console.warn('关闭注册窗口失败:', error)
+        await registerWindow.close().catch(() => {
+          void logInfo('关闭注册窗口失败')
         })
       }
       await createWebviewWindow('HuLa', 'home', 960, 720, 'login', true, 330, 480, undefined, false)
@@ -367,12 +371,11 @@ export const useLogin = () => {
           await init()
           await invoke('hide_splash_screen') // 初始化完再关闭启动页
         }
-        ;+useMitt.emit(MittEnum.MSG_INIT)
+        useMitt.emit(MittEnum.MSG_INIT)
 
         await routerOrOpenHomeWindow()
       })
       .catch((e: any) => {
-        console.error('登录异常：', e)
         window.$message.error(e)
         loading.value = false
         loginDisabled.value = false
@@ -399,11 +402,196 @@ export const useLogin = () => {
       })
   }
 
+  const giteeLogin = async () => {
+    try {
+      loading.value = true
+      loginDisabled.value = true
+      loginText.value = t('login.status.logging_in')
+
+      const clientId = await getEnhancedFingerprint()
+      localStorage.setItem('clientId', clientId)
+
+      await ensureAppStateReady()
+
+      const port: number = await invoke('start_oauth_server')
+      const redirectUri = `http://127.0.0.1:${port}/`
+
+      // 监听 OAuth 回调
+      let isProcessing = false
+      const unlisten = await listen<string>('oauth-token', async (event) => {
+        if (isProcessing) return
+        isProcessing = true
+
+        try {
+          const payload = event.payload || ''
+          const params = new URLSearchParams(payload)
+          const token = params.get('token') || ''
+          const refreshToken = params.get('refreshToken') || ''
+          const uid = params.get('uid') || ''
+          if (!token || !refreshToken) {
+            throw new Error('授权回调缺少 token 或 refreshToken')
+          }
+          await TokenManager.updateToken(token, refreshToken, uid || undefined)
+          loginDisabled.value = true
+          loading.value = false
+          loginText.value = t('login.status.success_redirect')
+          useMitt.emit(MittEnum.MSG_INIT)
+          await routerOrOpenHomeWindow()
+        } finally {
+          if (typeof unlisten === 'function') {
+            unlisten()
+          }
+        }
+      })
+
+      let baseUrl = ''
+
+      // 1. 优先尝试从 Tauri 后端获取配置 (local.yaml)
+      try {
+        const backendSettings = (await invoke('get_settings')) as Partial<import('@/services/tauriCommand').Settings>
+        if (backendSettings && backendSettings.backend) {
+          // 兼容 snake_case (Rust默认) 和 camelCase (可能的序列化配置)
+          // @ts-expect-error
+          baseUrl = backendSettings.backend.base_url || backendSettings.backend.baseUrl || ''
+        }
+      } catch (_e) {
+        void logInfo('Failed to get settings from backend')
+      }
+
+      // 简化：仅从后端配置读取 base_url（来源 base.yaml）
+
+      if (!baseUrl) {
+        window.$message.error('请先在设置中配置服务器地址')
+        loading.value = false
+        loginDisabled.value = false
+        return
+      }
+
+      // 移除末尾斜杠
+      baseUrl = baseUrl.replace(/\/$/, '')
+
+      console.log('baseUrl', baseUrl)
+
+      // 后端已配置固定回调地址 http://127.0.0.1:36677/
+      const authorizeUrlEndpoint = `${baseUrl}/oauth/anyTenant/gitee/authorize-url?redirect=${encodeURIComponent(redirectUri)}`
+
+      // 先请求后端获取真正的授权地址
+      // 注意：这里需要根据项目使用的 HTTP 客户端来调用
+      // 假设 invoke 无法直接调用后端 HTTP 接口，需要用 fetch 或 axios
+      // 这里暂时使用 fetch，如果项目有封装好的 http client 应该使用它
+      const response = await fetch(authorizeUrlEndpoint, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json'
+        }
+      })
+
+      const resText = await response.text()
+
+      let resJson
+      try {
+        resJson = JSON.parse(resText)
+      } catch (_e) {
+        throw new Error(`解析响应失败: ${resText.substring(0, 100)}...`)
+      }
+
+      if (resJson.code === 200 || resJson.code === 0) {
+        const giteeAuthUrl = resJson.data
+        await openExternalUrl(giteeAuthUrl)
+      } else {
+        throw new Error(resJson.msg || '获取授权地址失败')
+      }
+    } catch (_e) {
+      window.$message.error('Gitee 登录失败')
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = t('login.button.login.default')
+    }
+  }
+
+  const githubLogin = async () => {
+    try {
+      loading.value = true
+      loginDisabled.value = true
+      loginText.value = t('login.status.logging_in')
+      const clientId = await getEnhancedFingerprint()
+      localStorage.setItem('clientId', clientId)
+      await ensureAppStateReady()
+      const port: number = await invoke('start_oauth_server')
+      const redirectUri = `http://127.0.0.1:${port}/`
+      let isProcessing = false
+      const unlisten = await listen<string>('oauth-token', async (event) => {
+        if (isProcessing) return
+        isProcessing = true
+        try {
+          const payload = event.payload || ''
+          const params = new URLSearchParams(payload)
+          const token = params.get('token') || ''
+          const refreshToken = params.get('refreshToken') || ''
+          const uid = params.get('uid') || ''
+          if (!token || !refreshToken) {
+            throw new Error('授权回调缺少 token 或 refreshToken')
+          }
+          await TokenManager.updateToken(token, refreshToken, uid || undefined)
+          loginDisabled.value = true
+          loading.value = false
+          loginText.value = t('login.status.success_redirect')
+          useMitt.emit(MittEnum.MSG_INIT)
+          await routerOrOpenHomeWindow()
+        } finally {
+          if (typeof unlisten === 'function') {
+            unlisten()
+          }
+        }
+      })
+      let baseUrl = ''
+      try {
+        const backendSettings = (await invoke('get_settings')) as Partial<import('@/services/tauriCommand').Settings>
+        if (backendSettings && backendSettings.backend) {
+          // @ts-expect-error
+          baseUrl = backendSettings.backend.base_url || backendSettings.backend.baseUrl || ''
+        }
+      } catch (_e) {}
+      if (!baseUrl) {
+        window.$message.error('请先在设置中配置服务器地址')
+        loading.value = false
+        loginDisabled.value = false
+        return
+      }
+      baseUrl = baseUrl.replace(/\/$/, '')
+      const authorizeUrlEndpoint = `${baseUrl}/oauth/anyTenant/github/authorize-url?redirect=${encodeURIComponent(redirectUri)}`
+      const response = await fetch(authorizeUrlEndpoint, {
+        method: 'GET',
+        headers: { Accept: 'application/json' }
+      })
+      const resText = await response.text()
+      let resJson
+      try {
+        resJson = JSON.parse(resText)
+      } catch {
+        throw new Error(`解析响应失败: ${resText.substring(0, 100)}...`)
+      }
+      if (resJson.code === 200 || resJson.code === 0) {
+        const githubAuthUrl = resJson.data
+        await openExternalUrl(githubAuthUrl)
+      } else {
+        throw new Error(resJson.msg || '获取授权地址失败')
+      }
+    } catch (_e) {
+      window.$message.error('GitHub 登录失败')
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = t('login.button.login.default')
+    }
+  }
+
   return {
     resetLoginState,
     setLoginState,
     logout,
     normalLogin,
+    giteeLogin,
+    githubLogin,
     loading,
     loginText,
     loginDisabled,

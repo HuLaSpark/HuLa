@@ -5,9 +5,9 @@
     <ActionBar :max-w="false" :shrink="false" proxy />
 
     <!--  手动登录样式  -->
-    <n-flex vertical :size="25" v-if="uiState === 'manual'">
+    <n-flex vertical :size="22" v-if="uiState === 'manual'">
       <!-- 头像 -->
-      <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
+      <n-flex justify="center" class="w-full pt-12px" data-tauri-drag-region>
         <n-avatar
           class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
           :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
@@ -102,7 +102,7 @@
           :disabled="loginDisabled"
           tertiary
           style="color: #fff"
-          class="gradient-button w-full mt-8px mb-50px"
+          class="gradient-button w-full mt-8px mb-10px"
           @click="normalLogin('PC', true, false)">
           <span>{{ loginText }}</span>
         </n-button>
@@ -144,6 +144,11 @@
         </n-button>
       </n-flex>
     </n-flex>
+
+    <!-- 第三方登录 -->
+    <div class="w-full pb-22px pt-3px">
+      <ThirdPartyLogin :login-context="loginContext" />
+    </div>
 
     <!-- 底部操作栏 -->
     <div class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full" id="bottomBar">
@@ -220,6 +225,7 @@ import { clearListener } from '@/utils/ReadCountQueue'
 import { useLogin } from '@/hooks/useLogin'
 import { formatBottomText } from '@/utils/Formatting'
 import { ThemeEnum } from '@/enums'
+import ThirdPartyLogin, { type ThirdPartyLoginContext } from './ThirdPartyLogin.vue'
 
 const { t } = useI18n()
 
@@ -242,7 +248,13 @@ const arrowStatus = ref(false)
 const moreShow = ref(false)
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
-const { normalLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
+const { normalLogin, giteeLogin, githubLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
+const loginContext: ThirdPartyLoginContext = {
+  giteeLogin,
+  githubLogin,
+  loading,
+  loginDisabled
+}
 
 const driverSteps = computed<DriverStepConfig[]>(() => [
   {
