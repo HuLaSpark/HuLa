@@ -54,7 +54,9 @@
       "account": "Account: {account}"
     },
     "tooltip": {
-      "copy_account": "Copy account"
+      "copy_account": "Copy account",
+      "bound_gitee": "Gitee linked",
+      "bound_github": "GitHub linked"
     },
     "empty": {
       "no_result": "No matching result",
@@ -272,7 +274,9 @@
     },
     "location_unknown": "Unknown",
     "tooltip": {
-      "copy_account": "Copy account"
+      "copy_account": "Copy account",
+      "bound_gitee": "Gitee linked",
+      "bound_github": "GitHub linked"
     },
     "buttons": {
       "edit": "Edit profile",
@@ -380,6 +384,43 @@
     "network_offline": "Network unavailable, please check your settings",
     "network_connecting": "Connecting to server...",
     "network_ws_offline": "Server connection lost, retrying",
+    "copy": {
+      "empty": "Nothing to copy",
+      "image_processing": "Converting {format} image to PNG...",
+      "image_success": "Image copied to clipboard",
+      "image_convert_success": "Image converted to PNG and copied",
+      "selected_success": "Selected text copied",
+      "message_success": "Message copied",
+      "unknown_error": "Failed to copy content, please try again later"
+    },
+    "feature": {
+      "coming_soon": "Feature under development"
+    },
+    "translate": {
+      "empty": "Nothing to translate"
+    },
+    "file": {
+      "missing_local": "File not found locally, please download first",
+      "show_failed": "Unable to reveal file in folder",
+      "download_prompt": "File not downloaded yet, please download first",
+      "download_success": "File downloaded successfully",
+      "download_failed": "File download failed, please retry",
+      "save_success": "File saved locally",
+      "save_failed": "Failed to save file, please retry"
+    },
+    "image": {
+      "fetch_failed": "Failed to get image URL",
+      "locate_failed": "Unable to locate this image for now",
+      "download_prompt": "Image not downloaded, saving locally...",
+      "save_success": "Image saved locally",
+      "save_failed": "Failed to save image",
+      "download_failed": "Image download failed, please retry"
+    },
+    "delete": {
+      "invalid_session": "Unable to determine the session of this message",
+      "confirm": "Deleted messages will disappear from your history. Continue?",
+      "success": "Message deleted"
+    },
     "announcement": {
       "view_all": "View all"
     },
@@ -389,11 +430,17 @@
     "cancel": "Cancel",
     "group_nickname": {
       "title": "Edit group nickname",
-      "placeholder": "Enter a group nickname"
+      "placeholder": "Enter a group nickname",
+      "error": {
+        "empty": "Group nickname cannot be empty",
+        "invalid_room": "Group information is invalid"
+      }
     },
     "toast": {
       "searching": "Searching for messages...",
-      "not_found": "Failed to load history, please try again"
+      "not_found": "Failed to load history, please try again",
+      "multi_select_mobile": "Message multi-select is not available on mobile",
+      "disbanded_group": "This group has been disbanded"
     }
   },
   "friends_list": {

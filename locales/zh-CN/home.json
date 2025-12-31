@@ -271,7 +271,9 @@
     },
     "location_unknown": "未知",
     "tooltip": {
-      "copy_account": "复制账号"
+      "copy_account": "复制账号",
+      "bound_gitee": "已绑定 Gitee",
+      "bound_github": "已绑定 GitHub"
     },
     "buttons": {
       "edit": "编辑资料",
@@ -379,6 +381,43 @@
     "network_offline": "当前网络不可用，请检查你的网络设置",
     "network_connecting": "正在连接服务器...",
     "network_ws_offline": "服务器连接已断开，正在重试",
+    "copy": {
+      "empty": "没有可复制的内容",
+      "image_processing": "正在将 {format} 格式图片转换为 PNG 并复制...",
+      "image_success": "图片已复制到剪贴板",
+      "image_convert_success": "图片已转换为 PNG 并复制到剪贴板",
+      "selected_success": "选中文本已复制",
+      "message_success": "消息内容已复制",
+      "unknown_error": "复制内容失败，请稍后再试"
+    },
+    "feature": {
+      "coming_soon": "功能暂开发"
+    },
+    "translate": {
+      "empty": "没有可翻译的内容"
+    },
+    "file": {
+      "missing_local": "暂时找不到本地文件，请先下载后再试~",
+      "show_failed": "无法在文件夹中显示该文件",
+      "download_prompt": "文件还未下载，请先下载后再试~",
+      "download_success": "文件下载完成，请查看~",
+      "download_failed": "文件下载失败，请重试",
+      "save_success": "文件已保存到本地",
+      "save_failed": "文件保存失败，请重试"
+    },
+    "image": {
+      "fetch_failed": "获取图片地址失败",
+      "locate_failed": "暂时无法定位该图片~",
+      "download_prompt": "图片未下载，正在保存到本地...",
+      "save_success": "图片已保存到本地",
+      "save_failed": "保存图片失败",
+      "download_failed": "图片下载失败，请重试~"
+    },
+    "delete": {
+      "invalid_session": "无法确定消息所属的会话",
+      "confirm": "删除后将不会出现在你的消息记录中，确定删除吗?",
+      "success": "消息已删除"
+    },
     "announcement": {
       "view_all": "查看全部"
     },
@@ -388,11 +427,17 @@
     "cancel": "取消",
     "group_nickname": {
       "title": "修改群昵称",
-      "placeholder": "请输入群昵称"
+      "placeholder": "请输入群昵称",
+      "error": {
+        "empty": "群昵称不能为空",
+        "invalid_room": "当前群聊信息异常"
+      }
     },
     "toast": {
       "searching": "正在查找消息...",
-      "not_found": "加载历史消息失败，请稍后重试"
+      "not_found": "加载历史消息失败，请稍后重试",
+      "multi_select_mobile": "移动端暂不支持消息多选",
+      "disbanded_group": "该群聊已解散，无法执行此操作"
     }
   },
   "friends_list": {

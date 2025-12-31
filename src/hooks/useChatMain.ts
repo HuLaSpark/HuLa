@@ -104,7 +104,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
     const trimmedName = groupNicknameValue.value.trim()
     if (!trimmedName) {
-      groupNicknameError.value = '群昵称不能为空'
+      groupNicknameError.value = t('home.chat_main.group_nickname.error.empty')
       return
     }
 
@@ -115,7 +115,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
     const { roomId, currentUid } = groupNicknameContext.value
     if (!roomId) {
-      window.$message?.error('当前群聊信息异常')
+      window.$message?.error(t('home.chat_main.group_nickname.error.invalid_room'))
       return
     }
 
@@ -174,14 +174,14 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
   const isNoticeMessage = (item: MessageType) => item.message.type === MsgEnum.NOTICE
   const revealInDirSafely = async (targetPath?: string | null) => {
     if (!targetPath) {
-      window.$message?.error('暂时找不到本地文件，请先下载后再试~')
+      window.$message?.error(t('home.chat_main.file.missing_local'))
       return
     }
     try {
       await revealItemInDir(targetPath)
     } catch (error) {
       console.error('在文件夹中显示文件失败:', error)
-      window.$message?.error('无法在文件夹中显示该文件')
+      window.$message?.error(t('home.chat_main.file.show_failed'))
     }
   }
 
@@ -200,7 +200,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       click: async (item: MessageType) => {
         const imageUrl = item.message.body.url || item.message.body.content
         if (!imageUrl) {
-          window.$message.error('获取图片地址失败')
+          window.$message.error(t('home.chat_main.image.fetch_failed'))
           return
         }
         await emojiStore.addEmoji(imageUrl)
@@ -214,7 +214,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'share',
       click: (item: MessageType) => {
         if (isMobile()) {
-          window.$message.warning('功能暂开发')
+          window.$message.warning(t('home.chat_main.feature.coming_soon'))
           return
         }
         handleForward(item)
@@ -295,7 +295,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'copy',
       click: (item: MessageType) => {
         if (isMobile()) {
-          window.$message.warning('功能暂开发')
+          window.$message.warning(t('home.chat_main.feature.coming_soon'))
           return
         }
         handleCopy(item.message.body.url, true, item.message.id)
@@ -307,7 +307,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'Importing',
       click: async (item: MessageType) => {
         if (isMobile()) {
-          window.$message.warning('功能暂开发')
+          window.$message.warning(t('home.chat_main.feature.coming_soon'))
           return
         }
         await saveVideoAttachmentAs({
@@ -368,7 +368,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
 
         const content = selectedText || item.message.body.content
         if (!content) {
-          window.$message?.warning('没有可翻译的内容')
+          window.$message?.warning(t('home.chat_main.translate.empty'))
           return
         }
 
@@ -437,7 +437,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
               icon: 'Importing',
               click: async (item: MessageType) => {
                 if (isMobile()) {
-                  window.$message.warning('功能暂开发')
+                  window.$message.warning(t('home.chat_main.feature.coming_soon'))
                   return
                 }
                 const fileUrl = item.message.body.url
@@ -482,13 +482,13 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
                 // 最后判断文件不存在本地，那就下载它
                 if (!fileMeta.exists) {
                   // 文件不存在本地
-                  const downloadMessage = window.$message.info('文件没下载哦~ 请下载文件后再打开🚀...')
+                  const downloadMessage = window.$message.info(t('home.chat_main.file.download_prompt'))
                   const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
 
                   if (_absolutePath) {
                     absolutePath = _absolutePath
                     downloadMessage.destroy()
-                    window.$message.success('文件下载好啦！请查看~')
+                    window.$message.success(t('home.chat_main.file.download_success'))
                     await revealInDirSafely(_absolutePath)
                     await fileDownloadStore.refreshFileDownloadStatus({
                       fileUrl: item.message.body.url,
@@ -500,7 +500,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
                     return
                   } else {
                     absolutePath = ''
-                    window.$message.error('文件下载失败，请重试~')
+                    window.$message.error(t('home.chat_main.file.download_failed'))
                     return
                   }
                 }
@@ -520,7 +520,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             label: () => t('menu.del'),
             icon: 'delete',
             click: (item: any) => {
-              tips.value = '删除后将不会出现在你的消息记录中，确定删除吗?'
+              tips.value = t('home.chat_main.delete.confirm')
               modalShow.value = true
               delIndex.value = item.message.id
               delRoomId.value = item.message.roomId
@@ -647,7 +647,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'Importing',
       click: async (item: RightMouseMessageItem) => {
         if (isMobile()) {
-          window.$message.warning('功能暂开发')
+          window.$message.warning(t('home.chat_main.feature.coming_soon'))
           return
         }
         await saveFileAttachmentAs({
@@ -682,13 +682,13 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         // 最后判断文件不存在本地，那就下载它
         if (!fileMeta.exists) {
           // 文件不存在本地
-          const downloadMessage = window.$message.info('文件没下载哦, 请下载文件后再打开')
+          const downloadMessage = window.$message.info(t('home.chat_main.file.download_prompt'))
           const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
 
           if (_absolutePath) {
             absolutePath = _absolutePath
             downloadMessage.destroy()
-            window.$message.success('文件已保存到本地')
+            window.$message.success(t('home.chat_main.file.save_success'))
             await revealInDirSafely(_absolutePath)
             await fileDownloadStore.refreshFileDownloadStatus({
               fileUrl: item.message.body.url,
@@ -700,7 +700,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             return
           } else {
             absolutePath = ''
-            window.$message.error('文件下载失败，请重试')
+            window.$message.error(t('home.chat_main.file.download_failed'))
             return
           }
         }
@@ -726,7 +726,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
       icon: 'Importing',
       click: async (item: MessageType) => {
         if (isMobile()) {
-          window.$message.warning('功能暂开发')
+          window.$message.warning(t('home.chat_main.feature.coming_soon'))
           return
         }
         try {
@@ -749,7 +749,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
           }
         } catch (error) {
           console.error('保存图片失败:', error)
-          window.$message.error('保存图片失败')
+          window.$message.error(t('home.chat_main.image.save_failed'))
         }
       }
     },
@@ -760,7 +760,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         const fileUrl = item.message.body.url || item.message.body.content
         const fileName = item.message.body.fileName || extractFileName(fileUrl)
         if (!fileUrl || !fileName) {
-          window.$message.warning('暂时无法定位该图片~')
+          window.$message.warning(t('home.chat_main.image.locate_failed'))
           return
         }
 
@@ -774,13 +774,13 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
         const [fileMeta] = await getFilesMeta<FilesMeta>([fileStatus?.absolutePath || absolutePath || fileUrl])
 
         if (!fileMeta.exists) {
-          const downloadMessage = window.$message.info('图片没下载, 正在保存到本地...')
+          const downloadMessage = window.$message.info(t('home.chat_main.image.download_prompt'))
           const _absolutePath = await fileDownloadStore.downloadFile(fileUrl, fileName)
 
           if (_absolutePath) {
             absolutePath = _absolutePath
             downloadMessage.destroy()
-            window.$message.success('图片已保存到本地')
+            window.$message.success(t('home.chat_main.image.save_success'))
             await revealInDirSafely(_absolutePath)
             await fileDownloadStore.refreshFileDownloadStatus({
               fileUrl,
@@ -792,7 +792,7 @@ export const useChatMain = (isHistoryMode = false, options: UseChatMainOptions =
             return
           } else {
             absolutePath = ''
-            window.$message.error('图片下载失败，请重试~')
+            window.$message.error(t('home.chat_main.image.download_failed'))
             return
           }
         }
