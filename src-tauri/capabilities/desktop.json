@@ -15,6 +15,7 @@
     "core:window:allow-set-resizable",
     "core:window:allow-set-badge-count",
     "core:window:allow-set-theme",
-    "core:window:allow-theme"
+    "core:window:allow-theme",
+    "core:app:allow-set-app-theme"
   ]
 }

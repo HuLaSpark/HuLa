@@ -147,6 +147,8 @@ import { isWindows } from '@/utils/PlatformConstants'
 import { useFontOptions, useTranslateOptions, langOptions } from './config.ts'
 import { useTopicsList } from './model.tsx'
 import { useI18n } from 'vue-i18n'
+import { setTheme } from '@tauri-apps/api/app'
+import type { Theme } from '@tauri-apps/api/window'
 
 const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
@@ -169,8 +171,8 @@ const showText = computed({
 
 /** 切换主题 */
 const handleTheme = (code: string) => {
-  if (code === themes.pattern) return
   settingStore.toggleTheme(code)
+  setTheme(Object.is(code, 'os') ? null : (code as Theme))
 }
 
 /** 调整主界面高度 */
