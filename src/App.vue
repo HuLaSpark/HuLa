@@ -49,7 +49,6 @@ import { useFeedStore } from '@/stores/feed'
 import { useFeedNotificationStore } from '@/stores/feedNotification'
 import type { MarkItemType, RevokedMsgType, UserItem } from '@/services/types.ts'
 import * as ImRequestUtils from '@/utils/ImRequestUtils'
-import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { useTauriListener } from '@/hooks/useTauriListener'
 import { updateSettings } from '@/services/tauriCommand.ts'
@@ -564,8 +563,8 @@ const handleWebsocketEvent = async (event: any) => {
   const nextStateRaw = payload.state
   const nextState = typeof nextStateRaw === 'string' ? nextStateRaw.toUpperCase() : ''
   const isReconnectionFlag = payload.isReconnection ?? payload.is_reconnection
-  const hasRecoveredFromDrop = Boolean(previousState && previousState !== 'CONNECTED' && nextState === 'CONNECTED')
-  const shouldHandleReconnect = nextState === 'CONNECTED' && (isReconnectionFlag || hasRecoveredFromDrop)
+  // 只有明确标记为重连的情况才触发同步，避免首次连接时触发不必要的全量同步
+  const shouldHandleReconnect = nextState === 'CONNECTED' && isReconnectionFlag
 
   lastWsConnectionState = nextState || previousState
 
@@ -577,18 +576,19 @@ const handleWebsocketEvent = async (event: any) => {
   // 开始同步，显示加载状态
   chatStore.syncLoading = true
   try {
-    if (userStore.userInfo?.uid) {
-      await invoke('sync_messages', { param: { asyncData: true, uid: userStore.userInfo.uid } })
-    }
+    // Rust 端已通过 schedule_post_reconnect_sync 调用 sync_messages，前端无需重复调用
     await chatStore.getSessionList(true)
-    await chatStore.setAllSessionMsgList(20)
-    // 重连后同步频道和当前/首个群聊成员信息，避免展示断网前的旧数据
+
+    // 重连后同步当前/首个群聊成员信息，避免展示断网前的旧数据
     await refreshActiveGroupMembers()
+
     if (globalStore.currentSessionRoomId) {
-      await chatStore.resetAndRefreshCurrentRoomMessages()
-      await chatStore.fetchCurrentRoomRemoteOnce(20)
       const currentRoomId = globalStore.currentSessionRoomId
       const currentSession = chatStore.getSession(currentRoomId)
+
+      // 增量拉取当前会话的新消息，而不是清空重建
+      await chatStore.fetchCurrentRoomRemoteOnce(20)
+
       // 重连后如果当前会话仍有未读，补一次已读上报和本地清零，避免气泡卡住
       if (currentSession?.unreadCount) {
         chatStore.markSessionRead(currentRoomId)

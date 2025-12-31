@@ -277,6 +277,10 @@ export type UserInfoType = {
   client: string
   /** 个人简介 */
   resume: string
+  /** 是否绑定 Gitee */
+  linkedGitee?: boolean
+  /** 是否绑定 GitHub */
+  linkedGithub?: boolean
 }
 
 export type BadgeType = {

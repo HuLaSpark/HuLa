@@ -105,15 +105,30 @@
           <n-flex align="center" :size="12">
             <p class="text-[--info-text-color]">{{ t('home.profile_card.labels.account') }}</p>
             <span class="text-(12px [--chat-text-color])">{{ `${groupStore.getUserInfo(uid)?.account}` }}</span>
+
+            <n-tooltip trigger="hover">
+              <template #trigger>
+                <svg class="size-12px cursor-pointer hover:color-#909090 hover:transition-colors" @click="handleCopy">
+                  <use href="#copy"></use>
+                </svg>
+              </template>
+              <span>{{ t('home.profile_card.tooltip.copy_account') }}</span>
+            </n-tooltip>
+
+            <!-- Gitee/GitHub 标识 -->
+            <n-tooltip v-if="groupStore.getUserInfo(uid)?.linkedGitee">
+              <template #trigger>
+                <svg class="size-18px dark:color-#d5304f"><use href="#gitee-login"></use></svg>
+              </template>
+              <span>{{ t('home.profile_card.tooltip.bound_gitee') }}</span>
+            </n-tooltip>
+            <n-tooltip v-if="groupStore.getUserInfo(uid)?.linkedGithub">
+              <template #trigger>
+                <svg class="size-18px dark:color-#fefefe"><use href="#github-login"></use></svg>
+              </template>
+              <span>{{ t('home.profile_card.tooltip.bound_github') }}</span>
+            </n-tooltip>
           </n-flex>
-          <n-tooltip trigger="hover">
-            <template #trigger>
-              <svg class="size-12px cursor-pointer hover:color-#909090 hover:transition-colors" @click="handleCopy">
-                <use href="#copy"></use>
-              </svg>
-            </template>
-            <span>{{ t('home.profile_card.tooltip.copy_account') }}</span>
-          </n-tooltip>
         </n-flex>
       </n-flex>
 

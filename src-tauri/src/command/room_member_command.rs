@@ -38,6 +38,8 @@ pub struct RoomMemberResponse {
     pub wearing_item_id: Option<String>,
     #[serde(rename = "itemIds")]
     pub item_ids: Option<Vec<String>>,
+    pub linked_gitee: Option<bool>,
+    pub linked_github: Option<bool>,
 }
 
 #[tauri::command]
