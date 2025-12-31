@@ -526,21 +526,15 @@
         </div>
 
         <div class="flex items-center justify-between gap-12px border-t-(1px solid [--line-color]) pt-12px">
-          <div
-            class="flex flex-1 flex-col items-center gap-10px cursor-pointer text-(12px [--chat-text-color]) p-8px rounded-12px transition-colors hover:bg-#f4f5f9 dark:hover:bg-#1f232d"
-            @click="handleForwardGroupQr">
+          <div class="QRcode-item" @click="handleForwardGroupQr">
             <svg class="size-20px"><use href="#share-three"></use></svg>
             <span>{{ t('home.chat_header.qr.actions.forward') }}</span>
           </div>
-          <div
-            class="flex flex-1 flex-col items-center gap-10px cursor-pointer text-(12px [--chat-text-color]) p-8px rounded-12px transition-colors hover:bg-#f4f5f9 dark:hover:bg-#1f232d"
-            @click="handleCopyGroupId">
+          <div class="QRcode-item" @click="handleCopyGroupId">
             <svg class="size-20px"><use href="#copy"></use></svg>
             <span>{{ t('home.chat_header.qr.actions.copy_group_id') }}</span>
           </div>
-          <div
-            class="flex flex-1 flex-col items-center gap-10px cursor-pointer text-(12px [--chat-text-color]) p-8px rounded-12px transition-colors hover:bg-#f4f5f9 dark:hover:bg-#1f232d"
-            @click="handleSaveGroupQrImage">
+          <div class="QRcode-item" @click="handleSaveGroupQrImage">
             <svg class="size-20px"><use href="#Importing"></use></svg>
             <span>{{ t('home.chat_header.qr.actions.save_image') }}</span>
           </div>
@@ -1640,6 +1634,10 @@ onUnmounted(() => {
   &:hover .avatar-hover {
     opacity: 1;
   }
+}
+
+.QRcode-item {
+  @apply flex flex-1 flex-col items-center gap-10px cursor-pointer text-(12px [--chat-text-color]) p-8px rounded-12px transition-colors hover:bg-#e3e3e360 dark:hover:bg-#262626;
 }
 
 :deep(.n-scrollbar > .n-scrollbar-container > .n-scrollbar-content) {

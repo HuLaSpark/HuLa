@@ -151,8 +151,6 @@
                     <n-flex vertical :size="2" class="flex-1 truncate">
                       <p :title="item.name" class="text-12px truncate flex-1 leading-tight">
                         {{ item.myName ? item.myName : item.name }}
-                        <Icon v-if="item.linkedGithub" icon="mdi:github" class="ml-4px text-12px" />
-                        <Icon v-if="item.linkedGitee" icon="simple-icons:gitee" class="ml-2px text-12px" />
                       </p>
                       <n-flex
                         v-if="item.userStateId && getUserState(item.userStateId)"
@@ -209,7 +207,6 @@ import { useGroupStore } from '@/stores/group.ts'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
 import { AvatarUtils } from '@/utils/AvatarUtils'
-import { Icon } from '@iconify/vue'
 import { getUserByIds } from '@/utils/ImRequestUtils'
 import { useAnnouncementStore } from '@/stores/announcement'
 
