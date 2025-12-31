@@ -7,6 +7,7 @@
   <!-- 相机 / 麦克风 -->
   <uses-permission android:name="android.permission.CAMERA" />
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
   <!-- 存储 / 媒体访问 -->
   <!-- Android 13+ 推荐使用新的媒体权限 -->
