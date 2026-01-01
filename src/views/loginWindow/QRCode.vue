@@ -128,10 +128,11 @@ const scanStatusText = computed(() =>
 )
 
 // 第三方登录相关逻辑
-const { giteeLogin, githubLogin, loading: loginLoading, loginDisabled } = useLogin()
+const { giteeLogin, githubLogin, gitcodeLogin, loading: loginLoading, loginDisabled } = useLogin()
 const loginContext: ThirdPartyLoginContext = {
   giteeLogin,
   githubLogin,
+  gitcodeLogin,
   loading: loginLoading,
   loginDisabled
 }

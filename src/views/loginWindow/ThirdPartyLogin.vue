@@ -26,7 +26,7 @@ import { useLogin } from '@/hooks/useLogin'
 
 export type ThirdPartyLoginContext = Pick<
   ReturnType<typeof useLogin>,
-  'giteeLogin' | 'githubLogin' | 'loading' | 'loginDisabled'
+  'giteeLogin' | 'githubLogin' | 'gitcodeLogin' | 'loading' | 'loginDisabled'
 >
 
 const props = withDefaults(
@@ -41,7 +41,8 @@ const props = withDefaults(
 
 const { t } = useI18n()
 
-const resolvedContext = props.loginContext ?? useLogin()
+const defaultContext = useLogin()
+const resolvedContext = props.loginContext ? { ...defaultContext, ...props.loginContext } : defaultContext
 
 const thirdPartyLabel = computed(() => t('login.third_party.title'))
 const thirdPartyOptions = computed(() => [
@@ -64,9 +65,7 @@ const thirdPartyOptions = computed(() => [
     label: t('login.third_party.gitcode'),
     icon: '#gitcode-login',
     style: 'color-#d5304f dark:color-#d5304f80',
-    action: () => {
-      window.$message.warning('GitCode 正在对接')
-    }
+    action: resolvedContext.gitcodeLogin
   }
 ])
 

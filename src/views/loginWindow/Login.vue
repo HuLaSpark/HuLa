@@ -248,10 +248,12 @@ const arrowStatus = ref(false)
 const moreShow = ref(false)
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow()
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate()
-const { normalLogin, giteeLogin, githubLogin, loading, loginText, loginDisabled, info, uiState } = useLogin()
+const { normalLogin, giteeLogin, githubLogin, gitcodeLogin, loading, loginText, loginDisabled, info, uiState } =
+  useLogin()
 const loginContext: ThirdPartyLoginContext = {
   giteeLogin,
   githubLogin,
+  gitcodeLogin,
   loading,
   loginDisabled
 }
