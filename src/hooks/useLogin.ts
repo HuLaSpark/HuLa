@@ -611,6 +611,82 @@ export const useLogin = () => {
     }
   }
 
+  const gitcodeLogin = async () => {
+    try {
+      loading.value = true
+      loginDisabled.value = true
+      loginText.value = t('login.status.logging_in')
+      const clientId = await getEnhancedFingerprint()
+      localStorage.setItem('clientId', clientId)
+      await ensureAppStateReady()
+      const port: number = await invoke('start_oauth_server')
+      const redirectUri = `http://127.0.0.1:${port}/`
+      let isProcessing = false
+      const unlisten = await listen<string>('oauth-token', async (event) => {
+        if (isProcessing) return
+        isProcessing = true
+        try {
+          const payload = event.payload || ''
+          const params = new URLSearchParams(payload)
+          const token = params.get('token') || ''
+          const refreshToken = params.get('refreshToken') || ''
+          const uid = params.get('uid') || ''
+          if (!token || !refreshToken) {
+            throw new Error('授权回调缺少 token 或 refreshToken')
+          }
+          await TokenManager.updateToken(token, refreshToken, uid || undefined)
+          loginDisabled.value = true
+          loading.value = false
+          loginText.value = t('login.status.success_redirect')
+          useMitt.emit(MittEnum.MSG_INIT)
+          await routerOrOpenHomeWindow()
+        } finally {
+          if (typeof unlisten === 'function') {
+            unlisten()
+          }
+        }
+      })
+      let baseUrl = ''
+      try {
+        const backendSettings = (await invoke('get_settings')) as Partial<import('@/services/tauriCommand').Settings>
+        if (backendSettings && backendSettings.backend) {
+          // @ts-expect-error
+          baseUrl = backendSettings.backend.base_url || backendSettings.backend.baseUrl || ''
+        }
+      } catch (_e) {}
+      if (!baseUrl) {
+        window.$message.error('请先在设置中配置服务器地址')
+        loading.value = false
+        loginDisabled.value = false
+        return
+      }
+      baseUrl = baseUrl.replace(/\/$/, '')
+      const authorizeUrlEndpoint = `${baseUrl}/oauth/anyTenant/gitcode/authorize-url?redirect=${encodeURIComponent(redirectUri)}`
+      const response = await fetch(authorizeUrlEndpoint, {
+        method: 'GET',
+        headers: { Accept: 'application/json' }
+      })
+      const resText = await response.text()
+      let resJson
+      try {
+        resJson = JSON.parse(resText)
+      } catch {
+        throw new Error(`解析响应失败: ${resText.substring(0, 100)}...`)
+      }
+      if (resJson.code === 200 || resJson.code === 0) {
+        const gitcodeAuthUrl = resJson.data
+        await openExternalUrl(gitcodeAuthUrl)
+      } else {
+        throw new Error(resJson.msg || '获取授权地址失败')
+      }
+    } catch (_e) {
+      window.$message.error('GitCode 登录失败')
+      loading.value = false
+      loginDisabled.value = false
+      loginText.value = t('login.button.login.default')
+    }
+  }
+
   return {
     resetLoginState,
     setLoginState,
@@ -618,6 +694,7 @@ export const useLogin = () => {
     normalLogin,
     giteeLogin,
     githubLogin,
+    gitcodeLogin,
     loading,
     loginText,
     loginDisabled,
