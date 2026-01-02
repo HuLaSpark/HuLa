@@ -112,7 +112,7 @@
     "hula-emojis": "^1.2.31",
     "internal-ip": "^8.0.1",
     "markstream-vue": "0.0.3-beta.4",
-    "mermaid": "^11.12.1",
+    "mermaid": "^11.12.2",
     "mitt": "^3.0.1",
     "naive-ui": "^2.43.2",
     "p-limit": "^7.2.0",
