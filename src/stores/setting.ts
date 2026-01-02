@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { CloseBxEnum, ShowModeEnum, StoresEnum, ThemeEnum } from '@/enums'
 import { isDesktop, isMac } from '@/utils/PlatformConstants'
+import { setTheme } from '@tauri-apps/api/app'
+import type { Theme } from '@tauri-apps/api/window'
 
 // 获取平台对应的默认快捷键
 const getDefaultShortcuts = () => {
@@ -82,9 +84,11 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         state.themes.content = nextContent
       })
       setDocumentTheme(nextContent)
+      setTheme(Object.is(theme, 'os') ? null : (theme as Theme))
     },
     /** 切换主题 */
     toggleTheme(theme: string) {
+      setTheme(Object.is(theme, 'os') ? null : (theme as Theme))
       if (theme === ThemeEnum.OS) {
         const os = resolveOsTheme()
         this.$patch((state) => {
