@@ -32,7 +32,7 @@
             <template #header-extra>
               <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
             </template>
-            <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 270px)">
+            <n-scrollbar style="max-height: calc(100vh / var(--page-scale, 1) - 270px)" @scroll="handleFriendScroll">
               <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
               <div @contextmenu.stop="$event.preventDefault()">
                 <n-flex
@@ -197,6 +197,13 @@ const showMenu = (event: MouseEvent) => {
 
 const handleSelect = (event: MouseEvent) => {
   console.log(event)
+}
+
+const handleFriendScroll = (e: Event) => {
+  const { scrollTop, scrollHeight, clientHeight } = e.target as HTMLElement
+  if (scrollHeight - scrollTop - clientHeight < 20) {
+    contactStore.getContactList(false)
+  }
 }
 
 const resetSelection = () => {
