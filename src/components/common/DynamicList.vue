@@ -94,7 +94,7 @@
         <div class="mt-12px pt-8px border-t border-#f0f0f0">
           <!-- 操作按钮 - 固定高度防止闪烁 -->
           <div class="flex items-center justify-between gap-8px mb-8px h-28px">
-            <span class="text-12px text-#999">{{ formatTimestamp(item.createTime!) }}</span>
+            <span class="text-12px text-#999 whitespace-nowrap">{{ formatTimestamp(item.createTime!) }}</span>
             <div class="flex items-center justify-end gap-8px">
               <!-- 点赞按钮 -->
               <div
@@ -115,7 +115,7 @@
                 <svg class="w-16px h-16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span class="text-13px">
+                <span class="text-13px whitespace-nowrap">
                   {{
                     item.commentCount
                       ? t('dynamic.list.actions.comment_with_count', { count: item.commentCount })

@@ -49,5 +49,7 @@
   "dissolve_group": "解散群聊",
   "leave_group": "退出群聊",
   "today": "今天",
-  "yesterday": "昨天"
+  "yesterday": "昨天",
+  "start_group_chat": "发起群聊",
+  "add_contact": "添加联系人"
 }
