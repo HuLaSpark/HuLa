@@ -37,22 +37,31 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const getContactList = async (isFresh = false) => {
     // 非刷新模式下，如果已经加载完或正在加载中，则直接返回
     if (!isFresh) {
-      if (contactsOptions.value.isLast || contactsOptions.value.isLoading) return
+      console.log(contactsOptions.value.isLast)
+      if (contactsOptions.value.isLast) return
+    }
+    if (isFresh) {
+      contactsOptions.value.cursor = ''
+      contactsOptions.value.isLast = false
     }
     contactsOptions.value.isLoading = true
-    const res = await getFriendPage()
-    if (!res) return
-    const data = res
-    // 刷新模式下替换整个列表，否则追加到列表末尾
-    isFresh
-      ? contactsList.value.splice(0, contactsList.value.length, ...data.list)
-      : contactsList.value.push(...data.list)
-    contactsOptions.value.cursor = data.cursor
-    contactsOptions.value.isLast = data.isLast
-    contactsOptions.value.isLoading = false
+    try {
+      const data = await getFriendPage({ cursor: contactsOptions.value.cursor })
 
-    // 获取数据后更新联系人列表
-    contactsList.value.splice(0, contactsList.value.length, ...contactsList.value)
+      if (!data) return
+      // 刷新模式下替换整个列表，否则追加到列表末尾
+      if (isFresh) {
+        contactsList.value = data.list
+      } else {
+        contactsList.value.push(...data.list)
+      }
+      contactsOptions.value.cursor = data.cursor
+      contactsOptions.value.isLast = data.isLast
+    } catch (error) {
+      console.error('获取联系人列表失败:', error)
+    } finally {
+      contactsOptions.value.isLoading = false
+    }
   }
 
   /**
