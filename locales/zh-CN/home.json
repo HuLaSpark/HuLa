@@ -273,7 +273,8 @@
     "tooltip": {
       "copy_account": "复制账号",
       "bound_gitee": "已绑定 Gitee",
-      "bound_github": "已绑定 GitHub"
+      "bound_github": "已绑定 GitHub",
+      "bound_gitcode": "已绑定 Gitcode"
     },
     "buttons": {
       "edit": "编辑资料",
