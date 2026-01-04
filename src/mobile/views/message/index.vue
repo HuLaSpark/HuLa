@@ -101,7 +101,9 @@
             class="text-black"
             :class="item.top ? 'w-full bg-#64A29C18' : ''">
             <!-- 长按项 -->
-            <div @click.stop="intoRoom(item)" class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-4 py-3 gap-1">
+            <div
+              @click.stop="intoRoom(item)"
+              class="grid grid-cols-[2.2rem_1fr_max-content] items-start px-4 py-3 gap-1">
               <div class="flex-shrink-0">
                 <n-badge
                   :offset="[-6, 6]"
@@ -127,7 +129,7 @@
                       <use href="#auth"></use>
                     </svg>
                   </span>
-                  <span class="text-#555">
+                  <span class="text-#555 whitespace-nowrap">
                     {{ formatTimestamp(item?.activeTime) }}
                   </span>
                 </div>

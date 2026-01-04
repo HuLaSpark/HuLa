@@ -13,9 +13,14 @@
       <div
         ref="scrollContainer"
         :style="{ height: tabHeight + 'px' }"
-        class="z-1 overflow-y-auto mt-2 absolute z-3 w-full">
+        class="z-1 overflow-hidden mt-2 absolute z-3 w-full">
         <div class="custom-rounded bg-white flex px-24px flex-col gap-4 z-1 p-10px mt-4">
-          <n-scrollbar ref="scrollbarRef" :style="{ height: tabHeight + 'px' }" @scroll="handleScroll">
+          <n-scrollbar
+            ref="scrollbarRef"
+            :style="{ height: tabHeight + 'px' }"
+            :content-style="{ overflowX: 'hidden' }"
+            class="overflow-x-hidden"
+            @scroll="handleScroll">
             <!-- 动态内容区域 -->
             <div class="py-12px">
               <DynamicList

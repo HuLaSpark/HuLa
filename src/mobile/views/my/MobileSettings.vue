@@ -22,10 +22,10 @@
             <div>
               <!-- 根据 type 渲染对应组件 -->
               <n-switch v-if="item.type === 'switch'" v-model:value="item.value" />
-              <n-input v-else-if="item.type === 'input'" v-model="item.value" placeholder="请输入" class="w-40" />
+              <n-input v-else-if="item.type === 'input'" v-model:value="item.value" placeholder="请输入" class="w-40" />
               <n-select
                 v-else-if="item.type === 'select'"
-                v-model="item.value"
+                v-model:value="item.value"
                 :options="item.options"
                 placeholder="请选择"
                 class="w-40" />
