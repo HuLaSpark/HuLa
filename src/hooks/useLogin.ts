@@ -431,12 +431,25 @@ export const useLogin = () => {
           if (!token || !refreshToken) {
             throw new Error('授权回调缺少 token 或 refreshToken')
           }
-          await TokenManager.updateToken(token, refreshToken, uid || undefined)
+          const targetUid = uid || undefined
+          await TokenManager.updateToken(token, refreshToken, targetUid)
+          await invoke('sync_messages', {
+            param: {
+              asyncData: true,
+              fullSync: false,
+              uid: targetUid
+            }
+          })
           loginDisabled.value = true
           loading.value = false
           loginText.value = t('login.status.success_redirect')
           useMitt.emit(MittEnum.MSG_INIT)
           await routerOrOpenHomeWindow()
+        } catch {
+          window.$message.error('Gitee 登录失败')
+          loading.value = false
+          loginDisabled.value = false
+          loginText.value = t('login.button.login.default')
         } finally {
           if (typeof unlisten === 'function') {
             unlisten()
@@ -532,12 +545,25 @@ export const useLogin = () => {
           if (!token || !refreshToken) {
             throw new Error('授权回调缺少 token 或 refreshToken')
           }
-          await TokenManager.updateToken(token, refreshToken, uid || undefined)
+          const targetUid = uid || undefined
+          await TokenManager.updateToken(token, refreshToken, targetUid)
+          await invoke('sync_messages', {
+            param: {
+              asyncData: true,
+              fullSync: false,
+              uid: targetUid
+            }
+          })
           loginDisabled.value = true
           loading.value = false
           loginText.value = t('login.status.success_redirect')
           useMitt.emit(MittEnum.MSG_INIT)
           await routerOrOpenHomeWindow()
+        } catch {
+          window.$message.error('GitHub 登录失败')
+          loading.value = false
+          loginDisabled.value = false
+          loginText.value = t('login.button.login.default')
         } finally {
           if (typeof unlisten === 'function') {
             unlisten()
