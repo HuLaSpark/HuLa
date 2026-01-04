@@ -115,18 +115,24 @@
               <span>{{ t('home.profile_card.tooltip.copy_account') }}</span>
             </n-tooltip>
 
-            <!-- Gitee/GitHub 标识 -->
-            <n-tooltip v-if="groupStore.getUserInfo(uid)?.linkedGitee">
+            <!-- Gitee/GitHub/GitCode 标识 -->
+            <n-tooltip v-if="linkedGitee">
               <template #trigger>
                 <svg class="size-18px dark:color-#d5304f"><use href="#gitee-login"></use></svg>
               </template>
               <span>{{ t('home.profile_card.tooltip.bound_gitee') }}</span>
             </n-tooltip>
-            <n-tooltip v-if="groupStore.getUserInfo(uid)?.linkedGithub">
+            <n-tooltip v-if="linkedGithub">
               <template #trigger>
                 <svg class="size-18px dark:color-#fefefe"><use href="#github-login"></use></svg>
               </template>
               <span>{{ t('home.profile_card.tooltip.bound_github') }}</span>
+            </n-tooltip>
+            <n-tooltip v-if="linkedGitcode">
+              <template #trigger>
+                <svg class="size-18px dark:color-#d5304f"><use href="#gitcode-login"></use></svg>
+              </template>
+              <span>{{ t('home.profile_card.tooltip.bound_gitcode') }}</span>
             </n-tooltip>
           </n-flex>
         </n-flex>
@@ -214,6 +220,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useGroupStore } from '@/stores/group'
 import { useSettingStore } from '@/stores/setting'
 import { useUserStatusStore } from '@/stores/userStatus'
+import { useUserStore } from '@/stores/user'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 
 const { t } = useI18n()
@@ -232,6 +239,7 @@ const chatStore = useChatStore()
 const { openContent } = leftHook()
 const contactStore = useContactStore()
 const userStatusStore = useUserStatusStore()
+const userStore = useUserStore()
 const cachedStore = useCachedStore()
 const { stateList } = storeToRefs(userStatusStore)
 
@@ -241,6 +249,16 @@ const badgeLoadedMap = ref<Record<string, boolean>>({})
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl((resolvedUserInfo.value?.avatar as string) || ''))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
+/** 绑定标识（带当前用户信息兜底） */
+const linkedGitee = computed(
+  () => resolvedUserInfo.value?.linkedGitee ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGitee : false)
+)
+const linkedGithub = computed(
+  () => resolvedUserInfo.value?.linkedGithub ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGithub : false)
+)
+const linkedGitcode = computed(
+  () => resolvedUserInfo.value?.linkedGitcode ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGitcode : false)
+)
 /** 是否是我的好友 */
 const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
 /** 是否为群聊 */
