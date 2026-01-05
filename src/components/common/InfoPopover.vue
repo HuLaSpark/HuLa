@@ -249,16 +249,33 @@ const badgeLoadedMap = ref<Record<string, boolean>>({})
 const avatarSrc = computed(() => AvatarUtils.getAvatarUrl((resolvedUserInfo.value?.avatar as string) || ''))
 /** 是否是当前登录的用户 */
 const isCurrentUserUid = computed(() => userUid.value === uid)
-/** 绑定标识（带当前用户信息兜底） */
-const linkedGitee = computed(
-  () => resolvedUserInfo.value?.linkedGitee ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGitee : false)
-)
-const linkedGithub = computed(
-  () => resolvedUserInfo.value?.linkedGithub ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGithub : false)
-)
-const linkedGitcode = computed(
-  () => resolvedUserInfo.value?.linkedGitcode ?? (isCurrentUserUid.value ? userStore.userInfo?.linkedGitcode : false)
-)
+
+const providerFieldMap = {
+  gitee: 'linkedGitee',
+  github: 'linkedGithub',
+  gitcode: 'linkedGitcode'
+} as const
+
+type OAuthProvider = keyof typeof providerFieldMap
+
+const resolveLinkedState = (provider: OAuthProvider) => {
+  const fieldKey = providerFieldMap[provider]
+  const resolvedInfo = resolvedUserInfo.value
+  const fallbackInfo = isCurrentUserUid.value ? userStore.userInfo : undefined
+
+  return (
+    resolvedInfo?.[fieldKey] ??
+    fallbackInfo?.[fieldKey] ??
+    resolvedInfo?.oauthProviders?.includes(provider) ??
+    fallbackInfo?.oauthProviders?.includes(provider) ??
+    false
+  )
+}
+
+/** 绑定标识（带当前用户信息兜底，同时兼容 oauthProviders 列表） */
+const linkedGitee = computed(() => resolveLinkedState('gitee'))
+const linkedGithub = computed(() => resolveLinkedState('github'))
+const linkedGitcode = computed(() => resolveLinkedState('gitcode'))
 /** 是否是我的好友 */
 const isMyFriend = computed(() => !!contactStore.contactsList.find((item) => item.uid === uid))
 /** 是否为群聊 */

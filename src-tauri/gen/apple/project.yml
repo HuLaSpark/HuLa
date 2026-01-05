@@ -61,6 +61,7 @@ targets:
     settings:
       base:
         ENABLE_BITCODE: false
+        CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
         ARCHS: [arm64]
         VALID_ARCHS: arm64 
         OTHER_LDFLAGS: $(inherited) -lswiftCompatibilityConcurrency
