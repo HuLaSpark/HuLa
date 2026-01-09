@@ -2,6 +2,7 @@ import { MsgEnum } from '@/enums'
 import { UploadProviderEnum } from '@/hooks/useUpload'
 import { useChatStore } from '@/stores/chat'
 import { messageStrategyMap } from '@/strategy/MessageStrategy'
+import { removeTempFile } from '@/utils/TempFileManager'
 
 type ReplyContext = {
   value: {
@@ -105,6 +106,7 @@ export const useCustomForwardTask = () => {
       return messageBody
     } finally {
       releaseBlobUrl(msg?.url)
+      await removeTempFile(msg?.path, { reason: '删除临时二维码文件失败' })
     }
   }
 

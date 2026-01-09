@@ -1,5 +1,5 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
-import { BaseDirectory, remove, stat, writeFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, stat, writeFile } from '@tauri-apps/plugin-fs'
 import { fetch } from '@tauri-apps/plugin-http'
 import { createEventHook } from '@vueuse/core'
 import { TauriCommand, UploadSceneEnum } from '@/enums'
@@ -10,6 +10,7 @@ import { getImageDimensions } from '@/utils/ImageUtils'
 import { getQiniuToken, getUploadProvider } from '@/utils/ImRequestUtils'
 import { isAndroid, isMobile } from '@/utils/PlatformConstants'
 import { getWasmMd5 } from '@/utils/Md5Util'
+import { removeTempFile } from '@/utils/TempFileManager'
 
 /** 文件信息类型 */
 export type FileInfoType = {
@@ -122,7 +123,7 @@ export const useUpload = () => {
         onProgress
       })
     } finally {
-      await remove(tempPath, { baseDir }).catch(() => void 0)
+      await removeTempFile(tempPath, { baseDir, silent: true })
     }
   }
 

@@ -1,4 +1,4 @@
-import { BaseDirectory, readFile, remove, writeFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, readFile, writeFile } from '@tauri-apps/plugin-fs'
 import DOMPurify from 'dompurify'
 import type { Ref } from 'vue'
 import { AppException } from '@/common/exception.ts'
@@ -12,6 +12,7 @@ import { getImageDimensions } from '@/utils/ImageUtils'
 import { isMobile } from '@/utils/PlatformConstants'
 import { generateVideoThumbnail } from '@/utils/VideoThumbnail'
 import { useGroupStore } from '../stores/group'
+import { removeTempFile } from '@/utils/TempFileManager'
 
 interface MessageStrategy {
   getMsg: (msgInputValue: string, replyValue: any, fileList?: File[]) => any
@@ -1020,11 +1021,7 @@ class VideoMessageStrategyImpl extends AbstractMessageStrategy {
       const result = await this.uploadHook.doUpload(tempPath, uploadUrl, { ...options, enableDeduplication: true })
 
       // 清理临时文件
-      try {
-        await remove(tempPath, { baseDir })
-      } catch (cleanupError) {
-        console.warn('清理临时文件失败:', cleanupError)
-      }
+      await removeTempFile(tempPath, { baseDir })
 
       // 如果是七牛云上传，返回qiniuUrl
       if (options?.provider === UploadProviderEnum.QINIU) {

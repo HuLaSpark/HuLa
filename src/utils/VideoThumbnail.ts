@@ -1,8 +1,9 @@
 import { invoke } from '@tauri-apps/api/core'
 import { appCacheDir, join } from '@tauri-apps/api/path'
-import { BaseDirectory, remove, writeFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
 import { AppException } from '@/common/exception'
 import { isMobile } from '@/utils/PlatformConstants'
+import { removeTempFile } from '@/utils/TempFileManager'
 
 // 压缩缩略图至给定尺寸与质量，保持比例，返回压缩后的 File
 const compressThumbnail = async (
@@ -131,11 +132,7 @@ export const generateVideoThumbnail = async (file: File): Promise<File> => {
     const thumbnailBlob = new Blob([bytes], { type: 'image/jpeg' })
     const thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' })
 
-    try {
-      await remove(tempPath, { baseDir })
-    } catch (cleanupError) {
-      console.warn('清理临时文件失败:', cleanupError)
-    }
+    await removeTempFile(tempPath, { baseDir })
 
     return await compressThumbnail(thumbnailFile)
   } catch (error) {
