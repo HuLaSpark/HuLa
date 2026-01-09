@@ -83,19 +83,26 @@ impl DatabaseSettings {
         app_handle: &AppHandle,
     ) -> Result<DatabaseConnection, CommonError> {
         // 数据库路径配置：
-        let db_path = match app_handle.path().app_data_dir() {
-            Ok(app_data_dir) => {
-                if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
-                    tracing::warn!("Failed to create app_data_dir: {}", create_err);
+        let db_path = if cfg!(debug_assertions) && cfg!(desktop) {
+            // 桌面端开发环境：使用项目根目录（src-tauri）
+            let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            path.push("db.sqlite");
+            path
+        } else {
+            match app_handle.path().app_data_dir() {
+                Ok(app_data_dir) => {
+                    if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
+                        tracing::warn!("Failed to create app_data_dir: {}", create_err);
+                    }
+                    let db_path = app_data_dir.join("db.sqlite");
+                    info!("Using app_data_dir database path: {:?}", db_path);
+                    db_path
                 }
-                let db_path = app_data_dir.join("db.sqlite");
-                info!("Using app_data_dir database path: {:?}", db_path);
-                db_path
-            }
-            Err(e) => {
-                let error_msg = format!("Failed to get app_data_dir: {}", e);
-                tracing::error!("{}", error_msg);
-                return Err(CommonError::RequestError(error_msg).into());
+                Err(e) => {
+                    let error_msg = format!("Failed to get app_data_dir: {}", e);
+                    tracing::error!("{}", error_msg);
+                    return Err(CommonError::RequestError(error_msg).into());
+                }
             }
         };
         info!("Database path: {:?}", db_path);

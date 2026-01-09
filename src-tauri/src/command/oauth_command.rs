@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 use tauri::async_runtime::JoinHandle;
-use tauri::{AppHandle, Emitter, Manager, Runtime, State};
+use tauri::{AppHandle, Emitter, Runtime, State};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 

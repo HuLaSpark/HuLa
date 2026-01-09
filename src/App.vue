@@ -77,7 +77,9 @@ const { themes, lockScreen, page, login } = storeToRefs(settingStore)
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut()
 // 提前初始化网络状态监听，确保不错过 WebSocket 状态变化事件
-useNetworkStatus()
+if (isDesktop()) {
+  useNetworkStatus()
+}
 
 /** 不需要锁屏的页面 */
 const LockExclusion = new Set(['/login', '/tray', '/qrCode', '/about', '/onlineStatus', '/capture'])
