@@ -35,7 +35,7 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
   state: (): STO.Setting => ({
     themes: {
       content: '',
-      pattern: '',
+      pattern: ThemeEnum.OS,
       versatile: isDesktopComputed.value ? 'default' : 'simple'
     },
     escClose: true,

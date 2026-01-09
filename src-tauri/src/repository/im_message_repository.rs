@@ -20,6 +20,13 @@ lazy_static! {
     static ref ROOM_CLEAR_TABLE_INITIALIZED: AtomicBool = AtomicBool::new(false);
 }
 
+/// 重置表初始化标志，在切换数据库时调用
+pub fn reset_table_initialization_flags() {
+    DELETED_TABLE_INITIALIZED.store(false, Ordering::SeqCst);
+    ROOM_CLEAR_TABLE_INITIALIZED.store(false, Ordering::SeqCst);
+    info!("Table initialization flags have been reset");
+}
+
 #[derive(Clone)]
 pub struct MessageWithThumbnail {
     pub message: im_message::Model,

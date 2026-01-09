@@ -9,10 +9,8 @@ use tracing::{error, info};
 
 use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::repository::im_room_member_repository;
-use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::ops::Deref;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
@@ -67,7 +65,7 @@ pub async fn update_my_room_info(
 
         // 更新本地数据库
         update_my_room_info_db(
-            state.db_conn.deref(),
+            &*state.db_conn.read().await,
             &my_room_info.my_name,
             &my_room_info.id,
             &uid,
@@ -103,18 +101,7 @@ pub async fn get_room_members(
 ) -> Result<Vec<RoomMemberResponse>, String> {
     info!("Calling to get all member list of room with room_id");
     let result: Result<Vec<RoomMemberResponse>, CommonError> = async {
-        let login_uid = {
-            let user_info = state.user_info.lock().await;
-            user_info.uid.clone()
-        };
-
-        let mut members = fetch_and_update_room_members(
-            room_id.clone(),
-            state.db_conn.clone(),
-            state.rc.clone(),
-            login_uid.clone(),
-        )
-        .await?;
+        let mut members = fetch_and_update_room_members(room_id.clone(), state.rc.clone()).await?;
 
         sort_room_members(&mut members);
 
@@ -152,7 +139,7 @@ pub async fn cursor_page_room_members(
     };
 
     let data = im_room_member_repository::cursor_page_room_members(
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         param.room_id,
         param.cursor_page_param,
         &login_uid,
@@ -235,9 +222,7 @@ fn sort_room_members(members: &mut Vec<RoomMemberResponse>) {
 /// 异步更新房间成员数据
 async fn fetch_and_update_room_members(
     room_id: String,
-    _db_conn: Arc<DatabaseConnection>,
     request_client: Arc<Mutex<ImRequestClient>>,
-    _login_uid: String,
 ) -> Result<Vec<RoomMemberResponse>, CommonError> {
     let resp: Option<Vec<RoomMemberResponse>> = request_client
         .lock()

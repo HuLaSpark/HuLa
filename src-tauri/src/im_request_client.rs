@@ -1036,7 +1036,6 @@ impl ImUrl {
 
             // ================ 平台配置 ================
             "platformList" => Ok(ImUrl::PlatformList),
-            "modelRemainingUsage" => Ok(ImUrl::ModelRemainingUsage),
             "platformAddModel" => Ok(ImUrl::PlatformAddModel),
 
             // ================ AI 工具 ================

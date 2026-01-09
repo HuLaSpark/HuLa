@@ -1,12 +1,13 @@
-use std::ops::Deref;
-use tauri::{Emitter, State};
+use migration::{Migrator, MigratorTrait};
+use tauri::{AppHandle, Emitter, State};
 use tracing::{error, info};
 
 use crate::{
     AppData,
     command::message_command::check_user_init_and_fetch_messages,
+    configuration::get_configuration,
     im_request_client::{ImRequest, ImUrl},
-    repository::im_user_repository,
+    repository::{im_message_repository::reset_table_initialization_flags, im_user_repository},
     vo::vo::{LoginReq, LoginResp, RefreshTokenReq},
 };
 
@@ -14,14 +15,18 @@ use crate::{
 pub async fn login_command(
     data: LoginReq,
     state: State<'_, AppData>,
+    app_handle: AppHandle,
 ) -> Result<Option<LoginResp>, String> {
     if data.is_auto_login {
         // 自动登录逻辑
         if let Some(uid) = &data.uid {
             info!("Attempting auto login, user ID: {}", uid);
 
+            // 先切换到用户专属数据库
+            switch_to_user_database(&state, &app_handle, uid).await?;
+
             // 从数据库获取用户的 refresh_token
-            match im_user_repository::get_user_tokens(state.db_conn.deref(), uid).await {
+            match im_user_repository::get_user_tokens(&*state.db_conn.read().await, uid).await {
                 Ok(Some((_, refresh_token))) => {
                     info!(
                         "Found refresh_token for user {}, attempting to refresh login",
@@ -44,7 +49,7 @@ pub async fn login_command(
 
                             // 保存新的 token 信息到数据库
                             if let Err(e) = im_user_repository::save_user_tokens(
-                                state.db_conn.deref(),
+                                &*state.db_conn.read().await,
                                 uid,
                                 &refresh_resp.token,
                                 &refresh_resp.refresh_token,
@@ -99,12 +104,56 @@ pub async fn login_command(
 
         // 登录成功后处理用户信息和token保存
         if let Some(login_resp) = &res {
+            // 先切换到用户专属数据库
+            switch_to_user_database(&state, &app_handle, &login_resp.uid).await?;
             handle_login_success(login_resp, &state, async_data).await?;
         }
 
         info!("Manual login successful");
         Ok(res)
     }
+}
+
+/// 切换到用户专属数据库
+async fn switch_to_user_database(
+    state: &State<'_, AppData>,
+    app_handle: &AppHandle,
+    uid: &str,
+) -> Result<(), String> {
+    info!("Switching to user database for uid: {}", uid);
+
+    // 获取配置
+    let configuration = get_configuration(app_handle)
+        .map_err(|e| format!("Failed to load configuration: {}", e))?;
+
+    // 创建新的数据库连接
+    let new_db = configuration
+        .database
+        .connection_string(app_handle, Some(uid))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 执行数据库迁移
+    match Migrator::up(&new_db, None).await {
+        Ok(_) => {
+            info!("Database migration completed for user: {}", uid);
+        }
+        Err(e) => {
+            tracing::warn!("Database migration warning for user {}: {}", uid, e);
+        }
+    }
+
+    // 重置表初始化标志，确保新数据库会创建必要的表
+    reset_table_initialization_flags();
+
+    // 替换数据库连接
+    {
+        let mut db_guard = state.db_conn.write().await;
+        *db_guard = new_db;
+    }
+
+    info!("Successfully switched to database for user: {}", uid);
+    Ok(())
 }
 
 async fn handle_login_success(
@@ -124,7 +173,7 @@ async fn handle_login_success(
     info!("handle_login_success, user_info: {:?}", user_info);
     // 保存 token 信息到数据库
     im_user_repository::save_user_tokens(
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         uid,
         &login_resp.token,
         &login_resp.refresh_token,
@@ -133,9 +182,15 @@ async fn handle_login_success(
     .map_err(|e| e.to_string())?;
 
     let mut client = state.rc.lock().await;
-    check_user_init_and_fetch_messages(&mut client, state.db_conn.deref(), uid, async_data, false)
-        .await
-        .map_err(|e| e.to_string())?;
+    check_user_init_and_fetch_messages(
+        &mut client,
+        &*state.db_conn.read().await,
+        uid,
+        async_data,
+        false,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(())
 }

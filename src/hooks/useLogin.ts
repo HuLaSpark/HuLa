@@ -50,6 +50,34 @@ export const useLogin = () => {
   const { t } = useI18nGlobal()
 
   /**
+   * 清空 localStorage 中用户相关的持久化数据
+   * 防止 Pinia 在页面刷新时自动恢复旧账号数据
+   */
+  const clearUserLocalStorage = () => {
+    const userScopedStoreKeys = ['chat', 'group', 'contacts', 'feed', 'cached', 'sessionUnread']
+    userScopedStoreKeys.forEach((key) => {
+      localStorage.removeItem(key)
+    })
+    console.log('[useLogin] User localStorage has been cleared')
+  }
+
+  /**
+   * 清空消息缓存和群组数据
+   * 在新数据加载完成后调用，避免旧消息混入
+   */
+  const clearMessageCache = () => {
+    // 清空消息缓存（messageMap 是 reactive Record，需要逐个删除键）
+    for (const key of Object.keys(chatStore.messageMap)) {
+      delete chatStore.messageMap[key]
+    }
+    // 清空群组成员数据
+    for (const key of Object.keys(groupStore.userListMap)) {
+      delete groupStore.userListMap[key]
+    }
+    console.log('[useLogin] Message cache has been cleared')
+  }
+
+  /**
    * 在 composable 初始化时获取 router 实例
    * 注意: useRouter() 必须在组件 setup 上下文中调用
    * 不能在异步回调中调用 useRouter(),因为那时已经失去了 Vue 组件上下文
@@ -96,6 +124,7 @@ export const useLogin = () => {
    */
   const logout = async () => {
     globalStore.updateCurrentSessionRoomId('')
+
     const sendLogoutEvent = async () => {
       // ws 退出连接
       await invokeSilently('ws_disconnect')
@@ -210,10 +239,28 @@ export const useLogin = () => {
 
   const init = async (options?: { isInitialSync?: boolean }) => {
     const emojiStore = useEmojiStore()
-    // 保存当前选中的会话，避免同步时丢失用户的选中状态
+
+    // 保存当前选中的会话，同步后如果该会话仍存在则恢复选中状态
     const previousSessionRoomId = globalStore.currentSessionRoomId
+
+    // 清空 localStorage，防止页面刷新时恢复旧账号数据
+    clearUserLocalStorage()
+
+    // 清空消息缓存，避免旧消息混入新账号
+    clearMessageCache()
+
+    // 立即清空旧账号的会话列表，并立即获取新账号数据
+    // 这样用户看到的是短暂加载而不是错误的旧数据
+    chatStore.sessionList.length = 0
+    groupStore.groupDetails.length = 0
+
     // 连接 ws
     await rustWebSocketClient.initConnect()
+
+    // 立即获取新账号的会话列表（优先加载，减少空白时间）
+    chatStore.getSessionList(true).catch(() => {
+      void logInfo('[useLogin] 获取会话列表失败')
+    })
 
     // 用户相关数据初始化
     userStatusStore.stateList = await getAllUserState()
@@ -357,6 +404,7 @@ export const useLogin = () => {
       }
     })
       .then(async (_: any) => {
+        // 数据库切换已在后端 login_command 中完成
         loginDisabled.value = true
         loading.value = false
         loginText.value = t('login.status.success_redirect')
@@ -432,6 +480,10 @@ export const useLogin = () => {
             throw new Error('授权回调缺少 token 或 refreshToken')
           }
           const targetUid = uid || undefined
+          // 先切换到用户专属数据库
+          if (targetUid) {
+            await invoke('switch_user_database', { uid: targetUid })
+          }
           await TokenManager.updateToken(token, refreshToken, targetUid)
           await invoke('sync_messages', {
             param: {
@@ -546,6 +598,10 @@ export const useLogin = () => {
             throw new Error('授权回调缺少 token 或 refreshToken')
           }
           const targetUid = uid || undefined
+          // 先切换到用户专属数据库
+          if (targetUid) {
+            await invoke('switch_user_database', { uid: targetUid })
+          }
           await TokenManager.updateToken(token, refreshToken, targetUid)
           await invoke('sync_messages', {
             param: {
@@ -635,6 +691,10 @@ export const useLogin = () => {
             throw new Error('授权回调缺少 token 或 refreshToken')
           }
           const targetUid = uid || undefined
+          // 先切换到用户专属数据库
+          if (targetUid) {
+            await invoke('switch_user_database', { uid: targetUid })
+          }
           await TokenManager.updateToken(token, refreshToken, targetUid)
           await invoke('sync_messages', {
             param: {

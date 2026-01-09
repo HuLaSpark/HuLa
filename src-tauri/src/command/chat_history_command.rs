@@ -3,7 +3,6 @@ use crate::command::message_command::MessageResp;
 use crate::repository::im_message_repository;
 
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 use tauri::State;
 use tracing::{error, info};
 
@@ -74,7 +73,7 @@ pub async fn query_chat_history(
 
     // 查询数据库
     let messages =
-        im_message_repository::query_chat_history(state.db_conn.deref(), query_condition)
+        im_message_repository::query_chat_history(&*state.db_conn.read().await, query_condition)
             .await
             .map_err(|e| {
                 error!("查询聊天历史记录失败: {}", e);

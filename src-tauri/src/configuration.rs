@@ -68,12 +68,23 @@ pub enum Environment {
 }
 
 impl DatabaseSettings {
+    /// 根据用户ID生成数据库文件名
+    /// 如果提供了用户ID，则生成 `db_{uid}.sqlite` 格式的文件名
+    /// 否则使用默认的 `db.sqlite`
+    fn get_db_filename(uid: Option<&str>) -> String {
+        match uid {
+            Some(id) if !id.is_empty() => format!("db_{}.sqlite", id),
+            _ => "db.sqlite".to_string(),
+        }
+    }
+
     /// 创建数据库连接
     /// 根据不同的运行环境（桌面开发、移动端、桌面生产）选择合适的数据库路径
     /// 并配置数据库连接选项，返回数据库连接实例
     ///
     /// # 参数
     /// * `app_handle` - Tauri应用句柄，用于获取应用路径
+    /// * `uid` - 可选的用户ID，用于生成用户专属的数据库文件
     ///
     /// # 返回值
     /// * `Ok(DatabaseConnection)` - 成功时返回数据库连接
@@ -81,12 +92,16 @@ impl DatabaseSettings {
     pub async fn connection_string(
         &self,
         app_handle: &AppHandle,
+        uid: Option<&str>,
     ) -> Result<DatabaseConnection, CommonError> {
+        let db_filename = Self::get_db_filename(uid);
+        info!("Database filename: {}", db_filename);
+
         // 数据库路径配置：
         let db_path = if cfg!(debug_assertions) && cfg!(desktop) {
             // 桌面端开发环境：使用项目根目录（src-tauri）
             let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            path.push("db.sqlite");
+            path.push(&db_filename);
             path
         } else {
             match app_handle.path().app_data_dir() {
@@ -94,7 +109,7 @@ impl DatabaseSettings {
                     if let Err(create_err) = std::fs::create_dir_all(&app_data_dir) {
                         tracing::warn!("Failed to create app_data_dir: {}", create_err);
                     }
-                    let db_path = app_data_dir.join("db.sqlite");
+                    let db_path = app_data_dir.join(&db_filename);
                     info!("Using app_data_dir database path: {:?}", db_path);
                     db_path
                 }

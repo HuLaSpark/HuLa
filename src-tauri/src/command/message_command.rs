@@ -14,7 +14,6 @@ use sea_orm::{DatabaseConnection, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::future::Future;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use tauri::{State, ipc::Channel};
@@ -158,7 +157,7 @@ pub async fn page_msg(
 
     // 从数据库查询消息
     let db_result = im_message_repository::cursor_page_messages(
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         param.room_id,
         param.cursor_page_param,
         &login_uid,
@@ -185,7 +184,7 @@ pub async fn page_msg(
         } else if let Some(send_time) = msg.message.send_time {
             // 使用统一的 time_block 计算函数
             resp.time_block = im_message_repository::calculate_time_block(
-                state.db_conn.deref(),
+                &*state.db_conn.read().await,
                 &msg.message.room_id,
                 &msg.message.id,
                 send_time,
@@ -493,8 +492,6 @@ pub async fn sync_messages(
     param: Option<SyncMessagesParam>,
     state: State<'_, AppData>,
 ) -> Result<(), String> {
-    use std::ops::Deref;
-
     let async_data = param.as_ref().and_then(|p| p.async_data).unwrap_or(true);
     let full_sync = param.as_ref().and_then(|p| p.full_sync).unwrap_or(false);
     let uid = match param.as_ref().and_then(|p| p.uid.clone()) {
@@ -505,7 +502,7 @@ pub async fn sync_messages(
     let mut client = state.rc.lock().await;
     check_user_init_and_fetch_messages(
         &mut client,
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         &uid,
         async_data,
         full_sync,
@@ -596,8 +593,6 @@ pub async fn send_msg(
     success_channel: Channel<MessageResp>,
     error_channel: Channel<String>,
 ) -> Result<(), String> {
-    use std::ops::Deref;
-
     // 获取当前登录用户信息
     let (login_uid, nickname) = {
         let user_info = state.user_info.lock().await;
@@ -641,7 +636,8 @@ pub async fn send_msg(
         let db_conn = state.db_conn.clone(); // 克隆数据库连接供异步使用
         let mut record = message_record.clone(); // 拷贝消息记录以便闭包内可变
         async move {
-            let tx = db_conn.begin().await.map_err(CommonError::DatabaseError)?; // 开启事务
+            let db = db_conn.read().await;
+            let tx = db.begin().await.map_err(CommonError::DatabaseError)?; // 开启事务
             record = im_message_repository::save_message(&tx, record).await?; // 保存消息
             tx.commit().await.map_err(CommonError::DatabaseError)?; // 提交事务
             Ok(record)
@@ -694,7 +690,7 @@ pub async fn send_msg(
 
         // 更新消息状态
         let model = im_message_repository::update_message_status(
-            db_conn.deref(),
+            &*db_conn.read().await,
             record_for_send,
             status,
             id,
@@ -727,7 +723,8 @@ pub async fn save_msg(data: MessageResp, state: State<'_, AppData>) -> Result<()
         let db_conn = state.db_conn.clone();
         let record = record.clone();
         async move {
-            let tx = db_conn.begin().await?;
+            let db = db_conn.read().await;
+            let tx = db.begin().await?;
             im_message_repository::save_message(&tx, record).await?;
             tx.commit().await?;
             Ok(())
@@ -748,7 +745,7 @@ pub async fn update_message_recall_status(
     let login_uid = state.user_info.lock().await.uid.clone();
 
     im_message_repository::update_message_recall_status(
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         &message_id,
         message_type,
         &message_body,
@@ -770,40 +767,32 @@ pub async fn delete_message(
 ) -> Result<(), String> {
     let login_uid = state.user_info.lock().await.uid.clone();
 
+    let db = state.db_conn.read().await;
     let resolved_room_id = if let Some(room) = room_id {
         room
     } else {
-        im_message_repository::get_room_id_by_message_id(
-            state.db_conn.deref(),
-            &message_id,
-            &login_uid,
-        )
-        .await
-        .map_err(|e| e.to_string())?
-        .ok_or_else(|| "消息不存在或房间信息缺失".to_string())?
+        im_message_repository::get_room_id_by_message_id(&*db, &message_id, &login_uid)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| "消息不存在或房间信息缺失".to_string())?
     };
 
-    im_message_repository::delete_message_by_id(state.db_conn.deref(), &message_id, &login_uid)
+    im_message_repository::delete_message_by_id(&*db, &message_id, &login_uid)
         .await
         .map_err(|e| {
             error!("Failed to delete message {}: {}", message_id, e);
             e.to_string()
         })?;
 
-    im_message_repository::record_deleted_message(
-        state.db_conn.deref(),
-        &message_id,
-        &resolved_room_id,
-        &login_uid,
-    )
-    .await
-    .map_err(|e| {
-        error!(
-            "Failed to record deletion for message {} in room {}: {}",
-            message_id, resolved_room_id, e
-        );
-        e.to_string()
-    })?;
+    im_message_repository::record_deleted_message(&*db, &message_id, &resolved_room_id, &login_uid)
+        .await
+        .map_err(|e| {
+            error!(
+                "Failed to record deletion for message {} in room {}: {}",
+                message_id, resolved_room_id, e
+            );
+            e.to_string()
+        })?;
 
     info!(
         "Deleted message {} for current user {} from local database",
@@ -819,40 +808,34 @@ pub async fn delete_room_messages(
     state: State<'_, AppData>,
 ) -> Result<u64, String> {
     let login_uid = state.user_info.lock().await.uid.clone();
+    let db = state.db_conn.read().await;
 
-    let last_msg_id =
-        im_message_repository::get_room_max_message_id(state.db_conn.deref(), &room_id, &login_uid)
-            .await
-            .map_err(|e| {
-                error!(
-                    "Failed to query last message id for room {}: {}",
-                    room_id, e
-                );
-                e.to_string()
-            })?;
+    let last_msg_id = im_message_repository::get_room_max_message_id(&*db, &room_id, &login_uid)
+        .await
+        .map_err(|e| {
+            error!(
+                "Failed to query last message id for room {}: {}",
+                room_id, e
+            );
+            e.to_string()
+        })?;
 
-    let affected_rows =
-        im_message_repository::delete_messages_by_room(state.db_conn.deref(), &room_id, &login_uid)
-            .await
-            .map_err(|e| {
-                error!("Failed to delete messages for room {}: {}", room_id, e);
-                e.to_string()
-            })?;
+    let affected_rows = im_message_repository::delete_messages_by_room(&*db, &room_id, &login_uid)
+        .await
+        .map_err(|e| {
+            error!("Failed to delete messages for room {}: {}", room_id, e);
+            e.to_string()
+        })?;
 
-    im_message_repository::record_room_clear(
-        state.db_conn.deref(),
-        &room_id,
-        &login_uid,
-        last_msg_id,
-    )
-    .await
-    .map_err(|e| {
-        error!(
-            "Failed to record room clear for room {} (user {}): {}",
-            room_id, login_uid, e
-        );
-        e.to_string()
-    })?;
+    im_message_repository::record_room_clear(&*db, &room_id, &login_uid, last_msg_id)
+        .await
+        .map_err(|e| {
+            error!(
+                "Failed to record room clear for room {} (user {}): {}",
+                room_id, login_uid, e
+            );
+            e.to_string()
+        })?;
 
     info!(
         "Deleted {} messages for room {} (user {})",

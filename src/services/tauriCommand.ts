@@ -59,6 +59,16 @@ export const updateSettings = async (settings: UpdateSettingsParams) => {
   return await invoke('update_settings', { settings })
 }
 
+/**
+ * 切换用户数据库
+ * 根据用户ID切换到对应的数据库文件，如果数据库不存在则创建
+ * @param uid 用户ID
+ */
+export const switchUserDatabase = async (uid: string): Promise<void> => {
+  await ensureAppStateReady()
+  return await invoke('switch_user_database', { uid })
+}
+
 export const loginCommand = async (
   info: Partial<{
     account: string
@@ -91,6 +101,7 @@ export const loginCommand = async (
       uid: info.uid
     }
   }).then(async (res: any) => {
+    // 数据库切换已在后端 login_command 中完成
     // 开启 ws 连接
     await rustWebSocketClient.initConnect()
     await loginProcess(res.token, res.refreshToken, res.client)

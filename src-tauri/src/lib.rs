@@ -61,7 +61,7 @@ use mobiles::splash;
 
 #[derive(Debug)]
 pub struct AppData {
-    db_conn: Arc<DatabaseConnection>,
+    db_conn: Arc<RwLock<DatabaseConnection>>,
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<im_request_client::ImRequestClient>>,
     pub config: Arc<Mutex<Settings>>,
@@ -77,6 +77,7 @@ pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
 
 use crate::command::chat_history_command::query_chat_history;
 use crate::command::contact_command::{hide_contact_command, list_contacts_command};
+use crate::command::database_command::switch_user_database;
 use crate::command::file_manager_command::{
     debug_message_stats, get_navigation_items, query_files,
 };
@@ -91,7 +92,7 @@ use crate::command::oauth_command::start_oauth_server;
 #[cfg(desktop)]
 use tauri::Listener;
 use tauri::{AppHandle, Emitter, Manager};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 
 pub fn run() {
     #[cfg(desktop)]
@@ -144,7 +145,7 @@ async fn initialize_app_data(
     app_handle: tauri::AppHandle,
 ) -> Result<
     (
-        Arc<DatabaseConnection>,
+        Arc<RwLock<DatabaseConnection>>,
         Arc<Mutex<UserInfo>>,
         Arc<Mutex<im_request_client::ImRequestClient>>,
         Arc<Mutex<Settings>>,
@@ -161,17 +162,17 @@ async fn initialize_app_data(
         })?));
 
     // 初始化数据库连接
-    let db: Arc<DatabaseConnection> = Arc::new(
+    let db: Arc<RwLock<DatabaseConnection>> = Arc::new(RwLock::new(
         configuration
             .lock()
             .await
             .database
-            .connection_string(&app_handle)
+            .connection_string(&app_handle, None)
             .await?,
-    );
+    ));
 
     // 数据库迁移
-    match Migrator::up(db.as_ref(), None).await {
+    match Migrator::up(&*db.read().await, None).await {
         Ok(_) => {
             info!("Database migration completed");
         }
@@ -496,5 +497,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         #[cfg(target_os = "ios")]
         set_webview_keyboard_adjustment,
         is_app_state_ready,
+        switch_user_database,
     ]
 }

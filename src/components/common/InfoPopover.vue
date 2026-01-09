@@ -118,19 +118,19 @@
             <!-- Gitee/GitHub/GitCode 标识 -->
             <n-tooltip v-if="linkedGitee">
               <template #trigger>
-                <svg class="size-18px dark:color-#d5304f"><use href="#gitee-login"></use></svg>
+                <svg class="size-18px color-#d5304f"><use href="#gitee-login"></use></svg>
               </template>
               <span>{{ t('home.profile_card.tooltip.bound_gitee') }}</span>
             </n-tooltip>
             <n-tooltip v-if="linkedGithub">
               <template #trigger>
-                <svg class="size-18px dark:color-#fefefe"><use href="#github-login"></use></svg>
+                <svg class="size-18px color-#303030 dark:color-#fefefe"><use href="#github-login"></use></svg>
               </template>
               <span>{{ t('home.profile_card.tooltip.bound_github') }}</span>
             </n-tooltip>
             <n-tooltip v-if="linkedGitcode">
               <template #trigger>
-                <svg class="size-18px dark:color-#d5304f"><use href="#gitcode-login"></use></svg>
+                <svg class="size-18px color-#d5304f"><use href="#gitcode-login"></use></svg>
               </template>
               <span>{{ t('home.profile_card.tooltip.bound_gitcode') }}</span>
             </n-tooltip>

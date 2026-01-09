@@ -127,6 +127,9 @@ onUnmounted(() => {
 })
 
 const commonTheme: GlobalThemeOverrides = {
+  Badge: {
+    color: '#c14053'
+  },
   Input: {
     borderRadius: '10px',
     borderHover: '0',

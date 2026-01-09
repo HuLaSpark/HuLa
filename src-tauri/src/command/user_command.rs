@@ -9,7 +9,6 @@ use sea_orm::EntityTrait;
 use sea_orm::IntoActiveModel;
 use sea_orm::QueryFilter;
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 use tauri::State;
 use tracing::{debug, info};
 
@@ -46,12 +45,12 @@ pub async fn save_user_info(
     user_info: SaveUserInfoRequest,
     state: State<'_, AppData>,
 ) -> Result<(), String> {
-    let db = state.db_conn.clone();
+    let db = state.db_conn.read().await;
 
     // 检查用户是否存在
     let exists = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(&user_info.uid))
-        .one(db.deref())
+        .one(&*db)
         .await
         .map_err(|err| format!("Failed to query user: {}", err))?;
 
@@ -66,7 +65,7 @@ pub async fn save_user_info(
         };
 
         im_user::Entity::insert(user)
-            .exec(db.deref())
+            .exec(&*db)
             .await
             .map_err(|err| format!("Failed to insert user: {}", err))?;
     } else {
@@ -78,14 +77,14 @@ pub async fn save_user_info(
 #[tauri::command]
 pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), String> {
     info!("Updating user last operation time");
-    let db = state.db_conn.clone();
+    let db = state.db_conn.read().await;
 
     let uid = state.user_info.lock().await.uid.clone();
 
     // 检查用户是否存在
     let user = ImUserEntity::find()
         .filter(im_user::Column::Id.eq(uid.clone()))
-        .one(db.deref())
+        .one(&*db)
         .await
         .map_err(|err| format!("Failed to query user: {}", err))?;
 
@@ -94,7 +93,7 @@ pub async fn update_user_last_opt_time(state: State<'_, AppData>) -> Result<(), 
         active_model.last_opt_time = Set(Some(Local::now().timestamp_millis()));
 
         ImUserEntity::update(active_model)
-            .exec(db.deref())
+            .exec(&*db)
             .await
             .map_err(|err| format!("Failed to update user last operation time: {}", err))?;
     }
@@ -149,7 +148,7 @@ pub async fn update_token(
         rc.refresh_token = Some(req.refresh_token.clone());
     }
     im_user_repository::save_user_tokens(
-        state.db_conn.deref(),
+        &*state.db_conn.read().await,
         &req.uid,
         &req.token,
         &req.refresh_token,

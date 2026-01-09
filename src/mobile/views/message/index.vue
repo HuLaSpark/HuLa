@@ -107,7 +107,7 @@
               <div class="flex-shrink-0">
                 <n-badge
                   :offset="[-6, 6]"
-                  :color="item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'grey' : '#d5304f'"
+                  :color="item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'grey' : '#c14053'"
                   :value="item.unreadCount"
                   :max="99">
                   <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />

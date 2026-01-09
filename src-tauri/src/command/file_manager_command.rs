@@ -4,7 +4,6 @@ use entity::im_message;
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect};
 
 use serde::{Deserialize, Serialize};
-use std::ops::Deref;
 use tauri::State;
 use tracing::info;
 
@@ -96,18 +95,19 @@ pub async fn query_files(
     };
 
     // 查询数据库
+    let db = state.db_conn.read().await;
     let messages = match param.navigation_type.as_str() {
         "myFiles" => {
             // 查询所有房间的文件
-            query_all_files(state.db_conn.deref(), &login_uid, &param).await?
+            query_all_files(&*db, &login_uid, &param).await?
         }
         "senders" => {
             // 按发送人分组查询文件
-            query_files_by_senders(state.db_conn.deref(), &login_uid, &param).await?
+            query_files_by_senders(&*db, &login_uid, &param).await?
         }
         "sessions" | "groups" => {
             // 按会话或群聊分组查询文件
-            query_files_by_sessions(state.db_conn.deref(), &login_uid, &param).await?
+            query_files_by_sessions(&*db, &login_uid, &param).await?
         }
         _ => {
             return Err("不支持的导航类型".to_string());
@@ -485,10 +485,12 @@ pub async fn debug_message_stats(state: State<'_, AppData>) -> Result<serde_json
         user_info.uid.clone()
     };
 
+    let db = state.db_conn.read().await;
+
     // 查询总消息数
     let total_messages = im_message::Entity::find()
         .filter(im_message::Column::LoginUid.eq(&login_uid))
-        .count(state.db_conn.deref())
+        .count(&*db)
         .await
         .map_err(|e| format!("查询总消息数失败: {}", e))?;
 
@@ -504,7 +506,7 @@ pub async fn debug_message_stats(state: State<'_, AppData>) -> Result<serde_json
         let count = im_message::Entity::find()
             .filter(im_message::Column::LoginUid.eq(&login_uid))
             .filter(im_message::Column::MessageType.eq(msg_type))
-            .count(state.db_conn.deref())
+            .count(&*db)
             .await
             .map_err(|e| format!("查询类型 {} 消息数失败: {}", msg_type, e))?;
 
@@ -522,7 +524,7 @@ pub async fn debug_message_stats(state: State<'_, AppData>) -> Result<serde_json
         .filter(im_message::Column::MessageType.is_in([4, 6]))
         .order_by_desc(im_message::Column::SendTime)
         .limit(5)
-        .all(state.db_conn.deref())
+        .all(&*db)
         .await
         .map_err(|e| format!("查询样例消息失败: {}", e))?;
 
