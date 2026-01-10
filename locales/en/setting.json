@@ -58,6 +58,8 @@
     "sound": "Sound",
     "message_sound": "New Message Alert Sound",
     "message_sound_descript": "After turning on, a prompt sound will play when a new message is received.",
+    "message_volume": "Alert Volume",
+    "message_volume_descript": "Drag to adjust the prompt sound volume (0-100).",
     "group_setting": "Group settings",
     "select_all": "Select All",
     "group_notic_type": {

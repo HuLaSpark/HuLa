@@ -58,6 +58,8 @@
     "sound": "声音",
     "message_sound": "新消息提醒声音",
     "message_sound_descript": "开启后，当收到新消息会播放提示音。",
+    "message_volume": "提示音音量",
+    "message_volume_descript": "拖动滑块可以调节提示音音量，范围 0-100。",
     "group_setting": "群设置",
     "select_all": "全选",
     "group_notic_type": {

@@ -71,7 +71,8 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
       isConceal: false
     },
     notification: {
-      messageSound: true
+      messageSound: true,
+      volume: 80
     }
   }),
   actions: {
@@ -185,9 +186,19 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     /** 设置消息提示音开关 */
     setMessageSoundEnabled(enabled: boolean) {
       if (!this.notification) {
-        this.notification = { messageSound: true }
+        this.notification = { messageSound: true, volume: 80 }
+      } else if (typeof this.notification.volume !== 'number') {
+        this.notification.volume = 80
       }
       this.notification.messageSound = enabled
+    },
+    /** 设置消息提示音音量（0-100） */
+    setNotificationVolume(volume: number) {
+      if (!this.notification) {
+        this.notification = { messageSound: true, volume: 80 }
+      }
+      const normalized = Math.min(100, Math.max(0, Math.round(volume)))
+      this.notification.volume = normalized
     }
   },
   share: {

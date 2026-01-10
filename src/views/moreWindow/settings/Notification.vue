@@ -14,6 +14,32 @@
 
           <n-switch size="small" v-model:value="messageSound" />
         </n-flex>
+
+        <span class="w-full h-1px bg-[--line-color]"></span>
+
+        <n-flex align="center" justify="space-between" class="gap-12px flex-wrap">
+          <n-flex vertical :size="8" class="min-w-160px flex-1">
+            <span>{{ t('setting.notice.message_volume') }}</span>
+            <span class="text-(12px #909090)">{{ t('setting.notice.message_volume_descript') }}</span>
+          </n-flex>
+
+          <n-flex align="center" :size="12">
+            <n-slider
+              class="flex-1 min-w-160px"
+              v-model:value="notificationVolume"
+              :step="1"
+              :max="100"
+              :min="0"
+              :disabled="!messageSound" />
+            <n-input-number
+              v-model:value="notificationVolume"
+              size="small"
+              class="w-96px"
+              :min="0"
+              :max="100"
+              :disabled="!messageSound" />
+          </n-flex>
+        </n-flex>
       </n-flex>
     </n-flex>
 
@@ -163,6 +189,13 @@ const messageSound = computed({
   get: () => settingStore.notification.messageSound,
   set: (value: boolean) => {
     settingStore.setMessageSoundEnabled(value)
+  }
+})
+
+const notificationVolume = computed({
+  get: () => settingStore.notification.volume,
+  set: (value: number) => {
+    settingStore.setNotificationVolume(value)
   }
 })
 

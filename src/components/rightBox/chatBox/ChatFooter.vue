@@ -32,6 +32,7 @@
             trigger="click"
             :show-arrow="false"
             placement="top-start"
+            :disabled="chatStore.isMsgMultiChoose"
             style="
               padding: 0;
               background: var(--bg-emoji);
