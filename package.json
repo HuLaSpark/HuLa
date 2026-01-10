@@ -71,6 +71,8 @@
     "test:ui": "vitest --ui --coverage.enabled=true",
     "========= 测试覆盖率 =========": "",
     "coverage": "vitest run --coverage",
+    "========= 链接HuLa skill =========": "",
+    "skill": "node scripts/link-skills.js",
     "========= 单独提交 =========": "",
     "gitcz": "git-cz"
   },
