@@ -46,6 +46,16 @@
         "PingFang": "苹方",
         "AliFangYuan": "阿里妈妈方圆体"
       }
+    },
+    "system": {
+      "title": "系统",
+      "close_panel": "关闭面板",
+      "close_options": {
+        "minimize_to_tray": "最小化到托盘",
+        "exit_program": "直接退出"
+      },
+      "close_prompt": "关闭提示",
+      "esc_close_window": "ESC关闭窗口"
     }
   },
   "login": {

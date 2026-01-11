@@ -25,25 +25,25 @@
 
     <!-- 系统设置 -->
     <n-flex v-if="isWindows()" vertical class="text-(14px [--text-color])" :size="16">
-      <span class="pl-10px">系统</span>
+      <span class="pl-10px">{{ t('setting.general.system.title') }}</span>
 
       <n-flex class="item" :size="12" vertical>
         <!-- 关闭面板 -->
-        <n-flex v-if="isWindows()" align="center" justify="space-between">
-          <span>关闭主面板</span>
+        <n-flex v-if="isWindows()" align="center" justify="space-between" :wrap="false">
+          <span>{{ t('setting.general.system.close_panel') }}</span>
 
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :value="CloseBxEnum.HIDE" />
-            <span>最小化到系统托盘</span>
+            <span>{{ t('setting.general.system.close_options.minimize_to_tray') }}</span>
           </label>
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :value="CloseBxEnum.CLOSE" />
-            <span>直接退出程序</span>
+            <span>{{ t('setting.general.system.close_options.exit_program') }}</span>
           </label>
 
           <label class="text-(12px #909090) flex gap-6px justify-end items-center">
             <n-checkbox size="small" v-model:checked="tips.notTips" />
-            <span>是否关闭提示</span>
+            <span>{{ t('setting.general.system.close_prompt') }}</span>
           </label>
         </n-flex>
 
@@ -51,7 +51,7 @@
 
         <!-- ESC关闭面板 -->
         <n-flex v-if="isWindows()" align="center" justify="space-between">
-          <span>是否启用ESC关闭窗口</span>
+          <span>{{ t('setting.general.system.esc_close_window') }}</span>
 
           <n-switch size="small" v-model:value="escClose" />
         </n-flex>

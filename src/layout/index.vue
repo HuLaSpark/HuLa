@@ -79,7 +79,7 @@ const userUid = computed(() => userStore.userInfo?.uid ?? '')
 const hasCachedSessions = computed(() => chatStore.sessionList.length > 0)
 const appWindow = WebviewWindow.getCurrent()
 const loadingPercentage = ref(10)
-const loadingText = ref('正在加载应用...')
+const loadingText = ref(t('home.loading.app'))
 const { resetLoginState, logout, init } = useLogin()
 // 是否需要阻塞首屏并做初始化同步
 const requiresInitialSync = ref(true)
@@ -162,7 +162,7 @@ const AsyncLeft = defineAsyncComponent({
     const blockInit = shouldBlockInitialRender.value
     const initTask = ensureInitStarted(blockInit)
     await maybeDelayForInitialRender()
-    loadingText.value = '正在加载左侧面板...'
+    loadingText.value = t('home.loading.left_panel')
     const comp = await import('./left/index.vue')
     loadingPercentage.value = 33
     if (blockInit) {
@@ -178,7 +178,7 @@ const AsyncCenter = defineAsyncComponent({
     const blockInit = shouldBlockInitialRender.value
     const initTask = ensureInitStarted(blockInit)
     await import('./left/index.vue')
-    loadingText.value = '正在加载数据中...'
+    loadingText.value = t('home.loading.data')
     const comp = await import('./center/index.vue')
     loadingPercentage.value = 66
     if (blockInit) {
@@ -195,7 +195,7 @@ const AsyncRight = defineAsyncComponent({
     const initTask = ensureInitStarted(blockInit)
     await maybeDelayForInitialRender()
     await import('./center/index.vue')
-    loadingText.value = '正在加载右侧面板...'
+    loadingText.value = t('home.loading.right_panel')
     const comp = await import('./right/index.vue')
     loadingPercentage.value = 100
     if (blockInit) {

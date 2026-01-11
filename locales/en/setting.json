@@ -46,6 +46,16 @@
         "PingFang": "PingFang",
         "AliFangYuan": "Alibaba Rounded"
       }
+    },
+    "system": {
+      "title": "System",
+      "close_panel": "Close Panel",
+      "close_options": {
+        "minimize_to_tray": "Minimize to Tray",
+        "exit_program": "Exit Directly"
+      },
+      "close_prompt": "Close Prompt",
+      "esc_close_window": "ESC Close Window"
     }
   },
   "login": {

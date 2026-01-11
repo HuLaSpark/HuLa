@@ -6,6 +6,12 @@
   "search_history": "历史记录",
   "search_input_placeholder": "搜索",
   "clear_search_history": "清空",
+  "loading": {
+    "app": "加载应用中...",
+    "left_panel": "加载左侧面板...",
+    "data": "加载数据中...",
+    "right_panel": "加载右侧面板..."
+  },
   "action": {
     "message": "消息列表",
     "message_short_title": "消息",
