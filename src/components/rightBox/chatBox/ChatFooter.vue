@@ -460,16 +460,27 @@ const emojiHandle = async (item: string | EmojiUrlPayload, type: 'emoji' | 'emoj
   // 尝试获取最后的编辑范围
   let lastEditRange: SelectionRange | null = MsgInputRef.value?.getLastEditRange()
 
-  // 如果没有最后的编辑范围，尝试获取当前选区
-  if (!lastEditRange) {
+  // 验证选区是否在输入框内
+  const isRangeInInput = (range: Range | null): boolean => {
+    if (!range || !inp) return false
+    try {
+      return inp.contains(range.commonAncestorContainer)
+    } catch {
+      return false
+    }
+  }
+
+  // 如果没有有效的编辑范围，或选区不在输入框内，创建一个新的范围
+  if (!lastEditRange || !isRangeInInput(lastEditRange.range)) {
     const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0) {
+    if (selection && selection.rangeCount > 0 && isRangeInInput(selection.getRangeAt(0))) {
+      // 只有当前选区在输入框内时才使用
       lastEditRange = {
         range: selection.getRangeAt(0),
         selection
       }
     } else {
-      // 如果没有选区，创建一个新的范围到最后
+      // 创建一个新的范围到输入框末尾
       const range = document.createRange()
       range.selectNodeContents(inp)
       range.collapse(false)
