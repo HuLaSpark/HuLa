@@ -15,10 +15,10 @@ members = [".", "entity", "migration"]
 entity = { path = "entity" }
 
 [profile.dev]
-opt-level = 0          # 无优化
-debug = true           # 开启调试信息
-overflow-checks = true # 整数溢出检查
-incremental = true     # 启用增量编译
+opt-level = 1          
+debug = true           
+overflow-checks = true 
+incremental = true     
 
 [profile.release]
 panic = "abort"    # 崩溃时直接终止

@@ -497,6 +497,12 @@ export const useGroupStore = defineStore(
         return []
       }
 
+      const session = chatStore.getSession(roomId)
+      if (session && session.type !== RoomTypeEnum.GROUP) {
+        console.warn('[group] skip member refresh, room is not group:', roomId)
+        return []
+      }
+
       const cachedList = userListMap[roomId]
 
       if (!forceRefresh && Array.isArray(cachedList) && cachedList.length > 0) {
@@ -577,9 +583,12 @@ export const useGroupStore = defineStore(
       }
 
       refreshTargets.forEach((validRoomId) => {
-        getGroupUserList(validRoomId, true).catch((error) => {
-          console.error('[group] refresh members failed:', error)
-        })
+        const session = chatStore.getSession(validRoomId)
+        if (session && session.type === RoomTypeEnum.GROUP) {
+          getGroupUserList(validRoomId, true).catch((error) => {
+            console.error('[group] refresh members failed:', error)
+          })
+        }
       })
 
       return true
@@ -601,6 +610,12 @@ export const useGroupStore = defineStore(
       const targetRoomId = roomId || globalStore.currentSessionRoomId
       if (!targetRoomId) {
         console.warn('[addUserItem] cannot determine target room id')
+        return false
+      }
+
+      const session = chatStore.getSession(targetRoomId)
+      if (!session || session.type !== RoomTypeEnum.GROUP) {
+        console.warn('[addUserItem] skip, room is not group:', targetRoomId)
         return false
       }
 
@@ -626,6 +641,12 @@ export const useGroupStore = defineStore(
       const targetRoomId = roomId || globalStore.currentSessionRoomId
       if (!targetRoomId) {
         console.warn('[removeUserItem] cannot determine target room id')
+        return false
+      }
+
+      const session = chatStore.getSession(targetRoomId)
+      if (!session || session.type !== RoomTypeEnum.GROUP) {
+        console.warn('[removeUserItem] skip, room is not group:', targetRoomId)
         return false
       }
 
