@@ -7,6 +7,8 @@
       <!-- 锁屏页面 -->
       <LockScreen v-else />
     </NaiveProvider>
+    <!-- 内存监控组件（仅开发环境 + PC home 窗口） -->
+    <MemoryMonitor v-if="isDev && showMemoryMonitor && isHomeDesktopWindow" />
   </div>
   <component :is="mobileRtcCallFloatCell" v-if="mobileRtcCallFloatCell" />
 </template>
@@ -33,6 +35,7 @@ import { useGlobalStore } from '@/stores/global'
 import { useSettingStore } from '@/stores/setting.ts'
 import { isDesktop, isIOS, isMobile, isWindows10 } from '@/utils/PlatformConstants'
 import LockScreen from '@/views/LockScreen.vue'
+import MemoryMonitor from '@/components/common/MemoryMonitor.vue'
 import { unreadCountManager } from '@/utils/UnreadCountManager'
 import {
   type LoginSuccessResType,
@@ -56,6 +59,10 @@ import { useI18n } from 'vue-i18n'
 const mobileRtcCallFloatCell = isMobile()
   ? defineAsyncComponent(() => import('@/mobile/components/RtcCallFloatCell.vue'))
   : null
+
+const isDev = import.meta.env.DEV
+const showMemoryMonitor = ref(true)
+const isHomeDesktopWindow = computed(() => isDesktop() && appWindow.label === 'home')
 
 const userStore = useUserStore()
 const contactStore = useContactStore()
