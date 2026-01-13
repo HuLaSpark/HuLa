@@ -226,11 +226,12 @@ export const useLogin = () => {
     }
     // 没有需要保留的会话时也保持当前状态（增量同步不重置）
 
-    // 后台同步消息：登录命令已触发一次全量/离线同步，这里避免重复拉取；仅在需要时再显式调用
-    // 将消息预取和其他预热放后台，避免阻塞 UI
+    // 加载所有群的成员数据和群公告，确保切换会话时数据已就绪
+    const groupSessions = chatStore.getGroupSessions()
     await Promise.allSettled([
-      chatStore.setAllSessionMsgList(20),
+      ...groupSessions.map((session) => groupStore.getGroupUserList(session.roomId, true)),
       groupStore.setGroupDetails(),
+      chatStore.setAllSessionMsgList(20),
       cachedStore.getAllBadgeList()
     ]).catch(() => {
       void logInfo('[useLogin] 增量预热任务失败')
