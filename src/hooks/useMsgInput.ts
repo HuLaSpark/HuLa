@@ -285,8 +285,25 @@ export const useMsgInput = (messageInputDom: Ref) => {
    * @param userList 用户列表
    * @returns 被 @ 用户的uid数组
    */
-  const extractAtUserIds = (content: string, userList: BaseUserItem[]): string[] => {
+  const extractAtUserIds = (content: string, userList: (BaseUserItem & Partial<{ myName: string }>)[]): string[] => {
     const atUserIds: string[] = []
+
+    const resolveUidByName = (rawName?: string | null) => {
+      const normalized = rawName?.trim()
+      if (!normalized) return undefined
+
+      const matches = userList.filter((user) => {
+        const groupName = user.myName?.trim()
+        const originName = user.name?.trim()
+        return groupName === normalized || originName === normalized
+      })
+
+      if (matches.length === 1) {
+        return matches[0].uid
+      }
+
+      return undefined
+    }
 
     // 创建临时DOM元素来解析HTML
     const tempDiv = document.createElement('div')
@@ -303,9 +320,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
       }
       const name = node.textContent?.replace(/^@/, '')?.trim()
       if (!name) return
-      const user = userList.find((u) => u.name === name)
-      if (user) {
-        atUserIds.push(user.uid)
+      const resolvedUid = resolveUidByName(name)
+      if (resolvedUid) {
+        atUserIds.push(resolvedUid)
       }
     })
 
@@ -324,9 +341,9 @@ export const useMsgInput = (messageInputDom: Ref) => {
     if (matches) {
       matches.forEach((match) => {
         const username = match.slice(1) // 移除@符号
-        const user = userList.find((u) => u.name === username)
-        if (user) {
-          atUserIds.push(user.uid)
+        const resolvedUid = resolveUidByName(username)
+        if (resolvedUid) {
+          atUserIds.push(resolvedUid)
         }
       })
     }
