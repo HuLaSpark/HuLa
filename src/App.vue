@@ -17,16 +17,7 @@ import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { info } from '@tauri-apps/plugin-log'
 import { exit } from '@tauri-apps/plugin-process'
 import { loadLanguage } from '@/services/i18n'
-import {
-  CallTypeEnum,
-  EventEnum,
-  StoresEnum,
-  ThemeEnum,
-  ChangeTypeEnum,
-  MittEnum,
-  OnlineEnum,
-  RoomTypeEnum
-} from '@/enums'
+import { CallTypeEnum, EventEnum, ThemeEnum, ChangeTypeEnum, MittEnum, OnlineEnum, RoomTypeEnum } from '@/enums'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useWindow } from '@/hooks/useWindow.ts'
@@ -638,11 +629,14 @@ onMounted(() => {
   // 判断是否是移动端，移动端需要加载安全区域适配样式
   isMobile() && import('@/styles/scss/global/mobile.scss')
   import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
-  // 判断localStorage中是否有设置主题
-  if (!localStorage.getItem(StoresEnum.SETTING)) {
+  if (!settingStore.themes.content) {
+    // 首次运行使用跟随系统，保持既有体验
     settingStore.initTheme(ThemeEnum.OS)
+  } else {
+    // 非首次运行时直接使用已恢复的主题信息，避免被强制改回“跟随系统”
+    settingStore.normalizeThemeState()
   }
-  document.documentElement.dataset.theme = themes.value.content
+  document.documentElement.dataset.theme = settingStore.themes.content
   window.addEventListener('dragstart', preventDrag)
 
   addListener(listen('websocket-event', handleWebsocketEvent), 'websocket-event')
