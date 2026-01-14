@@ -427,6 +427,8 @@ sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 | 2025-11-5  | **匿名用户**         | `¥66`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 | 2025-02-6  | **小二**             | `¥62`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 | 2025-05-15 | **孤鸿影**           | `¥56`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
+| 2026-01-14 | **赵赫**           | `¥50`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
+| 2026-01-05 | **Dumbness**       | `¥50`    | ![微信赞赏](https://img.shields.io/badge/微信赞赏-07C160?style=flat&logo=wechat&logoColor=white)  |
 
 ### 🥉 铜牌赞助者 (￥20-49)
 
