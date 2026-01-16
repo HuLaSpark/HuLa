@@ -6,7 +6,7 @@
         class="bg-white"
         style="border-bottom: 1px solid; border-color: #dfdfdf"
         :hidden-right="true"
-        room-name="发布新动态" />
+        :room-name="t('mobile_post.title')" />
     </template>
 
     <template #container>
@@ -14,11 +14,11 @@
         <div class="flex flex-col p-16px gap-12px">
           <!-- 动态内容输入 -->
           <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-8px font-500">动态内容</div>
+            <div class="text-14px text-#333 mb-8px font-500">{{ t('mobile_post.content.label') }}</div>
             <van-field
               v-model="feedContent"
               type="textarea"
-              placeholder="尽情分享生活吧~😎"
+              :placeholder="t('mobile_post.content.placeholder')"
               :maxlength="500"
               show-word-limit
               :rows="8"
@@ -27,22 +27,22 @@
 
           <!-- 媒体类型提示（暂时禁用） -->
           <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-8px font-500">媒体类型</div>
+            <div class="text-14px text-#333 mb-8px font-500">{{ t('mobile_post.media_type.label') }}</div>
             <div class="text-13px text-#999">
               <div class="flex items-center gap-8px mb-6px">
                 <span class="text-#c8c9cc">📷</span>
-                <span class="text-#c8c9cc">图文（暂未开放）</span>
+                <span class="text-#c8c9cc">{{ t('mobile_post.media_type.option_image') }}</span>
               </div>
               <div class="flex items-center gap-8px">
                 <span class="text-#c8c9cc">🎬</span>
-                <span class="text-#c8c9cc">视频（暂未开放）</span>
+                <span class="text-#c8c9cc">{{ t('mobile_post.media_type.option_video') }}</span>
               </div>
             </div>
           </div>
 
           <!-- 权限选择 -->
           <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-12px font-500">谁可以看</div>
+            <div class="text-14px text-#333 mb-12px font-500">{{ t('mobile_post.visibility.label') }}</div>
             <van-radio-group v-model="permission" direction="vertical" @change="handlePermissionChange">
               <van-radio name="open" icon-size="18px" class="mb-12px">
                 <template #icon="props">
@@ -54,7 +54,7 @@
                     <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
                   </div>
                 </template>
-                <span class="ml-8px text-14px">公开</span>
+                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.public') }}</span>
               </van-radio>
               <van-radio name="partVisible" icon-size="18px" class="mb-12px">
                 <template #icon="props">
@@ -66,7 +66,7 @@
                     <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
                   </div>
                 </template>
-                <span class="ml-8px text-14px">部分可见</span>
+                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.selected') }}</span>
               </van-radio>
               <van-radio name="notAnyone" icon-size="18px">
                 <template #icon="props">
@@ -78,7 +78,7 @@
                     <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
                   </div>
                 </template>
-                <span class="ml-8px text-14px">不给谁看</span>
+                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.exclude') }}</span>
               </van-radio>
             </van-radio-group>
           </div>
@@ -86,7 +86,11 @@
           <!-- 选择用户 -->
           <div v-if="permission === 'partVisible' || permission === 'notAnyone'" class="bg-white rounded-12px p-16px">
             <div class="text-14px text-#333 mb-12px font-500">
-              {{ permission === 'partVisible' ? '选择可见的人' : '选择不可见的人' }}
+              {{
+                permission === 'partVisible'
+                  ? t('mobile_post.visibility_selected_btn_label')
+                  : t('mobile_post.visibility_exclude_btn_label')
+              }}
             </div>
             <van-button
               type="primary"
@@ -95,7 +99,7 @@
               @click="showUserSelectPopup = true"
               class="w-full"
               :style="{ borderColor: '#13987f', color: '#13987f' }">
-              选择用户 (已选 {{ selectedUsers.length }} 人)
+              {{ t('mobile_post.visibility_select_btn', { count: selectedUsers.length }) }}
             </van-button>
             <div v-if="selectedUsers.length > 0" class="mt-12px flex flex-wrap gap-8px">
               <van-tag
@@ -113,7 +117,9 @@
 
           <!-- 发布按钮 -->
           <div class="flex gap-12px mt-8px pb-20px">
-            <van-button block plain @click="goBack" :style="{ borderColor: '#c8c9cc', color: '#666' }">取消</van-button>
+            <van-button block plain @click="goBack" :style="{ borderColor: '#c8c9cc', color: '#666' }">
+              {{ t('mobile_post.btn.cancel') }}
+            </van-button>
             <van-button
               block
               type="primary"
@@ -121,7 +127,7 @@
               :disabled="!isPublishValid"
               @click="handlePublish"
               :style="{ background: '#13987f', borderColor: '#13987f' }">
-              发布
+              {{ t('mobile_post.btn.publish') }}
             </van-button>
           </div>
         </div>
@@ -134,15 +140,18 @@
     <div class="flex flex-col h-full">
       <!-- 弹窗标题 -->
       <div class="flex items-center justify-between p-16px border-b border-#eee">
-        <span class="text-16px font-500 text-#333">选择用户</span>
+        <span class="text-16px font-500 text-#333">{{ t('mobile_post.select_users.title') }}</span>
         <van-button type="primary" size="small" @click="confirmUserSelection" :style="{ background: '#13987f' }">
-          确定
+          {{ t('mobile_post.select_users.btn.done') }}
         </van-button>
       </div>
 
       <!-- 搜索框 -->
       <div class="p-12px border-b border-#f5f5f5">
-        <van-search v-model="userSearchKeyword" placeholder="搜索用户" shape="round" />
+        <van-search
+          v-model="userSearchKeyword"
+          :placeholder="t('mobile_post.select_users.search_placeholder')"
+          shape="round" />
       </div>
 
       <!-- 用户列表 -->
@@ -180,7 +189,7 @@
         </van-checkbox-group>
 
         <!-- 空状态 -->
-        <van-empty v-if="filteredContactsList.length === 0" description="暂无联系人" />
+        <van-empty v-if="filteredContactsList.length === 0" :description="t('mobile_post.empty')" />
       </div>
     </div>
   </van-popup>
@@ -195,6 +204,10 @@ import { useGroupStore } from '@/stores/group'
 import { AvatarUtils } from '@/utils/AvatarUtils'
 import type { FriendItem } from '@/services/types'
 import 'vant/lib/index.css' // Vant UI 样式
+import { useI18n } from 'vue-i18n'
+
+const { t, getLocaleMessage } = useI18n()
+console.log(getLocaleMessage('en'))
 
 const router = useRouter()
 const feedAutosize = { minHeight: 150, maxHeight: 300 }
@@ -239,7 +252,7 @@ const getUserAvatar = (user: FriendItem) => {
 // 获取用户名称
 const getUserName = (user: FriendItem) => {
   const userInfo = groupStore.getUserInfo(user.uid)
-  return userInfo?.name || user.remark || user.uid || '未知用户'
+  return userInfo?.name || user.remark || user.uid || t('mobile_post.unknown_user')
 }
 
 // 验证发布内容是否有效
@@ -292,13 +305,17 @@ const goBack = () => {
 const handlePublish = async () => {
   // 验证内容
   if (!feedContent.value.trim()) {
-    showToast('请输入动态内容')
+    showToast(t('mobile_post.error.required'))
     return
   }
 
   // 验证权限设置
   if ((permission.value === 'partVisible' || permission.value === 'notAnyone') && selectedUsers.value.length === 0) {
-    showToast(`请选择${permission.value === 'partVisible' ? '可见' : '不可见'}的用户`)
+    showToast(
+      permission.value === 'partVisible'
+        ? t('mobile_post.error.select_visible_users')
+        : t('mobile_post.error.select_exclude_users')
+    )
     return
   }
 
@@ -319,13 +336,13 @@ const handlePublish = async () => {
     // 调用 store 的发布方法，会自动刷新列表
     await feedStore.publishFeed(feedData)
 
-    showToast('发布成功！')
+    showToast(t('mobile_post.success.publish_success'))
 
     // 返回上一页
     router.back()
   } catch (error) {
     console.error('发布动态失败:', error)
-    showToast('发布失败，请稍后重试')
+    showToast(t('mobile_post.error.publish_failed'))
   } finally {
     isPublishing.value = false
   }
