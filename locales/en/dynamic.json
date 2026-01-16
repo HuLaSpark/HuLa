@@ -9,7 +9,8 @@
   "page": {
     "detail": {
       "title": "Feed detail"
-    }
+    },
+    "mobile_title": "Community"
   },
   "list": {
     "empty": "No feeds yet, share your first moment!",
@@ -48,7 +49,13 @@
       "select_users": "Select users",
       "confirm": "Confirm",
       "confirm_with_count": "Confirm ({count})"
-    }
+    },
+    "comments": {
+      "more": "{count} more comments"
+    },
+    "loading": "loading...",
+    "load_more": "Load more",
+    "loaded_all": "Loaded all feeds"
   },
   "detail": {
     "content": {

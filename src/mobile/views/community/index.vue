@@ -31,7 +31,9 @@
             </template>
           </n-button>
         </div>
-        <div class="flex-1 flex justify-center pt-12px text-16px font-600 text-#303030">我的社区</div>
+        <div class="flex-1 flex justify-center pt-12px text-16px font-600 text-#303030">
+          {{ t('dynamic.page.mobile_title') }}
+        </div>
         <div class="pr-24px opacity-0 pointer-events-none">
           <svg class="w-24px h-24px" viewBox="0 0 24 24" fill="none"></svg>
         </div>
@@ -115,7 +117,9 @@ import DynamicList from '@/components/common/DynamicList.vue'
 import FeedNotificationPopup from '@/components/common/FeedNotificationPopup.vue'
 import { useMitt } from '@/hooks/useMitt'
 import { WsResponseMessageType } from '@/services/wsType'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const router = useRouter()
 const feedStore = useFeedStore()
 const userStore = useUserStore()
