@@ -66,7 +66,7 @@ const userStore = useUserStore()
 const settings = reactive([
   {
     key: 'notifications',
-    label: t('mobile_setting.silent_label'),
+    label: computed(() => t('mobile_setting.silent_label')),
     type: 'switch',
     value: computed({
       get: () => true,
@@ -77,7 +77,7 @@ const settings = reactive([
   },
   {
     key: 'username',
-    label: t('mobile_setting.nickname'),
+    label: computed(() => t('mobile_setting.nickname')),
     type: 'input',
     value: computed({
       get: () => userStore.userInfo?.name || '',
@@ -86,20 +86,20 @@ const settings = reactive([
   },
   {
     key: 'theme',
-    label: t('mobile_setting.theme'),
+    label: computed(() => t('mobile_setting.theme')),
     type: 'select',
     value: computed({
       get: () => settingStore.themes.content,
       set: (val) => settingStore.toggleTheme(val)
     }),
     options: [
-      { label: t('mobile_setting.themes.light'), value: ThemeEnum.LIGHT },
-      { label: t('mobile_setting.themes.dark'), value: ThemeEnum.DARK }
+      { label: computed(() => t('mobile_setting.themes.light')), value: ThemeEnum.LIGHT },
+      { label: computed(() => t('mobile_setting.themes.dark')), value: ThemeEnum.DARK }
     ]
   },
   {
     key: 'language',
-    label: t('mobile_setting.language'),
+    label: computed(() => t('mobile_setting.language')),
     type: 'select',
     value: computed({
       get: () => settingStore.page.lang,

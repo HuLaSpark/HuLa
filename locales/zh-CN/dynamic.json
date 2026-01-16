@@ -9,7 +9,8 @@
   "page": {
     "detail": {
       "title": "动态详情"
-    }
+    },
+    "mobile_title": "社区"
   },
   "list": {
     "empty": "暂无动态，快去发布第一条吧！",
