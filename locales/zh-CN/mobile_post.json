@@ -1,0 +1,47 @@
+{
+  "title": "发布动态",
+  "content": {
+    "label": "动态内容",
+    "placeholder": "尽情分享生活吧~😎"
+  },
+  "media_type": {
+    "label": "媒体类型",
+    "option_image": "图片（暂不可用）",
+    "option_video": "视频（暂不可用）"
+  },
+  "visibility": {
+    "label": "可见范围",
+    "public": "公开",
+    "selected": "指定可见",
+    "exclude": "不给谁看",
+    "emptySelectionHint": {
+      "visible": "请选择可见的用户",
+      "hidden": "请选择不可见的用户"
+    }
+  },
+  "visibility_selected_btn_label": "选择可见的人",
+  "visibility_exclude_btn_label": "不给谁看",
+  "visibility_select_btn": "选择用户（已选择 {count} 人）",
+  "btn": {
+    "cancel": "取消",
+    "publish": "发布"
+  },
+  "select_users": {
+    "title": "选择用户",
+    "search_placeholder": "搜索用户",
+    "btn": {
+      "done": "完成"
+    }
+  },
+  "empty": "暂无联系人",
+  "error": {
+    "publish_failed": "发布失败，请重试",
+    "required": "请输入动态内容",
+    "select_visible_users": "请选择可见的用户",
+    "select_exclude_users": "请选择不可见的用户"
+  },
+  "success": {
+    "publish_success": "发布成功"
+  },
+  "unknown_user": "未知用户"
+}

@@ -1,0 +1,47 @@
+{
+  "title": "Publish Community",
+  "content": {
+    "label": "Post Content",
+    "placeholder": "Share your life 😎"
+  },
+  "media_type": {
+    "label": "Media Type",
+    "option_image": "Image (Temporarily Unavailable)",
+    "option_video": "Video (Temporarily Unavailable)"
+  },
+  "visibility": {
+    "label": "Visibility",
+    "public": "Public",
+    "selected": "Selected people",
+    "exclude": "Hide from specific people",
+    "emptySelectionHint": {
+      "visible": "Please select users who can see this",
+      "hidden": "Please select users to hide from"
+    }
+  },
+  "visibility_selected_btn_label": "Select viewers",
+  "visibility_exclude_btn_label": "Hide from...",
+  "visibility_select_btn": "Select users ({count} selected)",
+  "btn": {
+    "cancel": "Cancel",
+    "publish": "Publish"
+  },
+  "select_users": {
+    "title": "Select Users",
+    "search_placeholder": "Search users",
+    "btn": {
+      "done": "Done"
+    }
+  },
+  "empty": "No contacts yet",
+  "error": {
+    "publish_failed": "Failed to publish post. Please try again",
+    "required": "Post content cannot be empty",
+    "select_visible_users": "Please select users who can see this",
+    "select_exclude_users": "Please select users to hide from"
+  },
+  "success": {
+    "publish_success": "Post published successfully"
+  },
+  "unknown_user": "Unknown User"
+}
