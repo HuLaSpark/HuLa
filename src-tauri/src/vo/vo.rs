@@ -47,18 +47,3 @@ pub struct LoginResp {
     pub uid: String,
     pub expire: String,
 }
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RefreshTokenReq {
-    pub refresh_token: String,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RefreshTokenResp {
-    pub token: String,
-    pub refresh_token: String,
-    pub expire: String,
-    pub uid: String,
-}

@@ -1,14 +1,13 @@
 use std::str::FromStr;
 
-use anyhow::Ok;
 use base64::{Engine, prelude::BASE64_STANDARD};
 use reqwest::header;
 use serde_json::json;
-use tracing::{error, info};
+use tracing::error;
 
 use crate::{
     pojo::common::ApiResult,
-    vo::vo::{LoginReq, LoginResp, RefreshTokenReq, RefreshTokenResp},
+    vo::vo::{LoginReq, LoginResp},
 };
 
 #[derive(Debug)]
@@ -67,8 +66,6 @@ impl ImRequestClient {
         extra_headers: Option<Vec<(&str, &str)>>,
     ) -> reqwest::RequestBuilder {
         let url = format!("{}/{}", self.base_url, path);
-        info!("Request URL: {}, Method: {}", &url, method);
-
         let mut request_builder = self.client.request(method, &url);
 
         // 设置 token 请求头
@@ -116,9 +113,15 @@ impl ImRequestClient {
             // 使用 build_request 构建请求
             let request_builder = self.build_request(method.clone(), path, &body, &params, None);
 
-            // 发送请求
-            let response = request_builder.send().await?;
-            let result: ApiResult<T> = response.json().await?;
+            // 发送请求，区分网络错误和业务错误
+            let response = request_builder
+                .send()
+                .await
+                .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
+            let result: ApiResult<T> = response
+                .json()
+                .await
+                .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
 
             let url = format!("{}/{}", self.base_url, path);
 
@@ -127,8 +130,6 @@ impl ImRequestClient {
                     if retry_count >= MAX_RETRY_COUNT {
                         return Err(anyhow::anyhow!("token过期，刷新token失败"));
                     }
-
-                    error!("Token expired, starting token refresh");
                     self.start_refresh_token().await?;
                     retry_count += 1;
                     continue;
@@ -143,7 +144,6 @@ impl ImRequestClient {
                     return Err(anyhow::anyhow!("请重新登录"));
                 }
                 Some(200) => {
-                    info!("Request successful: {}, Method: {}", &url, method.clone());
                     return Ok(result);
                 }
                 _ => {
@@ -217,44 +217,60 @@ impl ImRequestClient {
             }
         }
 
-        info!("流式请求成功，开始接收流式数据");
         Ok(response)
     }
 
     pub async fn start_refresh_token(&mut self) -> Result<(), anyhow::Error> {
-        info!("Starting token refresh");
         let url = format!("{}/{}", self.base_url, ImUrl::RefreshToken.get_url().1);
 
+        let refresh_token = match self.refresh_token.clone() {
+            Some(token) if !token.is_empty() => token,
+            _ => return Err(anyhow::anyhow!("请重新登录")),
+        };
+        let old_refresh_token = refresh_token.clone();
+
         let body = json!({
-          "refreshToken": self.refresh_token.clone().unwrap()
+          "refreshToken": refresh_token
         });
 
         let request_builder = self.client.request(http::Method::POST, &url);
-        let response = request_builder.json(&body).send().await?;
-        let result: ApiResult<serde_json::Value> = response.json().await?;
+        let response = request_builder
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
+        let result: ApiResult<serde_json::Value> = response
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("network_error: {}", e))?;
 
         if !result.success {
-            error!("刷新token失败: {}", result.msg.clone().unwrap_or_default());
-            return Err(anyhow::anyhow!(
-                "刷新token失败: {}",
-                result.msg.clone().unwrap_or_default()
-            ));
+            // 服务器明确拒绝 refresh token，需要重新登录
+            return Err(anyhow::anyhow!("请重新登录"));
         }
 
-        if let Some(token) = result.data.clone().unwrap().get("token").unwrap().as_str() {
-            self.token = Some(token.to_owned());
-        }
+        let data = match result.data {
+            Some(data) => data,
+            None => {
+                error!("刷新token失败: 响应缺少 data 字段");
+                return Err(anyhow::anyhow!("请重新登录"));
+            }
+        };
 
-        if let Some(refresh_token) = result
-            .data
-            .clone()
-            .unwrap()
-            .get("refreshToken")
-            .unwrap()
-            .as_str()
-        {
-            self.refresh_token = Some(refresh_token.to_owned());
-        }
+        let token = match data.get("token").and_then(|value| value.as_str()) {
+            Some(value) => value,
+            None => {
+                error!("刷新token失败: 响应缺少 token 字段");
+                return Err(anyhow::anyhow!("请重新登录"));
+            }
+        };
+        self.token = Some(token.to_owned());
+
+        let refresh_token = match data.get("refreshToken").and_then(|value| value.as_str()) {
+            Some(value) if !value.is_empty() => value.to_owned(),
+            _ => old_refresh_token,
+        };
+        self.refresh_token = Some(refresh_token);
 
         Ok(())
     }
@@ -279,26 +295,6 @@ impl ImRequest for ImRequestClient {
     async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error> {
         let result: Option<LoginResp> = self
             .im_request(ImUrl::Login, Some(login_req), None::<serde_json::Value>)
-            .await?;
-
-        if let Some(data) = result.clone() {
-            self.token = Some(data.token.clone());
-            self.refresh_token = Some(data.refresh_token.clone());
-        }
-
-        Ok(result)
-    }
-
-    async fn refresh_token(
-        &mut self,
-        refresh_token_req: RefreshTokenReq,
-    ) -> Result<Option<RefreshTokenResp>, anyhow::Error> {
-        let result: Option<RefreshTokenResp> = self
-            .im_request(
-                ImUrl::RefreshToken,
-                Some(refresh_token_req),
-                None::<serde_json::Value>,
-            )
             .await?;
 
         if let Some(data) = result.clone() {
@@ -1145,8 +1141,4 @@ impl FromStr for ImUrl {
 
 pub trait ImRequest {
     async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error>;
-    async fn refresh_token(
-        &mut self,
-        refresh_token_req: RefreshTokenReq,
-    ) -> Result<Option<RefreshTokenResp>, anyhow::Error>;
 }

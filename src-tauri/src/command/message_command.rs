@@ -1,4 +1,8 @@
 use crate::AppData;
+use crate::command::token_helper::{
+    capture_token_snapshot_arc, capture_token_snapshot_direct, persist_token_if_refreshed_arc,
+    persist_token_if_refreshed_direct,
+};
 use crate::error::CommonError;
 use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::pojo::common::{CursorPageParam, CursorPageResp};
@@ -382,9 +386,13 @@ pub async fn fetch_all_messages(
         false => None,
     };
 
+    let old_tokens = capture_token_snapshot_direct(client);
+
     let messages: Option<Vec<MessageResp>> = client
         .im_request(ImUrl::GetMsgList, body, None::<serde_json::Value>)
         .await?;
+
+    persist_token_if_refreshed_direct(&old_tokens, client, db_conn, uid).await;
 
     if let Some(mut messages) = messages {
         // 排序消息（按发送时间）
@@ -656,8 +664,11 @@ pub async fn send_msg(
     let db_conn = state.db_conn.clone();
     let request_client = state.rc.clone();
     let mut record_for_send = message_record.clone();
+    let uid_for_token = login_uid.clone();
 
     tokio::spawn(async move {
+        let old_tokens = capture_token_snapshot_arc(&request_client).await;
+
         // 发送到后端接口
         let result: Result<Option<MessageResp>, anyhow::Error> = {
             let mut client = request_client.lock().await;
@@ -665,6 +676,9 @@ pub async fn send_msg(
                 .im_request(ImUrl::SendMsg, Some(send_data), None::<serde_json::Value>)
                 .await
         };
+
+        persist_token_if_refreshed_arc(&old_tokens, &request_client, &db_conn, &uid_for_token)
+            .await;
 
         let mut id = None;
 

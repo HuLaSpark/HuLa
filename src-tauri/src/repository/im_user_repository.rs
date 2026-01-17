@@ -51,12 +51,30 @@ where
             CommonError::DatabaseError(e)
         })?;
 
+    let refresh_token_to_save = if refresh_token.is_empty() {
+        if let Some(user) = &existing_user {
+            if let Some(saved_refresh) = user.refresh_token.clone() {
+                if !saved_refresh.is_empty() {
+                    saved_refresh
+                } else {
+                    "".to_string()
+                }
+            } else {
+                "".to_string()
+            }
+        } else {
+            "".to_string()
+        }
+    } else {
+        refresh_token.to_string()
+    };
+
     let user_update = if existing_user.is_some() {
         // 用户存在，更新 token 信息
         im_user::ActiveModel {
             id: Set(login_uid.to_string()),
             token: Set(Some(token.to_string())),
-            refresh_token: Set(Some(refresh_token.to_string())),
+            refresh_token: Set(Some(refresh_token_to_save.clone())),
             ..Default::default()
         }
     } else {
@@ -64,7 +82,7 @@ where
         im_user::ActiveModel {
             id: Set(login_uid.to_string()),
             token: Set(Some(token.to_string())),
-            refresh_token: Set(Some(refresh_token.to_string())),
+            refresh_token: Set(Some(refresh_token_to_save.clone())),
             is_init: Set(true), // 新用户默认未初始化
             ..Default::default()
         }

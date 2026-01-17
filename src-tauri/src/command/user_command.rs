@@ -136,22 +136,34 @@ pub async fn update_token(
     state: State<'_, AppData>,
 ) -> Result<(), String> {
     info!("Updating user token");
+    let refresh_token = if req.refresh_token.is_empty() {
+        let current_refresh = state.user_info.lock().await.refresh_token.clone();
+        if current_refresh.is_empty() {
+            "".to_string()
+        } else {
+            current_refresh
+        }
+    } else {
+        req.refresh_token.clone()
+    };
     {
         let mut user_info = state.user_info.lock().await;
         user_info.uid = req.uid.clone();
         user_info.token = req.token.clone();
-        user_info.refresh_token = req.refresh_token.clone();
+        user_info.refresh_token = refresh_token.clone();
     }
     {
         let mut rc = state.rc.lock().await;
         rc.token = Some(req.token.clone());
-        rc.refresh_token = Some(req.refresh_token.clone());
+        if !refresh_token.is_empty() {
+            rc.refresh_token = Some(refresh_token.clone());
+        }
     }
     im_user_repository::save_user_tokens(
         &*state.db_conn.read().await,
         &req.uid,
         &req.token,
-        &req.refresh_token,
+        &refresh_token,
     )
     .await
     .map_err(|e| e.to_string())?;

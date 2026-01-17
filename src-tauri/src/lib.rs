@@ -184,7 +184,7 @@ async fn initialize_app_data(
     let rc: im_request_client::ImRequestClient = im_request_client::ImRequestClient::new(
         configuration.lock().await.backend.base_url.clone(),
     )
-    .unwrap();
+    .map_err(|e| anyhow::anyhow!("Failed to create request client: {}", e))?;
 
     // 创建用户信息
     let user_info = UserInfo {
@@ -343,7 +343,9 @@ fn setup_mobile() {
 // 公共的 setup 函数
 fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let scope = app_handle.fs_scope();
-    scope.allow_directory("configuration", false).unwrap();
+    if let Err(e) = scope.allow_directory("configuration", false) {
+        tracing::warn!("Failed to allow configuration directory: {}", e);
+    }
 
     #[cfg(desktop)]
     setup_logout_listener(app_handle.clone());

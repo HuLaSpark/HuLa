@@ -1,4 +1,5 @@
 use crate::AppData;
+use crate::command::token_helper::{capture_token_snapshot_arc, persist_token_if_refreshed_arc};
 use crate::error::CommonError;
 use crate::pojo::common::{CursorPageParam, CursorPageResp, Page, PageParam};
 use crate::repository::im_room_member_repository::update_my_room_info as update_my_room_info_db;
@@ -51,6 +52,8 @@ pub async fn update_my_room_info(
         let uid = user_info.uid.clone();
         drop(user_info);
 
+        let old_tokens = capture_token_snapshot_arc(&state.rc).await;
+
         // 调用后端接口更新房间信息
         let _resp: Option<bool> = state
             .rc
@@ -62,6 +65,8 @@ pub async fn update_my_room_info(
                 None::<serde_json::Value>,
             )
             .await?;
+
+        persist_token_if_refreshed_arc(&old_tokens, &state.rc, &state.db_conn, &uid).await;
 
         // 更新本地数据库
         update_my_room_info_db(
@@ -100,8 +105,15 @@ pub async fn get_room_members(
     state: State<'_, AppData>,
 ) -> Result<Vec<RoomMemberResponse>, String> {
     info!("Calling to get all member list of room with room_id");
+    let uid = state.user_info.lock().await.uid.clone();
     let result: Result<Vec<RoomMemberResponse>, CommonError> = async {
-        let mut members = fetch_and_update_room_members(room_id.clone(), state.rc.clone()).await?;
+        let mut members = fetch_and_update_room_members(
+            room_id.clone(),
+            state.rc.clone(),
+            state.db_conn.clone(),
+            &uid,
+        )
+        .await?;
 
         sort_room_members(&mut members);
 
@@ -155,9 +167,12 @@ pub async fn page_room(
     page_param: PageParam,
     state: State<'_, AppData>,
 ) -> Result<Page<im_room::Model>, String> {
+    let uid = state.user_info.lock().await.uid.clone();
     let result: Result<Page<im_room::Model>, CommonError> = async {
         // 直接调用后端接口获取数据，不保存到数据库
-        let data = fetch_rooms_from_backend(page_param, state.rc.clone()).await?;
+        let data =
+            fetch_rooms_from_backend(page_param, state.rc.clone(), state.db_conn.clone(), &uid)
+                .await?;
 
         Ok(data)
     }
@@ -176,16 +191,23 @@ pub async fn page_room(
 async fn fetch_rooms_from_backend(
     page_param: PageParam,
     request_client: Arc<Mutex<ImRequestClient>>,
+    db_conn: Arc<tokio::sync::RwLock<sea_orm::DatabaseConnection>>,
+    uid: &str,
 ) -> Result<Page<im_room::Model>, CommonError> {
-    let mut client = request_client.lock().await;
+    let old_tokens = capture_token_snapshot_arc(&request_client).await;
 
-    let resp: Option<Page<im_room::Model>> = client
-        .im_request(
-            ImUrl::GroupList,
-            None::<serde_json::Value>,
-            Some(page_param),
-        )
-        .await?;
+    let resp: Option<Page<im_room::Model>> = {
+        let mut client = request_client.lock().await;
+        client
+            .im_request(
+                ImUrl::GroupList,
+                None::<serde_json::Value>,
+                Some(page_param),
+            )
+            .await?
+    };
+
+    persist_token_if_refreshed_arc(&old_tokens, &request_client, &db_conn, uid).await;
 
     if let Some(data) = resp {
         Ok(data)
@@ -223,7 +245,11 @@ fn sort_room_members(members: &mut Vec<RoomMemberResponse>) {
 async fn fetch_and_update_room_members(
     room_id: String,
     request_client: Arc<Mutex<ImRequestClient>>,
+    db_conn: Arc<tokio::sync::RwLock<sea_orm::DatabaseConnection>>,
+    uid: &str,
 ) -> Result<Vec<RoomMemberResponse>, CommonError> {
+    let old_tokens = capture_token_snapshot_arc(&request_client).await;
+
     let resp: Option<Vec<RoomMemberResponse>> = request_client
         .lock()
         .await
@@ -235,6 +261,8 @@ async fn fetch_and_update_room_members(
             })),
         )
         .await?;
+
+    persist_token_if_refreshed_arc(&old_tokens, &request_client, &db_conn, uid).await;
 
     if let Some(data) = resp {
         return Ok(data);

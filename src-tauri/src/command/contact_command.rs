@@ -1,4 +1,5 @@
 use crate::AppData;
+use crate::command::token_helper::{capture_token_snapshot_arc, persist_token_if_refreshed_arc};
 use crate::error::CommonError;
 use crate::im_request_client::{ImRequestClient, ImUrl};
 use crate::repository::im_contact_repository::{
@@ -71,6 +72,8 @@ async fn fetch_and_update_contacts(
     request_client: Arc<Mutex<ImRequestClient>>,
     login_uid: String,
 ) -> Result<Vec<im_contact::Model>, CommonError> {
+    let old_tokens = capture_token_snapshot_arc(&request_client).await;
+
     let resp: Option<Vec<im_contact::Model>> = request_client
         .lock()
         .await
@@ -80,6 +83,8 @@ async fn fetch_and_update_contacts(
             None::<serde_json::Value>,
         )
         .await?;
+
+    persist_token_if_refreshed_arc(&old_tokens, &request_client, &db_conn, &login_uid).await;
 
     if let Some(data) = resp {
         // 保存到本地数据库
@@ -122,6 +127,8 @@ pub async fn hide_contact_command(
             user_info.uid.clone()
         };
 
+        let old_tokens = capture_token_snapshot_arc(&state.rc).await;
+
         let resp: Option<bool> = state
             .rc
             .lock()
@@ -132,6 +139,8 @@ pub async fn hide_contact_command(
                 None::<serde_json::Value>,
             )
             .await?;
+
+        persist_token_if_refreshed_arc(&old_tokens, &state.rc, &state.db_conn, &login_uid).await;
 
         if let Some(_) = resp {
             // 更新本地数据库
