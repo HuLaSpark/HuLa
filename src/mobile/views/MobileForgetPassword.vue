@@ -175,7 +175,7 @@ const timerWorker = new Worker(new URL('../../workers/timer.worker.ts', import.m
 const { t } = useI18n()
 
 // 步骤状态
-const currentStep = ref(3)
+const currentStep = ref(1)
 const stepStatus = ref<'error' | 'finish' | 'process' | 'wait' | undefined>('process')
 
 // 第一步表单数据
