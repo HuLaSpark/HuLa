@@ -5,7 +5,8 @@
       "network_error": "Network Error"
     },
     "qr_code": "QR Code",
-    "remove_account": "Remove Account"
+    "cancel_login": "Cancel",
+    "remove_account": "Remove"
   },
   "input": {
     "account": {

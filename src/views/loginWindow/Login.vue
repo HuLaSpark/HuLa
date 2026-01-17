@@ -139,19 +139,37 @@
           tertiary
           style="color: #fff"
           class="gradient-button w-200px mt-12px mb-40px"
-          @click="normalLogin('PC', true, true)">
+          @click="triggerAutoLogin">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>
 
     <!-- 第三方登录 -->
-    <div class="w-full pb-22px pt-3px">
+    <div v-if="uiState !== 'auto'" class="w-full pb-22px pt-3px">
       <ThirdPartyLogin :login-context="loginContext" />
     </div>
 
     <!-- 底部操作栏 -->
-    <div class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full" id="bottomBar">
+    <div
+      v-if="uiState === 'auto'"
+      class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full"
+      id="bottomBar">
+      <div
+        class="color-#13987f cursor-pointer justify-self-end text-right"
+        :title="cancelLoginTitle"
+        @click="cancelAutoLoginAndShowManual">
+        {{ cancelLoginLabel }}
+      </div>
+      <div class="w-1px h-14px bg-#ccc dark:bg-#707070 justify-self-center"></div>
+      <div
+        class="color-#13987f cursor-pointer justify-self-start text-left"
+        :title="removeAccountTitle"
+        @click="removeStoredAccount">
+        {{ removeAccountLabel }}
+      </div>
+    </div>
+    <div v-else class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full" id="bottomBar">
       <div
         class="color-#13987f cursor-pointer justify-self-end text-right"
         :title="qrCodeTitle"
@@ -159,14 +177,7 @@
         {{ qrCodeLabel }}
       </div>
       <div class="w-1px h-14px bg-#ccc dark:bg-#707070 justify-self-center"></div>
-      <div
-        v-if="uiState === 'auto'"
-        class="color-#13987f cursor-pointer justify-self-start text-left"
-        :title="removeAccountTitle"
-        @click="removeToken">
-        {{ removeAccountLabel }}
-      </div>
-      <div v-else class="justify-self-start text-left">
+      <div class="justify-self-start text-left">
         <n-popover
           trigger="click"
           id="moreShow"
@@ -257,6 +268,57 @@ const loginContext: ThirdPartyLoginContext = {
   loading,
   loginDisabled
 }
+const isDesktopClient = isDesktop()
+const AUTO_LOGIN_DELAY_MS = 3000
+const autoLoginPending = ref(false)
+let autoLoginTimer: number | null = null
+
+const clearAutoLoginTimer = () => {
+  if (autoLoginTimer !== null) {
+    window.clearTimeout(autoLoginTimer)
+    autoLoginTimer = null
+  }
+  autoLoginPending.value = false
+}
+
+const startAutoLoginCountdown = () => {
+  if (!isDesktopClient) {
+    normalLogin('PC', true, true)
+    return
+  }
+  clearAutoLoginTimer()
+  autoLoginPending.value = true
+  autoLoginTimer = window.setTimeout(() => {
+    autoLoginPending.value = false
+    autoLoginTimer = null
+    normalLogin('PC', true, true)
+  }, AUTO_LOGIN_DELAY_MS)
+}
+
+const cancelAutoLogin = () => {
+  if (!autoLoginPending.value) {
+    return
+  }
+  clearAutoLoginTimer()
+}
+
+const handleAutoLoginActivity = () => {
+  if (uiState.value !== 'auto' || !autoLoginPending.value) {
+    return
+  }
+  cancelAutoLogin()
+}
+
+const triggerAutoLogin = () => {
+  cancelAutoLogin()
+  normalLogin('PC', true, true)
+}
+
+const cancelAutoLoginAndShowManual = () => {
+  cancelAutoLogin()
+  uiState.value = 'manual'
+  loginHistories.length > 0 && giveAccount(loginHistories[0])
+}
 
 const driverSteps = computed<DriverStepConfig[]>(() => [
   {
@@ -324,13 +386,18 @@ const MAX_BOTTOM_TEXT_LEN = 6
 const qrCodeText = computed(() => t('login.button.qr_code'))
 const moreText = computed(() => t('login.option.more'))
 const removeAccountText = computed(() => t('login.button.remove_account'))
+const cancelLoginText = computed(() => t('login.button.cancel_login'))
 const qrCodeLabel = computed(() => formatBottomText(qrCodeText.value, MAX_BOTTOM_TEXT_LEN))
 const moreLabel = computed(() => formatBottomText(moreText.value, MAX_BOTTOM_TEXT_LEN))
 const removeAccountLabel = computed(() => formatBottomText(removeAccountText.value, MAX_BOTTOM_TEXT_LEN))
+const cancelLoginLabel = computed(() => formatBottomText(cancelLoginText.value, MAX_BOTTOM_TEXT_LEN))
 const qrCodeTitle = computed(() => (qrCodeLabel.value !== qrCodeText.value ? qrCodeText.value : undefined))
 const moreTitle = computed(() => (moreLabel.value !== moreText.value ? moreText.value : undefined))
 const removeAccountTitle = computed(() =>
   removeAccountLabel.value !== removeAccountText.value ? removeAccountText.value : undefined
+)
+const cancelLoginTitle = computed(() =>
+  cancelLoginLabel.value !== cancelLoginText.value ? cancelLoginText.value : undefined
 )
 
 /** 是否直接跳转 */
@@ -353,8 +420,30 @@ timerWorker.onmessage = (e) => {
 }
 
 watchEffect(() => {
+  if (uiState.value === 'auto') {
+    loginDisabled.value = !isOnline.value || !userStore.userInfo?.account
+    return
+  }
   loginDisabled.value = !(info.value.account && info.value.password && protocol.value && isOnline.value)
 })
+
+watch(
+  () => uiState.value,
+  (state) => {
+    if (state !== 'auto') {
+      clearAutoLoginTimer()
+    }
+  }
+)
+
+watch(
+  () => login.value.autoLogin,
+  (isAuto) => {
+    if (!isAuto) {
+      clearAutoLoginTimer()
+    }
+  }
+)
 
 watch(isOnline, (v) => {
   loginDisabled.value = !v
@@ -446,10 +535,21 @@ const giveAccount = (item: UserInfoType) => {
 }
 
 /** 移除已登录账号 */
-const removeToken = () => {
+const removeStoredAccount = () => {
+  const storedUserInfo = userStore.userInfo
+  if (storedUserInfo) {
+    const matchedHistory = loginHistories.find(
+      (item) => item.uid === storedUserInfo.uid || item.account === storedUserInfo.account
+    )
+    if (matchedHistory) {
+      loginHistoriesStore.removeLoginHistory(matchedHistory)
+    }
+  }
   localStorage.removeItem('TOKEN')
   localStorage.removeItem('REFRESH_TOKEN')
   userStore.userInfo = undefined
+  settingStore.setAutoLogin(false)
+  cancelAutoLoginAndShowManual()
 }
 
 /** 打开服务协议窗口 */
@@ -514,7 +614,7 @@ onMounted(async () => {
   // 自动登录时显示自动登录界面并触发登录
   if (login.value.autoLogin) {
     uiState.value = 'auto'
-    normalLogin('PC', true, true)
+    startAutoLoginCountdown()
   } else {
     // 手动登录模式，自动填充第一个历史账号
     uiState.value = 'manual'
@@ -523,6 +623,10 @@ onMounted(async () => {
 
   window.addEventListener('click', closeMenu, true)
   window.addEventListener('keyup', enterKey)
+  if (isDesktopClient) {
+    window.addEventListener('pointerdown', handleAutoLoginActivity, true)
+    window.addEventListener('keydown', handleAutoLoginActivity, true)
+  }
   await checkUpdate('login', true)
   timerWorker.postMessage({
     type: 'startTimer',
@@ -534,6 +638,11 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('click', closeMenu, true)
   window.removeEventListener('keyup', enterKey)
+  if (isDesktopClient) {
+    window.removeEventListener('pointerdown', handleAutoLoginActivity, true)
+    window.removeEventListener('keydown', handleAutoLoginActivity, true)
+  }
+  clearAutoLoginTimer()
   // 清除Web Worker计时器
   timerWorker.postMessage({
     type: 'clearTimer',

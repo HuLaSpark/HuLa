@@ -5,6 +5,7 @@
       "network_error": "网络异常"
     },
     "qr_code": "扫码登录",
+    "cancel_login": "取消登录",
     "remove_account": "移除账号"
   },
   "input": {
