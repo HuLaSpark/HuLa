@@ -150,8 +150,6 @@ async function handleLogout() {
         logoutSuccess = true
       } catch (error) {
         console.error('服务器登出失败：', error)
-        // 即使服务器登出失败，也继续执行本地清理，但给出警告
-        window.$message.warning('服务器登出失败，但本地登录状态已清除')
       }
 
       // 无论服务器登出是否成功，都执行本地状态清理

@@ -108,6 +108,7 @@ impl ImRequestClient {
     ) -> Result<ApiResult<T>, anyhow::Error> {
         let mut retry_count = 0;
         const MAX_RETRY_COUNT: u8 = 2;
+        let is_logout = path == ImUrl::Logout.get_url().1;
 
         loop {
             // 使用 build_request 构建请求
@@ -127,6 +128,9 @@ impl ImRequestClient {
 
             match result.code {
                 Some(406) => {
+                    if is_logout {
+                        return Ok(result);
+                    }
                     if retry_count >= MAX_RETRY_COUNT {
                         return Err(anyhow::anyhow!("token过期，刷新token失败"));
                     }
@@ -135,6 +139,9 @@ impl ImRequestClient {
                     continue;
                 }
                 Some(401) => {
+                    if is_logout {
+                        return Ok(result);
+                    }
                     error!(
                         "{}; 方法: {}; 失败信息: {}",
                         &url,
