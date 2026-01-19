@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true  # 如果有新的发布任务，取消正在进行的任务
+  cancel-in-progress: true # 如果有新的发布任务，取消正在进行的任务
 
 jobs:
   prepare-frontend:
@@ -63,17 +63,17 @@ jobs:
     permissions:
       contents: write # 授予写入仓库内容的权限
     strategy:
-      fail-fast: false  # 某个平台构建失败不影响其他平台
+      fail-fast: false # 某个平台构建失败不影响其他平台
       matrix:
         include:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04"
-            args: ""
-          - platform: "windows-latest"
-            args: ""
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -268,9 +268,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 获取当前 tag 对应的 draft release
-          RELEASE=$(gh api repos/${{ github.repository }}/releases --jq '.[] | select(.tag_name == "${{ github.ref_name }}" and .draft == true)')
-          if [ -n "$RELEASE" ]; then
+          # 直接按 tag 获取 release，避免同 tag 多个草稿导致多个 ID
+          RELEASE=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} 2>/dev/null || true)
+          if [ -n "$RELEASE" ] && [ "$(echo "$RELEASE" | jq -r '.draft')" = "true" ]; then
             RELEASE_ID=$(echo "$RELEASE" | jq -r '.id')
             echo "Publishing draft release with ID: $RELEASE_ID"
 
@@ -285,7 +285,7 @@ jobs:
           fi
 
   upgradeLink-upload:
-    needs: publish-release  # 依赖于 publish-release 作业完成（确保 release 已正式发布）
+    needs: publish-release # 依赖于 publish-release 作业完成（确保 release 已正式发布）
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -294,6 +294,6 @@ jobs:
         uses: toolsetlink/upgradelink-action@v5
         with:
           source-url: 'https://github.com/HuLaSpark/HuLa/releases/download/${{ github.ref_name }}/latest.json'
-          access-key: ${{ secrets.UPGRADE_LINK_ACCESS_KEY }}  # ACCESS_KEY  密钥key
-          tauri-key: ${{ secrets.UPGRADE_LINK_TAURI_KEY }}    # TAURI_KEY tauri 应用唯一标识
+          access-key: ${{ secrets.UPGRADE_LINK_ACCESS_KEY }} # ACCESS_KEY  密钥key
+          tauri-key: ${{ secrets.UPGRADE_LINK_TAURI_KEY }} # TAURI_KEY tauri 应用唯一标识
           github-token: ${{ secrets.GITHUB_TOKEN }}
