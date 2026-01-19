@@ -1,5 +1,38 @@
 # Changelog
 
+## [3.0.9](https://github.com/HuLaSpark/HuLa/compare/v3.0.8...v3.0.9) (2026-01-19)
+
+### ✨ Features | 新功能
+
+* **chat:** :sparkles: support group member alias resolution when extracting [@mentions](https://github.com/mentions) ([86a7f3e](https://github.com/HuLaSpark/HuLa/commit/86a7f3e456b9cedc8a99f554557aa12cd0fb8e08))
+* **i18n:** :sparkles: add loading states and system settings translations ([a08bb76](https://github.com/HuLaSpark/HuLa/commit/a08bb762ff66f353a2ff01f529d6b778f55d22cc))
+* **i18n:** add i18n for community post ([7648f77](https://github.com/HuLaSpark/HuLa/commit/7648f777fd821ac7028b69423a3a3fa20caad046))
+* **i18n:** enhance internationalization support by adding mobile titles and computed labels ([9c07f86](https://github.com/HuLaSpark/HuLa/commit/9c07f8695820227f29f1f5b3961096c9d9ec0ba5))
+* **login:** :sparkles: add 3-second delay and cancel option for auto-login on desktop ([1f661ea](https://github.com/HuLaSpark/HuLa/commit/1f661eaaecf64c5e9ac411832b5a446c915be3e7))
+* **login:** :sparkles: add message sync and error handling for OAuth login ([7d7f0c2](https://github.com/HuLaSpark/HuLa/commit/7d7f0c2d6bc438ba93546aeb756d63cf2388eee7))
+* **login:** :sparkles: preload group member data and announcements during login ([2cc3eab](https://github.com/HuLaSpark/HuLa/commit/2cc3eab991a192cba654956fdc693ab2e75147ad))
+* **monitor:** :sparkles: add development memory monitor component ([709bcc4](https://github.com/HuLaSpark/HuLa/commit/709bcc4514f0eab86e88e9e8e86247d51511764c))
+* **notification:** :sparkles: add volume control for message alert sound ([d560912](https://github.com/HuLaSpark/HuLa/commit/d56091250799bcf35a751ff5764c197e1445c2e5))
+* **skill:** :sparkles: add HuLa skill linking script and project context documentation ([0aaf60c](https://github.com/HuLaSpark/HuLa/commit/0aaf60c0d2e1b8484afe4b7b7ecb791b1ab66e53))
+* **theme:** :sparkles: preserve user theme preference on app restart ([3d81c33](https://github.com/HuLaSpark/HuLa/commit/3d81c3338b8ef7d30a2ca883fbe16f035c9eb7f3))
+* **view:** :sparkles: add gitecode login ([cf80f79](https://github.com/HuLaSpark/HuLa/commit/cf80f793334c8917a0b8c8ef7ea30c12aa3f31e6))
+
+### 🐛 Bug Fixes | Bug 修复
+
+* **chat:** :bug: validate emoji insertion range is within input box ([e027e32](https://github.com/HuLaSpark/HuLa/commit/e027e320aca2c12c2b0694d8c81d5fa76b0ecbb5))
+* **ci:** :bug: fix draft release detection to avoid multiple release IDs for same tag ([342eae6](https://github.com/HuLaSpark/HuLa/commit/342eae600ca7394a4748ef04d1f589fd92ac6b8c))
+* **common:** :bug: page the friends list ([cc14874](https://github.com/HuLaSpark/HuLa/commit/cc14874773b9eab5579d0a53e4a58193269651a5))
+* **forget-password:** :bug: reset initial step to 1 from 3 ([cd42271](https://github.com/HuLaSpark/HuLa/commit/cd422712748e4659ad50e5c3893272ee11eac207))
+* **group:** :bug: fix group member refresh problem in single chat ([4cd1c3c](https://github.com/HuLaSpark/HuLa/commit/4cd1c3cd66f605c58ad4115e023a39035ea4ed0e))
+* **ios:** :bug: fix ios crash and auto login failure ([c860a14](https://github.com/HuLaSpark/HuLa/commit/c860a140e3b7a52ef1af7db5c553fa4c69b14ddc)), closes [#472](https://github.com/HuLaSpark/HuLa/issues/472)
+* **ios:** :bug: fix ios real machine stuck on startup page due to useNetworkStatus() ([8c18806](https://github.com/HuLaSpark/HuLa/commit/8c18806a83cd83d0a435022a8dc15d74f4a81f9a))
+* **ios:** :bug: fix ios simulator can't start ([cb2028a](https://github.com/HuLaSpark/HuLa/commit/cb2028a971acb2d6902a149885573d5e96557d3b))
+* **ios:** :bug: fix packaging error due to ios permissions issue ([18fb1fd](https://github.com/HuLaSpark/HuLa/commit/18fb1fd14ea230782794d9ce6b11aeada29171c4))
+* **logout:** :bug: skip token validation during logout to prevent error loops ([c65c740](https://github.com/HuLaSpark/HuLa/commit/c65c7407975bc959bebc01ca0f7ad7ff66486cc1))
+* **plugin:** :bug: display of ai usage times ([ca10f5d](https://github.com/HuLaSpark/HuLa/commit/ca10f5ddce0fa51e390c00cbeac2c8e40b6c925a))
+* **theme:** follow system to change theme ([7a7b5b2](https://github.com/HuLaSpark/HuLa/commit/7a7b5b24c133afb2dc9ca113a8c8020969a7af19))
+* **view:** :bug: render gitcode icon ([0ba6187](https://github.com/HuLaSpark/HuLa/commit/0ba61876b34eb8f87a44d19f776c93a7a4f6e887))
+
 ## [3.0.8](https://github.com/HuLaSpark/HuLa/compare/v3.0.6...v3.0.8) (2025-12-31)
 
 ### ✨ Features | 新功能
