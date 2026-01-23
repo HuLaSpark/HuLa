@@ -186,7 +186,8 @@
   },
   "pnpm": {
     "overrides": {
-      "conventional-changelog-conventionalcommits": "8.0.0"
+      "conventional-changelog-conventionalcommits": "8.0.0",
+      "lodash": "4.17.23"
     },
     "ignoredBuiltDependencies": ["@parcel/watcher", "esbuild", "sharp", "tlbs-map-vue", "vue-demi"]
   }
