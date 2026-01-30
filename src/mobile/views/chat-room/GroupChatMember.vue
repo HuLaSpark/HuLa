@@ -1,11 +1,7 @@
 <template>
   <AutoFixHeightPage :show-footer="false">
     <template #header>
-      <HeaderBar
-        :isOfficial="false"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
-        :hidden-right="true"
-        room-name="群成员" />
+      <HeaderBar :isOfficial="false" border :hidden-right="true" room-name="群成员" />
     </template>
 
     <template #container>
@@ -14,10 +10,11 @@
           <!-- 搜索表单 -->
           <n-form @submit="handleSubmit" class="flex flex-wrap gap-10px">
             <div class="flex flex-1">
-              <input
-                v-model="formData.keyword"
+              <n-input
+                v-model:value="formData.keyword"
                 placeholder="搜索"
-                class="bg-gray-100 text-center border-none w-full rounded-10px h-30px" />
+                size="medium"
+                class="text-center border-none w-full rounded-10px" />
             </div>
           </n-form>
 
@@ -25,7 +22,6 @@
             <div ref="measure" class="flex absolute w-full h-full top-0 left-0 z-1"></div>
             <div class="absolute z-10 w-full">
               <div v-if="filteredList.length === 0" class="flex w-full justify-center mt-20px">无数据</div>
-
               <n-virtual-list
                 v-else
                 :style="{ height: virtualScrollerHeight + 'px', width: '100%' }"
@@ -39,9 +35,9 @@
                         :src="AvatarUtils.getAvatarUrl(item.avatar)"
                         fallback-src="/logo.png"
                         round />
-                      <div class="line-clamp-1">
+                      <n-text class="line-clamp-1">
                         {{ item.name }}
-                      </div>
+                      </n-text>
                     </div>
                   </div>
                 </template>

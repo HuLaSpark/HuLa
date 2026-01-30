@@ -1,17 +1,16 @@
 <template>
-  <div class="flex flex-col h-full flex-1 bg-white">
+  <div class="flex flex-col h-full flex-1">
     <!-- 固定顶部区域 -->
     <Transition name="header-fade">
       <div
         v-if="isHeaderFixed"
-        class="fixed backdrop-blur-md left-0 right-0 z-100 flex items-center justify-between"
+        class="fixed backdrop-blur-md left-0 right-0 z-100 flex items-center justify-between bg-[rgba(255,255,255,0.8)] dark:bg-[rgba(20,20,20,0.8)]"
         :style="{
           height: 'env(safe-area-inset-top, 0px)',
-          paddingTop: '36px',
-          background: 'rgba(220, 220, 220, 0.6)'
+          paddingTop: '36px'
         }">
         <div class="pl-24px pt-16px">
-          <n-button text @click="openNotificationPopup" class="relative text-#303030">
+          <n-button text @click="openNotificationPopup" class="relative text-#303030 dark:invert">
             <template #icon>
               <div class="relative">
                 <svg class="size-22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,7 +30,7 @@
             </template>
           </n-button>
         </div>
-        <div class="flex-1 flex justify-center pt-12px text-16px font-600 text-#303030">
+        <div class="flex-1 flex justify-center pt-12px text-16px font-600 text-#303030 dark:text-white">
           {{ t('dynamic.page.mobile_title') }}
         </div>
         <div class="pr-24px opacity-0 pointer-events-none">

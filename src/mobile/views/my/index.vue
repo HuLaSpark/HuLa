@@ -1,7 +1,8 @@
 <template>
-  <div class="flex flex-col h-full">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed z-0 top-0" alt="hula" />
-
+  <div class="flex flex-col overflow-auto h-full relative">
+    <img
+      src="@/assets/mobile/chat-home/background.webp"
+      class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
     <!-- 设置区 -->
     <Settings />
 
@@ -14,7 +15,7 @@
         ref="scrollContainer"
         :style="{ height: tabHeight + 'px' }"
         class="z-1 overflow-hidden mt-2 absolute z-3 w-full">
-        <div class="custom-rounded bg-white flex px-24px flex-col gap-4 z-1 p-10px mt-4">
+        <n-card class="custom-rounded" content-class="flex flex-col gap-4 z-1 p-10px mt-4 p-15px!">
           <n-scrollbar
             ref="scrollbarRef"
             :style="{ height: tabHeight + 'px' }"
@@ -31,7 +32,7 @@
                 @item-click="handleItemClick" />
             </div>
           </n-scrollbar>
-        </div>
+        </n-card>
       </div>
     </div>
 

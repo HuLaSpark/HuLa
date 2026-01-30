@@ -7,7 +7,7 @@
       spellcheck="false"
       style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; white-space: pre-wrap"></div>
 
-    <div class="w-full min-h-20px bg-#FAFAFA flex flex-col z-2 footer-bar-shadow">
+    <div class="w-full min-h-20px flex flex-col z-2 footer-bar-shadow">
       <div class="flex-1 min-h-0">
         <chat-footer :detail-id="globalStore.currentSession?.detailId"></chat-footer>
       </div>

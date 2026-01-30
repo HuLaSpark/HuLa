@@ -1,74 +1,60 @@
 <template>
   <AutoFixHeightPage :show-footer="false">
     <template #header>
-      <HeaderBar
-        :isOfficial="false"
-        class="bg-white"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
-        :hidden-right="true"
-        room-name="公告详情" />
+      <HeaderBar :isOfficial="false" class="bg-white" border :hidden-right="true" room-name="公告详情" />
     </template>
 
     <template #container>
-      <div
-        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
+      <div class="flex flex-col overflow-auto h-full relative">
+        <img
+          src="@/assets/mobile/chat-home/background.webp"
+          class="absolute t-0 l-0 w-full h-full z-0 dark:opacity-20" />
         <div class="flex flex-col flex-1 gap-15px py-15px px-20px">
           <div v-if="loading" class="flex justify-center items-center h-200px">
             <n-spin size="large" />
           </div>
 
-          <div v-else-if="announcement" class="bg-white flex flex-col shadow p-10px gap-15px text-14px rounded-15px">
-            <!-- 公告头部信息 -->
-            <div
-              style="border-bottom: 1px solid; border-color: #ebebeb"
-              class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
-              <!-- 头像 -->
-              <div class="self-center h-38px">
-                <n-badge>
-                  <n-avatar :size="40" :src="publisherAvatar" :fallback-src="getFallbackAvatar()" round />
-                </n-badge>
-              </div>
-
-              <!-- 发布人信息 -->
-              <div class="truncate pl-4 flex gap-10px flex-col">
-                <div class="text-14px leading-tight font-bold flex-1 truncate text-#333">
-                  {{ publisherName }}
+          <n-card
+            v-else-if="announcement"
+            class="rounded-15px"
+            header-class="p-10px!"
+            :segmented="{ content: true, footer: 'soft' }">
+            <template #header>
+              <div class="grid grid-cols-[2.2rem_1fr_4rem] items-start px-2 py-3 gap-1">
+                <div class="self-center h-38px">
+                  <n-badge>
+                    <n-avatar :size="40" :src="publisherAvatar" :fallback-src="getFallbackAvatar()" round />
+                  </n-badge>
                 </div>
-                <div class="text-12px text-#333">
-                  {{ formatTimestamp(announcement.createTime) }}
+
+                <!-- 发布人信息 -->
+                <div class="truncate pl-4 flex gap-10px flex-col">
+                  <div class="text-14px leading-tight font-bold flex-1 truncate">
+                    {{ publisherName }}
+                  </div>
+                  <n-text depth="3" class="text-12px">
+                    {{ formatTimestamp(announcement.createTime) }}
+                  </n-text>
                 </div>
               </div>
+            </template>
 
-              <!-- 阅读统计 -->
+            <template #header-extra>
               <div class="justify-self-end self-center text-12px text-right flex gap-1 items-center">
                 <span class="text-#13987F">{{ announcement.readCount || 0 }}人已读</span>
               </div>
-            </div>
+            </template>
 
-            <!-- 公告内容 -->
-            <div class="announcement-content whitespace-pre-wrap break-words text-14px leading-6 text-#333">
+            <n-text>
               {{ announcement.content }}
-            </div>
+            </n-text>
 
-            <!-- 编辑按钮（仅管理员/群主可见） -->
-            <div v-if="canEdit" class="flex justify-center mb-10px">
-              <div
-                @click="goToNoticeEdit"
-                style="
-                  background: linear-gradient(145deg, #7eb7ac, #6fb0a4, #5fa89c);
-                  border-radius: 30px;
-                  padding: 10px 30px;
-                  color: white;
-                  font-weight: 500;
-                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-                  text-align: center;
-                  display: inline-block;
-                  cursor: pointer;
-                ">
-                编辑公告
+            <template #action v-if="canEdit">
+              <div class="flex justify-center">
+                <n-button strong secondary type="primary" class="m-auto" @click="goToNoticeEdit">编辑公告</n-button>
               </div>
-            </div>
-          </div>
+            </template>
+          </n-card>
 
           <div v-else class="flex justify-center items-center h-200px text-#909090">公告不存在或已被删除</div>
         </div>

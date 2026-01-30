@@ -1,147 +1,220 @@
 <template>
-  <div class="flex flex-1 flex-col">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed z-0 top-0" alt="hula" />
-    <AutoFixHeightPage :show-footer="false" class="z-1">
-      <template #header>
-        <HeaderBar
-          :isOfficial="false"
-          :hidden-right="true"
-          :enable-default-background="false"
-          :enable-shadow="false"
-          :room-name="t('mobile_edit_profile.title')" />
-      </template>
-
-      <template #container>
-        <div class="flex flex-col gap-1 overflow-auto h-full">
-          <div class="flex flex-col p-[0px_20px_20px_20px] gap-15px">
-            <!-- 头像 -->
-            <div class="flex justify-center">
-              <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden" @click="openAvatarCropper">
-                <n-avatar
-                  class="absolute"
-                  :size="86"
-                  :src="AvatarUtils.getAvatarUrl(localUserInfo.avatar!)"
-                  fallback-src="/logo.png"
-                  round />
-                <div
-                  class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
-                <div class="absolute bottom-25% text-center w-full text-12px text-white">
-                  {{ t('mobile_edit_profile.change_avatar') }}
-                </div>
+  <AutoFixHeightPage :show-footer="false" class="z-1">
+    <template #header>
+      <HeaderBar
+        :isOfficial="false"
+        :hidden-right="true"
+        :enable-default-background="false"
+        :enable-shadow="false"
+        :room-name="t('mobile_edit_profile.title')" />
+    </template>
+    <template #container>
+      <div class="flex flex-col overflow-auto h-full relative">
+        <img
+          src="@/assets/mobile/chat-home/background.webp"
+          class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
+        <div class="p-20px">
+          <!-- 头像 -->
+          <div class="flex justify-center mb-50px">
+            <div class="rounded-full relative bg-white w-86px h-86px overflow-hidden" @click="openAvatarCropper">
+              <n-avatar
+                class="absolute"
+                :size="86"
+                :src="AvatarUtils.getAvatarUrl(localUserInfo.avatar!)"
+                fallback-src="/logo.png"
+                round />
+              <div
+                class="absolute h-50% w-full bottom-0 bg-[rgb(50,50,50)] bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-15 backdrop-saturate-100 backdrop-contrast-100"></div>
+              <div class="absolute bottom-25% text-center w-full text-12px text-white">
+                {{ t('mobile_edit_profile.change_avatar') }}
               </div>
-              <input
-                ref="fileInput"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="hidden"
-                @change="handleFileChange" />
-              <AvatarCropper
-                ref="cropperRef"
-                v-model:show="showCropper"
-                :image-url="localImageUrl"
-                @crop="handleCrop" />
             </div>
-            <!-- 个人信息 -->
-            <van-form @submit="saveEditInfo">
-              <van-cell-group class="shadow" inset>
-                <!-- 昵称 -->
-                <van-field
-                  :disabled="true"
-                  v-model="localUserInfo.name"
-                  name="昵称"
-                  :label="t('mobile_edit_profile.nickname')"
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden"
+              @change="handleFileChange" />
+            <AvatarCropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
+          </div>
+          <!-- 个人信息 -->
+          <n-card class="p-0! rounded-16px">
+            <n-form @submit="saveEditInfo" label-placement="left" label-align="left" :label-width="80">
+              <n-form-item :label="t('mobile_edit_profile.nickname')">
+                <n-input
+                  readonly
+                  v-model:value="localUserInfo.name"
                   :placeholder="t('mobile_edit_profile.placeholder.nickname')"
-                  :rules="[{ required: true, message: t('mobile_edit_profile.placeholder.nickname') }]" />
+                  class="bg-transparent!" />
+              </n-form-item>
 
-                <!-- 性别 -->
-                <van-field
-                  v-model="genderText"
-                  is-link
+              <n-divider class="my-3! p-0!" />
+
+              <n-form-item
+                :label="t('mobile_edit_profile.gender')"
+                :placeholder="t('mobile_edit_profile.placeholder.gender')">
+                <n-input
+                  @click="pickerState.gender = true"
+                  v-model:value="genderText"
                   readonly
-                  name="picker"
-                  :label="t('mobile_edit_profile.gender')"
                   :placeholder="t('mobile_edit_profile.placeholder.gender')"
-                  @click="pickerState.gender = true" />
+                  class="bg-transparent!" />
+              </n-form-item>
 
-                <van-popup v-model:show="pickerState.gender" position="bottom">
-                  <van-picker
-                    :columns="pickerColumn.gender"
-                    @confirm="pickerConfirm.gender"
-                    @cancel="pickerState.gender = false" />
-                </van-popup>
+              <n-divider class="my-3! p-0!" />
 
-                <!-- 生日 -->
-                <van-field
-                  v-model="birthday"
-                  :name="t('mobile_edit_profile.brithday')"
-                  :label="t('mobile_edit_profile.brithday')"
-                  :placeholder="t('mobile_edit_profile.placeholder.brithday')"
-                  is-link
+              <n-form-item
+                :label="t('mobile_edit_profile.brithday')"
+                :placeholder="t('mobile_edit_profile.placeholder.brithday')">
+                <n-input
+                  @click="toEditBirthday"
+                  v-model:value="birthday"
                   readonly
-                  @click="toEditBirthday" />
-
-                <!-- 地区 -->
-                <van-field
-                  v-model="region"
-                  is-link
-                  readonly
-                  name="area"
-                  :label="t('mobile_edit_profile.brithday')"
                   :placeholder="t('mobile_edit_profile.placeholder.brithday')"
-                  @click="pickerState.region = true" />
-                <van-popup v-model:show="pickerState.region" position="bottom">
-                  <van-area
-                    :area-list="areaList"
-                    @confirm="pickerConfirm.region"
-                    @cancel="pickerState.region = false" />
-                </van-popup>
+                  class="bg-transparent!" />
+              </n-form-item>
 
-                <!-- 手机号 -->
-                <van-field
-                  :disabled="true"
-                  v-model="localUserInfo.phone"
-                  type="tel"
-                  name="手机号"
-                  :label="t('mobile_edit_profile.phone')"
+              <n-divider class="my-3! p-0!" />
+
+              <n-form-item label="地区" :placeholder="t('mobile_edit_profile.placeholder.brithday')">
+                <n-input
+                  @click="pickerState.region = true"
+                  v-model:value="region"
+                  readonly
+                  :placeholder="t('mobile_edit_profile.placeholder.brithday')"
+                  class="bg-transparent!" />
+              </n-form-item>
+
+              <n-divider class="my-3! p-0!" />
+
+              <n-form-item
+                disabled
+                :label="t('mobile_edit_profile.phone')"
+                :placeholder="t('mobile_edit_profile.placeholder.phone')">
+                <n-input
+                  disabled
+                  readonly
+                  v-model:value="localUserInfo.phone"
                   :placeholder="t('mobile_edit_profile.placeholder.phone')"
-                  :rules="[{ required: false, message: '请填写手机号' }]" />
+                  class="bg-transparent!" />
+              </n-form-item>
 
-                <!-- 简介 -->
-                <van-field
-                  v-model="localUserInfo.resume"
-                  name="简介"
-                  :label="t('mobile_edit_profile.bio')"
-                  :placeholder="t('mobile_edit_profile.placeholder.bio')"
+              <n-divider class="my-3! p-0!" />
+
+              <n-form-item
+                disabled
+                :label="t('mobile_edit_profile.bio')"
+                :placeholder="t('mobile_edit_profile.placeholder.bio')">
+                <n-input
                   type="textarea"
-                  rows="3"
-                  autosize
-                  @click="toEditBio" />
-              </van-cell-group>
+                  v-model:value="localUserInfo.resume"
+                  :placeholder="t('mobile_edit_profile.placeholder.bio')"
+                  class="bg-transparent!"
+                  @click="toEditBio"
+                  readonly />
+              </n-form-item>
+              <!-- <van-cell-group class="shadow" inset> -->
+              <!-- 昵称 -->
+              <!-- <van-field
+                    :disabled="true"
+                    v-model="localUserInfo.name"
+                    name="昵称"
+                    :label="t('mobile_edit_profile.nickname')"
+                    :placeholder="t('mobile_edit_profile.placeholder.nickname')"
+                    :rules="[{ required: true, message: t('mobile_edit_profile.placeholder.nickname') }]" /> -->
+
+              <!-- 性别 -->
+              <!-- <van-field
+                    v-model="genderText"
+                    is-link
+                    readonly
+                    name="picker"
+                    :label="t('mobile_edit_profile.gender')"
+                    :placeholder="t('mobile_edit_profile.placeholder.gender')"
+                    @click="pickerState.gender = true" /> -->
+
+              <n-drawer
+                v-model:show="pickerState.gender"
+                class="rounded-t-20px! overflow-hidden"
+                position="bottom"
+                round
+                placement="bottom"
+                default-height="300px">
+                <van-picker
+                  :columns="pickerColumn.gender"
+                  @confirm="pickerConfirm.gender"
+                  @cancel="pickerState.gender = false" />
+              </n-drawer>
+              <!-- <van-popup v-model:show="pickerState.gender" position="bottom">
+                    <van-picker
+                      :columns="pickerColumn.gender"
+                      @confirm="pickerConfirm.gender"
+                      @cancel="pickerState.gender = false" />
+                  </van-popup> -->
+
+              <!-- 生日 -->
+              <!-- <van-field
+                    v-model="birthday"
+                    :name="t('mobile_edit_profile.brithday')"
+                    :label="t('mobile_edit_profile.brithday')"
+                    :placeholder="t('mobile_edit_profile.placeholder.brithday')"
+                    is-link
+                    readonly
+                    @click="toEditBirthday" /> -->
+
+              <!-- 地区 -->
+              <!-- <van-field
+                    v-model="region"
+                    is-link
+                    readonly
+                    name="area"
+                    :label="t('mobile_edit_profile.brithday')"
+                    :placeholder="t('mobile_edit_profile.placeholder.brithday')"
+                    @click="pickerState.region = true" />
+                  -->
+              <n-drawer
+                v-model:show="pickerState.region"
+                class="rounded-t-20px! overflow-hidden"
+                position="bottom"
+                round
+                placement="bottom"
+                default-height="300px">
+                <van-area :area-list="areaList" @confirm="pickerConfirm.region" @cancel="pickerState.region = false" />
+              </n-drawer>
+
+              <!-- 手机号 -->
+              <!-- <van-field
+                    :disabled="true"
+                    v-model="localUserInfo.phone"
+                    type="tel"
+                    name="手机号"
+                    :label="t('mobile_edit_profile.phone')"
+                    :placeholder="t('mobile_edit_profile.placeholder.phone')"
+                    :rules="[{ required: false, message: '请填写手机号' }]" /> -->
+
+              <!-- 简介 -->
+              <!-- <van-field
+                    v-model="localUserInfo.resume"
+                    name="简介"
+                    :label="t('mobile_edit_profile.bio')"
+                    :placeholder="t('mobile_edit_profile.placeholder.bio')"
+                    type="textarea"
+                    rows="3"
+                    autosize
+                    @click="toEditBio" /> -->
+              <!-- </van-cell-group> -->
 
               <div class="flex justify-center mt-20px">
-                <button
-                  class=""
-                  style="
-                    background: linear-gradient(145deg, #7eb7ac, #6fb0a4, #5fa89c);
-                    border-radius: 30px;
-                    padding: 10px 30px;
-                    color: white;
-                    font-weight: 500;
-                    border: none;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-                    text-align: center;
-                    display: inline-block;
-                  "
-                  type="submit">
+                <n-button block attr-type="submit" type="primary" strong secondary round>
                   {{ t('mobile_edit_profile.save_btn') }}
-                </button>
+                </n-button>
               </div>
-            </van-form>
-          </div>
+            </n-form>
+          </n-card>
         </div>
-      </template>
-    </AutoFixHeightPage>
-  </div>
+      </div>
+    </template>
+  </AutoFixHeightPage>
 </template>
 
 <script setup lang="ts">

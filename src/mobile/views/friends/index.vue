@@ -1,7 +1,8 @@
 <template>
-  <div class="flex flex-col h-full flex-1">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
-
+  <div class="flex flex-col overflow-auto h-full relative">
+    <img
+      src="@/assets/mobile/chat-home/background.webp"
+      class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
     <!-- 页面蒙板 -->
     <div
       v-if="showMask"
@@ -11,7 +12,9 @@
 
     <!-- 导航条 -->
     <NavBar>
-      <template #center>{{ t('mobile_contact.title') }}</template>
+      <template #center>
+        <n-text>{{ t('mobile_contact.title') }}</n-text>
+      </template>
       <template #right>
         <n-dropdown
           @on-clickoutside="addIconHandler.clickOutside"
@@ -19,9 +22,13 @@
           trigger="click"
           :show-arrow="true"
           :options="uiViewsData.addOptions">
-          <svg @click="addIconHandler.open" class="size-22px bg-white p-5px rounded-8px">
-            <use href="#plus"></use>
-          </svg>
+          <n-button round strong secondary @click="addIconHandler.open">
+            <template #icon>
+              <n-icon>
+                <svg><use href="#plus"></use></svg>
+              </n-icon>
+            </template>
+          </n-button>
         </n-dropdown>
       </template>
     </NavBar>
@@ -30,7 +37,7 @@
     <div class="px-16px mt-2 mb-12px z-1">
       <n-input
         id="search"
-        class="rounded-6px w-full bg-white relative text-12px"
+        class="rounded-6px w-full relative text-12px"
         :maxlength="20"
         clearable
         spellCheck="false"
@@ -44,11 +51,13 @@
       </n-input>
     </div>
 
-    <div class="flex flex-1 gap-2 flex-col bg-white z-1 custom-rounded">
-      <!-- 我的消息条 -->
-      <div
-        class="grid grid-cols-[4rem_1fr_24px] items-center gap-8px py-15px px-16px border-b-[1px] border-b-solid border-b-[#e5e7eb]">
-        <div class="h-full flex items-center text-14px">{{ t('mobile_contact.my_chat') }}</div>
+    <n-card
+      :segmented="{ content: true, footer: 'soft' }"
+      :bordered="false"
+      class="custom-rounded flex-1"
+      header-class="py-15px! px-16px! text-14px!"
+      :title="t('mobile_contact.my_chat')">
+      <template #header-extra>
         <div @click="toMessage" class="h-full flex items-center justify-end">
           <span
             v-if="contactUnreadCount > 0"
@@ -57,9 +66,9 @@
           </span>
         </div>
         <div @click="toMessage" class="h-full flex justify-end items-center">
-          <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px" alt="" />
+          <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px dark:invert" alt="" />
         </div>
-      </div>
+      </template>
 
       <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
         <n-tab-pane name="1" :tab="t('mobile_contact.tab.contacts')">
@@ -146,7 +155,7 @@
           </n-collapse>
         </n-tab-pane>
       </n-tabs>
-    </div>
+    </n-card>
   </div>
 </template>
 <style scoped>
@@ -182,7 +191,8 @@ const renderImgIcon = (src: string) => {
   return () =>
     h('img', {
       src,
-      style: 'display:block; width: 24px; height: 24px; vertical-align: middle'
+      style: 'display:block; width: 24px; height: 24px; vertical-align: middle',
+      class: 'dark:invert'
     })
 }
 

@@ -14,7 +14,7 @@
       <div ref="infoBox" class="pl-2 flex gap-8px flex-col transition-transform duration-300 ease-in-out">
         <!-- 名字与在线状态 -->
         <div class="flex flex-warp gap-4 items-center">
-          <span class="font-bold text-20px text-#373838">{{ userDetailInfo!.name }}</span>
+          <n-text class="font-bold text-20px">{{ userDetailInfo!.name }}</n-text>
           <div
             v-show="hasUserOnlineState"
             class="bg-#E7EFE6 flex flex-wrap ps-2 px-8px items-center rounded-full gap-1 h-24px">
@@ -34,7 +34,7 @@
         <div class="flex flex-warp gap-2 items-center">
           <span class="text-bold-style">{{ t('mobile_personal_info.account') }}:{{ userDetailInfo!.account }}</span>
           <span v-if="isMyPage" @click="toMyQRCode" class="pe-15px">
-            <img class="w-14px h-14px" src="@/assets/mobile/my/qr-code.webp" alt="" />
+            <img class="w-14px h-14px dark:invert" src="@/assets/mobile/my/qr-code.webp" alt="" />
           </span>
         </div>
         <Transition name="medal-fade">
@@ -76,56 +76,65 @@
       <div class="flex flex-wrap justify-around mt-4">
         <div class="flex flex-warp gap-2 items-center">
           <div class="min-w-10 flex flex-col items-center">
-            <div class="fans-number">920.13W</div>
+            <n-text class="fans-number">920.13W</n-text>
             <div class="fans-title">{{ t('mobile_personal_info.follower') }}</div>
           </div>
-          <div class="h-20px w-1px bg-gray-300"></div>
+          <n-divider vertical class="h-20px" />
           <div class="min-w-10 flex flex-col items-center">
-            <div class="fans-number">120</div>
+            <n-text class="fans-number">120</n-text>
             <div class="fans-title">{{ t('mobile_personal_info.follow') }}</div>
           </div>
-          <div class="h-20px w-1px bg-gray-300"></div>
+          <n-divider vertical class="h-20px" />
           <div class="min-w-10 flex flex-col items-center">
-            <div class="fans-number">43.15W</div>
+            <n-text class="fans-number">43.15W</n-text>
             <div class="fans-title">{{ t('mobile_personal_info.like') }}</div>
           </div>
         </div>
-        <div class="flex-1 justify-end flex items-center gap-3">
-          <n-button
-            :disabled="loading"
-            @click="toEditProfile"
-            v-if="props.isMyPage && !isBotUser(uid)"
-            class="font-bold px-4 py-10px bg-#EEF4F3 text-#373838 rounded-full text-12px">
-            {{ t('mobile_personal_info.edit_profile') }}
-          </n-button>
-          <n-button
-            :loading="loading"
-            :disabled="loading"
-            @click="handleDelete"
-            :color="'#d5304f'"
-            v-if="!props.isMyPage && isMyFriend && !isBotUser(uid)"
-            class="px-5 py-10px font-bold text-center rounded-full text-12px">
-            {{ t('mobile_personal_info.remove_user') }}
-          </n-button>
+      </div>
+      <div class="justify-end flex items-center gap-3 mt-30px">
+        <n-button
+          :disabled="loading"
+          @click="toEditProfile"
+          strong
+          secondary
+          round
+          v-if="props.isMyPage && !isBotUser(uid)"
+          class="font-bold px-4 py-10px rounded-full text-12px">
+          {{ t('mobile_personal_info.edit_profile') }}
+        </n-button>
+        <n-button
+          :loading="loading"
+          :disabled="loading"
+          strong
+          secondary
+          @click="handleDelete"
+          :color="'#d5304f'"
+          v-if="!props.isMyPage && isMyFriend && !isBotUser(uid)"
+          class="px-5 py-10px font-bold text-center rounded-full text-12px">
+          {{ t('mobile_personal_info.remove_user') }}
+        </n-button>
 
-          <n-button
-            type="primary"
-            :disabled="loading"
-            @click="handleAddFriend"
-            v-if="!props.isMyPage && !isMyFriend && !isBotUser(uid)"
-            class="px-5 py-10px font-bold text-center rounded-full text-12px">
-            +&nbsp;
-            {{ t('mobile_personal_info.add_friend') }}
-          </n-button>
-          <n-button
-            type="primary"
-            @click="toChatRoom"
-            :disabled="loading"
-            v-if="!props.isMyPage && isMyFriend"
-            class="px-5 py-10px text-center font-bold rounded-full text-12px">
-            {{ isBotUser(uid) ? t('mobile_personal_info.open_bot') : t('mobile_personal_info.chat') }}
-          </n-button>
-        </div>
+        <n-button
+          type="primary"
+          :disabled="loading"
+          strong
+          secondary
+          @click="handleAddFriend"
+          v-if="!props.isMyPage && !isMyFriend && !isBotUser(uid)"
+          class="px-5 py-10px font-bold text-center rounded-full text-12px">
+          +&nbsp;
+          {{ t('mobile_personal_info.add_friend') }}
+        </n-button>
+        <n-button
+          type="primary"
+          strong
+          secondary
+          @click="toChatRoom"
+          :disabled="loading"
+          v-if="!props.isMyPage && isMyFriend"
+          class="px-5 py-10px text-center font-bold rounded-full text-12px">
+          {{ isBotUser(uid) ? t('mobile_personal_info.open_bot') : t('mobile_personal_info.chat') }}
+        </n-button>
       </div>
     </div>
   </Transition>

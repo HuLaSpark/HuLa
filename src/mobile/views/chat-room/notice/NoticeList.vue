@@ -1,47 +1,46 @@
 <template>
   <AutoFixHeightPage :show-footer="false">
     <template #header>
-      <HeaderBar
-        :isOfficial="false"
-        class="bg-white"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
-        :hidden-right="true"
-        room-name="群公告" />
+      <HeaderBar :isOfficial="false" class="bg-white" border :hidden-right="true" room-name="群公告" />
     </template>
 
     <template #container>
-      <div
-        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full relative">
+      <div class="flex flex-col overflow-auto h-full relative">
+        <img
+          src="@/assets/mobile/chat-home/background.webp"
+          class="absolute t-0 l-0 w-full h-full z-0 dark:opacity-20" />
         <div class="flex flex-col flex-1 gap-15px py-15px px-20px">
           <RecycleScroller :items="announList" :item-size="15" key-field="id" class="flex flex-col gap-15px">
             <template #default="{ item }">
               <!-- 公告内容块 -->
-              <div @click="goToNoticeDetail(item.id)" class="shadow flex p-15px bg-white rounded-10px">
-                <div class="flex flex-col w-full gap-10px">
-                  <!-- 时间/阅读人数 -->
-                  <div class="flex items-center justify-between text-14px">
-                    <span class="flex gap-5px">
-                      <span class="text-#717171">发布人:</span>
-                      <span class="text-black">{{ groupStore.getUserInfo(item.uid)?.name }}</span>
-                    </span>
-                    <span
-                      v-if="item.isTop"
-                      class="text-#13987F rounded-15px px-7px py-5px text-12px"
-                      style="border: 1px solid; border-color: #13987f">
-                      置顶
-                    </span>
-                  </div>
-                  <!-- 公告内容 -->
-                  <div class="text-14px line-clamp-3 line-height-20px text-#717171 max-h-60px">
-                    {{ item.content }}
-                  </div>
+              <n-card content-class="p-15px!" class="rounded-10px">
+                <div @click="goToNoticeDetail(item.id)">
+                  <div class="flex flex-col w-full gap-10px">
+                    <!-- 时间/阅读人数 -->
+                    <div class="flex items-center justify-between text-14px">
+                      <span class="flex gap-5px">
+                        <span class="text-#717171">发布人:</span>
+                        <span class="text-black dark:text-white/80">{{ groupStore.getUserInfo(item.uid)?.name }}</span>
+                      </span>
+                      <span
+                        v-if="item.isTop"
+                        class="text-#13987F rounded-15px px-7px py-5px text-12px"
+                        style="border: 1px solid; border-color: #13987f">
+                        置顶
+                      </span>
+                    </div>
+                    <!-- 公告内容 -->
+                    <div class="text-14px line-clamp-3 line-height-20px text-#717171 max-h-60px">
+                      {{ item.content }}
+                    </div>
 
-                  <div class="flex items-center justify-between text-12px">
-                    <span class="flex gap-5px text-#717171">{{ formatTimestamp(item.createTime) }}</span>
-                    <span class="text-#13987F">128人已读</span>
+                    <div class="flex items-center justify-between text-12px">
+                      <span class="flex gap-5px text-#717171">{{ formatTimestamp(item.createTime) }}</span>
+                      <span class="text-#13987F">128人已读</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </n-card>
             </template>
           </RecycleScroller>
         </div>

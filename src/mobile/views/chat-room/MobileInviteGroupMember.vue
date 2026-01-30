@@ -13,7 +13,7 @@
         <div class="flex-1 py-5px shrink-0">
           <n-input
             v-model:value="keyword"
-            class="rounded-10px w-full bg-gray-100 relative text-14px"
+            class="rounded-10px w-full relative text-14px"
             placeholder="搜索联系人~"
             clearable
             spellCheck="false"
@@ -44,7 +44,9 @@
                 class="w-full flex items-center px-5px"
                 :class="[
                   'cursor-pointer select-none transition-colors duration-150',
-                  selectedList.includes(item.uid) ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'
+                  selectedList.includes(item.uid)
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300'
+                    : 'data-[active=true]:hover:bg-blue-100 dark:data-[active=true]:hover:bg-blue-500/20'
                 ]">
                 <template #default>
                   <div class="flex items-center gap-10px px-8px py-10px">

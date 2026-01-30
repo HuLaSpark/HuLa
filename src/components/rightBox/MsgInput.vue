@@ -45,9 +45,10 @@
               @compositionend="updateSelectionRange"
               @keydown.exact.ctrl.enter="handleEnterKey"
               :data-placeholder="t('editor.placeholder')"
+              class="n-input"
               :class="
                 isMobile()
-                  ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! bg-white! rounded-10px! max-h-8rem! flex items-center'
+                  ? 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2 min-h-2rem ps-10px! text-14px! rounded-10px! max-h-8rem! flex items-center'
                   : 'empty:before:content-[attr(data-placeholder)] before:text-(12px #777) p-2'
               "></div>
           </n-scrollbar>
@@ -57,62 +58,58 @@
         <div
           v-if="!isMobile()"
           class="flex-shrink-0 max-h-52px p-4px pr-12px border-t border-gray-200/50 flex justify-end mb-4px">
-          <n-config-provider :theme="lightTheme">
-            <n-button-group size="small">
-              <n-button
-                color="#13987f"
-                :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
-                class="w-65px"
-                @click="handleDesktopSend">
-                {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
-              </n-button>
-              <n-button color="#13987f" class="p-[0_6px]">
-                <template #icon>
-                  <n-config-provider :theme="themes.content === ThemeEnum.DARK ? darkTheme : lightTheme">
-                    <n-popselect
-                      v-model:show="arrow"
-                      v-model:value="chatKey"
-                      :options="sendOptions"
-                      trigger="click"
-                      placement="top-end">
-                      <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
-                        <use href="#down"></use>
-                      </svg>
-                      <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
-                        <use href="#up"></use>
-                      </svg>
-                      <template #action>
-                        <n-flex
-                          justify="center"
-                          align="center"
-                          :size="4"
-                          class="text-(12px #777) cursor-default tracking-1 select-none">
-                          <i18n-t keypath="editor.send_or_newline">
-                            <template #send>
-                              <span v-if="chatKey !== 'Enter'">
-                                {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
-                              </span>
-                              <svg class="size-12px">
-                                <use href="#Enter"></use>
-                              </svg>
-                            </template>
-                            <template #newline>
-                              <n-flex align="center" :size="0">
-                                {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
-                                <svg class="size-12px">
-                                  <use href="#Enter"></use>
-                                </svg>
-                              </n-flex>
-                            </template>
-                          </i18n-t>
-                        </n-flex>
-                      </template>
-                    </n-popselect>
-                  </n-config-provider>
-                </template>
-              </n-button>
-            </n-button-group>
-          </n-config-provider>
+          <n-button-group size="small">
+            <n-button
+              color="#13987f"
+              :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
+              class="w-65px"
+              @click="handleDesktopSend">
+              {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
+            </n-button>
+            <n-button color="#13987f" class="p-[0_6px]">
+              <template #icon>
+                <n-popselect
+                  v-model:show="arrow"
+                  v-model:value="chatKey"
+                  :options="sendOptions"
+                  trigger="click"
+                  placement="top-end">
+                  <svg @click="arrow = true" v-if="!arrow" class="w-22px h-22px mt-2px outline-none">
+                    <use href="#down"></use>
+                  </svg>
+                  <svg @click="arrow = false" v-else class="w-22px h-22px mt-2px outline-none">
+                    <use href="#up"></use>
+                  </svg>
+                  <template #action>
+                    <n-flex
+                      justify="center"
+                      align="center"
+                      :size="4"
+                      class="text-(12px #777) cursor-default tracking-1 select-none">
+                      <i18n-t keypath="editor.send_or_newline">
+                        <template #send>
+                          <span v-if="chatKey !== 'Enter'">
+                            {{ isMac() ? MacOsKeyEnum['⌘'] : WinKeyEnum.CTRL }}
+                          </span>
+                          <svg class="size-12px">
+                            <use href="#Enter"></use>
+                          </svg>
+                        </template>
+                        <template #newline>
+                          <n-flex align="center" :size="0">
+                            {{ isMac() ? MacOsKeyEnum['⇧'] : WinKeyEnum.SHIFT }}
+                            <svg class="size-12px">
+                              <use href="#Enter"></use>
+                            </svg>
+                          </n-flex>
+                        </template>
+                      </i18n-t>
+                    </n-flex>
+                  </template>
+                </n-popselect>
+              </template>
+            </n-button>
+          </n-button-group>
         </div>
 
         <!-- @提及框  -->
@@ -197,17 +194,15 @@
           <div
             v-if="msgInput"
             class="flex-shrink-0 max-h-62px h-full border-t border-gray-200/50 flex items-center justify-end">
-            <n-config-provider class="h-full" :theme="lightTheme">
-              <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
-                <n-button
-                  color="#13987f"
-                  :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
-                  class="w-3rem h-full"
-                  @click="handleMobileSend">
-                  {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
-                </n-button>
-              </n-button-group>
-            </n-config-provider>
+            <n-button-group size="small" :class="isMobile() ? 'h-full' : 'pr-20px'">
+              <n-button
+                color="#13987f"
+                :disabled="props.isAIMode && props.isAIStreaming ? false : disabledSend"
+                class="w-3rem h-full"
+                @click="handleMobileSend">
+                {{ props.isAIMode && props.isAIStreaming ? '停止思考' : t('editor.send') }}
+              </n-button>
+            </n-button-group>
           </div>
           <div v-if="!msgInput" class="flex items-center justify-start h-full">
             <svg
@@ -233,7 +228,7 @@
 import { emit } from '@tauri-apps/api/event'
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { onKeyStroke } from '@vueuse/core'
-import { darkTheme, lightTheme, type VirtualListInst } from 'naive-ui'
+import { type VirtualListInst } from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import type { Ref } from 'vue'
 import { MacOsKeyEnum, MittEnum, RoomTypeEnum, ThemeEnum, WinKeyEnum } from '@/enums'

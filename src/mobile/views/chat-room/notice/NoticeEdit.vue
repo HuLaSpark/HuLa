@@ -4,50 +4,36 @@
       <HeaderBar
         :isOfficial="false"
         class="bg-white"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
+        border
         :hidden-right="true"
         :room-name="isEditMode ? '编辑群公告' : '新增群公告'" />
     </template>
 
     <template #container>
-      <div
-        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
-        <div class="flex flex-col flex-1 gap-20px py-15px px-20px">
-          <!-- 公告内容编辑区域 -->
-          <div class="bg-white rounded-15px p-15px shadow">
-            <n-form label-placement="top" size="medium">
-              <n-form-item label="公告内容" required>
-                <n-input
-                  v-model:value="announcementContent"
-                  type="textarea"
-                  placeholder="请输入公告内容..."
-                  class="w-full"
-                  :autosize="announcementAutosize"
-                  :maxlength="1000"
-                  :show-count="true" />
-              </n-form-item>
+      <n-card :bordered="false" class="h-full" content-class="p-10px!">
+        <n-input
+          v-model:value="announcementContent"
+          type="textarea"
+          placeholder="请输入公告内容..."
+          class="w-full p-0! m-0!"
+          :autosize="announcementAutosize"
+          :maxlength="1000"
+          :show-count="true" />
 
-              <n-form-item label="上传图片（暂不支持）">
-                <div class="upload-image-container">
-                  <n-upload
-                    action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
-                    list-type="image-card"
-                    :max="4"
-                    disabled>
-                    <div class="upload-trigger">
-                      <svg class="size-24px text-#999">
-                        <use href="#plus"></use>
-                      </svg>
-                      <span class="text-12px text-#999 mt-5px">点击上传</span>
-                    </div>
-                  </n-upload>
-                </div>
-              </n-form-item>
-            </n-form>
-          </div>
+        <div class="upload-image-container pt-10px">
+          <n-upload action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f" list-type="image-card" :max="4" disabled>
+            <div class="upload-trigger">
+              <svg class="size-24px text-#999">
+                <use href="#plus"></use>
+              </svg>
+              <span class="text-12px text-#999 mt-5px">点击上传</span>
+            </div>
+          </n-upload>
+        </div>
 
-          <!-- 置顶设置区域 -->
-          <div class="bg-white rounded-15px shadow">
+        <template #action>
+          <div class="pb-10px">
+            <!-- 置顶设置区域 -->
             <div class="flex flex-col w-full">
               <div class="flex justify-between py-15px px-15px items-center border-b border-gray-200">
                 <div class="flex flex-col">
@@ -57,17 +43,27 @@
                 <n-switch v-model:value="top" />
               </div>
             </div>
-          </div>
 
-          <!-- 操作按钮 -->
-          <div class="flex justify-center gap-15px">
-            <n-button type="default" class="w-40%" size="large" @click="handleCancel">取消</n-button>
-            <n-button type="primary" class="w-40%" size="large" @click="handleSubmit" :loading="submitting">
-              保存
-            </n-button>
+            <!-- 操作按钮 -->
+            <div class="flex justify-center gap-15px">
+              <n-button type="default" class="w-40%" strong secondary round size="large" @click="handleCancel">
+                取消
+              </n-button>
+              <n-button
+                type="primary"
+                class="w-40%"
+                strong
+                secondary
+                round
+                size="large"
+                @click="handleSubmit"
+                :loading="submitting">
+                保存
+              </n-button>
+            </div>
           </div>
-        </div>
-      </div>
+        </template>
+      </n-card>
     </template>
   </AutoFixHeightPage>
 </template>
@@ -172,22 +168,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 按钮样式优化 */
-.n-button {
-  border-radius: 30px;
-  font-weight: 500;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
-}
-
-.n-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.n-button--primary {
-  background: linear-gradient(145deg, #7eb7ac, #6fb0a4, #5fa89c);
-  border: none;
+:deep(.n-card > .n-card__action) {
+  padding: 0 !important;
 }
 
 /* 上传图片组件样式优化 */

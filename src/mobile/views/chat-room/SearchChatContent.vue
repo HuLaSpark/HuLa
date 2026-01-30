@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="flex gap-2 mx-2">
-      <input class="flex-1" type="text" placeholder="请输入聊天内容" />
-      <n-button type="primary" @click="() => router.back()">取消</n-button>
+      <n-input type="text" placeholder="请输入聊天内容" />
+      <n-button strong secondary type="primary" @click="() => router.back()">取消</n-button>
     </div>
 
     <div class="flex flex-col items-center mt-10">

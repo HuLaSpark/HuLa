@@ -628,6 +628,7 @@ onMounted(() => {
   isDesktop() && import('@/styles/scss/global/desktop.scss')
   // 判断是否是移动端，移动端需要加载安全区域适配样式
   isMobile() && import('@/styles/scss/global/mobile.scss')
+
   import(`@/styles/scss/theme/${themes.value.versatile}.scss`)
   if (!settingStore.themes.content) {
     // 首次运行使用跟随系统，保持既有体验
@@ -734,6 +735,8 @@ watch(
 watch(
   () => themes.value.versatile,
   async (val, oldVal) => {
+    console.log(val)
+
     await import(`@/styles/scss/theme/${val}.scss`)
     // 然后给最顶层的div设置val的类样式
     const app = document.querySelector('#app')?.classList as DOMTokenList

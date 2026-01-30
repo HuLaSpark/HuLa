@@ -3,78 +3,83 @@
     <template #header>
       <HeaderBar
         :isOfficial="false"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
+        border
         :hidden-right="true"
         :room-name="t('mobile_chat_setting.title', { t: title })" />
     </template>
 
     <template #container>
-      <div
-        class="bg-[url('@/assets/mobile/chat-home/background.webp')] bg-cover bg-center flex flex-col overflow-auto h-full">
-        <div class="flex flex-col gap-15px py-15px px-20px flex-1 min-h-0">
-          <div class="flex shadow py-10px bg-white rounded-10px w-full items-center gap-10px" @click="clickInfo">
-            <!-- 群头像 -->
-            <div class="flex justify-center">
-              <div class="rounded-full relative bg-white w-38px h-38px overflow-hidden" style="margin-left: 10px">
-                <n-avatar
-                  class="absolute"
-                  :size="38"
-                  :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')"
-                  fallback-src="/logo.png"
-                  :style="{
-                    'object-fit': 'cover',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)'
-                  }"
-                  round />
+      <div class="flex flex-col overflow-auto h-full relative">
+        <img
+          src="@/assets/mobile/chat-home/background.webp"
+          class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
+        <div class="flex flex-col gap-15px py-15px px-20px flex-1 min-h-0 z-1">
+          <n-card size="small" embedded class="rounded-10px p-0" content-class="p-0!">
+            <div class="flex py-10px rounded-10px w-full items-center gap-10px" @click="clickInfo">
+              <!-- 群头像 -->
+              <div class="flex justify-center">
+                <div class="rounded-full relative bg-white w-38px h-38px overflow-hidden" style="margin-left: 10px">
+                  <n-avatar
+                    class="absolute"
+                    :size="38"
+                    :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')"
+                    fallback-src="/logo.png"
+                    :style="{
+                      'object-fit': 'cover',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)'
+                    }"
+                    round />
+                </div>
+                <input
+                  v-if="isGroup"
+                  ref="fileInput"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  @change="handleFileChange" />
+                <AvatarCropper
+                  ref="cropperRef"
+                  v-model:show="showCropper"
+                  :image-url="localImageUrl"
+                  @crop="handleCrop" />
               </div>
-              <input
-                v-if="isGroup"
-                ref="fileInput"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                class="hidden"
-                @change="handleFileChange" />
-              <AvatarCropper
-                ref="cropperRef"
-                v-model:show="showCropper"
-                :image-url="localImageUrl"
-                @crop="handleCrop" />
-            </div>
 
-            <div class="text-14px flex items-center h-full gap-5px">
-              <span>
-                {{ activeItem?.name || '' }}
-              </span>
-              <span v-if="activeItem?.hotFlag === 1">
-                <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
-                  <use href="#auth"></use>
-                </svg>
-              </span>
+              <div class="text-14px flex items-center h-full gap-5px">
+                <span>
+                  {{ activeItem?.name || '' }}
+                </span>
+                <span v-if="activeItem?.hotFlag === 1">
+                  <svg class="w-18px h-18px iconpark-icon text-#1A9B83">
+                    <use href="#auth"></use>
+                  </svg>
+                </span>
+              </div>
             </div>
-          </div>
+          </n-card>
           <!-- 群成员  -->
-          <div v-if="isGroup" class="bg-white rounded-10px max-w-full p-[5px_10px_5x_10px] shadow">
-            <div class="p-[15px_15px_0px_15px] flex flex-col">
-              <!-- 群号 -->
-              <div class="flex justify-between items-center">
-                <div class="text-14px">{{ t('mobile_chat_setting.group_members_title') }}</div>
-                <div @click="toGroupChatMember" class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <i18n-t keypath="mobile_chat_setting.member_count">
-                    <template #count>
-                      <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
-                    </template>
-                  </i18n-t>
+          <n-card
+            v-if="isGroup"
+            class="rounded-10px"
+            content-class="p-[15px_15px_0px_15px]!"
+            header-class="text-14px! p-[15px_15px_0px_15px]!"
+            :title="t('mobile_chat_setting.group_members_title')">
+            <template #header-extra>
+              <div @click="toGroupChatMember" class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                <i18n-t keypath="mobile_chat_setting.member_count">
+                  <template #count>
+                    <span class="text-#398D7E">{{ groupStore.countInfo?.memberNum || 0 }}</span>
+                  </template>
+                </i18n-t>
 
-                  <div>
-                    <svg class="w-14px h-14px iconpark-icon">
-                      <use href="#right"></use>
-                    </svg>
-                  </div>
+                <div>
+                  <svg class="w-14px h-14px iconpark-icon">
+                    <use href="#right"></use>
+                  </svg>
                 </div>
               </div>
-            </div>
+            </template>
             <div class="py-15px px-5px grid grid-cols-5 gap-15px text-12px">
               <div
                 @click="toFriendInfo(i.uid)"
@@ -90,19 +95,16 @@
                 </div>
                 <div class="truncate max-w-full text-#707070">{{ i.name }}</div>
               </div>
-              <div
-                @click="toInviteGroupMember"
-                class="flex flex-col justify-center items-center gap-5px cursor-pointer">
-                <div
-                  class="rounded-full bg-#E5EFEE w-36px h-36px flex items-center justify-center hover:bg-#D5E5E0 transition-colors">
-                  <svg class="iconpark-icon h-25px w-25px">
+              <div class="flex flex-col justify-center items-center gap-5px cursor-pointer">
+                <n-button strong secondary circle @click="toInviteGroupMember">
+                  <svg class="iconpark-icon h-25px w-25px dark:opacity-40">
                     <use href="#plus"></use>
                   </svg>
-                </div>
+                </n-button>
                 <div>{{ t('mobile_chat_setting.group_invite_member') }}</div>
               </div>
             </div>
-          </div>
+          </n-card>
 
           <!-- 管理群成员 -->
           <div
@@ -112,19 +114,17 @@
             {{ t('mobile_chat_setting.manage_group_members') }}
           </div>
 
-          <div
-            class="bg-white p-15px rounded-10px shadow text-14px flex cursor-pointer"
-            @click="handleSearchChatContent">
+          <n-card class="rounded-10px" content-class="p-15px!" @click="handleSearchChatContent">
             {{ t('mobile_chat_setting.search_history') }}
-          </div>
+          </n-card>
           <!-- 群公告 -->
-          <div class="flex bg-white rounded-10px w-full h-auto shadow">
-            <div class="px-15px flex flex-col w-full">
-              <!-- 群号 -->
-              <div
-                style="border-bottom: 1px solid; border-color: #ebebeb"
-                @click="handleCopy(activeItem?.account || '')"
-                class="flex justify-between py-15px items-center">
+          <n-card
+            class="rounded-10px"
+            header-class="text-14px! p-15px!"
+            :segmented="{ content: true, footer: 'soft' }"
+            content-class="p-15px!">
+            <template #header>
+              <div @click="handleCopy(activeItem?.account || '')" class="flex justify-between items-center">
                 <div class="text-14px">
                   {{
                     t('mobile_chat_setting.id_card.qr_code_label', {
@@ -143,98 +143,89 @@
                   </div>
                 </div>
               </div>
-
-              <!-- 公告内容 -->
-              <div @click="goToNotice" v-if="isGroup" class="pt-15px flex flex-col text-14px gap-10px">
-                <div>{{ t('mobile_chat_setting.group_notice.title') }}</div>
-                <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
-                  {{ announList.length > 0 ? announList[0]?.content : '' }}
-                </div>
-              </div>
-
-              <!-- v-if="isGroup && groupStore.isAdminOrLord()"  -->
-              <div class="flex justify-between py-15px items-center">
-                <div class="text-14px">{{ t('mobile_chat_setting.group_name') }}</div>
-                <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <input
-                    style="
-                      height: 17px;
-                      border: none;
-                      text-align: right;
-                      outline: none;
-                      font-size: 14px;
-                      text-align: right;
-                    "
-                    v-model="nameValue"
-                    @blur="handleGroupInfoUpdate"
-                    :placeholder="t('mobile_chat_setting.input.group_name')" />
-                </div>
-              </div>
-
-              <div v-if="isGroup" class="flex justify-between py-15px items-center">
-                <div class="text-14px">{{ t('mobile_chat_setting.group_alias') }}</div>
-                <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
-                  <input
-                    style="
-                      height: 17px;
-                      border: none;
-                      text-align: right;
-                      outline: none;
-                      font-size: 14px;
-                      text-align: right;
-                    "
-                    v-model="nicknameValue"
-                    @blur="handleInfoUpdate"
-                    :placeholder="t('mobile_chat_setting.input.group_alias')" />
-                </div>
+            </template>
+            <!-- 公告内容 -->
+            <div @click="goToNotice" v-if="isGroup" class="flex flex-col text-14px gap-10px">
+              <div>{{ t('mobile_chat_setting.group_notice.title') }}</div>
+              <div class="text-#707070 line-clamp-2 text-12px line-height-20px">
+                {{ announList.length > 0 ? announList[0]?.content : '' }}
               </div>
             </div>
-          </div>
+
+            <!-- v-if="isGroup && groupStore.isAdminOrLord()"  -->
+            <div class="flex justify-between py-15px items-center">
+              <div class="text-14px">{{ t('mobile_chat_setting.group_name') }}</div>
+              <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                <n-input
+                  size="small"
+                  style="border: none; text-align: right; outline: none; text-align: right"
+                  v-model:value="nameValue"
+                  @blur="handleGroupInfoUpdate"
+                  :placeholder="t('mobile_chat_setting.input.group_name')" />
+              </div>
+            </div>
+
+            <div v-if="isGroup" class="flex justify-between py-15px items-center">
+              <div class="text-14px">{{ t('mobile_chat_setting.group_alias') }}</div>
+              <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
+                <n-input
+                  size="small"
+                  style="border: none; text-align: right; outline: none; text-align: right"
+                  v-model="nicknameValue"
+                  @blur="handleInfoUpdate"
+                  :placeholder="t('mobile_chat_setting.input.group_alias')" />
+              </div>
+            </div>
+          </n-card>
+
           <!-- 备注 -->
           <div class="w-full flex flex-col gap-15px rounded-10px">
             <div class="ps-15px text-14px">
-              <span>{{ t('mobile_chat_setting.remark') }}</span>
+              <span class="dark:text-white">{{ t('mobile_chat_setting.remark') }}</span>
               <span class="text-#6E6E6E ml-1">{{ t('mobile_chat_setting.remar_kprivate_visible') }}</span>
             </div>
-            <div class="rounded-10px flex w-full bg-white shadow">
-              <div class="w-full px-15px">
-                <input
-                  v-model="remarkValue"
-                  class="h-50px w-full"
-                  style="border: none; outline: none; font-size: 14px"
-                  :placeholder="t('mobile_chat_setting.input.remark')"
-                  @blur="handleInfoUpdate" />
-              </div>
+            <n-input
+              v-model="remarkValue"
+              size="large"
+              :placeholder="t('mobile_chat_setting.input.remark')"
+              @blur="handleInfoUpdate" />
+          </div>
+          <n-card
+            class="rounded-10px"
+            content-class="p-15px!"
+            header-class="p-15px! text-14px!"
+            :title="t('mobile_chat_setting.setting_type', { t: title })">
+            <div class="flex justify-between items-center">
+              <div class="text-14px">{{ t('mobile_chat_setting.pintop') }}</div>
+              <n-switch :value="!!activeItem?.top" @update:value="handleTop" />
             </div>
-          </div>
-          <div class="flex bg-white rounded-10px w-full h-auto shadow">
-            <div class="px-15px flex flex-col w-full">
-              <div class="pt-15px text-14px text-#6E6E6E">
-                {{ t('mobile_chat_setting.setting_type', { t: title }) }}
-              </div>
-              <!-- 群号 -->
-              <div
-                style="border-bottom: 1px solid; border-color: #ebebeb"
-                class="flex justify-between py-12px items-center">
-                <div class="text-14px">{{ t('mobile_chat_setting.pintop') }}</div>
-                <n-switch :value="!!activeItem?.top" @update:value="handleTop" />
-              </div>
-              <div
-                style="border-bottom: 1px solid; border-color: #ebebeb"
-                class="flex justify-between py-12px items-center">
-                <div class="text-14px">{{ t('mobile_chat_setting.silent') }}</div>
-                <n-switch
-                  @update:value="handleNotification"
-                  :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
-              </div>
+            <n-divider />
+            <div class="flex justify-between py-12px items-center">
+              <div class="text-14px">{{ t('mobile_chat_setting.silent') }}</div>
+              <n-switch
+                @update:value="handleNotification"
+                :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB" />
             </div>
-          </div>
-          <div class="shadow bg-white cursor-pointer text-red text-14px rounded-10px w-full mb-20px">
-            <div class="p-15px">{{ t('mobile_chat_setting.delete_chat_history') }}</div>
-          </div>
+          </n-card>
+          <n-button
+            strong
+            secondary
+            circle
+            size="large"
+            class="cursor-pointer text-red text-14px rounded-10px w-full mb-20px">
+            {{ t('mobile_chat_setting.delete_chat_history') }}
+          </n-button>
           <div class="mt-auto flex justify-center mb-20px">
             <!-- 解散群聊、退出群聊、删除好友按钮 -->
-            <n-button v-if="isGroup && globalStore.currentSessionRoomId !== '1'" type="error" @click="handleExit">
+            <n-button
+              class="w-full"
+              v-if="isGroup && globalStore.currentSessionRoomId !== '1'"
+              strong
+              secondary
+              round
+              type="error"
+              size="large"
+              @click="handleExit">
               {{
                 isGroup
                   ? isLord

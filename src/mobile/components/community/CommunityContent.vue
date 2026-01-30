@@ -9,9 +9,9 @@
 
       <!-- 中间：两行内容 -->
       <div class="truncate pl-4 flex gap-10px flex-col">
-        <div class="text-14px leading-tight font-bold flex-1 truncate text-#333 flex items-center gap-2">
+        <n-text class="text-14px leading-tight font-bold flex-1 truncate flex items-center gap-2">
           <span>{{ userName }}</span>
-        </div>
+        </n-text>
         <div class="text-12px text-#666 truncate">{{ formatTime(feedItem.createTime) }}</div>
       </div>
     </div>
@@ -22,9 +22,9 @@
       <div></div>
       <div class="flex flex-col gap-2 text-14px">
         <!-- 文本内容 -->
-        <div class="text-#333 leading-relaxed whitespace-pre-wrap break-words">
+        <n-text depth="3" class="leading-relaxed whitespace-pre-wrap break-words">
           {{ feedItem.content }}
-        </div>
+        </n-text>
 
         <!-- 图片网格 - 根据图片数量动态调整 -->
         <div v-if="feedItem.urls && feedItem.urls.length > 0" :class="getImageGridClass(feedItem.urls.length)">
@@ -52,7 +52,7 @@
         </div>
 
         <!-- 底部操作栏 -->
-        <div class="w-full flex justify-end mt-5px gap-5 items-center text-12px text-#666">
+        <div class="w-full flex justify-end mt-5px gap-5 items-center text-12px text-#666 dark:invert">
           <!-- 分享 -->
           <div class="flex items-center gap-1 cursor-pointer active:opacity-60" @click="handleShare">
             <svg class="iconpark-icon w-20px h-20px"><use href="#fenxiang"></use></svg>

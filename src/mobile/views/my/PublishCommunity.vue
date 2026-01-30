@@ -1,20 +1,18 @@
 <template>
   <AutoFixHeightPage :show-footer="false">
     <template #header>
-      <HeaderBar
-        :isOfficial="false"
-        class="bg-white"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
-        :hidden-right="true"
-        :room-name="t('mobile_post.title')" />
+      <HeaderBar :isOfficial="false" border :hidden-right="true" :room-name="t('mobile_post.title')" />
     </template>
 
     <template #container>
-      <div class="flex flex-col gap-1 overflow-auto h-full bg-#f5f5f5">
+      <div class="flex flex-col gap-1 overflow-auto h-full">
         <div class="flex flex-col p-16px gap-12px">
-          <!-- 动态内容输入 -->
-          <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-8px font-500">{{ t('mobile_post.content.label') }}</div>
+          <n-card
+            class="rounded-12px p-0!"
+            content-class="p-16px!"
+            header-class="text-14px! pb-0!"
+            :title="t('mobile_post.content.label')">
+            <!-- 动态内容输入 -->
             <van-field
               v-model="feedContent"
               type="textarea"
@@ -22,177 +20,171 @@
               :maxlength="500"
               show-word-limit
               :rows="8"
+              class="bg-transparent!"
               :autosize="feedAutosize" />
-          </div>
+          </n-card>
 
           <!-- 媒体类型提示（暂时禁用） -->
-          <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-8px font-500">{{ t('mobile_post.media_type.label') }}</div>
-            <div class="text-13px text-#999">
-              <div class="flex items-center gap-8px mb-6px">
-                <span class="text-#c8c9cc">📷</span>
-                <span class="text-#c8c9cc">{{ t('mobile_post.media_type.option_image') }}</span>
-              </div>
-              <div class="flex items-center gap-8px">
-                <span class="text-#c8c9cc">🎬</span>
-                <span class="text-#c8c9cc">{{ t('mobile_post.media_type.option_video') }}</span>
-              </div>
+          <!-- <div class="bg-white rounded-12px p-16px"> -->
+          <n-card
+            class="p-0! rounded-12px"
+            content-class="p-16px!"
+            header-class="text-14px! pb-0!"
+            :title="t('mobile_post.media_type.label')">
+            <div class="flex items-center gap-8px mb-6px">
+              <n-text depth="3" s>📷</n-text>
+              <n-text depth="3">{{ t('mobile_post.media_type.option_image') }}</n-text>
             </div>
-          </div>
+            <div class="flex items-center gap-8px">
+              <n-text depth="3">🎬</n-text>
+              <n-text depth="3">{{ t('mobile_post.media_type.option_video') }}</n-text>
+            </div>
+          </n-card>
+          <!-- </div> -->
 
           <!-- 权限选择 -->
-          <div class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-12px font-500">{{ t('mobile_post.visibility.label') }}</div>
-            <van-radio-group v-model="permission" direction="vertical" @change="handlePermissionChange">
-              <van-radio name="open" icon-size="18px" class="mb-12px">
-                <template #icon="props">
-                  <div
-                    :class="[
-                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
-                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
-                    ]">
-                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
-                  </div>
-                </template>
-                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.public') }}</span>
-              </van-radio>
-              <van-radio name="partVisible" icon-size="18px" class="mb-12px">
-                <template #icon="props">
-                  <div
-                    :class="[
-                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
-                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
-                    ]">
-                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
-                  </div>
-                </template>
-                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.selected') }}</span>
-              </van-radio>
-              <van-radio name="notAnyone" icon-size="18px">
-                <template #icon="props">
-                  <div
-                    :class="[
-                      'w-20px h-20px rounded-full border-2 flex items-center justify-center transition-all',
-                      props.checked ? 'border-#13987f bg-#13987f' : 'border-#c8c9cc'
-                    ]">
-                    <div v-if="props.checked" class="w-8px h-8px rounded-full bg-white"></div>
-                  </div>
-                </template>
-                <span class="ml-8px text-14px">{{ t('mobile_post.visibility.exclude') }}</span>
-              </van-radio>
-            </van-radio-group>
-          </div>
+          <n-card
+            class="p-0! rounded-12px"
+            content-class="p-16px"
+            header-class="text-14px! pb-0!"
+            :title="t('mobile_post.visibility.label')">
+            <n-radio-group
+              :value="permission"
+              @update:value="
+                (e) => {
+                  permission = e
+                  handlePermissionChange(e)
+                }
+              ">
+              <n-radio class="w-full" value="open">{{ t('mobile_post.visibility.public') }}</n-radio>
+              <n-radio class="w-full" value="partVisible">{{ t('mobile_post.visibility.selected') }}</n-radio>
+              <n-radio class="w-full" value="notAnyone">{{ t('mobile_post.visibility.exclude') }}</n-radio>
+            </n-radio-group>
+          </n-card>
 
           <!-- 选择用户 -->
-          <div v-if="permission === 'partVisible' || permission === 'notAnyone'" class="bg-white rounded-12px p-16px">
-            <div class="text-14px text-#333 mb-12px font-500">
-              {{
-                permission === 'partVisible'
-                  ? t('mobile_post.visibility_selected_btn_label')
-                  : t('mobile_post.visibility_exclude_btn_label')
-              }}
-            </div>
-            <van-button
-              type="primary"
+          <n-card
+            v-if="permission === 'partVisible' || permission === 'notAnyone'"
+            class="rounded-12px p-0!"
+            content-class="p-16px!"
+            header-class="text-14px! pb-0!"
+            :title="
+              permission === 'partVisible'
+                ? t('mobile_post.visibility_selected_btn_label')
+                : t('mobile_post.visibility_exclude_btn_label')
+            ">
+            <n-button
               size="small"
+              strong
+              secondary
+              type="primary"
               plain
               @click="showUserSelectPopup = true"
               class="w-full"
               :style="{ borderColor: '#13987f', color: '#13987f' }">
               {{ t('mobile_post.visibility_select_btn', { count: selectedUsers.length }) }}
-            </van-button>
+            </n-button>
             <div v-if="selectedUsers.length > 0" class="mt-12px flex flex-wrap gap-8px">
-              <van-tag
+              <n-tag
                 v-for="user in selectedUsers"
                 :key="user.uid"
                 closeable
-                size="medium"
-                color="#e8f5f4"
+                type="success"
+                size="small"
+                round
+                closable
                 text-color="#13987f"
                 @close="removeSelectedUser(user.uid)">
                 {{ getUserName(user) }}
-              </van-tag>
+              </n-tag>
             </div>
-          </div>
+          </n-card>
 
+          <!--  strong secondary round  -->
           <!-- 发布按钮 -->
-          <div class="flex gap-12px mt-8px pb-20px">
-            <van-button block plain @click="goBack" :style="{ borderColor: '#c8c9cc', color: '#666' }">
-              {{ t('mobile_post.btn.cancel') }}
-            </van-button>
-            <van-button
-              block
-              type="primary"
-              :loading="isPublishing"
-              :disabled="!isPublishValid"
-              @click="handlePublish"
-              :style="{ background: '#13987f', borderColor: '#13987f' }">
-              {{ t('mobile_post.btn.publish') }}
-            </van-button>
-          </div>
+          <n-grid :cols="2" x-gap="12">
+            <n-gi>
+              <n-button
+                block
+                secondary
+                round
+                size="large"
+                @click="goBack"
+                :style="{ borderColor: '#c8c9cc', color: '#666' }">
+                {{ t('mobile_post.btn.cancel') }}
+              </n-button>
+            </n-gi>
+            <n-gi>
+              <n-button
+                strong
+                secondary
+                round
+                block
+                size="large"
+                :loading="isPublishing"
+                :disabled="!isPublishValid"
+                @click="handlePublish"
+                :style="{ background: '#13987f', borderColor: '#13987f' }">
+                {{ t('mobile_post.btn.publish') }}
+              </n-button>
+            </n-gi>
+          </n-grid>
         </div>
       </div>
     </template>
   </AutoFixHeightPage>
 
   <!-- 用户选择弹窗 -->
-  <van-popup v-model:show="showUserSelectPopup" position="bottom" :style="{ height: '70%' }" round>
-    <div class="flex flex-col h-full">
-      <!-- 弹窗标题 -->
-      <div class="flex items-center justify-between p-16px border-b border-#eee">
-        <span class="text-16px font-500 text-#333">{{ t('mobile_post.select_users.title') }}</span>
-        <van-button type="primary" size="small" @click="confirmUserSelection" :style="{ background: '#13987f' }">
-          {{ t('mobile_post.select_users.btn.done') }}
-        </van-button>
-      </div>
+  <n-drawer
+    v-model:show="showUserSelectPopup"
+    class="rounded-t-20px!"
+    :style="{ background: themeVars.cardColor }"
+    position="bottom"
+    round
+    placement="bottom"
+    default-height="80%">
+    <n-drawer-content>
+      <template #header>
+        <n-flex justify="space-between">
+          <n-h3>{{ t('mobile_post.select_users.title') }}</n-h3>
+          <n-button strong secondary type="primary" size="small" @click="confirmUserSelection">
+            {{ t('mobile_post.select_users.btn.done') }}
+          </n-button>
+        </n-flex>
+      </template>
+      <n-space vertical :size="16">
+        <!-- 搜索框 -->
+        <n-input
+          size="large"
+          v-model:value="userSearchKeyword"
+          :placeholder="t('mobile_post.select_users.search_placeholder')" />
 
-      <!-- 搜索框 -->
-      <div class="p-12px border-b border-#f5f5f5">
-        <van-search
-          v-model="userSearchKeyword"
-          :placeholder="t('mobile_post.select_users.search_placeholder')"
-          shape="round" />
-      </div>
+        <!-- 用户列表 -->
+        <div class="flex-1 overflow-y-auto">
+          <n-checkbox-group v-model:value="selectedUserIds">
+            <n-list hoverable clickable class="bg-transparent" :bordered="false">
+              <n-list-item v-for="user in filteredContactsList" :key="user.uid" @click="toggleUser(user.uid)">
+                <n-flex class="flex items-center justify-between w-full" :gap="10">
+                  <n-avatar size="medium" class="shrink-0" :src="getUserAvatar(user)" round />
 
-      <!-- 用户列表 -->
-      <div class="flex-1 overflow-y-auto">
-        <van-checkbox-group v-model="selectedUserIds">
-          <van-cell-group>
-            <van-cell
-              v-for="user in filteredContactsList"
-              :key="user.uid"
-              clickable
-              @click="toggleUser(user.uid)"
-              class="user-item">
-              <template #title>
-                <div class="flex items-center gap-12px">
-                  <van-image
-                    :src="getUserAvatar(user)"
-                    round
-                    width="40"
-                    height="40"
-                    fit="cover"
-                    :style="{ flexShrink: 0 }" />
-                  <div class="flex-1 min-w-0">
-                    <div class="text-14px text-#333 font-500 truncate">
+                  <div class="grow overflow-hidden">
+                    <n-text class="truncate block">
                       {{ getUserName(user) }}
-                    </div>
-                    <div v-if="user.remark" class="text-12px text-#999 truncate mt-2px">{{ user.remark }}</div>
+                    </n-text>
+                    <n-text depth="3" v-if="user.remark" class="text-12px">{{ user.remark }}</n-text>
                   </div>
-                </div>
-              </template>
-              <template #right-icon>
-                <van-checkbox :name="user.uid" @click.stop ref="checkboxes" />
-              </template>
-            </van-cell>
-          </van-cell-group>
-        </van-checkbox-group>
 
-        <!-- 空状态 -->
-        <van-empty v-if="filteredContactsList.length === 0" :description="t('mobile_post.empty')" />
-      </div>
-    </div>
-  </van-popup>
+                  <n-checkbox :value="user.uid" class="shrink-0" @click.stop />
+                </n-flex>
+              </n-list-item>
+            </n-list>
+          </n-checkbox-group>
+          <!-- 空状态 -->
+          <van-empty v-if="filteredContactsList.length === 0" :description="t('mobile_post.empty')" />
+        </div>
+      </n-space>
+    </n-drawer-content>
+  </n-drawer>
 </template>
 
 <script setup lang="ts">
@@ -205,6 +197,9 @@ import { AvatarUtils } from '@/utils/AvatarUtils'
 import type { FriendItem } from '@/services/types'
 import 'vant/lib/index.css' // Vant UI 样式
 import { useI18n } from 'vue-i18n'
+import { useThemeVars } from 'naive-ui'
+
+const themeVars = useThemeVars()
 
 const { t, getLocaleMessage } = useI18n()
 console.log(getLocaleMessage('en'))
@@ -366,5 +361,11 @@ onMounted(async () => {
 
 .user-item:active {
   background-color: #f5f5f5;
+}
+
+.custom-rounded {
+  border-top-left-radius: 20px !important; /* 左上角 */
+  border-top-right-radius: 20px !important;
+  overflow: hidden;
 }
 </style>

@@ -1,7 +1,9 @@
 <template>
-  <div class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2">
+  <div class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 bg-background text-foreground">
     <div @click="handleBack" class="w-full h-full flex items-center">
-      <svg class="iconpark-icon w-24px h-24px ms-16px p-5px"><use href="#fanhui"></use></svg>
+      <svg class="iconpark-icon w-24px h-24px ms-16px p-5px">
+        <use href="#fanhui" class="text-foreground"></use>
+      </svg>
       <div
         v-show="props.msgCount ? (props.msgCount > 0 ? true : false) : false"
         class="rounded-15px flex items-center bg-#C7DBD9 px-7px text-14px min-h-20px">
@@ -10,7 +12,7 @@
     </div>
     <div class="w-full h-full overflow-hidden flex items-center justify-center">
       <div @click="handleRoomNameClick" :class="props.isOfficial ? ['chat-room-name-official'] : ['chat-room-name']">
-        <div class="truncate whitespace-nowrap overflow-hidden text-ellipsis w-full text-center">
+        <div class="truncate whitespace-nowrap overflow-hidden text-foreground text-ellipsis w-full text-center">
           {{ props.roomName }}
         </div>
         <svg v-if="props.isOfficial" class="w-18px h-18px iconpark-icon text-#1A9B83"><use href="#auth"></use></svg>
@@ -23,6 +25,8 @@
       </div>
     </div>
   </div>
+
+  <n-divider v-if="props.border" class="m-0!" />
 </template>
 
 <script setup lang="ts">
@@ -35,6 +39,7 @@ export interface HeaderBarProps {
   enableDefaultBackground?: boolean
   enableShadow?: boolean
   roomName?: string | false
+  border?: boolean
 }
 
 const props = withDefaults(defineProps<HeaderBarProps>(), {
@@ -42,7 +47,8 @@ const props = withDefaults(defineProps<HeaderBarProps>(), {
   hiddenRight: false,
   enableDefaultBackground: true,
   enableShadow: true,
-  roomName: false
+  roomName: false,
+  border: false
 })
 
 const emits = defineEmits<(e: 'roomNameClick', payload: HeaderBarProps) => void>()

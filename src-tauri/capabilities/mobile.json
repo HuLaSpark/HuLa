@@ -49,6 +49,7 @@
     "barcode-scanner:allow-vibrate",
     "mic-recorder:allow-start-recording",
     "mic-recorder:allow-stop-recording",
+    "core:app:allow-set-app-theme",
     {
       "identifier": "shell:allow-execute",
       "allow": [

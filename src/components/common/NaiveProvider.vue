@@ -67,11 +67,12 @@ const prefers = matchMedia('(prefers-color-scheme: dark)')
 // 定义不需要显示消息提示的窗口
 const noMessageWindows = ['tray', 'notify', 'capture', 'update', 'checkupdate']
 
-const isValidContent = (theme?: string) => theme === ThemeEnum.DARK || theme === ThemeEnum.LIGHT
+const isValidContent = (theme?: string): theme is ThemeEnum => theme === ThemeEnum.DARK || theme === ThemeEnum.LIGHT
 
 const applyThemeContent = (theme: ThemeEnum) => {
   globalTheme.value = theme === ThemeEnum.DARK ? darkTheme : lightTheme
   document.documentElement.dataset.theme = theme
+  console.log(globalTheme.value)
 }
 
 const syncOsTheme = () => {
@@ -117,7 +118,7 @@ watch(
       settingStore.normalizeThemeState()
       return
     }
-    applyThemeContent(content as ThemeEnum)
+    applyThemeContent(content)
   },
   { immediate: true }
 )

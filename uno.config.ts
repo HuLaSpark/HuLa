@@ -56,5 +56,16 @@ export default defineConfig({
     'fixed-rt': 'fixed right-0 top-0',
     'fixed-rb': 'fixed right-0 bottom-0',
     'fixed-center': 'fixed-lt flex-center size-full'
+  },
+
+  theme: {
+    colors: {
+      background: 'var(--background)',
+      foreground: 'var(--foreground)',
+      border: 'var(--border)',
+      card: 'var(--card)',
+      'card-foreground': 'var(--card-foreground)',
+      input: 'var(--input)'
+    }
   }
 })

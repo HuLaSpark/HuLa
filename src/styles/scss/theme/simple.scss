@@ -11,6 +11,14 @@
     --left-active-icon-color: #13987f;
     --left-win-icon-color: rgba(19, 152, 127, 0.6);
 
+    // 通用背景色
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.141 0.005 285.823);
+    --border: oklch(0.92 0.004 286.32);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.141 0.005 285.823);
+    --input: oklch(0.92 0.004 286.32);
+
     // 包含边框的选中样式
     --border-active-color: #13987f;
 
@@ -49,6 +57,13 @@ html[data-theme='dark'] {
     --left-bg-hover: rgba(255, 255, 255, 0.2);
     --left-active-icon-color: #13987f;
     --left-win-icon-color: rgba(19, 152, 127, 0.6);
+
+    --background: oklch(27, 27, 27);
+    --foreground: oklch(0.985 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --card: oklch(0.21 0.006 285.885);
+    --card-foreground: oklch(0.985 0 0);
+    --input: oklch(1 0 0 / 15%);
 
     // 包含边框的选中样式
     --border-active-color: #13987f;

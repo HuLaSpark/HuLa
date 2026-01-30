@@ -44,40 +44,38 @@
           <p class="text-(24px [--chat-text-color]) font-500">{{ userStore.userInfo!.name }}</p>
 
           <!-- 密码输入框 -->
-          <n-config-provider :theme="lightTheme">
-            <n-input
-              v-if="!isLogining && !isWrongPassword"
-              ref="inputInstRef"
-              style="
-                width: 320px;
-                border: 2px solid rgba(255, 255, 255, 0.1);
-                border-bottom-color: rgba(19, 152, 127, 1);
-                background-color: #404040;
-                color: #fff;
-              "
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              :placeholder="t('message.lock_screen.password_placeholder')"
-              show-password-on="click"
-              type="password"
-              @keyup.enter.prevent="unlock"
-              v-model:value="password">
-              <template #suffix>
-                <n-popover trigger="hover">
-                  <template #trigger>
-                    <svg
-                      @click.stop="unlock"
-                      class="size-16px color-#e3e3e3 mr-6px p-[4px_6px] rounded-8px cursor-pointer transition-all duration-300 ease-in-out hover:bg-#13987fe6">
-                      <use href="#arrow-right"></use>
-                    </svg>
-                  </template>
-                  <p>{{ t('message.lock_screen.enter_system_tooltip') }}</p>
-                </n-popover>
-              </template>
-            </n-input>
-          </n-config-provider>
+          <n-input
+            v-if="!isLogining && !isWrongPassword"
+            ref="inputInstRef"
+            style="
+              width: 320px;
+              border: 2px solid rgba(255, 255, 255, 0.1);
+              border-bottom-color: rgba(19, 152, 127, 1);
+              background-color: #404040;
+              color: #fff;
+            "
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            :placeholder="t('message.lock_screen.password_placeholder')"
+            show-password-on="click"
+            type="password"
+            @keyup.enter.prevent="unlock"
+            v-model:value="password">
+            <template #suffix>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <svg
+                    @click.stop="unlock"
+                    class="size-16px color-#e3e3e3 mr-6px p-[4px_6px] rounded-8px cursor-pointer transition-all duration-300 ease-in-out hover:bg-#13987fe6">
+                    <use href="#arrow-right"></use>
+                  </svg>
+                </template>
+                <p>{{ t('message.lock_screen.enter_system_tooltip') }}</p>
+              </n-popover>
+            </template>
+          </n-input>
 
           <!-- 登录时显示的文字 -->
           <n-flex vertical align="center" justify="center" :size="30" v-if="isLogining && !isWrongPassword">
@@ -115,7 +113,7 @@
 import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { onKeyStroke } from '@vueuse/core'
 import dayjs from 'dayjs'
-import { type InputInst, lightTheme } from 'naive-ui'
+import { type InputInst } from 'naive-ui'
 import { useLogin } from '@/hooks/useLogin.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'

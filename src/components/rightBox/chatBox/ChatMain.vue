@@ -14,11 +14,7 @@
 
     <!-- 置顶公告提示 -->
     <Transition name="announcement" mode="out-in">
-      <div
-        v-if="isGroup && topAnnouncement"
-        key="announcement"
-        :class="{ 'bg-#eee': isMobile() }"
-        class="p-[6px_12px_0_12px]">
+      <div v-if="isGroup && topAnnouncement" key="announcement" class="p-[6px_12px_0_12px]">
         <div
           class="custom-announcement"
           :class="{ 'announcement-hover': isAnnouncementHover }"
@@ -42,7 +38,7 @@
     </Transition>
 
     <!-- 聊天内容 -->
-    <div :class="{ 'bg-#eee': isMobile() }" class="flex flex-col flex-1 min-h-0">
+    <div class="flex flex-col flex-1 min-h-0">
       <div
         id="image-chat-main"
         ref="scrollContainer"

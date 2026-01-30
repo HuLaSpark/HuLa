@@ -1,6 +1,8 @@
 <template>
-  <div class="flex flex-col h-full">
-    <img src="@/assets/mobile/chat-home/background.webp" class="w-100% fixed top-0" alt="hula" />
+  <div class="flex flex-col overflow-auto h-full relative">
+    <img
+      src="@/assets/mobile/chat-home/background.webp"
+      class="absolute fixed top-0 l-0 w-full h-full z-0 dark:opacity-20" />
 
     <!-- 页面蒙板 -->
     <div
@@ -53,9 +55,16 @@
           trigger="click"
           :show-arrow="true"
           :options="uiViewsData.addOptions">
-          <svg @click="addIconHandler.open" class="size-22px bg-white p-5px rounded-8px">
+          <n-button round strong secondary @click="addIconHandler.open">
+            <template #icon>
+              <n-icon>
+                <svg><use href="#plus"></use></svg>
+              </n-icon>
+            </template>
+          </n-button>
+          <!-- <svg @click="addIconHandler.open" class="size-22px p-5px rounded-8px">
             <use href="#plus"></use>
-          </svg>
+          </svg> -->
         </n-dropdown>
       </template>
     </NavBar>
@@ -64,7 +73,7 @@
       <div class="py-5px shrink-0">
         <n-input
           id="search"
-          class="rounded-6px w-full bg-white relative text-12px"
+          class="rounded-6px w-full relative text-12px"
           :maxlength="20"
           clearable
           spellCheck="false"
@@ -81,7 +90,7 @@
           </template>
         </n-input>
       </div>
-      <div class="border-b-1 border-solid color-gray-200 px-18px mt-5px"></div>
+      <n-divider class="m-0! p-0! mt-10px!" />
     </div>
 
     <van-pull-refresh
@@ -115,8 +124,8 @@
               </div>
               <!-- 中间：两行内容 -->
               <div class="truncate pl-7 flex pt-5px gap-10px leading-tight flex-col">
-                <div class="text-16px font-bold flex-1 truncate text-#333 truncate">{{ item.name }}</div>
-                <div class="text-13px text-#555 truncate">
+                <n-text class="text-16px font-bold flex-1 truncate">{{ item.name }}</n-text>
+                <div class="text-13px text-gray-600 dark:text-gray-400 truncate">
                   {{ item.text }}
                 </div>
               </div>
@@ -129,12 +138,12 @@
                       <use href="#auth"></use>
                     </svg>
                   </span>
-                  <span class="text-#555 whitespace-nowrap">
+                  <span class="text-gray-600 whitespace-nowrap">
                     {{ formatTimestamp(item?.activeTime) }}
                   </span>
                 </div>
                 <div v-if="item.muteNotification === NotificationTypeEnum.NOT_DISTURB">
-                  <svg class="size-14px z-100 color-#909090">
+                  <svg class="size-14px z-100 color-gray-500/90">
                     <use href="#close-remind"></use>
                   </svg>
                 </div>
@@ -447,7 +456,8 @@ const renderImgIcon = (src: string) => {
   return () =>
     h('img', {
       src,
-      style: 'display:block; width: 26px; height: 26px; vertical-align: middle;'
+      style: 'display:block; width: 26px; height: 26px; vertical-align: middle;',
+      class: 'dark:invert'
     })
 }
 

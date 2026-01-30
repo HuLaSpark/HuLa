@@ -1,12 +1,7 @@
 <template>
   <AutoFixHeightPage :show-footer="false">
     <template #header>
-      <HeaderBar
-        :isOfficial="false"
-        class="bg-white"
-        style="border-bottom: 1px solid; border-color: #dfdfdf"
-        :hidden-right="true"
-        :room-name="t('mobile_setting.title')" />
+      <HeaderBar border :isOfficial="false" :hidden-right="true" :room-name="t('mobile_setting.title')" />
     </template>
 
     <template #container>
@@ -17,7 +12,7 @@
           <div
             v-for="item in settings"
             :key="item.key"
-            class="flex justify-between items-center bg-white p-12px rounded-lg shadow-sm">
+            class="flex justify-between items-center bg-card text-card-foreground ring-1 p-12px rounded-lg shadow-sm">
             <div class="text-base">{{ item.label }}</div>
             <div>
               <!-- 根据 type 渲染对应组件 -->

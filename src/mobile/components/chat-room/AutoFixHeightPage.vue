@@ -11,9 +11,7 @@
       </div>
     </div>
 
-    <div class="bg-#FAFAFA">
-      <slot name="footer"></slot>
-    </div>
+    <slot name="footer"></slot>
   </div>
 </template>
 

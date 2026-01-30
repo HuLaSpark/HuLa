@@ -1,6 +1,5 @@
 <template>
-  <n-config-provider
-    :theme="lightTheme"
+  <div
     class="h-full flex flex-col box-border"
     :class="{
       'bg-cover bg-center bg-no-repeat': props.backgroundImage
@@ -16,7 +15,7 @@
 
     <!-- 底部安全区域 -->
     <div :class="[{ 'safe-area-bottom': safeAreaBottom }, props.bottomSafeAreaClass]" />
-  </n-config-provider>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -35,7 +34,6 @@ import { audioManager } from '@/utils/AudioManager'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
-import { lightTheme } from 'naive-ui'
 interface MobileLayoutProps {
   /** 是否应用顶部安全区域 */
   safeAreaTop?: boolean

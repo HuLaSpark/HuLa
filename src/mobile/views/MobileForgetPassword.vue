@@ -6,163 +6,160 @@
       :enable-default-background="false"
       :enable-shadow="false"
       :room-name="t('mobile_forget_code.title')" />
-    <n-config-provider :theme="lightTheme" class="bg-#fff rounded-8px select-none cursor-default">
-      <n-flex vertical class="w-full size-full">
-        <!-- 步骤条 -->
-        <n-steps size="small" class="w-full px-40px mt-20px" :current="currentStep" :status="stepStatus">
-          <n-step :title="t('mobile_forget_code.steps.verify_email')" description="" />
-          <n-step :title="t('mobile_forget_code.steps.set_new_password')" description="" />
-          <n-step :title="t('mobile_forget_code.steps.done')" description="" />
-        </n-steps>
+    <n-flex vertical class="w-full size-full">
+      <!-- 步骤条 -->
+      <n-steps size="small" class="w-full px-40px mt-20px" :current="currentStep" :status="stepStatus">
+        <n-step :title="t('mobile_forget_code.steps.verify_email')" description="" />
+        <n-step :title="t('mobile_forget_code.steps.set_new_password')" description="" />
+        <n-step :title="t('mobile_forget_code.steps.done')" description="" />
+      </n-steps>
 
-        <!-- 第一步：验证邮箱 -->
-        <div v-if="currentStep === 1" class="w-full max-w-300px mx-auto mt-30px">
-          <n-form ref="formRef" :model="formData" :rules="emailRules">
-            <!-- 邮箱输入 -->
-            <n-form-item path="email" :label="t('mobile_forget_code.input.label.email')">
+      <!-- 第一步：验证邮箱 -->
+      <div v-if="currentStep === 1" class="w-full max-w-300px mx-auto mt-30px">
+        <n-form ref="formRef" :model="formData" :rules="emailRules">
+          <!-- 邮箱输入 -->
+          <n-form-item path="email" :label="t('mobile_forget_code.input.label.email')">
+            <n-input
+              :allow-input="noSideSpace"
+              class="border-(1px solid #90909080)"
+              v-model:value="formData.email"
+              :placeholder="t('mobile_forget_code.input.email')"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              clearable />
+          </n-form-item>
+
+          <!-- 邮箱验证码 -->
+          <n-form-item path="emailCode" :label="t('mobile_forget_code.input.label.email_verification_code')">
+            <n-flex :size="8">
               <n-input
                 :allow-input="noSideSpace"
                 class="border-(1px solid #90909080)"
-                v-model:value="formData.email"
-                :placeholder="t('mobile_forget_code.input.email')"
+                v-model:value="formData.emailCode"
+                :placeholder="t('mobile_forget_code.input.email_code')"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
-                clearable />
-            </n-form-item>
-
-            <!-- 邮箱验证码 -->
-            <n-form-item path="emailCode" :label="t('mobile_forget_code.input.label.email_verification_code')">
-              <n-flex :size="8">
-                <n-input
-                  :allow-input="noSideSpace"
-                  class="border-(1px solid #90909080)"
-                  v-model:value="formData.emailCode"
-                  :placeholder="t('mobile_forget_code.input.email_code')"
-                  spellCheck="false"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  maxlength="6" />
-                <n-button
-                  color="#13987f"
-                  ghost
-                  :disabled="sendBtnDisabled"
-                  :loading="sendingEmailCode"
-                  @click="sendEmailCode"
-                  class="min-w-100px w-fit h-34px">
-                  {{ emailCodeBtnText }}
-                </n-button>
-              </n-flex>
-            </n-form-item>
-
-            <n-button
-              :loading="verifyLoading"
-              :disabled="nextDisabled"
-              tertiary
-              style="color: #fff"
-              @click="verifyEmail"
-              class="mt-10px w-full gradient-button">
-              {{ t('mobile_forget_code.button.next') }}
-            </n-button>
-          </n-form>
-        </div>
-
-        <!-- 第二步：设置新密码 -->
-        <div v-if="currentStep === 2" class="w-full max-w-300px mx-auto mt-30px">
-          <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
-            <!-- 新密码 -->
-            <n-form-item path="password" :label="t('mobile_forget_code.input.label.new_pass')">
-              <n-flex vertical :size="8" class="w-full">
-                <n-input
-                  :allow-input="noSideSpace"
-                  class="border-(1px solid #90909080) w-full"
-                  v-model:value="passwordForm.password"
-                  type="password"
-                  show-password-on="click"
-                  :placeholder="t('mobile_forget_code.input.new_pass', { len: '6-16' })"
-                  maxlength="16"
-                  spellCheck="false"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  minlength="6" />
-                <n-flex vertical :size="4" class="space-y-4px">
-                  <Validation
-                    :value="passwordForm.password"
-                    :message="t('mobile_forget_code.validation.minlength', { len: '6-16' })"
-                    :validator="validateMinLength" />
-                  <Validation
-                    :value="passwordForm.password"
-                    :message="t('mobile_forget_code.validation.valid_characters')"
-                    :validator="validateAlphaNumeric" />
-                  <Validation
-                    :value="passwordForm.password"
-                    :message="t('mobile_forget_code.validation.must_special_char')"
-                    :validator="validateSpecialChar" />
-                </n-flex>
-              </n-flex>
-            </n-form-item>
-
-            <!-- 确认密码 -->
-            <n-form-item path="confirmPassword" :label="t('mobile_forget_code.input.label.confirm_password')">
-              <n-flex vertical :size="8" class="w-full">
-                <n-input
-                  :allow-input="noSideSpace"
-                  class="border-(1px solid #90909080) w-full"
-                  v-model:value="passwordForm.confirmPassword"
-                  type="password"
-                  show-password-on="click"
-                  :placeholder="t('mobile_forget_code.input.confirm_password')"
-                  spellCheck="false"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  maxlength="16"
-                  minlength="6" />
-                <n-flex vertical :size="4">
-                  <Validation
-                    :value="passwordForm.confirmPassword"
-                    :message="t('mobile_forget_code.validation.passwords_match')"
-                    :validator="(value: string) => value === passwordForm.password && value !== ''" />
-                </n-flex>
-              </n-flex>
-            </n-form-item>
-
-            <n-flex :size="16" class="mt-30px">
-              <n-button @click="goBack" class="flex-1">{{ t('mobile_forget_code.button.go_back_setp') }}</n-button>
+                maxlength="6" />
               <n-button
-                :loading="submitLoading"
-                tertiary
-                style="color: #fff"
-                @click="submitNewPassword"
-                class="flex-1 gradient-button">
-                {{ t('mobile_forget_code.button.submit') }}
+                color="#13987f"
+                ghost
+                :disabled="sendBtnDisabled"
+                :loading="sendingEmailCode"
+                @click="sendEmailCode"
+                class="min-w-100px w-fit h-34px">
+                {{ emailCodeBtnText }}
               </n-button>
             </n-flex>
-          </n-form>
-        </div>
+          </n-form-item>
 
-        <!-- 第三步：完成 -->
-        <div v-if="currentStep === 3" class="w-full max-w-300px mx-auto mt-100px text-center">
-          <!-- <n-icon size="64" class="text-#13987f">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" />
-          </svg>
-        </n-icon> -->
-          <img class="size-98px" src="/emoji/party-popper.webp" alt="" />
+          <n-button
+            :loading="verifyLoading"
+            :disabled="nextDisabled"
+            tertiary
+            style="color: #fff"
+            @click="verifyEmail"
+            class="mt-10px w-full gradient-button">
+            {{ t('mobile_forget_code.button.next') }}
+          </n-button>
+        </n-form>
+      </div>
 
-          <div class="mt-16px text-18px">{{ t('mobile_forget_code.password_reset_success') }}</div>
-          <div class="mt-16px text-14px text-#666">{{ t('mobile_forget_code.password_reset_success_desc') }}</div>
-        </div>
-      </n-flex>
-    </n-config-provider>
+      <!-- 第二步：设置新密码 -->
+      <div v-if="currentStep === 2" class="w-full max-w-300px mx-auto mt-30px">
+        <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
+          <!-- 新密码 -->
+          <n-form-item path="password" :label="t('mobile_forget_code.input.label.new_pass')">
+            <n-flex vertical :size="8" class="w-full">
+              <n-input
+                :allow-input="noSideSpace"
+                class="border-(1px solid #90909080) w-full"
+                v-model:value="passwordForm.password"
+                type="password"
+                show-password-on="click"
+                :placeholder="t('mobile_forget_code.input.new_pass', { len: '6-16' })"
+                maxlength="16"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                minlength="6" />
+              <n-flex vertical :size="4" class="space-y-4px">
+                <Validation
+                  :value="passwordForm.password"
+                  :message="t('mobile_forget_code.validation.minlength', { len: '6-16' })"
+                  :validator="validateMinLength" />
+                <Validation
+                  :value="passwordForm.password"
+                  :message="t('mobile_forget_code.validation.valid_characters')"
+                  :validator="validateAlphaNumeric" />
+                <Validation
+                  :value="passwordForm.password"
+                  :message="t('mobile_forget_code.validation.must_special_char')"
+                  :validator="validateSpecialChar" />
+              </n-flex>
+            </n-flex>
+          </n-form-item>
+
+          <!-- 确认密码 -->
+          <n-form-item path="confirmPassword" :label="t('mobile_forget_code.input.label.confirm_password')">
+            <n-flex vertical :size="8" class="w-full">
+              <n-input
+                :allow-input="noSideSpace"
+                class="border-(1px solid #90909080) w-full"
+                v-model:value="passwordForm.confirmPassword"
+                type="password"
+                show-password-on="click"
+                :placeholder="t('mobile_forget_code.input.confirm_password')"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                maxlength="16"
+                minlength="6" />
+              <n-flex vertical :size="4">
+                <Validation
+                  :value="passwordForm.confirmPassword"
+                  :message="t('mobile_forget_code.validation.passwords_match')"
+                  :validator="(value: string) => value === passwordForm.password && value !== ''" />
+              </n-flex>
+            </n-flex>
+          </n-form-item>
+
+          <n-flex :size="16" class="mt-30px">
+            <n-button @click="goBack" class="flex-1">{{ t('mobile_forget_code.button.go_back_setp') }}</n-button>
+            <n-button
+              :loading="submitLoading"
+              tertiary
+              style="color: #fff"
+              @click="submitNewPassword"
+              class="flex-1 gradient-button">
+              {{ t('mobile_forget_code.button.submit') }}
+            </n-button>
+          </n-flex>
+        </n-form>
+      </div>
+
+      <!-- 第三步：完成 -->
+      <div v-if="currentStep === 3" class="w-full max-w-300px mx-auto mt-100px text-center">
+        <!-- <n-icon size="64" class="text-#13987f">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" />
+        </svg>
+      </n-icon> -->
+        <img class="size-98px" src="/emoji/party-popper.webp" alt="" />
+
+        <div class="mt-16px text-18px">{{ t('mobile_forget_code.password_reset_success') }}</div>
+        <div class="mt-16px text-14px text-#666">{{ t('mobile_forget_code.password_reset_success_desc') }}</div>
+      </div>
+    </n-flex>
   </MobileLayout>
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from 'naive-ui'
 import Validation from '@/components/common/Validation.vue'
 import { forgetPassword, getCaptcha, sendCaptcha } from '@/utils/ImRequestUtils'
 import { validateAlphaNumeric, validateSpecialChar } from '@/utils/Validate'

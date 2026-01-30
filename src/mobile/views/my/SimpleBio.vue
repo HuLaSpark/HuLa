@@ -18,27 +18,25 @@
                 <svg @click="handleBack" class="w-32px h-32px iconpark-icon"><use href="#right"></use></svg>
               </div>
             </div>
-            <div class="flex shadow bg-white w-full rounded-lg items-center">
-              <div class="px-24px py-20px flex w-full flex-wrap gap-20px">
-                <n-avatar
-                  :size="74"
-                  :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
-                  fallback-src="/logo.png"
-                  round />
+            <n-card size="small" class="rounded-lg" content-class="flex gap-20px items-center">
+              <n-avatar
+                :size="74"
+                :src="AvatarUtils.getAvatarUrl(userStore.userInfo!.avatar!)"
+                fallback-src="/logo.png"
+                round />
 
-                <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
-                  <div class="font-bold text-18px text-#373838">{{ userStore.userInfo!.name }}</div>
-                  <div class="mt-2 text-bold-style line-height-22px line-clamp-2">
-                    {{ userStore.userInfo!.resume || t('mobile_my.default_bio') }}
-                  </div>
-                </div>
-
-                <div @click="toMyInfo" class="flex items-center justify-end">
-                  <svg @click="handleBack" class="w-24px text-gray h-24px iconpark-icon"><use href="#right"></use></svg>
+              <div @click="toMyInfo" class="flex flex-col flex-1 py-10px">
+                <div class="font-bold text-18px">{{ userStore.userInfo!.name }}</div>
+                <div class="mt-2 text-bold-style line-height-22px line-clamp-2">
+                  {{ userStore.userInfo!.resume || t('mobile_my.default_bio') }}
                 </div>
               </div>
-            </div>
-            <div class="flex flex-col w-full bg-white rounded-lg flex-1">
+
+              <div @click="toMyInfo" class="flex items-center justify-end">
+                <svg @click="handleBack" class="w-24px text-gray h-24px iconpark-icon"><use href="#right"></use></svg>
+              </div>
+            </n-card>
+            <n-card size="small" content-class="flex flex-col w-full flex-1" class="rounded-lg">
               <div
                 v-for="item in options"
                 :key="item.label"
@@ -52,7 +50,7 @@
                   <svg class="w-20px text-gray h-20px iconpark-icon"><use href="#right"></use></svg>
                 </div>
               </div>
-            </div>
+            </n-card>
           </div>
         </div>
       </template>
