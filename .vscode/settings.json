@@ -42,4 +42,7 @@
     "**/src-tauri/gen": true,
     ".tauri": true,
   },
+  "cSpell.words": [
+    "vant"
+  ],
 }

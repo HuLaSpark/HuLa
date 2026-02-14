@@ -169,15 +169,10 @@
                     :placeholder="t('mobile_edit_profile.placeholder.brithday')"
                     @click="pickerState.region = true" />
                   -->
-              <n-drawer
+              <area-drawer
                 v-model:show="pickerState.region"
-                class="rounded-t-20px! overflow-hidden"
-                position="bottom"
-                round
-                placement="bottom"
-                default-height="300px">
-                <van-area :area-list="areaList" @confirm="pickerConfirm.region" @cancel="pickerState.region = false" />
-              </n-drawer>
+                @confirm="pickerConfirm.region"
+                @cancel="pickerState.region = false" />
 
               <!-- 手机号 -->
               <!-- <van-field
@@ -215,7 +210,6 @@
 </template>
 
 <script setup lang="ts">
-import { areaList } from '@vant/area-data'
 import { useAvatarUpload } from '@/hooks/useAvatarUpload'
 import router from '@/router'
 import type { ModifyUserInfoType, UserInfoType } from '@/services/types.ts'

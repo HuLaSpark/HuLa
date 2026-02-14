@@ -4,18 +4,20 @@
     :theme="globalTheme"
     :locale="currentNaiveLocale"
     :date-locale="currentNaiveDateLocale">
-    <n-loading-bar-provider>
-      <n-dialog-provider>
-        <n-notification-provider :max="notificMax">
-          <n-message-provider :max="messageMax">
-            <n-modal-provider>
-              <slot></slot>
-              <naive-provider-content />
-            </n-modal-provider>
-          </n-message-provider>
-        </n-notification-provider>
-      </n-dialog-provider>
-    </n-loading-bar-provider>
+    <van-config-provider :theme="themes.content === ThemeEnum.DARK ? 'dark' : 'light'">
+      <n-loading-bar-provider>
+        <n-dialog-provider>
+          <n-notification-provider :max="notificMax">
+            <n-message-provider :max="messageMax">
+              <n-modal-provider>
+                <slot></slot>
+                <naive-provider-content />
+              </n-modal-provider>
+            </n-message-provider>
+          </n-notification-provider>
+        </n-dialog-provider>
+      </n-loading-bar-provider>
+    </van-config-provider>
   </n-config-provider>
 </template>
 
