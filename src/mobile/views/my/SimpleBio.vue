@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col overflow-auto h-full">
-    <AutoFixHeightPage :show-footer="false" class="z-1">
+    <MobileScaffold :show-footer="false" class="z-1">
       <template #container>
         <div class="z-2 flex flex-col gap-1 overflow-auto h-full">
           <div class="flex flex-col flex-1 p-20px gap-20px">
@@ -59,7 +59,7 @@
           </div>
         </div>
       </template>
-    </AutoFixHeightPage>
+    </MobileScaffold>
   </div>
 </template>
 

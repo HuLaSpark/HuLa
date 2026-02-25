@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage>
+  <MobileScaffold>
     <template #container>
       <div class="flex flex-col overflow-auto h-full relative">
         <!-- 页面蒙板 -->
@@ -209,7 +209,7 @@
         </teleport>
       </div>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage>
+  <MobileScaffold>
     <template #header>
       <HeaderBar
         ref="headerBar"
@@ -35,7 +35,7 @@
     <template #footer>
       <FooterBar v-if="!isBotSession" ref="footerBar"></FooterBar>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 
 <script setup lang="ts">

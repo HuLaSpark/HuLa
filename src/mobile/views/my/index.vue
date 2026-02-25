@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage :show-footer="false">
+  <MobileScaffold :show-footer="false">
     <template #container>
       <div class="flex flex-col overflow-auto h-full">
         <!-- 设置区 -->
@@ -48,7 +48,7 @@
         </div>
       </div>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 <script setup lang="ts">
 import PersonalInfo from '#/components/my/PersonalInfo.vue'

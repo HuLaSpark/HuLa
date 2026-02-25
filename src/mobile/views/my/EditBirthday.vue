@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage :show-footer="false">
+  <MobileScaffold :show-footer="false">
     <template #header>
       <HeaderBar :isOfficial="false" border :hidden-right="true" :room-name="t('mobile_edit_brithday.title')" />
     </template>
@@ -45,7 +45,7 @@
         </div>
       </div>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 
 <script setup lang="ts">

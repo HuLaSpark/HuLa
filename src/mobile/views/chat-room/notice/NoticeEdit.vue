@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage :show-footer="false">
+  <MobileScaffold :show-footer="false">
     <template #header>
       <HeaderBar
         :isOfficial="false"
@@ -65,7 +65,7 @@
         </template>
       </n-card>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 
 <script setup lang="ts">

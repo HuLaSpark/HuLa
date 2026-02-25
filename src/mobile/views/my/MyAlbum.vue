@@ -1,6 +1,6 @@
 <template>
   <div>
-    <AutoFixHeightPage :show-footer="false">
+    <MobileScaffold :show-footer="false">
       <template #header>
         <HeaderBar
           :isOfficial="false"
@@ -39,7 +39,7 @@
           </div>
         </div>
       </template>
-    </AutoFixHeightPage>
+    </MobileScaffold>
 
     <!-- 图片预览组件 -->
     <ImagePreview

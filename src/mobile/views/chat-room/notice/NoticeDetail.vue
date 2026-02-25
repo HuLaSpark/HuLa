@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage :show-footer="false">
+  <MobileScaffold :show-footer="false">
     <template #header>
       <HeaderBar :isOfficial="false" border :hidden-right="true" room-name="公告详情" />
     </template>
@@ -57,7 +57,7 @@
         </div>
       </div>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 
 <script setup lang="ts">

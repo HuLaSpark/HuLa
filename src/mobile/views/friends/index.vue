@@ -1,5 +1,5 @@
 <template>
-  <AutoFixHeightPage>
+  <MobileScaffold>
     <template #container>
       <div class="flex flex-col overflow-auto h-full relative">
         <!-- 页面蒙板 -->
@@ -159,7 +159,7 @@
         </n-card>
       </div>
     </template>
-  </AutoFixHeightPage>
+  </MobileScaffold>
 </template>
 <style scoped>
 .custom-rounded {
