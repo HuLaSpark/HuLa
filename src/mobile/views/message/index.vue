@@ -1,207 +1,215 @@
 <template>
-  <div class="flex flex-col overflow-auto h-full relative">
-    <img
-      src="@/assets/mobile/chat-home/background.webp"
-      class="absolute fixed top-0 l-0 w-full h-full z-0 dark:opacity-20" />
+  <AutoFixHeightPage>
+    <template #container>
+      <div class="flex flex-col overflow-auto h-full relative">
+        <!-- 页面蒙板 -->
+        <div
+          v-if="showMask"
+          @touchend="maskHandler.close"
+          @mouseup="maskHandler.close"
+          :class="[
+            longPressState.longPressActive
+              ? ''
+              : 'bg-black/20 backdrop-blur-sm transition-all duration-3000 ease-in-out opacity-100'
+          ]"
+          class="fixed inset-0 z-[999]"></div>
 
-    <!-- 页面蒙板 -->
-    <div
-      v-if="showMask"
-      @touchend="maskHandler.close"
-      @mouseup="maskHandler.close"
-      :class="[
-        longPressState.longPressActive
-          ? ''
-          : 'bg-black/20 backdrop-blur-sm transition-all duration-3000 ease-in-out opacity-100'
-      ]"
-      class="fixed inset-0 z-[999]"></div>
+        <NavBar>
+          <template #left>
+            <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
+              <n-avatar
+                :size="38"
+                :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ? userStore.userInfo.avatar : '/logoD.png')"
+                fallback-src="/logo.png"
+                round />
 
-    <NavBar>
-      <template #left>
-        <n-flex @click="toSimpleBio" align="center" :size="6" class="w-full">
-          <n-avatar
-            :size="38"
-            :src="AvatarUtils.getAvatarUrl(userStore.userInfo?.avatar ? userStore.userInfo.avatar : '/logoD.png')"
-            fallback-src="/logo.png"
-            round />
-
-          <n-flex vertical justify="center" :size="6">
-            <p
-              style="
-                font-weight: bold !important;
-                font-family:
-                  system-ui,
-                  -apple-system,
-                  sans-serif;
-              "
-              class="text-(16px [--text-color])">
-              {{ userStore.userInfo?.name ? userStore.userInfo.name : t('mobile_home.noname') }}
-            </p>
-            <p class="text-(10px [--text-color])">
-              {{
-                userStore.userInfo?.uid
-                  ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || t('mobile_home.china')
-                  : t('mobile_home.china')
-              }}
-            </p>
-          </n-flex>
-        </n-flex>
-      </template>
-
-      <template #right>
-        <n-dropdown
-          @on-clickoutside="addIconHandler.clickOutside"
-          @select="addIconHandler.select"
-          trigger="click"
-          :show-arrow="true"
-          :options="uiViewsData.addOptions">
-          <n-button round strong secondary @click="addIconHandler.open">
-            <template #icon>
-              <n-icon>
-                <svg><use href="#plus"></use></svg>
-              </n-icon>
-            </template>
-          </n-button>
-          <!-- <svg @click="addIconHandler.open" class="size-22px p-5px rounded-8px">
-            <use href="#plus"></use>
-          </svg> -->
-        </n-dropdown>
-      </template>
-    </NavBar>
-
-    <div class="px-16px mt-5px">
-      <div class="py-5px shrink-0">
-        <n-input
-          id="search"
-          class="rounded-6px w-full relative text-12px"
-          :maxlength="20"
-          clearable
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :placeholder="t('mobile_home.input.search')"
-          @focus="lockScroll"
-          @blur="unlockScroll">
-          <template #prefix>
-            <svg class="w-12px h-12px">
-              <use href="#search"></use>
-            </svg>
+              <n-flex vertical justify="center" :size="6">
+                <p
+                  style="
+                    font-weight: bold !important;
+                    font-family:
+                      system-ui,
+                      -apple-system,
+                      sans-serif;
+                  "
+                  class="text-(16px [--text-color])">
+                  {{ userStore.userInfo?.name ? userStore.userInfo.name : t('mobile_home.noname') }}
+                </p>
+                <p class="text-(10px [--text-color])">
+                  {{
+                    userStore.userInfo?.uid
+                      ? groupStore.getUserInfo(userStore.userInfo!.uid)?.locPlace || t('mobile_home.china')
+                      : t('mobile_home.china')
+                  }}
+                </p>
+              </n-flex>
+            </n-flex>
           </template>
-        </n-input>
-      </div>
-      <n-divider class="m-0! p-0! mt-10px!" />
-    </div>
 
-    <van-pull-refresh
-      class="flex-1"
-      :pull-distance="100"
-      :disabled="!isEnablePullRefresh"
-      v-model="loading"
-      @refresh="onRefresh">
-      <div class="flex flex-col h-full">
-        <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0" @scroll="onScroll" ref="scrollContainer">
-          <van-swipe-cell
-            @open="handleSwipeOpen"
-            @close="handleSwipeClose"
-            v-for="(item, idx) in sessionList"
-            v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
-            :key="`${item.id}-${idx}`"
-            class="text-black"
-            :class="item.top ? 'w-full bg-#64A29C18' : ''">
-            <!-- 长按项 -->
-            <div
-              @click.stop="intoRoom(item)"
-              class="grid grid-cols-[2.2rem_1fr_max-content] items-start px-4 py-3 gap-1">
-              <div class="flex-shrink-0">
-                <n-badge
-                  :offset="[-6, 6]"
-                  :color="item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'grey' : '#c14053'"
-                  :value="item.unreadCount"
-                  :max="99">
-                  <n-avatar :size="52" :src="AvatarUtils.getAvatarUrl(item.avatar)" fallback-src="/logo.png" round />
-                </n-badge>
-              </div>
-              <!-- 中间：两行内容 -->
-              <div class="truncate pl-7 flex pt-5px gap-10px leading-tight flex-col">
-                <n-text class="text-16px font-bold flex-1 truncate">{{ item.name }}</n-text>
-                <div class="text-13px text-gray-600 dark:text-gray-400 truncate">
-                  {{ item.text }}
-                </div>
-              </div>
+          <template #right>
+            <n-dropdown
+              @on-clickoutside="addIconHandler.clickOutside"
+              @select="addIconHandler.select"
+              trigger="click"
+              :show-arrow="true"
+              :options="uiViewsData.addOptions">
+              <n-button round strong secondary @click="addIconHandler.open">
+                <template #icon>
+                  <n-icon>
+                    <svg><use href="#plus"></use></svg>
+                  </n-icon>
+                </template>
+              </n-button>
+              <!-- <svg @click="addIconHandler.open" class="size-22px p-5px rounded-8px">
+                <use href="#plus"></use>
+              </svg> -->
+            </n-dropdown>
+          </template>
+        </NavBar>
 
-              <!-- 时间：靠顶 -->
-              <div class="text-12px pt-9px text-right flex flex-col gap-1 items-end justify-center">
-                <div class="flex items-center gap-1">
-                  <span v-if="item.hotFlag === IsAllUserEnum.Yes">
-                    <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
-                      <use href="#auth"></use>
-                    </svg>
-                  </span>
-                  <span class="text-gray-600 whitespace-nowrap">
-                    {{ formatTimestamp(item?.activeTime) }}
-                  </span>
+        <div class="px-16px mt-5px">
+          <div class="py-5px shrink-0">
+            <n-input
+              id="search"
+              class="rounded-6px w-full relative text-12px"
+              :maxlength="20"
+              clearable
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :placeholder="t('mobile_home.input.search')"
+              @focus="lockScroll"
+              @blur="unlockScroll">
+              <template #prefix>
+                <svg class="w-12px h-12px">
+                  <use href="#search"></use>
+                </svg>
+              </template>
+            </n-input>
+          </div>
+          <n-divider class="m-0! p-0! mt-10px!" />
+        </div>
+
+        <van-pull-refresh
+          class="flex-1"
+          :pull-distance="100"
+          :disabled="!isEnablePullRefresh"
+          v-model="loading"
+          @refresh="onRefresh">
+          <div class="flex flex-col h-full">
+            <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0" @scroll="onScroll" ref="scrollContainer">
+              <van-swipe-cell
+                @open="handleSwipeOpen"
+                @close="handleSwipeClose"
+                v-for="(item, idx) in sessionList"
+                v-on-long-press="[(e: PointerEvent) => handleLongPress(e, item), longPressOption]"
+                :key="`${item.id}-${idx}`"
+                class="text-black"
+                :class="item.top ? 'w-full bg-#64A29C18' : ''">
+                <!-- 长按项 -->
+                <div
+                  @click.stop="intoRoom(item)"
+                  class="grid grid-cols-[2.2rem_1fr_max-content] items-start px-4 py-3 gap-1">
+                  <div class="flex-shrink-0">
+                    <n-badge
+                      :offset="[-6, 6]"
+                      :color="item.muteNotification === NotificationTypeEnum.NOT_DISTURB ? 'grey' : '#c14053'"
+                      :value="item.unreadCount"
+                      :max="99">
+                      <n-avatar
+                        :size="52"
+                        :src="AvatarUtils.getAvatarUrl(item.avatar)"
+                        fallback-src="/logo.png"
+                        round />
+                    </n-badge>
+                  </div>
+                  <!-- 中间：两行内容 -->
+                  <div class="truncate pl-7 flex pt-5px gap-10px leading-tight flex-col">
+                    <n-text class="text-16px font-bold flex-1 truncate">{{ item.name }}</n-text>
+                    <div class="text-13px text-gray-600 dark:text-gray-400 truncate">
+                      {{ item.text }}
+                    </div>
+                  </div>
+
+                  <!-- 时间：靠顶 -->
+                  <div class="text-12px pt-9px text-right flex flex-col gap-1 items-end justify-center">
+                    <div class="flex items-center gap-1">
+                      <span v-if="item.hotFlag === IsAllUserEnum.Yes">
+                        <svg class="size-22px select-none outline-none cursor-pointer color-#13987f">
+                          <use href="#auth"></use>
+                        </svg>
+                      </span>
+                      <span class="text-gray-600 whitespace-nowrap">
+                        {{ formatTimestamp(item?.activeTime) }}
+                      </span>
+                    </div>
+                    <div v-if="item.muteNotification === NotificationTypeEnum.NOT_DISTURB">
+                      <svg class="size-14px z-100 color-gray-500/90">
+                        <use href="#close-remind"></use>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <div v-if="item.muteNotification === NotificationTypeEnum.NOT_DISTURB">
-                  <svg class="size-14px z-100 color-gray-500/90">
-                    <use href="#close-remind"></use>
-                  </svg>
-                </div>
+                <template #right>
+                  <div class="flex w-auto flex-wrap h-full">
+                    <div
+                      class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center"
+                      @click="handleToggleTop(item)">
+                      {{ item.top ? t('mobile_home.chat.unpin') : t('mobile_home.chat.pintop') }}
+                    </div>
+                    <div
+                      :class="(item?.unreadCount ?? 0) > 0 ? 'bg-#909090' : 'bg-#fbb160'"
+                      class="h-full text-14px w-80px text-white flex items-center justify-center"
+                      @click="handleToggleReadStatus((item?.unreadCount ?? 0) > 0, item)">
+                      {{
+                        (item?.unreadCount ?? 0) > 0
+                          ? t('mobile_home.chat.mark_as_read')
+                          : t('mobile_home.chat.mark_as_unread')
+                      }}
+                    </div>
+                    <div
+                      class="h-full text-14px w-80px bg-#d5304f text-white flex items-center justify-center"
+                      @click="handleDelete(item)">
+                      {{ t('mobile_home.chat.delete') }}
+                    </div>
+                  </div>
+                </template>
+              </van-swipe-cell>
+            </div>
+          </div>
+        </van-pull-refresh>
+
+        <teleport to="body">
+          <div
+            v-if="longPressState.showLongPressMenu"
+            :style="{ top: longPressState.longPressMenuTop + 'px' }"
+            class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
+            <div class="flex justify-between p-18px text-16px gap-22px rounded-16px bg-#4e4e4e whitespace-nowrap">
+              <div class="text-white" @click="handleDelete(currentLongPressItem)">
+                {{ t('mobile_home.menu.delete') }}
+              </div>
+              <div class="text-white" @click="handleToggleTop(currentLongPressItem)">
+                {{ currentLongPressItem?.top ? t('mobile_home.menu.unpin') : t('mobile_home.menu.pintop') }}
+              </div>
+              <div class="text-white" @click="handleToggleReadStatus((currentLongPressItem?.unreadCount ?? 0) > 0)">
+                {{
+                  (currentLongPressItem?.unreadCount ?? 0) > 0
+                    ? t('mobile_home.menu.read')
+                    : t('mobile_home.menu.unread')
+                }}
               </div>
             </div>
-            <template #right>
-              <div class="flex w-auto flex-wrap h-full">
-                <div
-                  class="h-full text-14px w-80px bg-#13987f text-white flex items-center justify-center"
-                  @click="handleToggleTop(item)">
-                  {{ item.top ? t('mobile_home.chat.unpin') : t('mobile_home.chat.pintop') }}
-                </div>
-                <div
-                  :class="(item?.unreadCount ?? 0) > 0 ? 'bg-#909090' : 'bg-#fbb160'"
-                  class="h-full text-14px w-80px text-white flex items-center justify-center"
-                  @click="handleToggleReadStatus((item?.unreadCount ?? 0) > 0, item)">
-                  {{
-                    (item?.unreadCount ?? 0) > 0
-                      ? t('mobile_home.chat.mark_as_read')
-                      : t('mobile_home.chat.mark_as_unread')
-                  }}
-                </div>
-                <div
-                  class="h-full text-14px w-80px bg-#d5304f text-white flex items-center justify-center"
-                  @click="handleDelete(item)">
-                  {{ t('mobile_home.chat.delete') }}
-                </div>
-              </div>
-            </template>
-          </van-swipe-cell>
-        </div>
-      </div>
-    </van-pull-refresh>
-
-    <teleport to="body">
-      <div
-        v-if="longPressState.showLongPressMenu"
-        :style="{ top: longPressState.longPressMenuTop + 'px' }"
-        class="fixed gap-10px z-999 left-1/2 transform -translate-x-1/2">
-        <div class="flex justify-between p-18px text-16px gap-22px rounded-16px bg-#4e4e4e whitespace-nowrap">
-          <div class="text-white" @click="handleDelete(currentLongPressItem)">{{ t('mobile_home.menu.delete') }}</div>
-          <div class="text-white" @click="handleToggleTop(currentLongPressItem)">
-            {{ currentLongPressItem?.top ? t('mobile_home.menu.unpin') : t('mobile_home.menu.pintop') }}
+            <div class="flex w-full justify-center h-15px">
+              <svg width="34" height="13" viewBox="0 0 35 13">
+                <path d="M0 0 L35 0 L17.5 13 Z" fill="#4e4e4e" />
+              </svg>
+            </div>
           </div>
-          <div class="text-white" @click="handleToggleReadStatus((currentLongPressItem?.unreadCount ?? 0) > 0)">
-            {{
-              (currentLongPressItem?.unreadCount ?? 0) > 0 ? t('mobile_home.menu.read') : t('mobile_home.menu.unread')
-            }}
-          </div>
-        </div>
-        <div class="flex w-full justify-center h-15px">
-          <svg width="34" height="13" viewBox="0 0 35 13">
-            <path d="M0 0 L35 0 L17.5 13 Z" fill="#4e4e4e" />
-          </svg>
-        </div>
+        </teleport>
       </div>
-    </teleport>
-  </div>
+    </template>
+  </AutoFixHeightPage>
 </template>
 
 <script setup lang="ts">

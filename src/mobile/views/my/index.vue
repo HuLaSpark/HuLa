@@ -1,49 +1,54 @@
 <template>
-  <div class="flex flex-col overflow-auto h-full">
-    <!-- 设置区 -->
-    <Settings />
+  <AutoFixHeightPage :show-footer="false">
+    <template #container>
+      <div class="flex flex-col overflow-auto h-full">
+        <!-- 设置区 -->
+        <Settings />
 
-    <PersonalInfo :is-show="isShow"></PersonalInfo>
+        <PersonalInfo :is-show="isShow"></PersonalInfo>
 
-    <div class="relative top-0 flex-1 flex">
-      <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
-      <!-- 动态内容 -->
-      <div
-        ref="scrollContainer"
-        :style="{ height: tabHeight + 'px' }"
-        class="z-1 overflow-hidden mt-2 absolute z-3 w-full">
-        <n-card class="custom-rounded" content-class="flex flex-col gap-4 z-1 p-10px mt-4 p-15px!">
-          <n-scrollbar
-            ref="scrollbarRef"
+        <!-- FIX: 内容消失，问题  待确定 -->
+        <div class="relative top-0 flex-1 flex">
+          <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
+          <!-- 动态内容 -->
+          <div
+            ref="scrollContainer"
             :style="{ height: tabHeight + 'px' }"
-            :content-style="{ overflowX: 'hidden' }"
-            class="overflow-x-hidden"
-            @scroll="handleScroll">
-            <!-- 动态内容区域 -->
-            <div class="py-12px">
-              <DynamicList
-                mode="mobile"
-                @preview-image="previewImage"
-                @video-play="handleVideoPlay"
-                @load-more="loadMore"
-                @item-click="handleItemClick" />
-            </div>
-          </n-scrollbar>
-        </n-card>
-      </div>
-    </div>
+            class="z-1 overflow-hidden mt-2 absolute z-3 w-full">
+            <n-card class="custom-rounded" content-class="flex flex-col gap-4 z-1 p-10px mt-4 p-15px!">
+              <n-scrollbar
+                ref="scrollbarRef"
+                :style="{ height: tabHeight + 'px' }"
+                :content-style="{ overflowX: 'hidden' }"
+                class="overflow-x-hidden"
+                @scroll="handleScroll">
+                <!-- 动态内容区域 -->
+                <div class="py-12px">
+                  <DynamicList
+                    mode="mobile"
+                    @preview-image="previewImage"
+                    @video-play="handleVideoPlay"
+                    @load-more="loadMore"
+                    @item-click="handleItemClick" />
+                </div>
+              </n-scrollbar>
+            </n-card>
+          </div>
+        </div>
 
-    <div
-      @click="toPublishCommunity"
-      class="w-52px h-52px rounded-full absolute bottom-120px right-20px z-3 flex items-center justify-center bg-[linear-gradient(145deg,#ACD7DA,#13987F)] shadow-[0_4px_12px_rgba(0,0,0,0.25),0_0_12px_rgba(172,215,218,0.8)]">
-      <div class="relative w-20px h-20px">
-        <!-- 竖线 -->
-        <div class="absolute left-1/2 top-0 h-full w-2px bg-white -translate-x-1/2"></div>
-        <!-- 横线 -->
-        <div class="absolute top-1/2 left-0 w-full h-2px bg-white -translate-y-1/2"></div>
+        <div
+          @click="toPublishCommunity"
+          class="w-52px h-52px rounded-full absolute bottom-120px right-20px z-3 flex items-center justify-center bg-[linear-gradient(145deg,#ACD7DA,#13987F)] shadow-[0_4px_12px_rgba(0,0,0,0.25),0_0_12px_rgba(172,215,218,0.8)]">
+          <div class="relative w-20px h-20px">
+            <!-- 竖线 -->
+            <div class="absolute left-1/2 top-0 h-full w-2px bg-white -translate-x-1/2"></div>
+            <!-- 横线 -->
+            <div class="absolute top-1/2 left-0 w-full h-2px bg-white -translate-y-1/2"></div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </AutoFixHeightPage>
 </template>
 <script setup lang="ts">
 import PersonalInfo from '#/components/my/PersonalInfo.vue'

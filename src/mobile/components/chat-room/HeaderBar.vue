@@ -1,5 +1,6 @@
 <template>
-  <div class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 bg-background text-foreground">
+  <div
+    class="w-full h-[56px] grid grid-cols-[100px_1fr_100px] z-2 bg-background text-foreground pt-[var(--safe-area-inset-top)]">
     <div @click="handleBack" class="w-full h-full flex items-center">
       <svg class="iconpark-icon w-24px h-24px ms-16px p-5px">
         <use href="#fanhui" class="text-foreground"></use>
@@ -50,6 +51,10 @@ const props = withDefaults(defineProps<HeaderBarProps>(), {
   roomName: false,
   border: false
 })
+
+// 移除脚手架提供的安全区域样式，交由组件自己控制
+const removeScaffoldSaveArea = inject<() => void>('removeSafeArea', () => undefined)
+removeScaffoldSaveArea()
 
 const emits = defineEmits<(e: 'roomNameClick', payload: HeaderBarProps) => void>()
 

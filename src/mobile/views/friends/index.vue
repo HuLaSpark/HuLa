@@ -1,162 +1,165 @@
 <template>
-  <div class="flex flex-col overflow-auto h-full relative">
-    <img
-      src="@/assets/mobile/chat-home/background.webp"
-      class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
-    <!-- 页面蒙板 -->
-    <div
-      v-if="showMask"
-      @touchend="maskHandler.close"
-      @click="maskHandler.close"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
+  <AutoFixHeightPage>
+    <template #container>
+      <div class="flex flex-col overflow-auto h-full relative">
+        <!-- 页面蒙板 -->
+        <div
+          v-if="showMask"
+          @touchend="maskHandler.close"
+          @click="maskHandler.close"
+          class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[999] transition-all duration-3000 ease-in-out opacity-100"></div>
 
-    <!-- 导航条 -->
-    <NavBar>
-      <template #center>
-        <n-text>{{ t('mobile_contact.title') }}</n-text>
-      </template>
-      <template #right>
-        <n-dropdown
-          @on-clickoutside="addIconHandler.clickOutside"
-          @select="addIconHandler.select"
-          trigger="click"
-          :show-arrow="true"
-          :options="uiViewsData.addOptions">
-          <n-button round strong secondary @click="addIconHandler.open">
-            <template #icon>
-              <n-icon>
-                <svg><use href="#plus"></use></svg>
-              </n-icon>
-            </template>
-          </n-button>
-        </n-dropdown>
-      </template>
-    </NavBar>
-
-    <!-- 输入框 -->
-    <div class="px-16px mt-2 mb-12px z-1">
-      <n-input
-        id="search"
-        class="rounded-6px w-full relative text-12px"
-        :maxlength="20"
-        clearable
-        spellCheck="false"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        :placeholder="t('mobile_contact.input.search')">
-        <template #prefix>
-          <svg class="w-12px h-12px"><use href="#search"></use></svg>
-        </template>
-      </n-input>
-    </div>
-
-    <n-card
-      :segmented="{ content: true, footer: 'soft' }"
-      :bordered="false"
-      class="custom-rounded flex-1"
-      header-class="py-15px! px-16px! text-14px!"
-      :title="t('mobile_contact.my_chat')">
-      <template #header-extra>
-        <div @click="toMessage" class="h-full flex items-center justify-end">
-          <span
-            v-if="contactUnreadCount > 0"
-            class="px-4px py-4px rounded-999px bg-#c14053 text-white text-12px font-600 min-w-20px text-center">
-            {{ contactUnreadCount > 99 ? '99+' : contactUnreadCount }}
-          </span>
-        </div>
-        <div @click="toMessage" class="h-full flex justify-end items-center">
-          <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px dark:invert" alt="" />
-        </div>
-      </template>
-
-      <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
-        <n-tab-pane name="1" :tab="t('mobile_contact.tab.contacts')">
-          <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
-            <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
-              <n-collapse-item :title="t('mobile_contact.friend.title')" name="1">
-                <template #header-extra>
-                  <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
+        <!-- 导航条 -->
+        <NavBar>
+          <template #center>
+            <n-text>{{ t('mobile_contact.title') }}</n-text>
+          </template>
+          <template #right>
+            <n-dropdown
+              @on-clickoutside="addIconHandler.clickOutside"
+              @select="addIconHandler.select"
+              trigger="click"
+              :show-arrow="true"
+              :options="uiViewsData.addOptions">
+              <n-button round strong secondary @click="addIconHandler.open">
+                <template #icon>
+                  <n-icon>
+                    <svg><use href="#plus"></use></svg>
+                  </n-icon>
                 </template>
-                <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
-                  <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
-                  <div @contextmenu.stop="$event.preventDefault()">
-                    <n-flex
-                      :size="10"
-                      @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
-                      :class="{ active: activeItem === item.uid }"
+              </n-button>
+            </n-dropdown>
+          </template>
+        </NavBar>
+
+        <!-- 输入框 -->
+        <div class="px-16px mt-2 mb-12px z-1">
+          <n-input
+            id="search"
+            class="rounded-6px w-full relative text-12px"
+            :maxlength="20"
+            clearable
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            :placeholder="t('mobile_contact.input.search')">
+            <template #prefix>
+              <svg class="w-12px h-12px"><use href="#search"></use></svg>
+            </template>
+          </n-input>
+        </div>
+
+        <n-card
+          :segmented="{ content: true, footer: 'soft' }"
+          :bordered="false"
+          class="custom-rounded flex-1"
+          header-class="py-15px! px-16px! text-14px!"
+          :title="t('mobile_contact.my_chat')">
+          <template #header-extra>
+            <div @click="toMessage" class="h-full flex items-center justify-end">
+              <span
+                v-if="contactUnreadCount > 0"
+                class="px-4px py-4px rounded-999px bg-#c14053 text-white text-12px font-600 min-w-20px text-center">
+                {{ contactUnreadCount > 99 ? '99+' : contactUnreadCount }}
+              </span>
+            </div>
+            <div @click="toMessage" class="h-full flex justify-end items-center">
+              <img src="@/assets/mobile/friend/right-arrow.webp" class="block h-20px dark:invert" alt="" />
+            </div>
+          </template>
+
+          <n-tabs type="segment" animated class="mt-4px p-[4px_10px_0px_8px]">
+            <n-tab-pane name="1" :tab="t('mobile_contact.tab.contacts')">
+              <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
+                <ContextMenu @contextmenu="showMenu($event)" @select="handleSelect($event.label)" :menu="menuList">
+                  <n-collapse-item :title="t('mobile_contact.friend.title')" name="1">
+                    <template #header-extra>
+                      <span class="text-(10px #707070)">{{ onlineCount }}/{{ contactStore.contactsList.length }}</span>
+                    </template>
+                    <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
+                      <!-- 用户框 多套一层div来移除默认的右键事件然后覆盖掉因为margin空隙而导致右键可用 -->
+                      <div @contextmenu.stop="$event.preventDefault()">
+                        <n-flex
+                          :size="10"
+                          @click="handleClick(item.uid, RoomTypeEnum.SINGLE)"
+                          :class="{ active: activeItem === item.uid }"
+                          class="item-box w-full h-75px mb-5px"
+                          v-for="item in sortedContacts"
+                          :key="item.uid">
+                          <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
+                            <n-avatar
+                              round
+                              style="border: 1px solid var(--avatar-border-color)"
+                              :size="44"
+                              class="grayscale"
+                              :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
+                              :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
+                              fallback-src="/logo.png" />
+
+                            <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
+                              <span class="text-14px leading-tight flex-1 truncate">
+                                {{ groupStore.getUserInfo(item.uid)?.name }}
+                              </span>
+
+                              <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
+                                [
+                                <template v-if="isBotUser(item.uid)">助手</template>
+                                <template v-else-if="getUserState(item.uid)">
+                                  <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
+                                  {{ getUserState(item.uid)?.title }}
+                                </template>
+                                <template v-else>
+                                  <n-badge
+                                    :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'"
+                                    dot />
+                                  {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
+                                </template>
+                                ]
+                              </div>
+                            </n-flex>
+                          </n-flex>
+                        </n-flex>
+                      </div>
+                    </n-scrollbar>
+                  </n-collapse-item>
+                </ContextMenu>
+              </n-collapse>
+            </n-tab-pane>
+            <n-tab-pane name="2" :tab="t('mobile_contact.tab.group')">
+              <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
+                <n-collapse-item :title="t('mobile_contact.group.title')" name="1">
+                  <template #header-extra>
+                    <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
+                  </template>
+                  <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
+                    <div
+                      @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
+                      :class="{ active: activeItem === item.roomId }"
                       class="item-box w-full h-75px mb-5px"
-                      v-for="item in sortedContacts"
-                      :key="item.uid">
+                      v-for="item in groupChatList"
+                      :key="item.roomId">
                       <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
                         <n-avatar
                           round
                           style="border: 1px solid var(--avatar-border-color)"
+                          bordered
                           :size="44"
-                          class="grayscale"
-                          :class="{ 'grayscale-0': item.activeStatus === OnlineEnum.ONLINE }"
-                          :src="AvatarUtils.getAvatarUrl(groupStore.getUserInfo(item.uid)?.avatar!)"
+                          :src="AvatarUtils.getAvatarUrl(item.avatar)"
                           fallback-src="/logo.png" />
 
-                        <n-flex vertical justify="space-between" class="h-fit flex-1 truncate">
-                          <span class="text-14px leading-tight flex-1 truncate">
-                            {{ groupStore.getUserInfo(item.uid)?.name }}
-                          </span>
-
-                          <div class="text leading-tight text-12px flex-y-center gap-4px flex-1 truncate">
-                            [
-                            <template v-if="isBotUser(item.uid)">助手</template>
-                            <template v-else-if="getUserState(item.uid)">
-                              <img class="size-12px rounded-50%" :src="getUserState(item.uid)?.url" alt="" />
-                              {{ getUserState(item.uid)?.title }}
-                            </template>
-                            <template v-else>
-                              <n-badge :color="item.activeStatus === OnlineEnum.ONLINE ? '#1ab292' : '#909090'" dot />
-                              {{ item.activeStatus === OnlineEnum.ONLINE ? '在线' : '离线' }}
-                            </template>
-                            ]
-                          </div>
-                        </n-flex>
+                        <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.groupName }}</span>
                       </n-flex>
-                    </n-flex>
-                  </div>
-                </n-scrollbar>
-              </n-collapse-item>
-            </ContextMenu>
-          </n-collapse>
-        </n-tab-pane>
-        <n-tab-pane name="2" :tab="t('mobile_contact.tab.group')">
-          <n-collapse :display-directive="'show'" accordion :default-expanded-names="['1']">
-            <n-collapse-item :title="t('mobile_contact.group.title')" name="1">
-              <template #header-extra>
-                <span class="text-(10px #707070)">{{ groupChatList.length }}</span>
-              </template>
-              <n-scrollbar style="max-height: calc(100vh - (340px + var(--safe-area-inset-top)))">
-                <div
-                  @click="handleClick(item.roomId, RoomTypeEnum.GROUP)"
-                  :class="{ active: activeItem === item.roomId }"
-                  class="item-box w-full h-75px mb-5px"
-                  v-for="item in groupChatList"
-                  :key="item.roomId">
-                  <n-flex align="center" :size="10" class="h-75px pl-6px pr-8px flex-1 truncate">
-                    <n-avatar
-                      round
-                      style="border: 1px solid var(--avatar-border-color)"
-                      bordered
-                      :size="44"
-                      :src="AvatarUtils.getAvatarUrl(item.avatar)"
-                      fallback-src="/logo.png" />
-
-                    <span class="text-14px leading-tight flex-1 truncate">{{ item.remark || item.groupName }}</span>
-                  </n-flex>
-                </div>
-              </n-scrollbar>
-            </n-collapse-item>
-          </n-collapse>
-        </n-tab-pane>
-      </n-tabs>
-    </n-card>
-  </div>
+                    </div>
+                  </n-scrollbar>
+                </n-collapse-item>
+              </n-collapse>
+            </n-tab-pane>
+          </n-tabs>
+        </n-card>
+      </div>
+    </template>
+  </AutoFixHeightPage>
 </template>
 <style scoped>
 .custom-rounded {

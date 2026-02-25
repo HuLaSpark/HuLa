@@ -6,8 +6,6 @@
         'bg-cover bg-center bg-no-repeat': props.backgroundImage
       }"
       :style="mergedStyle">
-      <!-- 顶部安全区域 -->
-      <div :class="[{ 'safe-area-top': safeAreaTop }, props.topSafeAreaClass]" />
 
       <!-- 内容区域 -->
       <div class="flex-1 min-h-0">
@@ -234,9 +232,6 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 </script>
 
 <style scoped lang="scss">
-.safe-area-top {
-  padding-top: var(--safe-area-inset-top);
-}
 .safe-area-bottom {
   padding-bottom: var(--safe-area-inset-bottom);
 }
