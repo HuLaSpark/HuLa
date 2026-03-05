@@ -1,12 +1,7 @@
 <template>
-  <n-tabs @update:value="onUpdate" :default-value="props.activeTabName" animated>
+  <n-tabs @update:value="onUpdate" :default-value="props.activeTabName" animated class="h-full overflow-hidden tab">
     <n-tab-pane display-directive="show:lazy" v-for="i in props.options" :key="i.name" :name="i.name" :tab="i.tab">
-      <!-- 这里高度写死并不影响下面的高度修正，写高度超过TabBar以防用户手机卡顿看到突然的高度修正的效果视差 -->
-      <div
-        :ref="bindDynamicAreaRef(i.name)"
-        :style="{ height: props.customHeight ? customHeight + 'px' : defaultHeight }"
-        @scroll="handleScroll"
-        class="flex flex-col gap-4 overflow-y-auto">
+      <div :ref="bindDynamicAreaRef(i.name)" @scroll="handleScroll" class="flex flex-col gap-4">
         <!-- 动态消息 -->
         <slot :name="i.name"></slot>
         <!-- 占位元素，避免最后一个动态消息紧贴tabbar -->
@@ -20,8 +15,6 @@
 import { type PropType, ref, type VNodeRef } from 'vue'
 
 const emit = defineEmits(['update', 'scroll'])
-
-const defaultHeight = ref('90vh')
 
 const handleScroll = (event: any) => {
   emit('scroll', event)
@@ -66,4 +59,9 @@ const onUpdate = (newTab: string) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.tab :deep(.n-tabs-pane-wrapper) {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+</style>

@@ -10,80 +10,67 @@
     </template>
 
     <template #container>
-      <div class="flex flex-col overflow-auto h-full">
-        <PersonalInfo :is-my-page="isMyPage" :is-show="isShow"></PersonalInfo>
+      <div class="flex flex-col h-full">
+        <div class="shrink-0">
+          <PersonalInfo :is-my-page="isMyPage" :is-show="isShow"></PersonalInfo>
+        </div>
 
-        <div class="top-0 flex-1 flex w-full border-#13987F border-1">
-          <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
+        <div class="grow-1 overflow-hidden custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
+          <CommunityTab @scroll="handleScroll" @update="onUpdate" :options="tabOptions" active-tab-name="find">
+            <template #find>
+              <!-- 加载状态 -->
+              <div
+                v-if="feedOptions.isLoading && feedList.length === 0"
+                class="flex justify-center items-center py-20px">
+                <n-spin size="large" />
+              </div>
 
-          <div
-            ref="scrollContainer"
-            :style="{ height: tabHeight + 'px' }"
-            class="w-full z-1 overflow-y-auto absolute z-3">
-            <div class="custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
-              <CommunityTab
-                :style="{ height: tabHeight - 10 + 'px' }"
-                :custom-height="tabHeight - 10"
-                @scroll="handleScroll"
-                @update="onUpdate"
-                :options="tabOptions"
-                active-tab-name="find">
-                <template #find>
-                  <!-- 加载状态 -->
-                  <div
-                    v-if="feedOptions.isLoading && feedList.length === 0"
-                    class="flex justify-center items-center py-20px">
-                    <n-spin size="large" />
-                  </div>
+              <!-- 空状态 -->
+              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
+                暂无动态
+              </div>
 
-                  <!-- 空状态 -->
-                  <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                    暂无动态
-                  </div>
+              <!-- 动态列表 -->
+              <template v-else>
+                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
 
-                  <!-- 动态列表 -->
-                  <template v-else>
-                    <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
+                <!-- 加载更多 -->
+                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
+                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
+                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
+                  </n-button>
+                </div>
 
-                    <!-- 加载更多 -->
-                    <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                      <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                        {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                      </n-button>
-                    </div>
+                <!-- 已加载全部 -->
+                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
+              </template>
+            </template>
 
-                    <!-- 已加载全部 -->
-                    <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-                  </template>
-                </template>
+            <template #follow>
+              <!-- 赞过的动态 -->
+              <div
+                v-if="feedOptions.isLoading && feedList.length === 0"
+                class="flex justify-center items-center py-20px">
+                <n-spin size="large" />
+              </div>
 
-                <template #follow>
-                  <!-- 赞过的动态 -->
-                  <div
-                    v-if="feedOptions.isLoading && feedList.length === 0"
-                    class="flex justify-center items-center py-20px">
-                    <n-spin size="large" />
-                  </div>
+              <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
+                暂无赞过的动态
+              </div>
 
-                  <div v-else-if="feedList.length === 0" class="flex justify-center items-center py-40px text-gray-500">
-                    暂无赞过的动态
-                  </div>
+              <template v-else>
+                <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
 
-                  <template v-else>
-                    <CommunityContent v-for="item in feedList" :key="item.id" :feed-item="item" />
+                <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
+                  <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
+                    {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
+                  </n-button>
+                </div>
 
-                    <div v-if="!feedOptions.isLast" class="flex justify-center py-15px">
-                      <n-button :loading="feedOptions.isLoading" @click="loadMore" type="primary" text size="small">
-                        {{ feedOptions.isLoading ? '加载中...' : '加载更多' }}
-                      </n-button>
-                    </div>
-
-                    <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
-                  </template>
-                </template>
-              </CommunityTab>
-            </div>
-          </div>
+                <div v-else class="flex justify-center py-15px text-12px text-gray-400">已加载全部</div>
+              </template>
+            </template>
+          </CommunityTab>
         </div>
       </div>
     </template>
@@ -105,12 +92,7 @@ const avatarBox = ref<HTMLElement | null>(null)
 const lastScrollTop = ref(0)
 const hasTriggeredHide = ref(false)
 const infoBox = ref<HTMLElement | null>(null)
-const measureRef = ref<HTMLDivElement>()
 const scrollContainer = ref<HTMLElement | null>(null)
-const tabHeight = ref(300)
-const contentRectObserver = new ResizeObserver((event) => {
-  tabHeight.value = event[0].contentRect.height
-})
 const userStore = useUserStore()
 
 const route = useRoute()
@@ -185,10 +167,6 @@ watch(isShow, (show) => {
 })
 
 onMounted(async () => {
-  if (measureRef.value) {
-    contentRectObserver.observe(measureRef.value)
-  }
-
   if (userStore.userInfo?.uid === uid) {
     isMyPage.value = true
   } else {
@@ -197,12 +175,6 @@ onMounted(async () => {
 
   // 初始加载动态列表
   await feedStore.getFeedList(true)
-})
-
-onUnmounted(() => {
-  if (measureRef.value) {
-    contentRectObserver.unobserve(measureRef.value)
-  }
 })
 
 const handleScroll = (event: Event) => {
