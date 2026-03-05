@@ -1,14 +1,14 @@
 <template>
-  <MobileLayout :safeAreaTop="true" :safeAreaBottom="true">
-    <div class="flex flex-col h-full bg-gradient-to-b">
-      <!-- 顶部导航栏 -->
-      <HeaderBar :isOfficial="false" :enable-shadow="false" :hidden-right="true" room-name="动态详情" />
+  <MobileLayout>
+    <MobileScaffold>
+      <template #header>
+        <HeaderBar :isOfficial="false" :enable-shadow="false" :hidden-right="true" room-name="动态详情" />
+      </template>
 
-      <!-- 动态详情内容 -->
-      <div class="flex-1 overflow-y-auto overflow-x-hidden w-full">
+      <template #container>
         <DynamicDetail :feed-id="feedId" mode="mobile" @preview-image="previewImage" @video-play="handleVideoPlay" />
-      </div>
-    </div>
+      </template>
+    </MobileScaffold>
   </MobileLayout>
 </template>
 

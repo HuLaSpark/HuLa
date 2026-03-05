@@ -1,32 +1,34 @@
 <template>
-  <div class="flex flex-col flex-1 min-h-0 relative">
-    <img v-if="bgmURL" :src="bgmURL" class="absolute fixed top-0 left-0 w-full h-full z-0 dark:opacity-20" />
-    <!-- 页面容器 -->
-    <div class="flex w-full items-start flex-col flex-1 min-h-0 z-1">
-      <div class="w-full" :class="{ 'pt-[var(--safe-area-inset-top)]': safeAreaRef }">
+  <div class="bg-[var(--center-bg-color)]">
+    <img v-if="bgmURL" :src="bgmURL" class="object-cover absolute top-0 left-0 w-screen h-screen dark:opacity-20" />
+    <div class="h-screen w-screen overflow-hidden flex flex-col relative">
+      <header class="shrink-0 box-border" :class="{ 'pt-[var(--safe-area-inset-top)]': safeAreaRef }">
         <slot name="header"></slot>
-      </div>
-      <!-- 消息内容区 -->
-      <div class="w-full flex-1 overflow-y-hidden min-h-0">
+      </header>
+      <div class="flex-1 overflow-hidden grow-1">
         <slot name="container"></slot>
       </div>
+      <footer
+        class="shrink-0 footer box-border"
+        :class="{ 'pb-[var(--safe-area-inset-bottom)]': slots.footer == void 0 }">
+        <slot name="footer" class="pb-[var(--safe-area-inset-bottom)] box-border" />
+      </footer>
     </div>
-
-    <slot v-if="showFooter" name="footer" class="z-1"></slot>
   </div>
 </template>
-
 <script setup lang="ts">
 import bgImg from '@/assets/mobile/chat-home/background.webp'
 
-const {
-  showFooter = true,
-  background = true,
-  safeArea = true
-} = defineProps<{
+const { background = true, safeArea = true } = defineProps<{
   showFooter?: boolean
   background?: string | boolean
   safeArea?: boolean
+}>()
+
+const slots = defineSlots<{
+  header: () => unknown
+  container: () => any
+  footer: () => unknown
 }>()
 
 const bgmURL = computed(() => {
@@ -46,4 +48,8 @@ function useSafeArea(getter: () => boolean) {
 }
 </script>
 
-<style lang="scss"></style>
+<style lang="scss" scoped>
+.footer > :slotted(*) {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+</style>

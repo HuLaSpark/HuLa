@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout :safeAreaTop="true" class="overflow-hidden" :safeAreaBottom="true">
+  <MobileLayout class="overflow-hidden">
     <HeaderBar
       :isOfficial="false"
       :hidden-right="true"

@@ -1,282 +1,288 @@
 <template>
-  <MobileLayout :backgroundImage="'/login_bg.png'" :safeAreaTop="false" :safeAreaBottom="false">
-    <div class="h-full flex-col-center gap-40px">
-      <div class="flex-center absolute top-13vh left-36px">
-        <p class="text-(20px #333)">{{ t('login.mobile.welcome_title') }}</p>
-        <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
-      </div>
-
-      <!-- 选项卡导航 -->
-      <div class="w-80% h-40px absolute top-20vh flex-center">
-        <div class="flex w-200px relative">
-          <div
-            @click="activeTab = 'login'"
-            :class="[
-              'z-999 w-100px text-center transition-all duration-300 ease-out',
-              activeTab === 'login' ? 'text-(18px #000)' : 'text-(16px #666)'
-            ]">
-            {{ t('login.mobile.tabs.login') }}
+  <MobileLayout>
+    <MobileScaffold :background="'/login_bg.png'" :safe-area="false">
+      <template #container>
+        <div class="h-full flex-col-center gap-40px">
+          <div class="flex-center absolute top-13vh left-36px">
+            <p class="text-(20px #333) dark:text-gray-400">{{ t('login.mobile.welcome_title') }}</p>
+            <img src="@/assets/mobile/2.svg" alt="" class="w-80px h-20px" />
           </div>
-          <div
-            @click="activeTab = 'register'"
-            :class="[
-              'z-999 w-100px text-center transition-all duration-300 ease-out',
-              activeTab === 'register' ? 'text-(18px #000)' : 'text-(16px #666)'
-            ]">
-            {{ t('login.mobile.tabs.register') }}
+
+          <!-- 选项卡导航 -->
+          <div class="w-80% h-40px absolute top-20vh flex-center">
+            <div class="flex w-200px relative">
+              <div
+                @click="activeTab = 'login'"
+                :class="[
+                  'z-999 w-100px text-center transition-all duration-300 ease-out',
+                  activeTab === 'login' ? 'text-(18px #000) dark:text-white' : 'text-(16px #666) dark:text-gray-400'
+                ]">
+                {{ t('login.mobile.tabs.login') }}
+              </div>
+              <div
+                @click="activeTab = 'register'"
+                :class="[
+                  'z-999 w-100px text-center transition-all duration-300 ease-out',
+                  activeTab === 'register' ? 'text-(18px #000) dark:text-white' : 'text-(16px #666) dark:text-gray-400'
+                ]">
+                {{ t('login.mobile.tabs.register') }}
+              </div>
+              <!-- 选中条 -->
+              <div
+                style="border-radius: 24px 42px 4px 24px"
+                :class="[
+                  'z-10 absolute bottom--4px h-6px w-34px bg-#13987f transition-all duration-300 ease-out',
+                  activeTab === 'login' ? 'left-[33px]' : 'left-[133px]'
+                ]"></div>
+            </div>
           </div>
-          <!-- 选中条 -->
-          <div
-            style="border-radius: 24px 42px 4px 24px"
-            :class="[
-              'z-10 absolute bottom--4px h-6px w-34px bg-#13987f transition-all duration-300 ease-out',
-              activeTab === 'login' ? 'left-[33px]' : 'left-[133px]'
-            ]"></div>
-        </div>
-      </div>
 
-      <!-- 头像 -->
-      <img v-if="activeTab === 'login'" :src="userInfo.avatar" alt="logo" class="size-86px rounded-full" />
+          <!-- 头像 -->
+          <img v-if="activeTab === 'login'" :src="userInfo.avatar" alt="logo" class="size-86px rounded-full" />
 
-      <!-- 登录表单 -->
-      <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
-        <n-input
-          :class="{ 'pl-22px': loginHistories.length > 0 }"
-          size="large"
-          v-model:value="userInfo.account"
-          type="text"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :placeholder="accountPH"
-          @focus="accountPH = ''"
-          @blur="accountPH = t('login.mobile.input.account_placeholder')"
-          clearable>
-          <template #suffix>
-            <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
-              <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050">
-                <use href="#down"></use>
-              </svg>
-              <svg v-else class="down w-18px h-18px color-#505050"><use href="#up"></use></svg>
+          <!-- 登录表单 -->
+          <n-flex v-if="activeTab === 'login'" class="text-center w-80%" vertical :size="16">
+            <n-input
+              :class="{ 'pl-22px': loginHistories.length > 0 }"
+              size="large"
+              v-model:value="userInfo.account"
+              type="text"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :placeholder="accountPH"
+              @focus="accountPH = ''"
+              @blur="accountPH = t('login.mobile.input.account_placeholder')"
+              clearable>
+              <template #suffix>
+                <n-flex v-if="loginHistories.length > 0" @click="arrowStatus = !arrowStatus">
+                  <svg v-if="!arrowStatus" class="down w-18px h-18px color-#505050">
+                    <use href="#down"></use>
+                  </svg>
+                  <svg v-else class="down w-18px h-18px color-#505050"><use href="#up"></use></svg>
+                </n-flex>
+              </template>
+            </n-input>
+
+            <!-- 账号选择框-->
+            <div
+              style="border: 1px solid rgba(70, 70, 70, 0.1)"
+              v-if="loginHistories.length > 0 && arrowStatus"
+              class="account-box absolute w-80% max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
+              <n-scrollbar style="max-height: 120px" trigger="none">
+                <n-flex
+                  vertical
+                  v-for="item in loginHistories"
+                  :key="item.account"
+                  @click="giveAccount(item)"
+                  class="p-8px hover:bg-#f3f3f3 hover:rounded-6px">
+                  <div class="flex-between-center">
+                    <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
+                    <p class="text-14px color-#505050">{{ item.account }}</p>
+                    <svg @click.stop="delAccount(item)" class="w-12px h-12px">
+                      <use href="#close"></use>
+                    </svg>
+                  </div>
+                </n-flex>
+              </n-scrollbar>
+            </div>
+
+            <n-input
+              class="pl-22px mt-8px"
+              size="large"
+              show-password-on="click"
+              v-model:value="userInfo.password"
+              type="password"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :placeholder="passwordPH"
+              @focus="passwordPH = ''"
+              @blur="passwordPH = t('login.mobile.input.code_placeholder')"
+              clearable />
+
+            <n-flex justify="flex-end" :size="6">
+              <n-button text color="#13987f" @click="handleForgetPassword">
+                {{ t('login.mobile.forget_code') }}
+              </n-button>
             </n-flex>
-          </template>
-        </n-input>
 
-        <!-- 账号选择框-->
-        <div
-          style="border: 1px solid rgba(70, 70, 70, 0.1)"
-          v-if="loginHistories.length > 0 && arrowStatus"
-          class="account-box absolute w-80% max-h-140px bg-#fdfdfd mt-45px z-99 rounded-8px p-8px box-border">
-          <n-scrollbar style="max-height: 120px" trigger="none">
-            <n-flex
-              vertical
-              v-for="item in loginHistories"
-              :key="item.account"
-              @click="giveAccount(item)"
-              class="p-8px hover:bg-#f3f3f3 hover:rounded-6px">
-              <div class="flex-between-center">
-                <n-avatar :src="AvatarUtils.getAvatarUrl(item.avatar)" class="size-28px bg-#ccc rounded-50%" />
-                <p class="text-14px color-#505050">{{ item.account }}</p>
-                <svg @click.stop="delAccount(item)" class="w-12px h-12px">
-                  <use href="#close"></use>
-                </svg>
+            <n-button
+              :loading="loading"
+              :disabled="loginDisabled"
+              tertiary
+              style="color: #fff"
+              class="w-full mt-8px mb-50px gradient-button"
+              @click="normalLogin('MOBILE', true, false)">
+              <span>{{ loginText }}</span>
+            </n-button>
+
+            <!-- 协议 -->
+            <n-flex align="center" justify="center" :style="agreementStyle" :size="6" class="absolute bottom-0 w-[80%]">
+              <n-checkbox v-model:checked="protocol" />
+              <div class="text-12px color-#909090 cursor-default lh-14px">
+                <span>{{ t('login.term.checkout.text1') }}</span>
+                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
+                  {{ t('login.term.checkout.text2') }}
+                </span>
+                <span>{{ t('login.term.checkout.text3') }}</span>
+                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
+                  {{ t('login.term.checkout.text4') }}
+                </span>
               </div>
             </n-flex>
-          </n-scrollbar>
+          </n-flex>
+
+          <!-- 注册表单 - 第一步：昵称和密码 -->
+          <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80%" vertical :size="16">
+            <n-input
+              size="large"
+              maxlength="8"
+              minlength="1"
+              v-model:value="registerInfo.nickName"
+              type="text"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :allow-input="noSideSpace"
+              :placeholder="registerNamePH"
+              @focus="registerNamePH = ''"
+              @blur="registerNamePH = t('login.mobile.register.input.nickname')"
+              clearable />
+
+            <n-input
+              class="pl-16px"
+              size="large"
+              minlength="6"
+              show-password-on="click"
+              v-model:value="registerInfo.password"
+              type="password"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :allow-input="noSideSpace"
+              :placeholder="registerPasswordPH"
+              @focus="registerPasswordPH = ''"
+              @blur="registerPasswordPH = t('login.mobile.register.input.password')"
+              clearable />
+
+            <n-input
+              class="pl-16px"
+              size="large"
+              minlength="6"
+              show-password-on="click"
+              v-model:value="registerInfo.confirmPassword"
+              type="password"
+              spellCheck="false"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              :allow-input="noSideSpace"
+              :placeholder="confirmPasswordPH"
+              @focus="confirmPasswordPH = ''"
+              @blur="confirmPasswordPH = t('login.mobile.register.input.confirm_password')"
+              clearable />
+
+            <!-- 密码提示信息 -->
+            <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
+              <Validation
+                :value="registerInfo.password"
+                :message="t('login.mobile.register.pass_validate_info.minlength', { len: 6 })"
+                :validator="validateMinLength" />
+              <Validation
+                :value="registerInfo.password"
+                :message="t('login.mobile.register.pass_validate_info.valid_characters')"
+                :validator="validateAlphaNumeric" />
+              <Validation
+                :value="registerInfo.password"
+                :message="t('login.mobile.register.pass_validate_info.must_special_char')"
+                :validator="validateSpecialChar" />
+            </n-flex>
+
+            <!-- 协议 -->
+            <n-flex align="center" justify="center" :size="6" class="mt-10px">
+              <n-checkbox v-model:checked="registerProtocol" />
+              <div class="text-12px color-#909090 cursor-default lh-14px">
+                <span>{{ t('login.term.checkout.text1') }}</span>
+                <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
+                  {{ t('login.term.checkout.text2') }}
+                </span>
+                <span>{{ t('login.term.checkout.text3') }}</span>
+                <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
+                  {{ t('login.term.checkout.text4') }}
+                </span>
+              </div>
+            </n-flex>
+
+            <n-button
+              :loading="registerLoading"
+              :disabled="!isStep1Valid"
+              tertiary
+              style="color: #fff"
+              class="w-full mt-8px mb-50px gradient-button"
+              @click="handleRegisterStep">
+              <span>{{ t('login.mobile.register.btn.next') }}</span>
+            </n-button>
+          </n-flex>
+
+          <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
+          <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
+            <n-auto-complete
+              size="large"
+              v-model:value="registerInfo.email"
+              :placeholder="registerEmailPH"
+              :options="commonEmailDomains"
+              :get-show="getShow"
+              clearable
+              type="text"
+              @focus="registerEmailPH = ''"
+              @blur="registerEmailPH = t('login.mobile.register.input.email')" />
+
+            <!-- 邮箱验证码 -->
+            <div class="flex justify-between items-center gap-10px">
+              <n-input
+                size="large"
+                maxlength="6"
+                v-model:value="registerInfo.code"
+                type="text"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                :allow-input="noSideSpace"
+                :placeholder="registerCodePH"
+                @focus="registerCodePH = ''"
+                @blur="registerCodePH = t('login.mobile.register.input.email_verification_code')"
+                clearable />
+
+              <n-button
+                tertiary
+                style="color: #fff"
+                class="flex-shrink-0 gradient-button"
+                :loading="sendCodeLoading"
+                :disabled="sendCodeDisabled"
+                @click="handleSendEmailCode">
+                <span>{{ sendCodeButtonText }}</span>
+              </n-button>
+            </div>
+
+            <n-button
+              :loading="registerLoading"
+              :disabled="!isStep2Valid"
+              tertiary
+              style="color: #fff"
+              class="w-full mt-8px mb-50px gradient-button"
+              @click="handleRegisterStep">
+              <span>{{ t('login.mobile.register.btn.register') }}</span>
+            </n-button>
+          </n-flex>
         </div>
-
-        <n-input
-          class="pl-22px mt-8px"
-          size="large"
-          show-password-on="click"
-          v-model:value="userInfo.password"
-          type="password"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :placeholder="passwordPH"
-          @focus="passwordPH = ''"
-          @blur="passwordPH = t('login.mobile.input.code_placeholder')"
-          clearable />
-
-        <n-flex justify="flex-end" :size="6">
-          <n-button text color="#13987f" @click="handleForgetPassword">{{ t('login.mobile.forget_code') }}</n-button>
-        </n-flex>
-
-        <n-button
-          :loading="loading"
-          :disabled="loginDisabled"
-          tertiary
-          style="color: #fff"
-          class="w-full mt-8px mb-50px gradient-button"
-          @click="normalLogin('MOBILE', true, false)">
-          <span>{{ loginText }}</span>
-        </n-button>
-
-        <!-- 协议 -->
-        <n-flex align="center" justify="center" :style="agreementStyle" :size="6" class="absolute bottom-0 w-[80%]">
-          <n-checkbox v-model:checked="protocol" />
-          <div class="text-12px color-#909090 cursor-default lh-14px">
-            <span>{{ t('login.term.checkout.text1') }}</span>
-            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
-              {{ t('login.term.checkout.text2') }}
-            </span>
-            <span>{{ t('login.term.checkout.text3') }}</span>
-            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
-              {{ t('login.term.checkout.text4') }}
-            </span>
-          </div>
-        </n-flex>
-      </n-flex>
-
-      <!-- 注册表单 - 第一步：昵称和密码 -->
-      <n-flex v-if="activeTab === 'register' && currentStep === 1" class="text-center w-80%" vertical :size="16">
-        <n-input
-          size="large"
-          maxlength="8"
-          minlength="1"
-          v-model:value="registerInfo.nickName"
-          type="text"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :allow-input="noSideSpace"
-          :placeholder="registerNamePH"
-          @focus="registerNamePH = ''"
-          @blur="registerNamePH = t('login.mobile.register.input.nickname')"
-          clearable />
-
-        <n-input
-          class="pl-16px"
-          size="large"
-          minlength="6"
-          show-password-on="click"
-          v-model:value="registerInfo.password"
-          type="password"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :allow-input="noSideSpace"
-          :placeholder="registerPasswordPH"
-          @focus="registerPasswordPH = ''"
-          @blur="registerPasswordPH = t('login.mobile.register.input.password')"
-          clearable />
-
-        <n-input
-          class="pl-16px"
-          size="large"
-          minlength="6"
-          show-password-on="click"
-          v-model:value="registerInfo.confirmPassword"
-          type="password"
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          :allow-input="noSideSpace"
-          :placeholder="confirmPasswordPH"
-          @focus="confirmPasswordPH = ''"
-          @blur="confirmPasswordPH = t('login.mobile.register.input.confirm_password')"
-          clearable />
-
-        <!-- 密码提示信息 -->
-        <n-flex vertical v-if="registerInfo.password" :size="10" class="mt-8px">
-          <Validation
-            :value="registerInfo.password"
-            :message="t('login.mobile.register.pass_validate_info.minlength', { len: 6 })"
-            :validator="validateMinLength" />
-          <Validation
-            :value="registerInfo.password"
-            :message="t('login.mobile.register.pass_validate_info.valid_characters')"
-            :validator="validateAlphaNumeric" />
-          <Validation
-            :value="registerInfo.password"
-            :message="t('login.mobile.register.pass_validate_info.must_special_char')"
-            :validator="validateSpecialChar" />
-        </n-flex>
-
-        <!-- 协议 -->
-        <n-flex align="center" justify="center" :size="6" class="mt-10px">
-          <n-checkbox v-model:checked="registerProtocol" />
-          <div class="text-12px color-#909090 cursor-default lh-14px">
-            <span>{{ t('login.term.checkout.text1') }}</span>
-            <span @click.stop="toServiceAgreement" class="color-#13987f cursor-pointer">
-              {{ t('login.term.checkout.text2') }}
-            </span>
-            <span>{{ t('login.term.checkout.text3') }}</span>
-            <span @click.stop="toPrivacyAgreement" class="color-#13987f cursor-pointer">
-              {{ t('login.term.checkout.text4') }}
-            </span>
-          </div>
-        </n-flex>
-
-        <n-button
-          :loading="registerLoading"
-          :disabled="!isStep1Valid"
-          tertiary
-          style="color: #fff"
-          class="w-full mt-8px mb-50px gradient-button"
-          @click="handleRegisterStep">
-          <span>{{ t('login.mobile.register.btn.next') }}</span>
-        </n-button>
-      </n-flex>
-
-      <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
-      <n-flex v-if="activeTab === 'register' && currentStep === 2" class="text-center w-80%" vertical :size="16">
-        <n-auto-complete
-          size="large"
-          v-model:value="registerInfo.email"
-          :placeholder="registerEmailPH"
-          :options="commonEmailDomains"
-          :get-show="getShow"
-          clearable
-          type="text"
-          @focus="registerEmailPH = ''"
-          @blur="registerEmailPH = t('login.mobile.register.input.email')" />
-
-        <!-- 邮箱验证码 -->
-        <div class="flex justify-between items-center gap-10px">
-          <n-input
-            size="large"
-            maxlength="6"
-            v-model:value="registerInfo.code"
-            type="text"
-            spellCheck="false"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            :allow-input="noSideSpace"
-            :placeholder="registerCodePH"
-            @focus="registerCodePH = ''"
-            @blur="registerCodePH = t('login.mobile.register.input.email_verification_code')"
-            clearable />
-
-          <n-button
-            tertiary
-            style="color: #fff"
-            class="flex-shrink-0 gradient-button"
-            :loading="sendCodeLoading"
-            :disabled="sendCodeDisabled"
-            @click="handleSendEmailCode">
-            <span>{{ sendCodeButtonText }}</span>
-          </n-button>
-        </div>
-
-        <n-button
-          :loading="registerLoading"
-          :disabled="!isStep2Valid"
-          tertiary
-          style="color: #fff"
-          class="w-full mt-8px mb-50px gradient-button"
-          @click="handleRegisterStep">
-          <span>{{ t('login.mobile.register.btn.register') }}</span>
-        </n-button>
-      </n-flex>
-    </div>
+      </template>
+    </MobileScaffold>
   </MobileLayout>
 </template>
 

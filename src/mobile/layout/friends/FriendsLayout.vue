@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout :safeAreaTop="true" :safeAreaBottom="true">
+  <MobileLayout>
     <div class="h-full flex flex-col">
       <!-- 页面全部内容 -->
       <div class="flex flex-col flex-1">

@@ -1,20 +1,6 @@
 <template>
   <van-config-provider :theme="settingStore.themes.content === ThemeEnum.DARK ? 'dark' : 'light'" class="h-full">
-    <div
-      class="h-full flex flex-col box-border"
-      :class="{
-        'bg-cover bg-center bg-no-repeat': props.backgroundImage
-      }"
-      :style="mergedStyle">
-
-      <!-- 内容区域 -->
-      <div class="flex-1 min-h-0">
-        <slot></slot>
-      </div>
-
-      <!-- 底部安全区域 -->
-      <div :class="[{ 'safe-area-bottom': safeAreaBottom }, props.bottomSafeAreaClass]" />
-    </div>
+    <slot></slot>
   </van-config-provider>
 </template>
 
@@ -34,18 +20,6 @@ import { audioManager } from '@/utils/AudioManager'
 import { isMobile, isWindows } from '@/utils/PlatformConstants'
 import { invokeSilently } from '@/utils/TauriInvokeHandler'
 import { useRoute } from 'vue-router'
-interface MobileLayoutProps {
-  /** 是否应用顶部安全区域 */
-  safeAreaTop?: boolean
-  /** 是否应用底部安全区域 */
-  safeAreaBottom?: boolean
-  /** 背景图片URL */
-  backgroundImage?: string
-  /** 顶部安全区域的自定义 CSS class */
-  topSafeAreaClass?: string
-  /** 底部安全区域的自定义 CSS class */
-  bottomSafeAreaClass?: string
-}
 
 const route = useRoute()
 const chatStore = useChatStore()
@@ -69,35 +43,6 @@ const playMessageSound = async () => {
     console.warn('播放消息音效失败:', error)
   }
 }
-
-const props = withDefaults(defineProps<MobileLayoutProps>(), {
-  safeAreaTop: true,
-  safeAreaBottom: true,
-  backgroundImage: '',
-  topSafeAreaClass: '',
-  bottomSafeAreaClass: ''
-})
-
-// 计算背景图样式
-const backgroundImageStyle = computed(() => {
-  const styles: Record<string, string> = {}
-
-  // 设置背景图片
-  if (props.backgroundImage) {
-    // 处理路径别名 @/ 转换为 /src/
-    let imagePath = props.backgroundImage
-    if (imagePath.startsWith('@/')) {
-      imagePath = imagePath.replace('@/', '/src/')
-    }
-    styles.backgroundImage = `url(${imagePath})`
-  }
-  return styles
-})
-
-const mergedStyle = computed(() => ({
-  backgroundColor: 'var(--center-bg-color)',
-  ...backgroundImageStyle.value
-}))
 
 /**
  * 从消息中提取文件信息并添加到 file store
@@ -231,6 +176,11 @@ useMitt.on(WsResponseMessageType.RECEIVE_MESSAGE, async (data: MessageType) => {
 })
 </script>
 
+<style>
+:root {
+  background-color: var(--center-bg-color);
+}
+</style>
 <style scoped lang="scss">
 .safe-area-bottom {
   padding-bottom: var(--safe-area-inset-bottom);
