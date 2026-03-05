@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout :safeAreaTop="true" :safeAreaBottom="true" :bottomSafeAreaClass="computedBottomSafeAreaClass">
+  <MobileLayout>
     <div class="h-full flex flex-col">
       <!-- 页面全部内容 -->
       <div class="flex flex-col flex-1 min-h-0">
@@ -13,14 +13,6 @@
   </MobileLayout>
 </template>
 
-<script setup lang="ts">
-const route = useRoute()
-const computedBottomSafeAreaClass = computed(() => {
-  if (route.name === 'mobileChatMain') {
-    return 'bg-#FAFAFA'
-  }
-  return ''
-})
-</script>
+<script setup lang="ts"></script>
 
 <style lang="scss" scoped></style>

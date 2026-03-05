@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout class="bg-gray-100 px-20px" :safeAreaTop="true" :safeAreaBottom="true">
+  <MobileLayout class="bg-gray-100 px-20px">
     <HeaderBar
       :isOfficial="false"
       :hidden-right="true"
