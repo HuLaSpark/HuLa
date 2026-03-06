@@ -15,6 +15,7 @@
           <PersonalInfo :is-my-page="isMyPage" :is-show="isShow"></PersonalInfo>
         </div>
 
+        <!-- TODO: 原先滚动 PersonalInfo 收缩需要重新实现 -->
         <div class="grow-1 overflow-hidden custom-rounded flex px-24px flex-col gap-4 z-1 p-10px mt-4 shadow">
           <CommunityTab @scroll="handleScroll" @update="onUpdate" :options="tabOptions" active-tab-name="find">
             <template #find>
