@@ -149,8 +149,7 @@
               </div>
             </div>
 
-            <!-- v-if="isGroup && groupStore.isAdminOrLord()"  -->
-            <div class="flex justify-between py-15px items-center">
+            <div class="flex justify-between py-15px items-center" v-if="isGroup && groupStore.isAdminOrLord()">
               <div class="text-14px">{{ t('mobile_chat_setting.group_name') }}</div>
               <div class="text-12px text-#6E6E6E flex flex-wrap gap-10px items-center">
                 <n-input
