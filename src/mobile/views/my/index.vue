@@ -1,41 +1,26 @@
 <template>
   <MobileScaffold :show-footer="false">
+    <template #header>
+      <Settings />
+    </template>
     <template #container>
-      <div class="flex flex-col overflow-auto h-full">
-        <!-- 设置区 -->
-        <Settings />
-
-        <PersonalInfo :is-show="isShow"></PersonalInfo>
-
-        <!-- FIX: 内容消失，问题  待确定 -->
-        <div class="relative top-0 flex-1 flex">
-          <div ref="measureRef" class="h-full w-full absolute top-0 z-0"></div>
-          <!-- 动态内容 -->
-          <div
-            ref="scrollContainer"
-            :style="{ height: tabHeight + 'px' }"
-            class="z-1 overflow-hidden mt-2 absolute z-3 w-full">
-            <n-card class="custom-rounded" content-class="flex flex-col gap-4 z-1 p-10px mt-4 p-15px!">
-              <n-scrollbar
-                ref="scrollbarRef"
-                :style="{ height: tabHeight + 'px' }"
-                :content-style="{ overflowX: 'hidden' }"
-                class="overflow-x-hidden"
-                @scroll="handleScroll">
-                <!-- 动态内容区域 -->
-                <div class="py-12px">
-                  <DynamicList
-                    mode="mobile"
-                    @preview-image="previewImage"
-                    @video-play="handleVideoPlay"
-                    @load-more="loadMore"
-                    @item-click="handleItemClick" />
-                </div>
-              </n-scrollbar>
-            </n-card>
-          </div>
+      <div class="flex flex-col h-full gap-4">
+        <div>
+          <PersonalInfo :is-show="isShow"></PersonalInfo>
         </div>
-
+        <div class="h-full flex-1 overflow-hidden border! border-red!" ref="scrollContainer">
+          <n-card class="custom-rounded h-full" :content-class="`${!isShow ? 'h-full' : ''}`">
+            <n-scrollbar :x-scrollable="false" class="m-0!" @scroll="handleScroll">
+              <!-- 动态内容区域 -->
+              <DynamicList
+                mode="mobile"
+                @preview-image="previewImage"
+                @video-play="handleVideoPlay"
+                @load-more="loadMore"
+                @item-click="handleItemClick" />
+            </n-scrollbar>
+          </n-card>
+        </div>
         <div
           @click="toPublishCommunity"
           class="w-52px h-52px rounded-full absolute bottom-120px right-20px z-3 flex items-center justify-center bg-[linear-gradient(145deg,#ACD7DA,#13987F)] shadow-[0_4px_12px_rgba(0,0,0,0.25),0_0_12px_rgba(172,215,218,0.8)]">
@@ -56,16 +41,9 @@ import Settings from '#/components/my/Settings.vue'
 import router from '@/router'
 import { useFeedStore } from '@/stores/feed'
 import DynamicList from '@/components/common/DynamicList.vue'
+import { useSwipe } from '@vueuse/core'
 
 const feedStore = useFeedStore()
-
-const measureRef = ref<HTMLDivElement>()
-
-const tabHeight = ref(300)
-
-const measureElementObserver = new ResizeObserver((event) => {
-  tabHeight.value = event[0].contentRect.height
-})
 
 const toPublishCommunity = () => {
   router.push('/mobile/mobileMy/publishCommunity')
@@ -97,72 +75,67 @@ const handleItemClick = (feedId: string) => {
 
 const isShow = ref(true)
 
-const avatarBox = ref<HTMLElement | null>(null)
+// const avatarBox = ref<HTMLElement | null>(null)
 
-watch(isShow, (show) => {
-  const box = avatarBox.value
-  if (!box) return
+// watch(isShow, (show) => {
+//   const box = avatarBox.value
+//   if (!box) return
 
-  box.style.overflow = 'hidden'
-  box.style.transition = 'all 0.3s ease'
+//   box.style.overflow = 'hidden'
+//   box.style.transition = 'all 0.3s ease'
 
-  if (show) {
-    // 显示：从缩小恢复到原始高度
-    box.style.height = box.scrollHeight + 'px'
-    box.style.opacity = '1'
-    box.style.transform = 'scale(1) translateY(0)'
+//   if (show) {
+//     // 显示：从缩小恢复到原始高度
+//     box.style.height = box.scrollHeight + 'px'
+//     box.style.opacity = '1'
+//     box.style.transform = 'scale(1) translateY(0)'
 
-    box.addEventListener(
-      'transitionend',
-      () => {
-        box.style.height = 'auto' // 回归自适应高度
-        box.style.overflow = ''
-      },
-      { once: true }
-    )
-  } else {
-    // 隐藏：缩小并收起高度
-    box.style.height = box.scrollHeight + 'px' // 先设置为当前高度
-    requestAnimationFrame(() => {
-      box.style.height = '58px' // 保持略小的高度（你原图是 86px，缩放 0.65 后约为 56px）
-      box.style.transform = 'scale(1) translateY(0)'
-    })
+//     box.addEventListener(
+//       'transitionend',
+//       () => {
+//         box.style.height = 'auto' // 回归自适应高度
+//         box.style.overflow = ''
+//       },
+//       { once: true }
+//     )
+//   } else {
+//     // 隐藏：缩小并收起高度
+//     box.style.height = box.scrollHeight + 'px' // 先设置为当前高度
+//     requestAnimationFrame(() => {
+//       box.style.height = '58px' // 保持略小的高度（你原图是 86px，缩放 0.65 后约为 56px）
+//       box.style.transform = 'scale(1) translateY(0)'
+//     })
+//   }
+// })
+
+// const infoBox = ref<HTMLElement | null>(null)
+// watch(isShow, (show) => {
+//   const info = infoBox.value
+//   if (!info) return
+
+//   // 添加动画过渡（也可直接写在 class 里）
+//   info.style.transition = 'transform 0.3s ease'
+
+//   if (show) {
+//     info.style.transform = 'translateX(0)'
+//   } else {
+//     info.style.transform = 'translateX(-20px)' // 👈 向左移动一点
+//   }
+// })
+
+const scrollContainer = useTemplateRef<HTMLElement>('scrollContainer')
+useSwipe(scrollContainer, {
+  threshold: 30,
+  onSwipeEnd: (_e, direction) => {
+    if (direction === 'up') {
+      isShow.value = false
+    }
   }
 })
-
-const infoBox = ref<HTMLElement | null>(null)
-watch(isShow, (show) => {
-  const info = infoBox.value
-  if (!info) return
-
-  // 添加动画过渡（也可直接写在 class 里）
-  info.style.transition = 'transform 0.3s ease'
-
-  if (show) {
-    info.style.transform = 'translateX(0)'
-  } else {
-    info.style.transform = 'translateX(-20px)' // 👈 向左移动一点
-  }
-})
-
-const scrollContainer = ref<HTMLElement | null>(null)
-
-const lastScrollTop = ref(0)
-const hasTriggeredHide = ref(false)
 
 onMounted(async () => {
-  if (measureRef.value) {
-    measureElementObserver.observe(measureRef.value)
-  }
-
   // 初始加载动态列表
   await feedStore.getFeedList(true)
-})
-
-onUnmounted(() => {
-  if (measureRef.value) {
-    measureElementObserver.unobserve(measureRef.value)
-  }
 })
 
 const handleScroll = (event: Event) => {
@@ -171,30 +144,9 @@ const handleScroll = (event: Event) => {
 
   const scrollTop = target.scrollTop
 
-  // 向上滑动
-  if (scrollTop - lastScrollTop.value > 0) {
-    if (scrollTop > 700 && isShow.value && !hasTriggeredHide.value) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isShow.value = false
-          hasTriggeredHide.value = true
-        })
-      })
-    }
+  if (!isShow.value && scrollTop <= 0) {
+    isShow.value = true
   }
-
-  // 向下滑回顶部区域
-  if (scrollTop < 580) {
-    requestAnimationFrame(() => {
-      isShow.value = true
-      hasTriggeredHide.value = false
-      if (scrollContainer.value) {
-        scrollContainer.value.scrollTop = 0
-      }
-    })
-  }
-
-  lastScrollTop.value = scrollTop
 }
 </script>
 <style lang="scss" scoped>
