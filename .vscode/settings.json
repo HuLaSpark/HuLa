@@ -60,6 +60,7 @@
     "tauri",
     "tungstenite",
     "Vant",
+    "vueuse",
     "webpki"
   ],
 }
