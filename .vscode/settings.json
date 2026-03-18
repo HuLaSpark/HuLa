@@ -3,7 +3,7 @@
     ".vscode/tailwindcss.json"
   ],
   "java.configuration.updateBuildConfiguration": "disabled",
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
   "i18n-ally.autoDetection": false,
   "i18n-ally.displayLanguage": "zh",
   "i18n-ally.namespace": true,
