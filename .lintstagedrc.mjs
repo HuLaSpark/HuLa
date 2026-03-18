@@ -10,7 +10,7 @@ export default {
     (filenames) => {
       const filteredFiles = filenames.filter(
         (f) =>
-          !f.includes('src-tauri/') && !f.includes('tauri-plugin-hula/') && !f.includes('public/') && !f.endsWith('.d.ts')
+          !f.includes('src-tauri/') && !f.includes('tauri-plugin-hula/') && !f.includes('public/') && !f.endsWith('.d.ts') && !f.includes('.vscode/')
       )
       return filteredFiles.length > 0
         ? `biome check --write --unsafe ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(' ')}`
