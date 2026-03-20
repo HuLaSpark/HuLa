@@ -14,6 +14,11 @@ export const useContextMenu = (ContextMenuRef: Ref, isNull?: Ref<boolean>) => {
   // 禁止滚动的默认行为
   const preventDefault = (e: Event) => e.preventDefault()
 
+  /** 阻止 window 上的默认右键菜单，避免与关闭逻辑冲突；必须保存引用以便 onUnmounted 移除，否则会只增不减导致 DOM/引用无法回收 */
+  const preventWindowContextMenu = (e: Event) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
   // 禁止选中文本的默认行为
   const preventTextSelection = (e: Event) => e.preventDefault()
 
@@ -117,14 +122,7 @@ export const useContextMenu = (ContextMenuRef: Ref, isNull?: Ref<boolean>) => {
     //这里只监听了div的右键，如果需要监听其他元素的右键，需要在其他元素上监听
     div.addEventListener('contextmenu', handleContextMenu)
     // 这里需要监听window的右键，否则右键会触发div的右键事件，导致menu无法关闭，并且阻止默认右键菜单
-    window.addEventListener(
-      'contextmenu',
-      (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-      },
-      false
-    )
+    window.addEventListener('contextmenu', preventWindowContextMenu, false)
     window.addEventListener('click', closeMenu, true)
     window.addEventListener('contextmenu', closeMenu, true)
   })
@@ -132,6 +130,7 @@ export const useContextMenu = (ContextMenuRef: Ref, isNull?: Ref<boolean>) => {
   onUnmounted(() => {
     const div = ContextMenuRef.value
     div?.removeEventListener('contextmenu', handleContextMenu)
+    window.removeEventListener('contextmenu', preventWindowContextMenu)
     window.removeEventListener('contextmenu', preventDefault)
     window.removeEventListener('wheel', preventDefault)
     window.removeEventListener('selectstart', preventTextSelection)
