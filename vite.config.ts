@@ -131,20 +131,16 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       // 设置兼容低版本浏览器的目标
       target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
       cssCodeSplit: true, // 启用 CSS 代码拆分
-      minify: 'esbuild' as const, // 指定使用哪种混淆器
+      minify: 'oxc' as const, // Vite 8 默认使用 Oxc 压缩，减少对 esbuild 依赖
       // chunk 大小警告的限制(kb)
       chunkSizeWarningLimit: 1200,
-      // esbuild配置，解决低版本浏览器兼容性问题
-      esbuild: {
-        supported: {
-          'top-level-await': false
-        },
-        // 生产环境移除 console.log、debugger(默认移除注释)
-        drop: mode === 'production' ? ['console', 'debugger'] : []
-      },
+      // Vite 8 默认使用 Oxc，生产环境移除 console.log、debugger
+      oxc: mode === 'production' ? { dropConsole: true, dropDebugger: true } : undefined,
+      // 显式关闭 esbuild 转译链路，避免 worker 构建时触发 transformWithEsbuild
+      esbuild: false,
       sourcemap: false, // 关闭源码映射
-      // 分包配置
-      rollupOptions: {
+      // Vite 8 默认构建器为 Rolldown，这里改为官方推荐的 rolldownOptions
+      rolldownOptions: {
         output: {
           chunkFileNames: 'static/js/[name]-[hash].js', // 引入文件名的名称
           entryFileNames: 'static/js/[name]-[hash].js', // 包的入口文件名称
