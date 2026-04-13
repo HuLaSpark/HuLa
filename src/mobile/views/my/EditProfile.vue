@@ -257,10 +257,8 @@ const pickerState = ref({
 })
 
 const {
-  fileInput,
   localImageUrl,
   showCropper,
-  cropperRef,
   openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop

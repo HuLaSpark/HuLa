@@ -131,7 +131,7 @@ const { isDownloading: legacyIsDownloading } = useDownload()
 const fileDownloadStore = useFileDownloadStore()
 const fallbackFileName = computed(() => t('message.file.unknown_file'))
 
-const props = defineProps<{
+const { uploadProgress = 0, ...props } = defineProps<{
   body: FileBody
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
@@ -144,7 +144,6 @@ const iconDimensions = ref({ width: 40, height: 40 })
 
 // 上传状态
 const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
-const uploadProgress = computed(() => props.uploadProgress || 0)
 
 // 文件下载状态
 const fileStatus = computed(() => {

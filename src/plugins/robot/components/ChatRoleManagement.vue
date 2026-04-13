@@ -335,10 +335,8 @@ const formRules: FormRules = {
 
 // 头像上传
 const {
-  fileInput,
   localImageUrl,
   showCropper,
-  cropperRef,
   openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop

@@ -979,7 +979,7 @@ const markdownCodeBlockProps = computed(() => ({
   isDark: isDarkTheme.value,
   darkTheme: SHIKI_DARK_THEME,
   lightTheme: SHIKI_LIGHT_THEME,
-  themes: [SHIKI_DARK_THEME, SHIKI_LIGHT_THEME] as const,
+  themes: [SHIKI_DARK_THEME, SHIKI_LIGHT_THEME],
   showHeader: true
 }))
 

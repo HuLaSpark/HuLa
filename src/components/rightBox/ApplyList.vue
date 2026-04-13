@@ -140,7 +140,6 @@ const groupStore = useGroupStore()
 const { t } = useI18n()
 const currentUserId = ref('0')
 const loadingMap = ref<Record<string, boolean>>({})
-const virtualListRef = ref()
 const isLoadingMore = ref(false)
 const props = defineProps<{
   type: 'friend' | 'group'

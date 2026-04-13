@@ -25,7 +25,6 @@ const globalStore = useGlobalStore()
 const emit = defineEmits(['focus', 'blur', 'updateHeight'])
 
 // ==== DOM 和状态 ====
-const messageInputDom = ref<HTMLElement | null>(null)
 const root = ref()
 
 onMounted(() => {

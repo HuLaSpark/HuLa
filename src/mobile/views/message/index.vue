@@ -246,7 +246,6 @@ const contactStore = useContactStore()
 // 加载更多ui事件处理（开始）
 
 const isEnablePullRefresh = ref(true) // 是否启用下拉刷新，现在设置为滚动到顶才启用
-const scrollContainer = ref(null) // 消息滚动容器
 
 let scrollTop = 0 // 记住当前滑动到哪了
 

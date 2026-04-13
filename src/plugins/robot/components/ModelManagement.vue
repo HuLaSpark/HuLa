@@ -656,10 +656,8 @@ const handleAdd = () => {
 }
 
 const {
-  fileInput,
   localImageUrl,
   showCropper,
-  cropperRef,
   openAvatarCropper,
   handleFileChange,
   handleCrop: onCrop

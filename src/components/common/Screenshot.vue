@@ -133,7 +133,6 @@ type ScreenConfig = {
 // 获取当前窗口实例
 const { t } = useI18n()
 const appWindow = WebviewWindow.getCurrent()
-const canvasbox: Ref<HTMLDivElement | null> = ref(null)
 
 // 图像层
 const imgCanvas: Ref<HTMLCanvasElement | null> = ref(null)

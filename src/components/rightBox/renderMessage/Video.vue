@@ -157,7 +157,7 @@ const videoViewerStore = useVideoViewerStore()
 const chatStore = useChatStore()
 const { downloadFile, isDownloading, process } = useDownload()
 const { t } = useI18n()
-const props = defineProps<{
+const { uploadProgress = 0, ...props } = defineProps<{
   body: VideoBody
   messageStatus?: MessageStatusEnum
   uploadProgress?: number
@@ -181,11 +181,9 @@ const isVideoDownloaded = ref<boolean | null>(null)
 const hasCheckedDownloadStatus = ref(false)
 // 视频上传状态
 const isUploading = computed(() => props.messageStatus === MessageStatusEnum.SENDING)
-const uploadProgress = computed(() => {
-  return props.uploadProgress || 0
-})
+
 const fallbackVideoName = computed(() => t('message.video.unknown_video'))
-const uploadingTip = computed(() => t('message.video.uploading', { progress: uploadProgress.value }))
+const uploadingTip = computed(() => t('message.video.uploading', { progress: uploadProgress }))
 const openingTip = computed(() => t('message.video.opening'))
 const thumbnailStore = useThumbnailCacheStore()
 const { observe: observeVideoVisibility, disconnect: disconnectVideoVisibility } = useIntersectionTaskQueue({

@@ -72,7 +72,6 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<(e: 'refresh') => void>()
 
 const containerRef = ref<HTMLElement>()
-const contentRef = ref<HTMLElement>()
 const distance = ref(0)
 const startY = ref(0)
 const isRefreshing = ref(false)

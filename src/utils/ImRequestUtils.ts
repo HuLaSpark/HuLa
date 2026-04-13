@@ -1,6 +1,6 @@
 import { ImUrlEnum, TauriCommand, type NotificationTypeEnum } from '@/enums'
 import type { CacheBadgeReq, LoginUserReq, ModifyUserInfoType, RegisterUserReq, UserItem } from '@/services/types'
-import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
+import { ErrorType, invokeSilently, invokeWithErrorHandler, invokeWithRetry } from '@/utils/TauriInvokeHandler'
 import { useChatStore } from '../stores/chat'
 import { useGroupStore } from '../stores/group'
 
@@ -55,7 +55,6 @@ export async function imRequest<T = any>(
 
   // 如果需要重试
   if (retry) {
-    const { invokeWithRetry } = await import('@/utils/TauriInvokeHandler')
     return await invokeWithRetry<T>('im_request_command', args, {
       ...retry,
       showError: invokeOptions.showError,
