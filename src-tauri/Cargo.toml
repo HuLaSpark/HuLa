@@ -40,11 +40,11 @@ name = "hula_app_lib"
 
 [build-dependencies]
 cc = "1.2"
-tauri-build = { version = "2.5.6", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # Tauri 官方依赖
-tauri = { version = "2.10.1", features = [
+tauri = { version = "2", features = [
   "protocol-asset",
   "macos-private-api",
   "tray-icon",
@@ -53,8 +53,8 @@ tauri = { version = "2.10.1", features = [
   "unstable",
 ] }
 tauri-plugin-clipboard-manager = "2"
-tauri-plugin-dialog = "2.7.0"
-tauri-plugin-fs = "2.5.0"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-http = { version = "2", features = [
   "unsafe-headers",
@@ -65,61 +65,63 @@ tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
 tauri-plugin-process = "2"
 tauri-plugin-shell = "2"
-tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 tauri-plugin-upload = "2"
 # tauri-plugin-devtools = "2"
-tauri-plugin-log = { version = "2.8.0", features = ["colored"] }
-tracing = "0.1"
-tracing-subscriber = "0.3.22"
+tauri-plugin-log = { version = "2", features = ["colored"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
 
 # Tauri 非官方依赖
 async-walkdir = "2.1.0"
-moka = { version = "0.12.11", features = ["future"] }
-once_cell = "1.19"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-sysinfo = "0.37.2"
+moka = { version = "0.12.15", features = ["future"] }
+once_cell = "1.21.4"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sysinfo = "0.38.4"
 tauri-plugin-mic-recorder = "2"
-tokio = { version = "1.48.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.52.2", features = ["rt", "rt-multi-thread", "macros"] }
 
-chrono = "0.4.42"
-sea-orm = { version = "1.1.19", features = [
+chrono = "0.4.44"
+sea-orm = { version = "1.1.20", features = [
   "sqlx-sqlite",
   "runtime-tokio-rustls",
   "macros",
   "debug-print",
 ] }
 
-anyhow = "1.0.100"
+anyhow = "1.0.102"
 base64 = "0.22.1"
 bytes = "1.11.1"
-config = { version = "0.15.19", default-features = false, features = ["yaml"] }
+config = { version = "0.15.22", default-features = false, features = ["yaml"] }
 dotenv = "0.15.0"
 entity = { path = "entity" }
-futures = "0.3"
+futures = "0.3.32"
 http = "1.4.0"
-image = { version = "0.25.9", features = ["jpeg", "png"] }
+image = { version = "0.25.10", features = ["jpeg", "png"] }
 lazy_static = "1.5"
-md-5 = "0.10"
+md-5 = "0.11.0"
 migration = { path = "migration" } # depends on your needs
 mime_guess = "2.0.5"
-pulldown-cmark = "0.13"
-reqwest = { version = "0.12", default-features = false, features = [
+pulldown-cmark = "0.13.3"
+reqwest = { version = "0.13.3", default-features = false, features = [
   "json",
   "socks",
   "rustls-tls",
   "blocking",
   "stream",
 ] }
-rodio = "0.21.1"
-thiserror = "2.0.17"
+rodio = "0.22.2"
+thiserror = "2.0.18"
 
 # WebSocket 相关依赖
 futures-util = "0.3.32"
-libsqlite3-sys = { version = "0.30.1", features = ["bundled"] }
-tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
-url = "2.5"
-uuid = { version = "1.19", features = ["v4"] }
+libsqlite3-sys = { version = "0.37.0", features = ["bundled"] }
+tokio-tungstenite = { version = "0.29.0", features = [
+  "rustls-tls-webpki-roots",
+] }
+url = "2.5.8"
+uuid = { version = "1.23.1", features = ["v4"] }
 
 # 移动端的依赖 (iOS 和 Android)
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
