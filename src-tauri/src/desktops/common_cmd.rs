@@ -1,5 +1,6 @@
 #![allow(unexpected_cfgs)]
-use base64::{Engine as _, engine::general_purpose};
+use base64::Engine as _;
+use base64::engine::general_purpose;
 use screenshots::Screen;
 #[cfg(target_os = "macos")]
 use std::cell::RefCell;
@@ -7,16 +8,30 @@ use std::cmp;
 #[cfg(target_os = "macos")]
 use std::collections::HashMap;
 #[cfg(target_os = "macos")]
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 #[cfg(target_os = "macos")]
-use std::sync::{
-    Arc, Mutex, OnceLock,
-    atomic::{AtomicBool, AtomicU64, Ordering},
-};
+use std::ffi::CString;
+#[cfg(target_os = "macos")]
+use std::sync::Arc;
+#[cfg(target_os = "macos")]
+use std::sync::Mutex;
+#[cfg(target_os = "macos")]
+use std::sync::OnceLock;
+#[cfg(target_os = "macos")]
+use std::sync::atomic::AtomicBool;
+#[cfg(target_os = "macos")]
+use std::sync::atomic::AtomicU64;
+#[cfg(target_os = "macos")]
+use std::sync::atomic::Ordering;
 use std::thread;
 use std::time::Duration;
+use tauri::AppHandle;
+use tauri::LogicalSize;
+use tauri::Manager;
+use tauri::ResourceId;
+use tauri::Runtime;
+use tauri::Webview;
 use tauri::path::BaseDirectory;
-use tauri::{AppHandle, LogicalSize, Manager, ResourceId, Runtime, Webview};
 
 #[cfg(target_os = "macos")]
 use block2::RcBlock;
@@ -27,11 +42,17 @@ use objc2::runtime::ProtocolObject;
 #[cfg(target_os = "macos")]
 use objc2_app_kit::NSWindow;
 #[cfg(target_os = "macos")]
-use objc2_core_foundation::{CGPoint, CGRect};
+use objc2_core_foundation::CGPoint;
 #[cfg(target_os = "macos")]
-use objc2_foundation::{
-    NSNotification, NSNotificationCenter, NSNotificationName, NSObjectProtocol,
-};
+use objc2_core_foundation::CGRect;
+#[cfg(target_os = "macos")]
+use objc2_foundation::NSNotification;
+#[cfg(target_os = "macos")]
+use objc2_foundation::NSNotificationCenter;
+#[cfg(target_os = "macos")]
+use objc2_foundation::NSNotificationName;
+#[cfg(target_os = "macos")]
+use objc2_foundation::NSObjectProtocol;
 #[cfg(target_os = "windows")]
 use serde::Serialize;
 #[cfg(target_os = "macos")]
@@ -377,12 +398,13 @@ fn play_audio_internal(path: &str, handle: &AppHandle) -> Result<(), String> {
     let audio = File::open(audio_path).map_err(|e| format!("打开音频文件失败: {}", e))?;
 
     let file = BufReader::new(audio);
-    let stream = rodio::OutputStreamBuilder::open_default_stream()
+    let stream = rodio::DeviceSinkBuilder::open_default_sink()
         .map_err(|e| format!("创建音频输出流失败: {}", e))?;
     let source = Decoder::new(file).map_err(|e| format!("解码音频文件失败: {}", e))?;
 
-    stream.mixer().add(source);
-    thread::sleep(Duration::from_millis(3000));
+    let player = rodio::Player::connect_new(stream.mixer());
+    player.append(source);
+    player.sleep_until_end();
     Ok(())
 }
 
@@ -766,9 +788,13 @@ pub fn get_windows_scale_info() -> Result<WindowsScaleInfo, String> {
 /// 从Windows注册表读取文本缩放设置
 #[cfg(target_os = "windows")]
 unsafe fn get_text_scale_from_registry() -> Result<f64, String> {
-    use windows::Win32::System::Registry::{
-        HKEY, HKEY_CURRENT_USER, KEY_READ, REG_DWORD, RegCloseKey, RegOpenKeyExW, RegQueryValueExW,
-    };
+    use windows::Win32::System::Registry::HKEY;
+    use windows::Win32::System::Registry::HKEY_CURRENT_USER;
+    use windows::Win32::System::Registry::KEY_READ;
+    use windows::Win32::System::Registry::REG_DWORD;
+    use windows::Win32::System::Registry::RegCloseKey;
+    use windows::Win32::System::Registry::RegOpenKeyExW;
+    use windows::Win32::System::Registry::RegQueryValueExW;
     use windows::core::w;
 
     // 尝试多个可能的注册表位置
