@@ -1,18 +1,24 @@
-import Colorthief from 'colorthief'
+import { getColor } from 'colorthief'
 import { defineStore } from 'pinia'
 import { StoresEnum } from '@/enums'
-
-const colorthief = new Colorthief()
 
 // 状态图标颜色
 const ensureStateColor = (state?: STO.UserState) => {
   if (!state || state.bgColor || !state.url) return
 
   const img = new Image()
+  img.crossOrigin = 'anonymous'
   img.src = state.url
   img.onload = async () => {
-    const colors = await colorthief.getColor(img, 3)
-    state.bgColor = `rgba(${colors.join(',')}, 0.4)`
+    try {
+      const color = await getColor(img, { quality: 3 })
+      const colors = color?.array()
+      if (colors) {
+        state.bgColor = `rgba(${colors.join(',')}, 0.4)`
+      }
+    } catch (error) {
+      console.warn('[userStatus] Failed to extract status icon color:', error)
+    }
   }
 }
 
