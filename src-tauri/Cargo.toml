@@ -92,7 +92,7 @@ sea-orm = { version = "1.1.19", features = [
 
 anyhow = "1.0.100"
 base64 = "0.22.1"
-bytes = "1.11"
+bytes = "1.11.1"
 config = { version = "0.15.19", default-features = false, features = ["yaml"] }
 dotenv = "0.15.0"
 entity = { path = "entity" }
@@ -115,7 +115,7 @@ rodio = "0.21.1"
 thiserror = "2.0.17"
 
 # WebSocket 相关依赖
-futures-util = "0.3"
+futures-util = "0.3.32"
 libsqlite3-sys = { version = "0.30.1", features = ["bundled"] }
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }
 url = "2.5"
