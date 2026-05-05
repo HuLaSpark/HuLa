@@ -107,16 +107,16 @@ pulldown-cmark = "0.13.3"
 reqwest = { version = "0.13.3", default-features = false, features = [
   "json",
   "socks",
-  "rustls-tls",
+  "rustls",
   "blocking",
   "stream",
+  "query",
 ] }
 rodio = "0.22.2"
 thiserror = "2.0.18"
 
 # WebSocket 相关依赖
 futures-util = "0.3.32"
-libsqlite3-sys = { version = "0.37.0", features = ["bundled"] }
 tokio-tungstenite = { version = "0.29.0", features = [
   "rustls-tls-webpki-roots",
 ] }
