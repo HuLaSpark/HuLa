@@ -5,6 +5,11 @@ body {
   width: 100%;
 }
 
+:root {
+  background-color: var(--center-bg-color);
+  @apply text-[--text-color];
+}
+
 .chat-message-max-width {
   max-width: fit-content;
 }

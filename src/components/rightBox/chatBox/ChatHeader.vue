@@ -4,63 +4,59 @@
     v-if="activeItem"
     data-tauri-drag-region
     class="z-999 flex-y-center flex-shrink-0 border-b-(1px solid [--right-chat-footer-line-color]) select-none cursor-default justify-between p-[6px_22px_10px]">
-    <n-flex align="center">
-      <Transition name="loading" mode="out-in">
-        <n-flex align="center">
-          <n-avatar
-            :class="[
-              'rounded-8px select-none',
-              { grayscale: activeItem?.type === RoomTypeEnum.SINGLE && !isOnline && !isBotUser }
-            ]"
-            :size="28"
-            :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
-            :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
-            :src="currentUserAvatar" />
-          <label class="flex-y-center gap-6px">
-            <p class="text-(16px [--text-color])">{{ groupStore.countInfo?.remark || activeItem?.name }}</p>
-            <p
-              v-if="activeItem?.type === RoomTypeEnum.GROUP && groupStore.countInfo?.memberNum"
-              class="text-(11px #808080)">
-              [{{ groupStore.countInfo?.memberNum }}]
-            </p>
-            <!-- bot用户标签 -->
-            <div
-              v-if="isBotUser"
-              class="dark:bg-[#13987f40] bg-[#e8f4f1] dark:border-(1px solid #13987f) border-(1px solid #13987f) flex-center px-8px py-4px rounded-6px">
-              <p class="text-(11px #13987f)">{{ t('home.chat_header.bot_tag') }}</p>
-            </div>
-          </label>
-          <svg
-            v-if="activeItem?.hotFlag === IsAllUserEnum.Yes"
-            class="size-20px color-#13987f select-none outline-none">
-            <use href="#auth"></use>
-          </svg>
-          <n-flex v-else-if="activeItem?.type === RoomTypeEnum.SINGLE && !isBotUser" align="center">
-            <template v-if="shouldShowDeleteFriend">
-              <n-flex align="center" :size="6">
-                <!-- 状态图标 -->
-                <img v-if="hasCustomState && statusIcon" :src="statusIcon" class="size-18px rounded-50%" alt="" />
-                <n-badge v-else :color="isOnline ? '#1ab292' : '#909090'" dot />
+    <Transition name="loading" mode="out-in">
+      <n-flex align="center">
+        <n-avatar
+          :class="[
+            'rounded-8px select-none',
+            { grayscale: activeItem?.type === RoomTypeEnum.SINGLE && !isOnline && !isBotUser }
+          ]"
+          :size="28"
+          :color="themes.content === ThemeEnum.DARK ? '' : '#fff'"
+          :fallback-src="themes.content === ThemeEnum.DARK ? '/logoL.png' : '/logoD.png'"
+          :src="currentUserAvatar" />
+        <label class="flex-y-center gap-6px">
+          <p class="text-(16px [--text-color])">{{ groupStore.countInfo?.remark || activeItem?.name }}</p>
+          <p
+            v-if="activeItem?.type === RoomTypeEnum.GROUP && groupStore.countInfo?.memberNum"
+            class="text-(11px #808080)">
+            [{{ groupStore.countInfo?.memberNum }}]
+          </p>
+          <!-- bot用户标签 -->
+          <div
+            v-if="isBotUser"
+            class="dark:bg-[#13987f40] bg-[#e8f4f1] dark:border-(1px solid #13987f) border-(1px solid #13987f) flex-center px-8px py-4px rounded-6px">
+            <p class="text-(11px #13987f)">{{ t('home.chat_header.bot_tag') }}</p>
+          </div>
+        </label>
+        <svg v-if="activeItem?.hotFlag === IsAllUserEnum.Yes" class="size-20px color-#13987f select-none outline-none">
+          <use href="#auth"></use>
+        </svg>
+        <n-flex v-else-if="activeItem?.type === RoomTypeEnum.SINGLE && !isBotUser" align="center">
+          <template v-if="shouldShowDeleteFriend">
+            <n-flex align="center" :size="6">
+              <!-- 状态图标 -->
+              <img v-if="hasCustomState && statusIcon" :src="statusIcon" class="size-18px rounded-50%" alt="" />
+              <n-badge v-else :color="isOnline ? '#1ab292' : '#909090'" dot />
 
-                <!-- 状态文本 -->
-                <p class="text-(12px [--text-color])">
-                  {{ statusTitle }}
-                </p>
-              </n-flex>
-            </template>
+              <!-- 状态文本 -->
+              <p class="text-(12px [--text-color])">
+                {{ statusTitle }}
+              </p>
+            </n-flex>
+          </template>
 
-            <template v-else>
-              <n-flex align="center" :size="4">
-                <svg class="size-16px color-#d03553">
-                  <use href="#close"></use>
-                </svg>
-                <p class="text-(12px [--text-color])">{{ t('home.chat_header.status_abnormal') }}</p>
-              </n-flex>
-            </template>
-          </n-flex>
+          <template v-else>
+            <n-flex align="center" :size="4">
+              <svg class="size-16px color-#d03553">
+                <use href="#close"></use>
+              </svg>
+              <p class="text-(12px [--text-color])">{{ t('home.chat_header.status_abnormal') }}</p>
+            </n-flex>
+          </template>
         </n-flex>
-      </Transition>
-    </n-flex>
+      </n-flex>
+    </Transition>
     <!-- 顶部右边选项栏 -->
     <nav v-if="shouldShowDeleteFriend || chatStore.isGroup" class="options flex-y-center gap-20px color-[--icon-color]">
       <div v-if="!isChannel && !isBotUser" class="options-box">
@@ -131,297 +127,41 @@
       </div>
     </nav>
 
-    <!-- 侧边选项栏 -->
-    <Transition v-if="shouldShowDeleteFriend || chatStore.isGroup" name="sidebar">
-      <div v-if="sidebarShow" style="border: 1px solid rgba(90, 90, 90, 0.1)" class="sidebar">
-        <n-scrollbar style="height: calc(100vh / var(--page-scale, 1) - 24px)" class="p-22px box-border">
-          <!-- 单聊侧边栏选项 -->
-          <template v-if="!chatStore.isGroup">
-            <div class="box-item flex-col-y-center">
-              <div class="flex-between-center">
-                <p>{{ t('home.chat_header.sidebar.single.pin') }}</p>
-                <n-switch size="small" :value="activeItem?.top" @update:value="handleTop" />
-              </div>
-              <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
-              <div class="flex-between-center">
-                <p>{{ t('home.chat_header.sidebar.single.mute') }}</p>
-                <n-switch
-                  size="small"
-                  :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
-                  @update:value="handleNotification" />
-              </div>
-            </div>
+    <ChatInnerDrawer v-model:show="sidebarShow" v-if="shouldShowDeleteFriend || chatStore.isGroup">
+      <SingleChatSidebar
+        v-if="!chatStore.isGroup"
+        :active-item="activeItem"
+        :is-bot-user="isBotUser"
+        @top="handleTop"
+        @notification="handleNotification"
+        @shield="handleShield"
+        @delete="handleDelete" />
 
-            <div class="box-item">
-              <div class="flex-between-center">
-                <p>{{ t('home.chat_header.sidebar.single.shield') }}</p>
-                <n-switch size="small" :value="activeItem?.shield" @update:value="handleShield" />
-              </div>
-            </div>
-
-            <div class="box-item cursor-pointer" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
-              <p>{{ t('home.chat_header.sidebar.single.delete_history') }}</p>
-            </div>
-
-            <div
-              v-if="!isBotUser"
-              class="box-item flex-x-center cursor-pointer"
-              @click="handleDelete(RoomActEnum.DELETE_FRIEND)">
-              <p class="color-#d03553">{{ t('home.chat_header.sidebar.single.delete_friend') }}</p>
-            </div>
-
-            <p v-if="!isBotUser" class="m-[0_auto] text-(12px #13987f center) mt-20px cursor-pointer">
-              {{ t('home.chat_header.sidebar.single.report') }}
-            </p>
-          </template>
-
-          <!-- 群聊侧边栏选项 -->
-          <template v-else>
-            <div class="box-item cursor-default">
-              <n-flex
-                align="center"
-                :justify="groupStore.countInfo!.allowScanEnter ? 'space-between' : ''"
-                :size="groupStore.countInfo!.allowScanEnter ? 0 : 12">
-                <!-- 群头像 -->
-                <div class="relative group">
-                  <!-- 群主可以编辑头像，显示黑色蒙层和上传图标 -->
-                  <div v-if="isGroupOwner" class="avatar-wrapper relative" @click="handleUploadAvatar">
-                    <n-avatar round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')" />
-                    <div class="avatar-hover absolute size-full rounded-50% flex-center">
-                      <svg class="size-14px color-#fefefe">
-                        <use href="#Export"></use>
-                      </svg>
-                    </div>
-                  </div>
-
-                  <n-avatar v-else round :size="40" :src="AvatarUtils.getAvatarUrl(activeItem?.avatar || '')" />
-                </div>
-
-                <n-flex vertical :size="6">
-                  <!-- 群名称 -->
-                  <n-flex :size="10" align="center">
-                    <div v-if="isGroupOwner && isEditingGroupName">
-                      <n-input
-                        ref="groupNameInputRef"
-                        v-model:value="editingGroupName"
-                        @blur.stop="handleGroupNameChange"
-                        @keydown.enter.stop="handleGroupNameChange"
-                        size="tiny"
-                        style="width: 100px; height: 22px"
-                        maxlength="12"
-                        spellCheck="false"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        class="border-(solid 1px [--line-color])"
-                        :placeholder="t('home.chat_header.sidebar.group.name_placeholder')" />
-                    </div>
-                    <div
-                      v-else
-                      class="text-(14px --text-color) leading-loose cursor-default h-22px flex-center"
-                      :class="{ 'cursor-pointer': isGroupOwner }"
-                      @click="isGroupOwner && startEditGroupName()">
-                      <p :title="activeItem?.name" class="max-w-100px truncate">{{ activeItem?.name }}</p>
-                      <!-- 显示编辑图标 -->
-                      <svg v-if="isGroupOwner" class="size-14px ml-1 inline-block color-[--icon-color]">
-                        <use href="#edit"></use>
-                      </svg>
-                    </div>
-
-                    <n-popover trigger="hover" v-if="activeItem?.hotFlag === IsAllUserEnum.Yes && !isEditingGroupName">
-                      <template #trigger>
-                        <svg class="size-20px select-none outline-none cursor-pointer color-#13987f">
-                          <use href="#auth"></use>
-                        </svg>
-                      </template>
-                      <span>{{ t('home.chat_header.sidebar.group.official_badge') }}</span>
-                    </n-popover>
-                  </n-flex>
-
-                  <n-flex align="center" :size="8">
-                    <!-- hula号 -->
-                    <p
-                      class="text-(12px center [--chat-text-color]) rounded-4px w-100px py-2px bg-[#e3e3e3] dark:bg-[#505050]">
-                      {{ activeItem?.account }}
-                    </p>
-
-                    <n-tooltip trigger="hover">
-                      <template #trigger>
-                        <svg
-                          class="size-12px cursor-pointer hover:color-#909090 hover:transition-colors"
-                          @click="handleCopy">
-                          <use href="#copy"></use>
-                        </svg>
-                      </template>
-                      <span>{{ t('home.chat_header.sidebar.group.copy') }}</span>
-                    </n-tooltip>
-                  </n-flex>
-                </n-flex>
-
-                <div
-                  v-if="groupStore.countInfo!.allowScanEnter"
-                  class="flex-center cursor-pointer bg-#e3e3e380 dark:bg-#303030 border-(1px solid #90909080) gap-6px px-4px py-6px rounded-6px"
-                  @click="showQRCodeModal = true">
-                  <svg class="size-16px"><use href="#pay-code-one"></use></svg>
-                  <p class="text-(12px [--chat-text-color])">{{ t('home.chat_header.sidebar.group.qr') }}</p>
-                </div>
-              </n-flex>
-            </div>
-
-            <!-- 群聊成员列表 -->
-            <div class="box-item cursor-default">
-              <n-flex vertical justify="center" :size="16">
-                <p class="text-(14px --text-color)">
-                  {{
-                    activeItem?.hotFlag !== IsAllUserEnum.Yes
-                      ? t('home.chat_header.sidebar.group.members')
-                      : t('home.chat_header.sidebar.group.channel_members')
-                  }}
-                </p>
-
-                <n-flex align="center" justify="start" :size="[24, 20]">
-                  <template v-for="(item, _index) in userList" :key="_index">
-                    <n-flex vertical justify="center" align="center" :size="10">
-                      <n-avatar round :size="30" :src="AvatarUtils.getAvatarUrl(item.avatar)" />
-
-                      <p class="text-(10px --text-color center) w-30px truncate">
-                        {{ item.name }}
-                      </p>
-                    </n-flex>
-                  </template>
-                </n-flex>
-              </n-flex>
-            </div>
-
-            <!-- 我本群的昵称 -->
-            <p class="text-(12px [--chat-text-color]) mt-20px mb-10px">
-              {{ t('home.chat_header.sidebar.group.my_name') }}
-            </p>
-            <n-input
-              class="border-(solid 1px [--line-color]) custom-shadow"
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              :maxlength="12"
-              clearable
-              v-model:value="localMyName"
-              @blur.stop="handleGroupInfoChange" />
-            <!-- 群备注 -->
-            <p class="flex-start-center gap-10px text-(12px [--chat-text-color]) mt-20px mb-10px">
-              {{ t('home.chat_header.sidebar.group.remark') }}
-              <span class="text-(10px #909090)">{{ t('home.chat_header.sidebar.group.remark_desc') }}</span>
-            </p>
-            <n-input
-              class="border-(solid 1px [--line-color]) custom-shadow"
-              v-model:value="localRemark"
-              spellCheck="false"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              clearable
-              @blur.stop="handleGroupInfoChange" />
-
-            <!-- 群设置选项 -->
-            <div class="box-item cursor-default">
-              <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">{{ t('home.chat_header.sidebar.group.settings.title') }}</p>
-
-                <div class="flex-between-center">
-                  <p>{{ t('home.chat_header.sidebar.group.settings.pin') }}</p>
-                  <n-switch size="small" :value="activeItem?.top" @update:value="handleTop" />
-                </div>
-
-                <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
-
-                <div class="flex-between-center">
-                  <p>{{ t('home.chat_header.sidebar.group.settings.mute') }}</p>
-                  <n-switch
-                    size="small"
-                    :value="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
-                    @update:value="handleNotification" />
-                </div>
-                <template v-if="groupStore.isAdminOrLord()">
-                  <div class="h-1px bg-[--setting-item-line] m-[10px_0]"></div>
-
-                  <div class="flex-between-center">
-                    <p>{{ t('home.chat_header.sidebar.group.settings.scan') }}</p>
-                    <n-switch
-                      size="small"
-                      :value="groupStore.countInfo!.allowScanEnter"
-                      @update:value="
-                        (val: any) => {
-                          updateRoomInfo({
-                            id: groupStore.countInfo!.roomId,
-                            allowScanEnter: val
-                          })
-                        }
-                      " />
-                  </div>
-                </template>
-              </n-flex>
-            </div>
-
-            <!-- 群消息设置（仅在消息免打扰开启时显示） -->
-            <div
-              v-if="activeItem?.muteNotification === NotificationTypeEnum.NOT_DISTURB"
-              class="box-item cursor-default">
-              <n-flex vertical justify="center" :size="4">
-                <p class="text-(12px #909090) pb-14px">
-                  {{ t('home.chat_header.sidebar.group.message_settings.title') }}
-                </p>
-
-                <div class="flex-between-center">
-                  <n-select
-                    v-model:value="messageSettingType"
-                    :options="messageSettingOptions"
-                    @update:value="handleMessageSetting" />
-                </div>
-              </n-flex>
-            </div>
-
-            <!-- 管理群成员（仅管理员和群主可见） -->
-            <div
-              v-if="
-                groupStore.isAdminOrLord() && activeItem?.hotFlag !== IsAllUserEnum.Yes && currentSessionRoomId !== '1'
-              "
-              class="box-item cursor-pointer mb-20px"
-              @click="handleManageGroupMember">
-              <p>{{ t('home.chat_header.sidebar.group.manage_members') }}</p>
-            </div>
-
-            <div class="box-item cursor-pointer mb-20px" @click="handleDelete(RoomActEnum.DELETE_RECORD)">
-              <p>{{ t('home.chat_header.sidebar.group.delete_history') }}</p>
-            </div>
-
-            <div
-              v-if="activeItem?.hotFlag !== IsAllUserEnum.Yes"
-              class="box-item flex-x-center cursor-pointer mb-20px"
-              @click="
-                handleDelete(
-                  activeItem?.operate === SessionOperateEnum.DISSOLUTION_GROUP
-                    ? RoomActEnum.DISSOLUTION_GROUP
-                    : RoomActEnum.EXIT_GROUP
-                )
-              ">
-              <p class="color-#d03553">
-                {{
-                  activeItem?.operate === SessionOperateEnum.DISSOLUTION_GROUP
-                    ? t('home.chat_header.sidebar.group.dissolve')
-                    : t('home.chat_header.sidebar.group.exit')
-                }}
-              </p>
-            </div>
-
-            <p
-              v-if="activeItem?.hotFlag !== IsAllUserEnum.Yes"
-              class="text-(12px #13987f center) my-20px cursor-pointer">
-              {{ t('home.chat_header.sidebar.group.report') }}
-            </p>
-          </template>
-        </n-scrollbar>
-      </div>
-    </Transition>
+      <GroupChatSidebar
+        v-else
+        :active-item="activeItem"
+        :user-list="userList"
+        :is-group-owner="isGroupOwner"
+        :is-editing-group-name="isEditingGroupName"
+        v-model:editing-group-name="editingGroupName"
+        v-model:local-my-name="localMyName"
+        v-model:local-remark="localRemark"
+        :current-session-room-id="currentSessionRoomId"
+        v-model:message-setting-type="messageSettingType"
+        :message-setting-options="messageSettingOptions"
+        @top="handleTop"
+        @notification="handleNotification"
+        @shield="handleShield"
+        @delete="handleDelete"
+        @copy="handleCopy"
+        @upload-avatar="handleUploadAvatar"
+        @group-name-change="handleGroupNameChange"
+        @start-edit-group-name="startEditGroupName"
+        @group-info-change="handleGroupInfoChange"
+        @manage-group-member="handleManageGroupMember"
+        @show-qr-code="showQRCodeModal = true"
+        @update-room-info="updateRoomInfo" />
+    </ChatInnerDrawer>
   </main>
 
   <!-- 弹出框 -->
@@ -592,7 +332,6 @@ import {
   RoleEnum,
   RoomActEnum,
   RoomTypeEnum,
-  SessionOperateEnum,
   ThemeEnum,
   TauriCommand,
   UserType,
@@ -616,6 +355,9 @@ import { notification, setSessionTop, shield, updateRoomInfo } from '@/utils/ImR
 import { canvasToImageBytes } from '@/utils/Canvas2Dom'
 import { invokeWithErrorHandler } from '@/utils/TauriInvokeHandler'
 import { isMac, isWindows } from '@/utils/PlatformConstants'
+import ChatInnerDrawer from '../../chat-inner-drawer.vue'
+import SingleChatSidebar from './SingleChatSidebar.vue'
+import GroupChatSidebar from './GroupChatSidebar.vue'
 
 // 转发群二维码尺寸
 const QR_IMAGE_SIZE = 200
@@ -776,8 +518,6 @@ const isGroupOwner = computed(() => {
 const isEditingGroupName = ref(false)
 // 编辑中的群名称
 const editingGroupName = ref('')
-// 群名称输入框引用
-const groupNameInputRef = useTemplateRef<HTMLInputElement | null>('groupNameInputRef')
 // 待保存的群信息
 const pendingGroupInfo = ref<{
   groupName?: string
@@ -821,13 +561,22 @@ watch(
   }
 )
 
-const messageSettingType = computed(() => {
-  // 群消息设置只在免打扰模式下有意义
-  if (activeItem.value?.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
-    return activeItem.value?.shield ? 'shield' : 'notification'
+const messageSettingType = computed({
+  get() {
+    if (activeItem.value?.muteNotification === NotificationTypeEnum.NOT_DISTURB) {
+      return activeItem.value?.shield ? 'shield' : 'notification'
+    }
+    return 'notification'
+  },
+  set(value: string) {
+    const session = activeItem.value
+    if (!session) return
+    if (value === 'shield' && !session.shield) {
+      handleShield(true)
+    } else if (value === 'notification' && session.shield) {
+      handleShield(false)
+    }
   }
-  // 非免打扰模式下，默认返回 notification
-  return 'notification'
 })
 const messageSettingOptions = computed(() => [
   { label: t('home.chat_header.message_setting.receive_no_alert'), value: 'notification' },
@@ -1348,22 +1097,6 @@ const handleShield = (value: boolean) => {
     })
 }
 
-const handleMessageSetting = (value: string) => {
-  const session = activeItem.value
-  if (!session) return
-  if (value === 'shield') {
-    // 设置为屏蔽消息
-    if (!session.shield) {
-      handleShield(true)
-    }
-  } else if (value === 'notification') {
-    // 设置为接收消息但不提醒
-    if (session.shield) {
-      handleShield(false)
-    }
-  }
-}
-
 /** 处理群名称修改失焦 */
 const handleGroupNameChange = () => {
   const session = activeItem.value
@@ -1538,11 +1271,6 @@ const startEditGroupName = () => {
 
   editingGroupName.value = activeItem.value?.name || ''
   isEditingGroupName.value = true
-
-  // 在下一个事件循环中聚焦输入框
-  nextTick(() => {
-    groupNameInputRef.value?.focus()
-  })
 }
 
 // 保存群名称
@@ -1612,23 +1340,6 @@ onUnmounted(() => {
 .loading-enter-from,
 .loading-leave-to {
   opacity: 0;
-}
-
-.avatar-wrapper {
-  cursor: pointer;
-
-  .avatar-hover {
-    opacity: 0;
-    transition: opacity 0.4s ease-in-out;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    top: 0;
-    left: 0;
-  }
-
-  &:hover .avatar-hover {
-    opacity: 1;
-  }
 }
 
 .QRcode-item {
