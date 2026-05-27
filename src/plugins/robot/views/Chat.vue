@@ -298,6 +298,7 @@
                                 :custom-id="markdownCustomId"
                                 :is-dark="isDarkTheme"
                                 :viewportPriority="false"
+                                :smooth-streaming="true"
                                 :themes="markdownThemes"
                                 :code-block-props="markdownCodeBlockProps" />
                             </div>
@@ -310,6 +311,7 @@
                               :custom-id="markdownCustomId"
                               :is-dark="isDarkTheme"
                               :viewportPriority="false"
+                              :smooth-streaming="true"
                               :themes="markdownThemes"
                               :code-block-props="markdownCodeBlockProps" />
                           </div>
