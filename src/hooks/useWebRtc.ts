@@ -1,12 +1,14 @@
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { error, info } from '@tauri-apps/plugin-log'
+import { useI18n } from 'vue-i18n'
 import { initConfig } from '@/utils/ImRequestUtils'
 import { CallTypeEnum, RTCCallStatus } from '@/enums'
 import rustWebSocketClient from '@/services/webSocketRust'
 import { useUserStore } from '@/stores/user'
 import { WsRequestMsgType, WsResponseMessageType } from '../services/wsType'
 import { isMobile } from '../utils/PlatformConstants'
+import { type DeviceKind, useDevicePermission } from './useDevicePermission'
 import { useMitt } from './useMitt'
 import { useTauriListener } from './useTauriListener'
 
@@ -102,6 +104,8 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     callerId: undefined
   })
   const userStore = useUserStore()
+  const { t } = useI18n()
+  const { isPermissionDenied, resolveDeniedDeviceKind, openSystemSettings } = useDevicePermission()
 
   // 设备相关状态
   const audioDevices = ref<MediaDeviceInfo[]>([])
@@ -112,6 +116,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   // 状态
   const connectionStatus = ref<RTCCallStatus | undefined>(undefined)
   const isDeviceLoad = ref(false)
+  const deviceAccessError = ref<'permission' | 'unavailable' | undefined>(undefined)
   const isLinker = ref(false) // 判断是否是 webrtc 连接的参与者
 
   // rtc状态
@@ -280,27 +285,90 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
     }
   }
 
+  /**
+   * 权限被拒绝时给用户友好提示，并提供“打开系统设置”入口
+   * @param kind 设备类型，决定提示文案与跳转的设置页
+   * @param err 原始错误，用于判定是否为权限拒绝
+   */
+  const getRequiredDeviceKinds = (type: CallTypeEnum): DeviceKind[] => {
+    return type === CallTypeEnum.VIDEO ? ['microphone', 'camera'] : ['microphone']
+  }
+
+  const getDeviceProbeConstraints = (type: CallTypeEnum): MediaStreamConstraints => {
+    return {
+      audio: true,
+      video: type === CallTypeEnum.VIDEO
+    }
+  }
+
+  const showDeviceUnavailableMessage = (kind: DeviceKind) => {
+    const key = kind === 'camera' ? 'message.permission.camera.unavailable' : 'message.permission.mic.unavailable'
+    window.$message.error(t(key))
+  }
+
+  const showPermissionDeniedMessage = (kind: DeviceKind, err?: unknown, onHangup?: () => void | Promise<void>) => {
+    const titleKey = kind === 'camera' ? 'message.permission.camera.title' : 'message.permission.mic.title'
+    const key = kind === 'camera' ? 'message.permission.camera.denied' : 'message.permission.mic.denied'
+    window.$dialog.warning({
+      title: t(titleKey),
+      content: t(key),
+      positiveText: t('message.permission.open_settings'),
+      negativeText: t('message.permission.hangup'),
+      onPositiveClick: () => {
+        void openSystemSettings(kind)
+        return false
+      },
+      onNegativeClick: () => {
+        void onHangup?.()
+      }
+    })
+    error(`设备权限被拒绝(${kind}): ${String(err ?? '')}`)
+  }
+
   // 获取设备列表
-  const getDevices = async () => {
+  const getDevices = async (type: CallTypeEnum = callType, onPermissionHangup?: () => void | Promise<void>) => {
     try {
       info('start getDevices')
       isDeviceLoad.value = true
+      deviceAccessError.value = undefined
 
       // 先请求权限以获取完整的设备信息
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        const stream = await navigator.mediaDevices.getUserMedia(getDeviceProbeConstraints(type))
         stream.getTracks().forEach((track) => track.stop()) // 立即停止流
-      } catch (_permissionError) {
-        error('Permission denied, will get limited device info')
+      } catch (permissionError) {
+        // 权限被拒绝：提示用户并中止获取设备，避免在无权限情况下继续通话
+        if (isPermissionDenied(permissionError)) {
+          const kind = await resolveDeniedDeviceKind(getRequiredDeviceKinds(type))
+          showPermissionDeniedMessage(kind, permissionError, onPermissionHangup)
+          deviceAccessError.value = 'permission'
+          isDeviceLoad.value = false
+          return false
+        }
+        // 非权限问题（如设备暂不可用）：记录后继续用 enumerateDevices 兜底
+        info(`getUserMedia 探针失败，将尝试获取受限设备信息: ${String(permissionError)}`)
       }
 
       const devices = (await navigator.mediaDevices.enumerateDevices()) || []
       info(`getDevices, devices: ${JSON.stringify(devices)}`)
       if (devices.length === 0) {
+        deviceAccessError.value = 'unavailable'
         return false
       }
       audioDevices.value = devices.filter((device) => device.kind === 'audioinput')
       videoDevices.value = devices.filter((device) => device.kind === 'videoinput')
+      if (audioDevices.value.length === 0) {
+        showDeviceUnavailableMessage('microphone')
+        deviceAccessError.value = 'unavailable'
+        isDeviceLoad.value = false
+        return false
+      }
+      if (type === CallTypeEnum.VIDEO && videoDevices.value.length === 0) {
+        showDeviceUnavailableMessage('camera')
+        deviceAccessError.value = 'unavailable'
+        isDeviceLoad.value = false
+        return false
+      }
       // 默认选择 “default” | "第一个" 设备
       selectedAudioDevice.value =
         audioDevices.value.find((device) => device.deviceId === 'default')?.deviceId ||
@@ -311,7 +379,9 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       isDeviceLoad.value = false
       return true
     } catch (err) {
-      window.$message.error('获取设备失败!')
+      if (deviceAccessError.value !== 'permission') {
+        window.$message.error('获取设备失败!')
+      }
       error(`获取设备失败: ${err}`)
       // 默认没有设备
       selectedAudioDevice.value = selectedAudioDevice.value || null
@@ -322,7 +392,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
   }
 
   // 获取本地媒体流
-  const getLocalStream = async (type: CallTypeEnum) => {
+  const getLocalStream = async (type: CallTypeEnum, onPermissionHangup?: () => void | Promise<void>) => {
     try {
       info('获取本地媒体流')
       const constraints = {
@@ -371,9 +441,16 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       return true
     } catch (err) {
       console.error('获取本地流失败:', err)
-      window.$message.error('获取本地媒体流失败，请检查设备!')
-      error(`获取本地媒体流失败，请检查设备! ${err}`)
-      await sendRtcCall2VideoCallResponse(2)
+      if (isPermissionDenied(err)) {
+        // 权限拒绝：根据通话类型提示对应权限被拒
+        const kind = await resolveDeniedDeviceKind(getRequiredDeviceKinds(type))
+        showPermissionDeniedMessage(kind, err, onPermissionHangup)
+        deviceAccessError.value = 'permission'
+      } else {
+        window.$message.error('获取本地媒体流失败，请检查设备!')
+        error(`获取本地媒体流失败，请检查设备! ${err}`)
+        await sendRtcCall2VideoCallResponse(2)
+      }
       return false
     }
   }
@@ -491,7 +568,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         return false
       }
       clear() // 清理资源
-      if (!(await getDevices())) {
+      if (!(await getDevices(type, endCall))) {
+        if (deviceAccessError.value === 'permission') {
+          return false
+        }
         window.$message.error('获取设备失败!')
         // 获取设备失败时自动关闭窗口
         setTimeout(async () => {
@@ -515,7 +595,10 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
         }
       }, MAX_TIME_OUT_SECONDS * 1000)
 
-      if (!(await getLocalStream(type))) {
+      if (!(await getLocalStream(type, endCall))) {
+        if (deviceAccessError.value === 'permission') {
+          return false
+        }
         clear()
         // 获取本地媒体流失败时自动关闭窗口
         setTimeout(async () => {
@@ -599,6 +682,7 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       pendingCandidates.value = []
       audioDevices.value = []
       videoDevices.value = []
+      deviceAccessError.value = undefined
       selectedAudioDevice.value = null
       selectedVideoDevice.value = null
       localStream.value = null
@@ -642,14 +726,26 @@ export const useWebRtc = (roomId: string, remoteUserId: string, callType: CallTy
       connectionStatus.value = RTCCallStatus.CALLING
       await nextTick()
 
-      await getDevices()
-      const hasLocalStream = await getLocalStream(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO)
+      if (!(await getDevices(video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO, handleCallResponse.bind(null, 0)))) {
+        if (deviceAccessError.value === 'permission') {
+          return false
+        }
+        await handleCallResponse(0)
+        return false
+      }
+      const hasLocalStream = await getLocalStream(
+        video ? CallTypeEnum.VIDEO : CallTypeEnum.AUDIO,
+        handleCallResponse.bind(null, 0)
+      )
 
       // 停止铃声
       stopBell()
 
       // 检查本地媒体流是否获取成功
       if (!hasLocalStream || !localStream.value) {
+        if (deviceAccessError.value === 'permission') {
+          return false
+        }
         // 睡眠 3s
         await new Promise((resolve) => setTimeout(resolve, 3000))
         await handleCallResponse(0)

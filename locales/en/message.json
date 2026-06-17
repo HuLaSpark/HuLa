@@ -57,6 +57,22 @@
     "camera_enable": "Turn camera on",
     "hangup": "Hang up"
   },
+  "permission": {
+    "mic": {
+      "title": "Microphone permission",
+      "denied": "Microphone permission denied. Please enable it in system settings and retry",
+      "unavailable": "No microphone device detected"
+    },
+    "camera": {
+      "title": "Camera permission",
+      "denied": "Camera permission denied. Please enable it in system settings and retry",
+      "unavailable": "No camera device detected"
+    },
+    "open_settings": "Open system settings",
+    "retry": "Retry",
+    "hangup": "Hang up",
+    "requesting": "Requesting device permission..."
+  },
   "friend_verify": {
     "title": "Add friend request",
     "account": "Account: {account}",

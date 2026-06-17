@@ -98,6 +98,17 @@
     "opener:default",
     "opener:allow-reveal-item-in-dir",
     "opener:allow-open-path",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "x-apple.systempreferences:*"
+        },
+        {
+          "url": "ms-settings:*"
+        }
+      ]
+    },
     "mic-recorder:default",
     "log:default",
     "log:allow-log",
