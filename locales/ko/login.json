@@ -1,0 +1,193 @@
+{
+  "button": {
+    "login": {
+      "default": "로그인",
+      "network_error": "네트워크 오류"
+    },
+    "qr_code": "QR 코드",
+    "cancel_login": "취소",
+    "remove_account": "삭제"
+  },
+  "input": {
+    "account": {
+      "placeholder": "이메일 / HuLa 계정"
+    },
+    "pass": {
+      "placeholder": "HuLa 비밀번호 입력"
+    }
+  },
+  "option": {
+    "more": "더보기",
+    "items": {
+      "forget": "비밀번호 찾기",
+      "network_setting": "네트워크 설정"
+    }
+  },
+  "term": {
+    "checkout": {
+      "text1": "다음에 동의합니다: ",
+      "text2": "이용약관",
+      "text3": " 및 ",
+      "text4": "개인정보 처리방침"
+    }
+  },
+  "auth_way": {
+    "acc_pss": "계정/비밀번호 로그인"
+  },
+  "register": "회원가입",
+  "third_party": {
+    "title": "OAuth 로그인 / 회원가입",
+    "gitee": "Gitee로 로그인",
+    "github": "GitHub로 로그인",
+    "gitcode": "GitCode로 로그인"
+  },
+  "qr_code_expired": "QR 코드가 만료되었습니다",
+  "qr_code_expired_hint": "잠시 후 다시 시도해 주세요",
+  "qr_code_scan_hint": "HuLa 앱으로 QR 코드를 스캔해 주세요",
+  "qr_code_gen_fail_hint": "QR 코드 생성에 실패했습니다",
+  "qr_code_scan_success_hint": "스캔 성공, 승인을 기다리는 중",
+  "wait_auth_hint": "승인을 기다리는 중...",
+  "login_success": "로그인 성공",
+  "fetch_user_fail": "사용자 정보를 가져오지 못했습니다",
+  "refreshing": "새로고침 중...",
+  "loading": "불러오는 중...",
+  "scan_qr_code_fail": "QR 코드 스캔에 실패했습니다",
+  "status": {
+    "logging_in": "로그인 중...",
+    "success_redirect": "이동 중...",
+    "service_disconnected": "서비스 연결이 끊어졌습니다"
+  },
+  "qr": {
+    "overlay": {
+      "success": "로그인 성공",
+      "error": "QR 스캔 실패",
+      "auth": "스캔 완료, 승인을 기다리는 중",
+      "expired": "QR 코드가 만료되었습니다",
+      "fetch_failed": "로그인은 성공했지만 사용자 정보를 가져오지 못했습니다",
+      "generate_fail": "QR 코드 생성에 실패했습니다",
+      "general_error": "문제가 발생했습니다",
+      "refreshing": "새로고침 중..."
+    },
+    "load_text": {
+      "loading": "불러오는 중...",
+      "refreshing": "새로고침 중...",
+      "scan_hint": "HuLa 앱으로 스캔해 주세요",
+      "login": "로그인 중...",
+      "retry": "잠시 후 다시 시도해 주세요",
+      "auth_pending": "승인을 기다리는 중..."
+    },
+    "actions": {
+      "account_login": "계정 로그인",
+      "register": "회원가입",
+      "register_title": "회원가입"
+    }
+  },
+  "guide": {
+    "welcome": {
+      "title": "🎉 HuLa에 오신 것을 환영합니다",
+      "desc": "HuLa는 Tauri로 제작되었으며 Windows, macOS, Linux, iOS, Android를 지원합니다"
+    },
+    "privacy": {
+      "title": "🤔 개인정보 및 서비스 약관",
+      "desc": "먼저 HuLa의 개인정보 처리방침과 이용약관을 확인해 주세요"
+    },
+    "network": {
+      "title": "⚙️ 네트워크 설정",
+      "desc": "HuLa는 사용자 지정 서버 주소로 공식 서버를 대체할 수 있습니다"
+    },
+    "register": {
+      "title": "🤓 로그인 방법",
+      "desc": "HuLa를 사용하기 전에 계정을 등록하고 프로필을 완성해 주세요"
+    },
+    "actions": {
+      "next": "다음",
+      "prev": "이전",
+      "done": "완료",
+      "progress": "{current}/{total}"
+    }
+  },
+  "network": {
+    "title": "네트워크 설정",
+    "tabs": {
+      "api": "API",
+      "ws": "WebSocket"
+    },
+    "fields": {
+      "type": "유형",
+      "host": "IP 또는 도메인",
+      "port": "포트",
+      "suffix": "접미사"
+    },
+    "placeholder": {
+      "host": "127.0.0.1 또는 hulaspark.com",
+      "port": "443",
+      "api_suffix": "api",
+      "ws_suffix": "websocket"
+    },
+    "api": {
+      "options": {
+        "none": "사용 안 함(공식 서버 사용)",
+        "http": "HTTP",
+        "https": "HTTPS"
+      }
+    },
+    "ws": {
+      "options": {
+        "none": "사용 안 함(공식 서버 사용)",
+        "ws": "WS",
+        "wss": "WSS"
+      }
+    },
+    "actions": {
+      "save": "저장",
+      "back": "뒤로"
+    },
+    "messages": {
+      "incomplete": "네트워크 설정 항목을 모두 입력해 주세요",
+      "save_success": "네트워크 설정이 저장되었습니다",
+      "save_failed": "네트워크 설정 저장에 실패했습니다: {error}"
+    }
+  },
+  "mobile": {
+    "welcome_title": "안녕하세요, 환영합니다",
+    "tabs": {
+      "login": "로그인",
+      "register": "회원가입"
+    },
+    "forget_code": "비밀번호 찾기",
+    "btn": {
+      "login": "로그인"
+    },
+    "input": {
+      "account_placeholder": "HuLa 계정 입력",
+      "code_placeholder": "비밀번호 입력"
+    },
+    "register": {
+      "input": {
+        "nickname": "닉네임",
+        "password": "비밀번호",
+        "confirm_password": "비밀번호 확인",
+        "email": "이메일",
+        "email_verification_code": "이메일 인증 코드 입력"
+      },
+      "btn": {
+        "register": "회원가입",
+        "next": "다음",
+        "send_email_code": "인증 코드 전송",
+        "resend_in": "{seconds}초 후 재전송"
+      },
+      "pass_validate_info": {
+        "minlength": "최소 {len}자 이상",
+        "valid_characters": "영문과 숫자로 구성",
+        "must_special_char": "특수문자를 포함해야 합니다"
+      }
+    },
+    "email_invalid": "유효하지 않은 이메일입니다.",
+    "code_sent_email": "인증 코드가 전송되었습니다. 이메일을 확인해 주세요.",
+    "code_send_failed_with_reason": "인증 코드 전송에 실패했습니다: {reason}",
+    "code_send_failed_retry": "인증 코드 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "complete_info_before_register": "회원가입 전에 정보를 모두 입력해 주세요.",
+    "register_success": "회원가입이 완료되었습니다.",
+    "register_fail": "회원가입에 실패했습니다."
+  }
+}

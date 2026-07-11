@@ -1,0 +1,36 @@
+{
+  "title": {
+    "create": "그룹 공지 작성",
+    "view": "그룹 공지",
+    "edit": "그룹 공지 수정"
+  },
+  "form": {
+    "placeholder": "공지 내용을 입력하세요 (1~600자)",
+    "pinned": "상단 고정",
+    "actions": {
+      "cancel": "취소",
+      "publish": "게시",
+      "new": "새 공지 작성"
+    }
+  },
+  "list": {
+    "empty": "아직 공지가 없습니다",
+    "loadMore": "더 보기",
+    "noMore": "더 이상 공지가 없습니다",
+    "deleteConfirm": "정말로 모든 메시지를 삭제하시겠습니까?",
+    "delete": {
+      "confirm": "삭제",
+      "cancel": "취소"
+    },
+    "expand": "펼치기",
+    "collapse": "접기"
+  },
+  "toast": {
+    "contentRequired": "공지 내용을 입력해 주세요",
+    "contentTooLong": "공지는 600자를 초과할 수 없습니다",
+    "createSuccess": "공지가 게시되었습니다",
+    "createFail": "공지 게시에 실패했습니다",
+    "editSuccess": "공지가 수정되었습니다",
+    "editFail": "공지 수정에 실패했습니다"
+  }
+}

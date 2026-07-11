@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "select_all": "전체 선택",
+    "save_as": "다른 이름으로 저장",
+    "paste": "붙여넣기",
+    "copy": "복사",
+    "cut": "잘라내기"
+  },
+  "send": "전송",
+  "placeholder": "따뜻한 말 한마디가 마음을 녹이고, 모진 말 한마디가 마음에 상처를 남깁니다.",
+  "send_or_newline": "{send} 전송/{newline} 줄바꿈",
+  "file": "파일",
+  "image": "이미지",
+  "voice": "음성",
+  "location": "위치",
+  "chat_history": "채팅 기록",
+  "screenshot": "스크린샷",
+  "screenshot_hide_curr_window": "스크린샷 시 현재 창 숨기기",
+  "relation": {
+    "not_friends": "더 이상 친구 관계가 아닙니다."
+  }
+}

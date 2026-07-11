@@ -1,0 +1,18 @@
+{
+  "search": {
+    "placeholder": "채팅 검색"
+  },
+  "tabs": {
+    "all": "전체",
+    "imageVideo": "이미지/동영상",
+    "file": "파일"
+  },
+  "datePicker": {
+    "placeholder": "날짜 범위 선택",
+    "start": "시작일",
+    "end": "종료일"
+  },
+  "empty": {
+    "noData": "채팅 기록이 없습니다"
+  }
+}

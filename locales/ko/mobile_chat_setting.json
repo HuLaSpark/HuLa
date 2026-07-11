@@ -1,0 +1,61 @@
+{
+  "title": "{t} 설정",
+  "type": {
+    "group": "그룹",
+    "single_chat": "채팅"
+  },
+  "group_members_title": "그룹 멤버",
+  "member_count": "멤버 {count}명",
+  "group_invite_member": "초대",
+  "manage_group_members": "그룹 멤버 관리",
+  "search_history": "채팅 기록 검색",
+  "id_card": {
+    "type": {
+      "group": "그룹",
+      "single_chat": "채팅"
+    },
+    "qr_code_label": "{t} / QR 코드"
+  },
+  "group_notice": {
+    "title": "공지사항"
+  },
+  "group_name": "그룹 이름",
+  "input": {
+    "group_name": "그룹 별명을 입력하세요",
+    "group_alias": "그룹 내 별명을 입력하세요",
+    "remark": "이 이름은 나만 볼 수 있습니다."
+  },
+  "group_alias": "그룹 내 내 별명",
+  "remark": "메모",
+  "remar_kprivate_visible": "(나만 보기)",
+  "setting_type": "{t} 설정",
+  "silent": "메시지 알림 끄기",
+  "pintop": "상단 고정",
+  "delete_chat_history": "채팅 기록 삭제",
+  "disband_group": "그룹 해체",
+  "leave_group": "그룹 나가기",
+  "delete_friend": "친구 삭제",
+  "copy_id": "{id} 복사 완료",
+  "confirm_disband_group": "정말로 이 그룹을 해체하시겠습니까?",
+  "confirm_leave_group": "정말로 이 그룹을 나가시겠습니까?",
+  "confirm_delete_friend": "정말로 이 친구를 삭제하시겠습니까?",
+  "session_not_exist": "현재 대화가 존재하지 않습니다",
+  "disband_channel_failed": "채널 해체에 실패했습니다",
+  "group_disbanded": "그룹이 해체되었습니다",
+  "leave_channel_failed": "채널 나가기에 실패했습니다",
+  "group_left": "그룹에서 나갔습니다",
+  "get_friend_info_failed": "친구 정보를 가져오지 못했습니다",
+  "delete_friend_success": "친구가 삭제되었습니다",
+  "session_not_ready": "현재 대화 정보가 준비되지 않았습니다",
+  "unpinned_success": "고정이 해제되었습니다",
+  "pinned_success": "상단에 고정되었습니다",
+  "pin_failed": "고정에 실패했습니다",
+  "group_note_updated": "그룹 메모가 업데이트되었습니다",
+  "remark_updated": "{n} 메모가 업데이트되었습니다",
+  "group_name_updated": "그룹 이름이 업데이트되었습니다",
+  "setting_failed": "설정에 실패했습니다",
+  "messages_muted": "메시지 알림이 꺼졌습니다",
+  "messages_unmuted": "메시지 알림이 켜졌습니다",
+  "notifications_silent": "메시지는 수신되지만 알림은 꺼져 있습니다",
+  "notifications_enabled": "알림이 켜졌습니다"
+}

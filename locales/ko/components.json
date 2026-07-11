@@ -1,0 +1,31 @@
+{
+  "common": {
+    "confirm": "확인",
+    "cancel": "취소"
+  },
+  "actionBar": {
+    "always_on_top": {
+      "enabled": "항상 위 고정 해제",
+      "disabled": "항상 위에 고정"
+    },
+    "close_prompt": {
+      "title": "트레이로 최소화할까요, 앱을 종료할까요?",
+      "hide_to_tray": "시스템 트레이로 최소화",
+      "exit_app": "앱 종료",
+      "no_prompt": "다시 표시하지 않기"
+    }
+  },
+  "avatarCropper": {
+    "title": "아바타 자르기",
+    "preview": {
+      "round": "원형 미리보기",
+      "square": "둥근 사각형 미리보기"
+    },
+    "uploading": "업로드 중..."
+  },
+  "announcementCard": {
+    "title": "공지사항",
+    "viewDetail": "자세히 보기",
+    "windowTitle": "그룹 공지 보기"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "title": "메시지",
+  "accept": "수락",
+  "approved": "수락됨",
+  "refused": "거절됨",
+  "agreed": "수락됨",
+  "declined": "거절됨",
+  "pending": "대기중",
+  "ignored": "무시됨",
+  "notification": {
+    "friend": "친구 알림",
+    "group": "그룹 알림"
+  },
+  "friend_request_message": "메시지: ",
+  "unknown_user": "알 수 없음",
+  "empty_require": "친구 요청이 없습니다",
+  "empty_group_require": "그룹 가입 신청 알림이 없습니다",
+  "menu": {
+    "decline": "거절",
+    "ignore": "무시"
+  },
+  "friend_request_status": {
+    "accepted": "요청이 수락되었습니다",
+    "verifying": "초대를 확인하는 중입니다",
+    "sent": "친구 요청을 보냈습니다"
+  },
+  "loading": "로딩 중{tail}",
+  "group": {
+    "apply_to_join": "[{name}] 가입 신청",
+    "invited_to_join": "{inviter}님을 [{group}]에 초대했습니다",
+    "joined_group": "[{group}]에 가입했습니다",
+    "invited_curr_to_join": "[{group}]에 초대되었습니다",
+    "kicked_out": "{operator}님에 의해 [{group}]에서 강퇴되었습니다",
+    "set_as_admin": "그룹장에 의해 [{group}]의 관리자로 설정되었습니다",
+    "removed_as_admin": "그룹장에 의해 [{group}]의 관리자 권한이 해제되었습니다"
+  },
+  "tab": {
+    "friend_messages": "친구 메시지",
+    "group_messages": "그룹 메시지"
+  }
+}

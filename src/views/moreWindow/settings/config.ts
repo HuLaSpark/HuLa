@@ -102,6 +102,10 @@ const langOptions = [
   {
     label: 'English',
     value: 'en'
+  },
+  {
+    label: '한국어',
+    value: 'ko'
   }
 ]
 

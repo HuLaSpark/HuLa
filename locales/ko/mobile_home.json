@@ -1,0 +1,25 @@
+{
+  "menu": {
+    "pintop": "상단 고정",
+    "unpin": "고정 해제",
+    "read": "읽음",
+    "unread": "읽지 않음",
+    "delete": "삭제"
+  },
+  "input": {
+    "search": "검색"
+  },
+  "noname": "이름 없음",
+  "china": "중국",
+  "chat": {
+    "unpin": "고정 해제",
+    "pintop": "상단 고정",
+    "mark_as_read": "읽음",
+    "mark_as_unread": "읽지 않음",
+    "delete": "삭제"
+  },
+  "marked_as_read": "읽음으로 표시했습니다",
+  "marked_as_unread": "읽지 않음으로 표시했습니다",
+  "mark_as_read_failed": "읽음 표시에 실패했습니다",
+  "mark_as_unread_failed": "읽지 않음 표시에 실패했습니다"
+}

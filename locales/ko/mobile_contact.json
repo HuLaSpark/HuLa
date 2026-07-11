@@ -1,0 +1,17 @@
+{
+  "title": "연락처",
+  "input": {
+    "search": "검색"
+  },
+  "my_chat": "내 채팅",
+  "tab": {
+    "contacts": "친구",
+    "group": "그룹"
+  },
+  "friend": {
+    "title": "내 친구"
+  },
+  "group": {
+    "title": "내 그룹"
+  }
+}

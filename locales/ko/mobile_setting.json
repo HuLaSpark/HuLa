@@ -1,0 +1,14 @@
+{
+  "title": "설정",
+  "silent_label": "알림",
+  "nickname": "닉네임",
+  "theme": "테마",
+  "language": "언어",
+  "button": {
+    "logout": "로그아웃"
+  },
+  "themes": {
+    "dark": "다크",
+    "light": "라이트"
+  }
+}
