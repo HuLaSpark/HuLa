@@ -4,10 +4,12 @@ import weekday from 'dayjs/plugin/weekday'
 import type { ConfigType, Dayjs, OpUnitType } from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'
+import 'dayjs/locale/ko'
 import { useI18nGlobal } from '@/services/i18n'
 
 export const setDayjsLocale = (lang: string) => {
-  const mapped = lang.toLowerCase().includes('zh') ? 'zh-cn' : 'en'
+  const normalized = lang.toLowerCase()
+  const mapped = normalized.includes('zh') ? 'zh-cn' : normalized.includes('ko') ? 'ko' : 'en'
   dayjs.locale(mapped)
 }
 

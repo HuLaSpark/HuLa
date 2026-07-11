@@ -1,0 +1,21 @@
+{
+  "account": "ID",
+  "unlocked_count_park": {
+    "text1": "획득한",
+    "text2": "개의 배지"
+  },
+  "no_medal": "아직 획득한 배지가 없어요~",
+  "follower": "팔로워",
+  "follow": "팔로잉",
+  "like": "좋아요",
+  "edit_profile": "프로필 편집",
+  "remove_user": "삭제",
+  "add_friend": "친구 추가",
+  "open_bot": "봇 열기",
+  "chat": "채팅",
+  "delete_user": {
+    "success": "친구 삭제에 성공했습니다",
+    "failed": "친구 삭제에 실패했습니다"
+  },
+  "not_found": "친구를 찾을 수 없습니다"
+}

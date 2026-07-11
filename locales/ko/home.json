@@ -1,0 +1,489 @@
+{
+  "search_suggestions": "추천 검색어",
+  "search_guide": "검색창에서 검색하세요",
+  "no_search_results": "검색 결과가 없습니다",
+  "search_result": "검색 결과",
+  "search_history": "검색 기록",
+  "search_input_placeholder": "검색",
+  "clear_search_history": "전체 삭제",
+  "loading": {
+    "app": "앱을 불러오는 중...",
+    "left_panel": "왼쪽 패널을 불러오는 중...",
+    "data": "데이터를 불러오는 중...",
+    "right_panel": "오른쪽 패널을 불러오는 중..."
+  },
+  "action": {
+    "message": "메시지",
+    "message_short_title": "메시지",
+    "contact": "친구",
+    "contact_short_title": "친구",
+    "file_manager": "파일 관리자",
+    "file_manager_short_title": "파일",
+    "favorite": "즐겨찾기",
+    "favorite_short_title": "즐겨찾기",
+    "plugin": "플러그인",
+    "plugin_manage": "플러그인 관리",
+    "more": "더보기",
+    "opened": "열림",
+    "start_group_chat": "그룹 채팅 시작",
+    "add_friend_or_group": "친구/그룹 추가"
+  },
+  "plugins": {
+    "dynamic": "모멘트",
+    "dynamic_short_title": "모멘트",
+    "chatbot": "챗봇",
+    "chatbot_short_title": "챗봇",
+    "status": {
+      "builtin": "기본 제공",
+      "uninstalling": "제거 중"
+    },
+    "actions": {
+      "install": "설치",
+      "pin": "사이드바에 고정",
+      "unpin": "고정 해제",
+      "uninstall": "제거"
+    }
+  },
+  "search_window": {
+    "title": "전체 검색",
+    "tabs": {
+      "recommend": "추천",
+      "user": "친구 찾기",
+      "group": "그룹 찾기"
+    },
+    "placeholder": {
+      "recommend": "키워드를 입력해 둘러보세요",
+      "user": "닉네임을 검색해 친구를 추가하세요",
+      "group": "그룹 ID를 입력해 그룹을 찾으세요"
+    },
+    "labels": {
+      "account": "계정: {account}"
+    },
+    "tooltip": {
+      "copy_account": "계정 복사",
+      "bound_gitee": "Gitee 연동됨",
+      "bound_github": "GitHub 연동됨",
+      "bound_gitcode": "Gitcode 연동됨"
+    },
+    "empty": {
+      "no_result": "일치하는 결과가 없습니다",
+      "prompt": "키워드를 입력해 검색하세요"
+    },
+    "notification": {
+      "copy_success": "{account} 복사 완료",
+      "search_fail": "검색 실패"
+    },
+    "buttons": {
+      "add": "추가",
+      "message": "메시지 보내기",
+      "edit_profile": "프로필 편집"
+    },
+    "modal": {
+      "add_friend": "친구 추가 요청",
+      "add_group": "그룹 가입 요청"
+    }
+  },
+  "chat_details": {
+    "single": {
+      "empty_signature": "아직 등록된 소개글이 없습니다",
+      "region": "지역: {place}",
+      "unknown": "알 수 없음",
+      "badge_label": "배지:",
+      "call_only_single": "음성/영상 통화는 1:1 채팅에서만 가능합니다",
+      "friend_info_missing": "친구 정보를 불러올 수 없습니다",
+      "footer": {
+        "audio_call": "음성 통화",
+        "video_call": "영상 통화"
+      }
+    },
+    "group": {
+      "official_badge": "공식 그룹",
+      "id": "그룹 ID {account}",
+      "copy": "복사",
+      "copy_success": "{account} 복사 완료",
+      "info_missing": "그룹 정보를 불러올 수 없습니다",
+      "remark": {
+        "label": "그룹 메모",
+        "placeholder": "메모를 입력하세요",
+        "empty": "그룹 메모 설정",
+        "success": "그룹 메모가 변경되었습니다",
+        "fail": "그룹 메모 변경에 실패했습니다"
+      },
+      "nickname": {
+        "label": "내 닉네임",
+        "placeholder": "닉네임을 입력하세요",
+        "empty": "설정 안 됨",
+        "success": "닉네임이 변경되었습니다",
+        "fail": "닉네임 변경에 실패했습니다"
+      },
+      "announcement": {
+        "label": "공지사항",
+        "empty": "설정 안 됨",
+        "window_title": "공지사항 보기"
+      },
+      "members": {
+        "count": "멤버 ({count}명)",
+        "online": "온라인 {count}명"
+      }
+    },
+    "actions": {
+      "message": "메시지 보내기"
+    },
+    "window": {
+      "image_viewer": "이미지 뷰어"
+    }
+  },
+  "chat_reaction": {
+    "like": "좋아요",
+    "unsatisfied": "별로예요",
+    "heart": "하트",
+    "angry": "화나요",
+    "party": "축하해요",
+    "rocket": "로켓",
+    "lol": "웃겨요",
+    "clap": "박수",
+    "flower": "꽃",
+    "bomb": "폭탄",
+    "question": "궁금해요",
+    "victory": "승리",
+    "light": "반짝",
+    "red_envelope": "세뱃돈"
+  },
+  "chat_header": {
+    "bot_tag": "봇",
+    "status_abnormal": "친구 상태를 확인할 수 없습니다",
+    "toolbar": {
+      "audio_call": "음성 통화",
+      "video_call": "영상 통화",
+      "screen_share": "화면 공유",
+      "remote_assist": "원격 지원",
+      "invite_to_group": "그룹에 초대",
+      "start_group_chat": "그룹 채팅 시작"
+    },
+    "sidebar": {
+      "single": {
+        "pin": "상단 고정",
+        "mute": "알림 끄기",
+        "shield": "이 사용자 차단",
+        "delete_history": "대화 내용 삭제",
+        "delete_friend": "친구 삭제",
+        "report": "괴롭힘을 당하셨나요? 이 사용자 신고하기"
+      },
+      "group": {
+        "name_placeholder": "그룹 이름을 입력하세요 (최대 12자)",
+        "official_badge": "공식 그룹",
+        "copy": "복사",
+        "qr": "QR코드",
+        "members": "그룹 멤버",
+        "channel_members": "채널 멤버",
+        "my_name": "이 그룹에서의 내 닉네임",
+        "remark": "그룹 메모",
+        "remark_desc": "(나에게만 보임)",
+        "settings": {
+          "title": "그룹 설정",
+          "pin": "상단 고정",
+          "mute": "알림 끄기",
+          "scan": "QR코드로 가입 허용"
+        },
+        "message_settings": {
+          "title": "메시지 설정"
+        },
+        "manage_members": "멤버 관리",
+        "delete_history": "대화 내용 삭제",
+        "dissolve": "그룹 해산",
+        "exit": "그룹 나가기",
+        "report": "괴롭힘을 당하셨나요? 이 그룹 신고하기"
+      }
+    },
+    "message_setting": {
+      "receive_no_alert": "알림 없이 받기",
+      "shield": "메시지 차단"
+    },
+    "modal": {
+      "confirm": "확인",
+      "cancel": "취소",
+      "invite_friends": "친구 초대",
+      "tips": {
+        "delete_friend": "이 친구를 삭제하시겠습니까?",
+        "dissolve_group": "이 그룹을 해산하시겠습니까?",
+        "exit_group": "이 그룹을 나가시겠습니까?",
+        "rename_group": "그룹 이름을 {name}(으)로 변경하시겠습니까?",
+        "update_info": "변경한 그룹 정보를 저장하시겠습니까?",
+        "delete_history": "로컬 대화 내용을 삭제하시겠습니까?"
+      }
+    },
+    "qr": {
+      "tip": "QR코드를 스캔해 가입하세요",
+      "group_id_label": "그룹 ID: ",
+      "actions": {
+        "forward": "전달",
+        "copy_group_id": "그룹 ID 복사",
+        "save_image": "이미지 저장"
+      },
+      "toast": {
+        "group_id_copied": "그룹 ID가 복사되었습니다",
+        "save_success": "이미지가 저장되었습니다",
+        "save_failed": "저장 실패"
+      }
+    },
+    "toast": {
+      "copy_success": "{account} 복사 완료",
+      "group_info_updated": "그룹 정보가 업데이트되었습니다",
+      "group_info_update_failed": "그룹 정보 업데이트에 실패했습니다",
+      "todo": "준비 중입니다",
+      "pin_on": "고정됨",
+      "pin_off": "고정 해제됨",
+      "pin_failed": "고정 실패",
+      "mute_on": "알림 없이 받도록 설정했습니다",
+      "mute_off": "알림을 받도록 설정했습니다",
+      "shield_on": "메시지가 차단되었습니다",
+      "shield_off": "메시지 차단이 해제되었습니다",
+      "action_failed": "작업에 실패했습니다",
+      "group_name_empty": "그룹 이름을 입력해주세요",
+      "group_name_too_long": "그룹 이름은 12자를 초과할 수 없습니다",
+      "delete_history_success": "대화 내용이 삭제되었습니다",
+      "delete_history_failed": "대화 내용 삭제에 실패했습니다",
+      "delete_friend_success": "친구가 삭제되었습니다",
+      "dissolve_not_allowed": "채널은 해산할 수 없습니다",
+      "dissolve_success": "그룹이 해산되었습니다",
+      "exit_not_allowed": "채널은 나갈 수 없습니다",
+      "exit_success": "그룹에서 나갔습니다",
+      "group_name_update_failed": "그룹 이름 변경에 실패했습니다"
+    }
+  },
+  "manage_group_member": {
+    "title": "그룹 멤버 관리",
+    "search_placeholder_mobile": "멤버 검색~",
+    "search_placeholder_pc": "그룹 멤버 검색",
+    "selected_count": "{count}명 선택됨",
+    "remove_button": "그룹에서 내보내기",
+    "dialog_negative": "취소",
+    "dialog_positive": "확인",
+    "remove_confirm": "{count}명의 멤버를 내보내시겠습니까?",
+    "channel_not_allowed": "채널에서는 멤버를 내보낼 수 없습니다",
+    "select_member_warning": "내보낼 멤버를 선택하세요",
+    "remove_success": "{count}명의 멤버를 내보냈습니다",
+    "remove_failed": "멤버 내보내기에 실패했습니다. 다시 시도해주세요",
+    "confirm_remove_title": "내보내기 확인",
+    "channel_manage_unsupported": "채널은 멤버 관리를 지원하지 않습니다"
+  },
+  "profile_card": {
+    "online_status": "온라인 상태",
+    "status": {
+      "online": "온라인",
+      "offline": "오프라인"
+    },
+    "labels": {
+      "account": "계정",
+      "location": "지역",
+      "badges": "배지",
+      "activities": "활동"
+    },
+    "location_unknown": "알 수 없음",
+    "tooltip": {
+      "copy_account": "계정 복사",
+      "bound_gitee": "Gitee 연동됨",
+      "bound_github": "GitHub 연동됨",
+      "bound_gitcode": "Gitcode 연동됨"
+    },
+    "buttons": {
+      "edit": "프로필 편집",
+      "message": "메시지 보내기",
+      "add_friend": "친구 추가"
+    },
+    "notification": {
+      "copy_success": "{account} 복사 완료"
+    },
+    "modal": {
+      "add_friend": "친구 추가 요청"
+    },
+    "developer_badge": "HuLa 개발자"
+  },
+  "profile_edit": {
+    "title": "프로필 편집",
+    "avatar": {
+      "change": "프로필 사진 변경",
+      "tips": "권장 크기 180x180px, JPG·PNG·WEBP 형식 지원, 500kb 이하 파일만 가능합니다"
+    },
+    "badge": {
+      "current": "현재 착용 중인 배지:",
+      "wear": "착용"
+    },
+    "form": {
+      "nickname": {
+        "label": "닉네임",
+        "placeholder": "닉네임을 입력하세요",
+        "remaining": "닉네임 변경 가능 횟수: {count}회"
+      }
+    },
+    "actions": {
+      "save": "저장"
+    },
+    "toast": {
+      "avatar_update_success": "프로필 사진이 변경되었습니다"
+    }
+  },
+  "chat_sidebar": {
+    "announcement": {
+      "title": "그룹 공지사항",
+      "load_failed": "공지사항을 불러오지 못했습니다. 다시 시도해주세요",
+      "default": "민감한 정보는 공유하지 마세요. 관련 법규를 준수하지 않으면 메시지가 삭제될 수 있습니다.",
+      "window": {
+        "add": "공지사항 추가",
+        "view": "공지사항 보기"
+      }
+    },
+    "actions": {
+      "retry": "다시 시도"
+    },
+    "online_members": "온라인 멤버 {count}명",
+    "search": {
+      "placeholder": "검색"
+    },
+    "roles": {
+      "owner": "방장",
+      "admin": "관리자"
+    }
+  },
+  "about": {
+    "version": "버전: {version} ({arch})",
+    "device": "기기: {type}{version}",
+    "copyright": "Copyright © {start}-{end} HuLaSpark",
+    "rights": "All Rights Reserved."
+  },
+  "apply_list": {
+    "friend_notice": "친구 요청",
+    "group_notice": "그룹 알림",
+    "you": "나",
+    "unknown_user": "알 수 없는 사용자",
+    "message_label": "메시지: ",
+    "handler_label": "처리자: {name}",
+    "accept": "수락",
+    "status": {
+      "accepted": "승인됨",
+      "rejected": "거절됨",
+      "ignored": "무시됨",
+      "rejected_by_other": "상대방이 거절함",
+      "pending": "인증 대기 중"
+    },
+    "friend": {
+      "accepted_you": "요청이 승인되었습니다",
+      "pending": "인증 대기 중",
+      "request": "친구 추가를 요청했습니다"
+    },
+    "group": {
+      "loading": "불러오는 중...",
+      "apply": "[{group}] 가입 신청",
+      "invite": "{name}님을 [{group}]에 초대",
+      "invite_confirmed": "[{group}]에 가입했습니다",
+      "invite_you": "[{group}]에 초대했습니다",
+      "kicked": "{operator}님이 [{group}]에서 내보냈습니다",
+      "set_admin": "[{group}]의 관리자로 설정되었습니다",
+      "remove_admin": "[{group}]의 관리자 권한이 해제되었습니다"
+    },
+    "dropdown": {
+      "reject": "거절",
+      "ignore": "무시"
+    },
+    "empty_friend": "친구 요청이 없습니다",
+    "empty_group": "그룹 알림이 없습니다"
+  },
+  "chat_main": {
+    "network_offline": "네트워크를 사용할 수 없습니다. 설정을 확인해주세요",
+    "network_connecting": "서버에 연결하는 중...",
+    "network_ws_offline": "서버 연결이 끊어졌습니다. 재연결 중입니다",
+    "copy": {
+      "empty": "복사할 내용이 없습니다",
+      "image_processing": "{format} 이미지를 PNG로 변환하는 중...",
+      "image_success": "이미지가 클립보드에 복사되었습니다",
+      "image_convert_success": "이미지를 PNG로 변환해 복사했습니다",
+      "selected_success": "선택한 텍스트가 복사되었습니다",
+      "message_success": "메시지가 복사되었습니다",
+      "unknown_error": "복사에 실패했습니다. 나중에 다시 시도해주세요"
+    },
+    "feature": {
+      "coming_soon": "준비 중인 기능입니다"
+    },
+    "translate": {
+      "empty": "번역할 내용이 없습니다"
+    },
+    "file": {
+      "missing_local": "로컬에서 파일을 찾을 수 없습니다. 먼저 다운로드해주세요",
+      "show_failed": "폴더에서 파일을 열 수 없습니다",
+      "download_prompt": "아직 다운로드되지 않은 파일입니다. 먼저 다운로드해주세요",
+      "download_success": "파일이 다운로드되었습니다",
+      "download_failed": "파일 다운로드에 실패했습니다. 다시 시도해주세요",
+      "save_success": "파일이 로컬에 저장되었습니다",
+      "save_failed": "파일 저장에 실패했습니다. 다시 시도해주세요"
+    },
+    "image": {
+      "fetch_failed": "이미지 주소를 가져오지 못했습니다",
+      "locate_failed": "지금은 이 이미지를 찾을 수 없습니다",
+      "download_prompt": "이미지가 다운로드되지 않아 로컬에 저장하는 중...",
+      "save_success": "이미지가 로컬에 저장되었습니다",
+      "save_failed": "이미지 저장에 실패했습니다",
+      "download_failed": "이미지 다운로드에 실패했습니다. 다시 시도해주세요"
+    },
+    "delete": {
+      "invalid_session": "이 메시지의 대화를 확인할 수 없습니다",
+      "confirm": "삭제한 메시지는 대화 내용에서 사라집니다. 계속하시겠습니까?",
+      "success": "메시지가 삭제되었습니다"
+    },
+    "announcement": {
+      "view_all": "전체 보기"
+    },
+    "no_more": "더 이상 메시지가 없습니다",
+    "new_messages": "새 메시지 {count}개",
+    "confirm": "확인",
+    "cancel": "취소",
+    "group_nickname": {
+      "title": "그룹 닉네임 수정",
+      "placeholder": "그룹 닉네임을 입력하세요",
+      "error": {
+        "empty": "그룹 닉네임을 입력해주세요",
+        "invalid_room": "그룹 정보가 올바르지 않습니다"
+      }
+    },
+    "toast": {
+      "searching": "메시지를 검색하는 중...",
+      "not_found": "이전 메시지를 불러오지 못했습니다. 다시 시도해주세요",
+      "multi_select_mobile": "모바일에서는 메시지 다중 선택을 사용할 수 없습니다",
+      "disbanded_group": "이 그룹은 이미 해산되었습니다"
+    }
+  },
+  "friends_list": {
+    "notice": {
+      "friend": "친구 알림",
+      "group": "그룹 알림"
+    },
+    "tabs": {
+      "friend": "친구",
+      "group": "그룹"
+    },
+    "collapse": {
+      "friend": "내 친구",
+      "group": "내 그룹"
+    },
+    "bot_tag": "봇",
+    "status": {
+      "online": "온라인",
+      "offline": "오프라인"
+    },
+    "menu": {
+      "add_group": "카테고리 추가",
+      "rename_group": "카테고리 이름 변경",
+      "delete_group": "카테고리 삭제"
+    }
+  },
+  "create_group": {
+    "title": "그룹 채팅 만들기",
+    "action": "만들기",
+    "success": "그룹 채팅이 생성되었습니다",
+    "fail": "그룹 채팅 생성에 실패했습니다",
+    "required_tag": "필수"
+  },
+  "file_drop": {
+    "title": "놓으면 파일을 전송합니다",
+    "desc": "이미지나 파일을 끌어다 놓으면 현재 대화방으로 전송됩니다"
+  }
+}

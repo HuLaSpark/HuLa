@@ -1,0 +1,49 @@
+{
+  "title": "비밀번호 찾기",
+  "steps": {
+    "verify_email": "이메일 인증",
+    "set_new_password": "비밀번호 설정",
+    "done": "완료"
+  },
+  "input": {
+    "label": {
+      "email": "이메일",
+      "email_verification_code": "인증코드",
+      "new_pass": "새 비밀번호",
+      "confirm_password": "비밀번호 확인"
+    },
+    "email": "이메일",
+    "email_code": "인증코드",
+    "new_pass": "새 비밀번호를 입력해주세요 ({len}자)",
+    "confirm_password": "비밀번호를 다시 입력해주세요"
+  },
+  "validation": {
+    "minlength": "최소 {len}자 이상",
+    "valid_characters": "영문과 숫자로 구성",
+    "must_special_char": "특수문자를 포함해야 합니다",
+    "passwords_match": "비밀번호가 일치합니다"
+  },
+  "button": {
+    "send_email_code": "인증코드 전송",
+    "next": "다음",
+    "go_back_setp": "이전",
+    "submit": "제출"
+  },
+  "password_reset_success": "비밀번호가 재설정되었습니다",
+  "password_reset_success_desc": "이제 새 비밀번호로 로그인할 수 있습니다",
+  "rules": {
+    "email_require": "이메일 주소를 입력해주세요",
+    "email_invalid": "올바른 이메일 주소를 입력해주세요",
+    "email_code_require": "이메일로 전송된 인증코드를 입력해주세요",
+    "code_length": "인증코드는 {len}자리여야 합니다",
+
+    "new_pass_require": "새 비밀번호를 입력해주세요",
+    "new_pass_length": "비밀번호는 {len}자여야 합니다",
+
+    "confirm_pass_require": "비밀번호를 확인해주세요",
+    "pass_not_match": "비밀번호가 일치하지 않습니다"
+  },
+  "too_many_requests": "요청이 너무 많습니다. {s}초 후 다시 시도해주세요",
+  "code_sent_email": "인증코드가 이메일로 전송되었습니다",
+  "email_resend_in": "{seconds}초 후 재전송"
+}

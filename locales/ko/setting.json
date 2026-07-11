@@ -1,0 +1,162 @@
+{
+  "common": {
+    "provider_label": "제공자",
+    "provider_name": "HuLa",
+    "tag_new": "신규"
+  },
+  "footer": {
+    "like_product": "이 제품이 마음에 드시나요? ",
+    "star_cta": "GitHub에서 별을 눌러",
+    "share_joiner": "그리고",
+    "share_cta": "소중한 의견을 공유해 주세요",
+    "star_popover_title": "GitHub에서 스타 눌러주기",
+    "star_popover_desc": "HuLa가 마음에 드셨고 저희를 응원해 주고 싶으시다면, GitHub 저장소에 별을 눌러주실 수 있나요? 작은 행동이지만 저희에게는 큰 힘이 되며, 더 좋은 기능을 계속 만들어갈 수 있는 원동력이 됩니다.",
+    "later": "나중에",
+    "star_button": "스타 누르기",
+    "issue_popover_title": "GitHub에 피드백 남기기",
+    "issue_popover_desc": "모든 의견은 저희에게 소중합니다. 개선하고 싶은 기능이나 사용 경험이 있다면 언제든 편하게 알려주세요!",
+    "issue_button": "피드백 남기기"
+  },
+  "general": {
+    "title": "일반",
+    "appearance": {
+      "title": "화면 표시",
+      "theme": {
+        "auto": "시스템 설정 따르기",
+        "light": "라이트",
+        "dark": "다크"
+      }
+    },
+    "chat": {
+      "title": "채팅",
+      "translate_service": "번역 서비스",
+      "translate_options": {
+        "tencent": "텐센트 클라우드 번역",
+        "youdao": "유다오 번역"
+      }
+    },
+    "ui": {
+      "title": "UI",
+      "language": "언어",
+      "blur": "가우시안 블러",
+      "shadow": "그림자 효과 사용",
+      "font": "글꼴",
+      "menu_name": "메뉴 이름",
+      "font_options": {
+        "PingFang": "PingFang",
+        "AliFangYuan": "알리바바 방원체"
+      }
+    },
+    "system": {
+      "title": "시스템",
+      "close_panel": "닫기 패널",
+      "close_options": {
+        "minimize_to_tray": "트레이로 최소화",
+        "exit_program": "바로 종료"
+      },
+      "close_prompt": "닫기 안내",
+      "esc_close_window": "ESC로 창 닫기"
+    }
+  },
+  "login": {
+    "title": "로그인",
+    "auto_login_startup": "시작 시 자동 로그인",
+    "launch_startup": "시스템 시작 시 자동 실행"
+  },
+  "notice": {
+    "title": "알림",
+    "sound": "소리",
+    "message_sound": "새 메시지 알림음",
+    "message_sound_descript": "켜면 새 메시지를 받을 때 알림음이 재생됩니다.",
+    "message_volume": "알림음 볼륨",
+    "message_volume_descript": "드래그하여 알림음 볼륨을 조절하세요 (0-100).",
+    "group_setting": "그룹 설정",
+    "select_all": "전체 선택",
+    "group_notic_type": {
+      "allow": "허용",
+      "silent": "방해 금지",
+      "block": "차단"
+    },
+    "input": {
+      "search_group_placholder": "그룹 검색"
+    },
+    "batch_set": "일괄 설정",
+    "message_select_group_first": "먼저 설정할 그룹을 선택해 주세요.",
+    "unknow_group": "알 수 없는 그룹",
+    "group_chat_not_found": "그룹 채팅 정보를 찾을 수 없습니다.",
+    "setup_fail": "설정 실패",
+    "message_group_batch_setup_success": "일괄 설정이 완료되었습니다! 그룹 채팅 {count}개가 {type}(으)로 설정되었습니다.",
+    "message_group_batch_update_result": "일괄 업데이트 완료: 성공 {success_count}개, 실패 {fail_count}개.",
+    "message_reminder_allowed": "메시지 알림이 허용되었습니다",
+    "message_reminder_silent": "메시지는 수신되지만 알림은 표시되지 않습니다",
+    "message_ring": "벨소리",
+    "message_unblocked": "차단 해제됨"
+  },
+  "shortcut": {
+    "title": "단축키",
+    "global_shortcut_title": "전역",
+    "enable_global_shortcuts": "전역 단축키 사용",
+    "enable_global_shortcuts_hint": "끄면 아래의 모든 단축키가 비활성화됩니다.",
+    "function_shortcut_title": "기능",
+    "message_title": "메시지",
+    "screenshot": "스크린샷",
+    "screenshot_hint": "단축키를 눌러 캡처하세요",
+    "panel_switch": "메인 패널 전환",
+    "panel_switch_hint": "단축키를 눌러 메인 패널을 전환하세요",
+    "message_shortcut": "메시지",
+    "send_message_shortcut": "메시지 보내기",
+    "send_message_shortcut_hint": "단축키를 눌러 메시지를 보내세요",
+    "send_message_shortcut_option": "{key}를 눌러 보내기",
+    "unbound": "지정되지 않음",
+    "bound": "지정됨",
+    "reset": "초기화",
+    "shortcut_update_result": "{name}이(가) 업데이트되었습니다",
+    "shortcut_setting_failed": "{name} 설정에 실패했습니다",
+    "global_enable": "전역 단축키가 켜졌습니다",
+    "global_disable": "전역 단축키가 꺼졌습니다",
+    "global_toggle_failed": "전역 단축키 전환 설정에 실패했습니다",
+    "send_message_updated": "메시지 보내기 단축키가 업데이트되었습니다",
+    "send_message_failed": "메시지 보내기 단축키 설정에 실패했습니다"
+  },
+  "storage": {
+    "title": "저장소",
+    "file_scan_progress": "파일 스캔 중",
+    "usage": "파일 스캔 비율",
+    "used_space": "사용 중인 공간",
+    "app_used_space": "HuLa 데이터",
+    "free_space": "여유 공간",
+    "directory": "디렉터리",
+    "curr_dir": "현재 디렉터리",
+    "current_file": "현재 파일",
+    "scanning_progress": "스캔 진행률",
+    "processed_files": "처리된 파일",
+    "processed_files_unit": "{count}개",
+    "total_size": "총 용량",
+    "mount_point": "마운트 지점",
+    "disk_total": "디스크 총 용량",
+    "disk_used": "디스크 사용 용량",
+    "disk_usage_percent": "디스크 사용률",
+    "elapsed": "소요 시간",
+    "elapsed_unit": "{seconds}초",
+    "path_type": "스캔 디렉터리 유형",
+    "path_type_default": "기본값",
+    "path_type_custom": "사용자 지정",
+    "fetching_directory": "디렉터리 경로를 가져오는 중...",
+    "select_directory": "디렉터리 선택",
+    "start_scan": "스캔 시작",
+    "scanning": "스캔 중...",
+    "select_directory_title": "스캔할 디렉터리를 선택하세요",
+    "select_directory_failed": "디렉터리 선택에 실패했습니다",
+    "select_directory_error": "디렉터리 선택 실패"
+  },
+  "theme": {
+    "title": "테마",
+    "restore_default": "기본값으로 복원",
+    "versatile": {
+      "title": "생동감 있는 팔레트",
+      "description": "색상의 매력을 느끼고 나만의 팔레트를 만들어보세요",
+      "simple": "심플한 우아함"
+    }
+  },
+  "unknow": "알 수 없음"
+}

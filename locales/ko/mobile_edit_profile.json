@@ -1,0 +1,23 @@
+{
+  "title": "프로필",
+  "nickname": "닉네임",
+  "gender": "성별",
+  "brithday": "생일",
+  "region": "지역",
+  "phone": "전화번호",
+  "bio": "소개",
+  "placeholder": {
+    "nickname": "닉네임을 입력해주세요",
+    "gender": "성별을 선택해주세요",
+    "brithday": "생일을 선택해주세요",
+    "region": "지역을 선택해주세요",
+    "phone": "전화번호를 입력해주세요",
+    "bio": "자기소개를 입력해주세요"
+  },
+  "save_btn": "저장",
+  "change_avatar": "변경",
+  "genders": {
+    "male": "남성",
+    "female": "여성"
+  }
+}

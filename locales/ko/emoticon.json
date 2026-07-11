@@ -1,0 +1,21 @@
+{
+  "recent": {
+    "title": "최근 사용"
+  },
+  "tabs": {
+    "emoji": "이모지",
+    "favorites": "즐겨찾기"
+  },
+  "favorites": {
+    "title": "내 이모티콘",
+    "empty": "이모티콘이 없습니다",
+    "delete": "삭제",
+    "deleteSuccess": "이모티콘이 삭제되었습니다",
+    "deleteFail": "이모티콘 삭제에 실패했습니다"
+  },
+  "categories": {
+    "expression": "표정 이모지",
+    "animal": "동물 이모지",
+    "gesture": "제스처 이모지"
+  }
+}

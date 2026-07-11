@@ -1,0 +1,9 @@
+{
+  "title": "생일 편집",
+  "options": {
+    "display_birthday_tag": "생일 태그 표시",
+    "displsy_age": "나이 표시",
+    "display_constellation": "별자리 표시"
+  },
+  "save_btn": "저장"
+}
