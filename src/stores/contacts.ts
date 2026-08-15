@@ -5,6 +5,7 @@ import { RequestNoticeAgreeStatus } from '@/services/types'
 import { useGlobalStore } from '@/stores/global'
 import { useFeedStore } from '@/stores/feed'
 import { useGroupStore } from '@/stores/group'
+import { useUserStore } from '@/stores/user'
 import {
   deleteFriend,
   getFriendPage,
@@ -19,6 +20,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
   const globalStore = useGlobalStore()
   const feedStore = useFeedStore()
   const groupStore = useGroupStore()
+  const userStore = useUserStore()
 
   /** 联系人列表 */
   const contactsList = ref<FriendItem[]>([])
@@ -69,9 +71,13 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
    * 更新全局store中的未读计数
    */
   const getApplyUnReadCount = async () => {
+    const requestUid = userStore.userInfo?.uid
+    if (!requestUid) return
+
     const res: any = await getNoticeUnreadCount()
-    if (!res) return
-    // 更新全局store中的未读计数
+    if (!res || userStore.userInfo?.uid !== requestUid) return
+
+    // 仅允许当前账号的响应更新未读计数，避免切换账号时旧请求覆盖新状态
     globalStore.unReadMark.newFriendUnreadCount = res.unReadCount4Friend
     globalStore.unReadMark.newGroupUnreadCount = res.unReadCount4Group
 
@@ -211,6 +217,14 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     await getContactList(true)
   }
 
+  /** 清理账号相关的联系人和申请状态，避免切换账号时复用旧数据 */
+  const resetAccountState = () => {
+    contactsList.value = []
+    requestFriendsList.value = []
+    contactsOptions.value = { isLast: false, isLoading: false, cursor: '' }
+    applyPageOptions.value = { isLast: false, cursor: '', pageNo: 1 }
+  }
+
   return {
     getContactList,
     getApplyPage,
@@ -221,6 +235,7 @@ export const useContactStore = defineStore(StoresEnum.CONTACTS, () => {
     applyPageOptions,
     onDeleteFriend,
     onHandleInvite,
-    deleteContact
+    deleteContact,
+    resetAccountState
   }
 })

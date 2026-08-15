@@ -28,6 +28,7 @@ import { info as logInfo } from '@tauri-apps/plugin-log'
 import { ensureAppStateReady } from '@/utils/AppStateReady'
 import { useI18nGlobal } from '../services/i18n'
 import { useInitialSyncStore } from '@/stores/initialSync'
+import { useContactStore } from '@/stores/contacts'
 import { openExternalUrl } from './useLinkSegments'
 import { TokenManager } from '@/utils/TokenManager'
 
@@ -45,6 +46,7 @@ export const useLogin = () => {
   const userStore = useUserStore()
   const loginHistoriesStore = useLoginHistoriesStore()
   const initialSyncStore = useInitialSyncStore()
+  const contactStore = useContactStore()
   const { createWebviewWindow } = useWindow()
 
   const { t } = useI18nGlobal()
@@ -75,6 +77,13 @@ export const useLogin = () => {
       delete groupStore.userListMap[key]
     }
     console.log('[useLogin] Message cache has been cleared')
+  }
+
+  /** 清理当前账号的好友申请状态，避免窗口交接或异步响应造成红点串号 */
+  const clearAccountApplyState = () => {
+    if (!isDesktop()) return
+    globalStore.resetAccountApplyState()
+    contactStore.resetAccountState()
   }
 
   /**
@@ -124,6 +133,7 @@ export const useLogin = () => {
    */
   const logout = async () => {
     globalStore.updateCurrentSessionRoomId('')
+    clearAccountApplyState()
 
     const sendLogoutEvent = async () => {
       // ws 退出连接
@@ -246,6 +256,7 @@ export const useLogin = () => {
 
     // 清空 localStorage，防止页面刷新时恢复旧账号数据
     clearUserLocalStorage()
+    clearAccountApplyState()
 
     // 清空消息缓存，避免旧消息混入新账号
     clearMessageCache()
@@ -273,6 +284,9 @@ export const useLogin = () => {
     }
     userStore.userInfo = account
     loginHistoriesStore.addLoginHistory(account)
+    if (isDesktop()) {
+      await contactStore.getApplyUnReadCount()
+    }
     // 初始化表情列表并在后台预取本地缓存（使用 worker + 并发限制）
     void emojiStore.initEmojis().catch(() => {
       void logInfo('[login] 初始化表情失败')
