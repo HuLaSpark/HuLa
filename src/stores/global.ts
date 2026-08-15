@@ -164,6 +164,13 @@ export const useGlobalStore = defineStore(
       currentSessionRoomId.value = id
     }
 
+    /** 清理账号相关的申请未读状态，避免切换账号时共享旧账号红点 */
+    const resetAccountApplyState = () => {
+      unReadMark.newFriendUnreadCount = 0
+      unReadMark.newGroupUnreadCount = 0
+      currentSelectedContact.value = undefined
+    }
+
     return {
       unReadMark,
       currentSession,
@@ -178,6 +185,7 @@ export const useGlobalStore = defineStore(
       setTipVisible,
       updateGlobalUnreadCount,
       updateCurrentSessionRoomId,
+      resetAccountApplyState,
       currentSessionRoomId
     }
   },
