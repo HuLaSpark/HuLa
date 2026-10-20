@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import { chalk } from './colors.js'
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
 import { platform } from 'os'

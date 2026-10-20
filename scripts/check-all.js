@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import { chalk } from './colors.js'
 import { execFileSync } from 'child_process'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'

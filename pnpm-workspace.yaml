@@ -1,8 +1,20 @@
 packages:
   - "."
 
-onlyBuiltDependencies:
-  - '@vue-office/docx'
-  - '@vue-office/excel'
-  - '@vue-office/pdf'
-  - '@vue-office/pptx'
+allowBuilds:
+  '@parcel/watcher': false
+  '@vue-office/docx': true
+  '@vue-office/excel': true
+  '@vue-office/pdf': true
+  '@vue-office/pptx': true
+  esbuild: false
+  sharp: false
+  tlbs-map-vue: false
+  vue-demi: false
+
+overrides:
+  conventional-changelog-conventionalcommits: 8.0.0
+  lodash: 4.18.1
+  lodash-es: 4.18.1
+  nopt: 9.0.0
+  abbrev: 4.0.0
