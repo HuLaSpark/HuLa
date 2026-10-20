@@ -1,4 +1,4 @@
-import chalk from 'chalk'
+import { chalk } from './colors.js'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
