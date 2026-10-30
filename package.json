@@ -162,7 +162,7 @@
     "commitizen": "^4.3.1",
     "cz-git": "^1.13.0",
     "eruda": "^3.4.3",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^21.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "postcss-pxtorem": "^6.1.0",
