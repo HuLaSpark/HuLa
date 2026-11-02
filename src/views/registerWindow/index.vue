@@ -465,6 +465,36 @@ const handleStepAction = async () => {
     })
   } catch (error) {
     console.error('发送验证码失败', error)
+
+    // 改进错误提示，区分不同的错误类型
+    let errorMessage = t('auth.register.messages.code_send_failed')
+
+    if (error instanceof Error) {
+      const errorStr = error.message.toLowerCase()
+
+      // 网络错误
+      if (errorStr.includes('network_error') || errorStr.includes('failed to fetch') || errorStr.includes('network')) {
+        errorMessage = t('auth.register.errors.network_error')
+      }
+      // 服务器异常
+      else if (errorStr.includes('500') || errorStr.includes('server') || errorStr.includes('服务器')) {
+        errorMessage = t('auth.register.errors.server_error')
+      }
+      // 邮箱已存在
+      else if (errorStr.includes('exist') || errorStr.includes('已存在') || errorStr.includes('registered')) {
+        errorMessage = t('auth.register.errors.email_exists')
+      }
+      // 邮箱格式错误
+      else if (errorStr.includes('email') || errorStr.includes('邮箱')) {
+        errorMessage = t('auth.register.errors.email_invalid')
+      }
+      // 其他错误显示原始消息
+      else if (error.message && !error.message.includes('调用')) {
+        errorMessage = error.message
+      }
+    }
+
+    window.$message.error(errorMessage)
   } finally {
     loading.value = false
   }
@@ -523,7 +553,37 @@ const register = async () => {
       WebviewWindow.getCurrent().close()
     }, 1200)
   } catch (error) {
-    window.$message.error(t('auth.register.messages.register_fail'))
+    console.error('注册失败', error)
+
+    // 改进错误提示，区分不同的错误类型
+    let errorMessage = t('auth.register.messages.register_fail')
+
+    if (error instanceof Error) {
+      const errorStr = error.message.toLowerCase()
+
+      // 网络错误
+      if (errorStr.includes('network_error') || errorStr.includes('failed to fetch') || errorStr.includes('network')) {
+        errorMessage = t('auth.register.errors.network_error')
+      }
+      // 服务器异常
+      else if (errorStr.includes('500') || errorStr.includes('server') || errorStr.includes('服务器')) {
+        errorMessage = t('auth.register.errors.server_error')
+      }
+      // 验证码错误
+      else if (errorStr.includes('code') || errorStr.includes('验证码') || errorStr.includes('captcha')) {
+        errorMessage = t('auth.register.errors.code_invalid')
+      }
+      // 邮箱已存在
+      else if (errorStr.includes('exist') || errorStr.includes('已存在') || errorStr.includes('registered')) {
+        errorMessage = t('auth.register.errors.email_exists')
+      }
+      // 其他错误显示原始消息
+      else if (error.message && !error.message.includes('调用')) {
+        errorMessage = error.message
+      }
+    }
+
+    window.$message.error(errorMessage)
   } finally {
     registerLoading.value = false
   }
