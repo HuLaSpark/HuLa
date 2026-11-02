@@ -1,0 +1,11 @@
+database:
+  sqlite_file: db.sqlite
+backend:
+  # 本地开发环境配置
+  # 如果你有本地后端服务，请修改为本地地址，例如：
+  # base_url: http://localhost:8080/api
+  # ws_url: ws://localhost:8080/api/ws/ws
+
+  # 默认使用生产环境地址（确保后端服务可用）
+  base_url: https://hulaspark.com/api
+  ws_url: wss://hulaspark.com/api/ws/ws
