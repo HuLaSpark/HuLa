@@ -4,6 +4,7 @@
 import { createSharedComposable, tryOnScopeDispose } from '@vueuse/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import rustWebSocketClient, { ConnectionState } from '@/services/webSocketRust'
+import { info, warn, error as logError } from '@tauri-apps/plugin-log'
 
 const useSharedNetworkStatus = createSharedComposable(() => {
   // 网络状态 - 基于浏览器navigator.onLine
@@ -37,13 +38,70 @@ const useSharedNetworkStatus = createSharedComposable(() => {
   const isListening = ref(false)
   let wsUnlisten: UnlistenFn | null = null
 
+  // 自动重连相关状态
+  const isReconnecting = ref(false)
+  const reconnectAttempts = ref(0)
+  const lastOfflineTime = ref<number | null>(null)
+  const MAX_RECONNECT_ATTEMPTS = 3
+
   // 监听浏览器网络状态变化
   const handleOnline = () => {
     browserOnline.value = true
+    // 网络恢复后尝试重连
+    attemptReconnect()
   }
 
   const handleOffline = () => {
     browserOnline.value = false
+    lastOfflineTime.value = Date.now()
+    warn('[NetworkStatus] 网络已断开')
+  }
+
+  /**
+   * 执行重连逻辑
+   */
+  const attemptReconnect = async () => {
+    if (isReconnecting.value) {
+      warn('[NetworkStatus] 重连已在进行中，跳过')
+      return
+    }
+
+    isReconnecting.value = true
+    reconnectAttempts.value++
+
+    try {
+      info(`[NetworkStatus] 尝试重连 (第 ${reconnectAttempts.value} 次)`)
+
+      // 检查当前连接状态
+      const isConnected = await rustWebSocketClient.isConnected()
+
+      if (!isConnected) {
+        info('[NetworkStatus] WebSocket 未连接，执行强制重连')
+        await rustWebSocketClient.forceReconnect()
+        info('[NetworkStatus] 重连成功')
+        reconnectAttempts.value = 0 // 重置重连计数
+      } else {
+        info('[NetworkStatus] WebSocket 已连接，无需重连')
+        reconnectAttempts.value = 0
+      }
+    } catch (err) {
+      logError(`[NetworkStatus] 重连失败: ${err}`)
+
+      // 如果未达到最大重试次数，延迟后再次尝试
+      if (reconnectAttempts.value < MAX_RECONNECT_ATTEMPTS) {
+        const retryDelay = Math.min(1000 * 2 ** reconnectAttempts.value, 10000)
+        warn(`[NetworkStatus] ${retryDelay}ms 后将重试`)
+
+        setTimeout(() => {
+          attemptReconnect()
+        }, retryDelay)
+      } else {
+        logError('[NetworkStatus] 已达到最大重连次数，停止重连')
+        reconnectAttempts.value = 0
+      }
+    } finally {
+      isReconnecting.value = false
+    }
   }
 
   const isTauriContext = () => {
@@ -137,6 +195,9 @@ const useSharedNetworkStatus = createSharedComposable(() => {
     wsStatus,
     wsState,
     isWsConnecting,
+    isReconnecting,
+    reconnectAttempts,
+    attemptReconnect,
     initNetworkListener,
     cleanupNetworkListener
   }
