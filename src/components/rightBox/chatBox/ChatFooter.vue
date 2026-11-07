@@ -79,7 +79,8 @@
             <Emoticon @emojiHandle="emojiHandle" :all="false" />
           </n-popover>
 
-          <div class="flex-center gap-2px mr-12px">
+          <!-- 截图依赖桌面端能力，浏览器版不显示 -->
+          <div v-if="!isWeb" class="flex-center gap-2px mr-12px">
             <svg @click="handleScreenshot()">
               <use href="#screenshot"></use>
             </svg>
@@ -223,6 +224,7 @@ import { MittEnum, MobilePanelStateEnum, MsgEnum, RoomTypeEnum } from '@/enums'
 import { useChatLayoutGlobal } from '@/hooks/useChatLayout'
 import { type SelectionRange, useCommon } from '@/hooks/useCommon.ts'
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut.ts'
+import { isWeb } from '@/utils/runtime'
 import { useMitt } from '@/hooks/useMitt'
 import { useWindow } from '@/hooks/useWindow'
 import type { FriendItem, SessionItem } from '@/services/types'
