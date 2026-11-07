@@ -12,6 +12,7 @@ import { type ConfigEnv, defineConfig, loadEnv } from 'vite'
 import VueSetupExtend from 'vite-plugin-vue-setup-extend'
 import { getComponentsDirs, getComponentsDtsPath } from './build/config/components'
 import { createManualChunks } from './build/config/chunks'
+import { createWebAliases, webAliasGuard } from './build/config/webAlias'
 import { atStartup } from './build/config/console'
 import packageJson from './package.json'
 
@@ -39,7 +40,9 @@ const rawIP = getLocalIP() || (await internalIpV4())
 export default defineConfig(({ mode }: ConfigEnv) => {
   // 获取当前环境的配置,如何设置第三个参数则加载所有变量，而不是以"VITE_"前缀的变量
   const config = loadEnv(mode, process.cwd(), '')
-  const currentPlatform = config.TAURI_ENV_PLATFORM
+  // 浏览器版(vite --mode web)：使用 PC 布局，Tauri 模块通过别名替换为 src/platform/web 下的浏览器实现
+  const isWeb = mode === 'web'
+  const currentPlatform = isWeb ? 'linux' : config.TAURI_ENV_PLATFORM
   const isPC = currentPlatform === 'windows' || currentPlatform === 'darwin' || currentPlatform === 'linux'
 
   const serverPort = isPC ? 6130 : 5210
@@ -68,16 +71,36 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   // 是否开启启动时打印信息
   atStartup(config, mode, host)()
 
+  const baseAlias = {
+    // 配置主路径别名@
+    '@': fileURLToPath(new URL('./src', import.meta.url)),
+    // 配置移动端路径别名#
+    '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
+    // 配置路径别名~(根路径)
+    '~': fileURLToPath(new URL('.', import.meta.url))
+  }
+
+  // 浏览器版开发/预览服务器：把 VITE_WEB_API_BASE 代理到后端（HTTP 与 WebSocket）
+  const webApiBase = config.VITE_WEB_API_BASE || '/api'
+  const webProxy = {
+    [webApiBase]: {
+      target: config.WEB_API_TARGET || 'http://127.0.0.1:18760',
+      changeOrigin: true,
+      ws: true,
+      ...(config.WEB_API_STRIP_PREFIX === 'true'
+        ? { rewrite: (path: string) => path.slice(webApiBase.length) || '/' }
+        : {})
+    }
+  }
+  const webPort = Number(config.WEB_PORT || 6131)
+
   return {
+    // 浏览器版使用独立的依赖预构建缓存，与桌面端开发服务器同时运行时互不干扰
+    cacheDir: isWeb ? 'node_modules/.vite-web' : undefined,
     resolve: {
-      alias: {
-        // 配置主路径别名@
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        // 配置移动端路径别名#
-        '#': fileURLToPath(new URL('./src/mobile', import.meta.url)),
-        // 配置路径别名~(根路径)
-        '~': fileURLToPath(new URL('.', import.meta.url))
-      }
+      alias: isWeb
+        ? [...createWebAliases(), ...Object.entries(baseAlias).map(([find, replacement]) => ({ find, replacement }))]
+        : baseAlias
     },
     css: {
       preprocessorOptions: {
@@ -101,6 +124,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }
     },
     plugins: [
+      // 浏览器版：未提供替身的 Tauri 模块直接报错
+      ...(isWeb ? [webAliasGuard()] : []),
       /**
        * vue3.5.0已支持解构并具有响应式
        * */
@@ -128,6 +153,8 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       format: 'es' as const
     },
     build: {
+      // 浏览器版输出到 dist-web，避免覆盖 Tauri 使用的 dist
+      ...(isWeb ? { outDir: 'dist-web' } : {}),
       // 设置兼容低版本浏览器的目标
       target: ['chrome87', 'edge88', 'firefox78', 'safari14'],
       cssCodeSplit: true, // 启用 CSS 代码拆分
@@ -154,20 +181,30 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     // 1. prevent vite from obscuring rust errors
     clearScreen: false,
     // 2. tauri expects a fixed port, fail if that port is not available
-    server: {
-      hmr: {
-        protocol: 'ws',
-        host: host,
-        port: serverPort
-      },
-      cors: true, // 配置 CORS
-      host: '0.0.0.0',
-      port: serverPort,
-      strictPort: true,
-      watch: {
-        // 3. tell vite to ignore watching `src-tauri`
-        ignored: ['**/src-tauri/**']
-      }
-    }
+    server: isWeb
+      ? {
+          host: '0.0.0.0',
+          port: webPort,
+          strictPort: true,
+          proxy: webProxy,
+          watch: { ignored: ['**/src-tauri/**'] }
+        }
+      : {
+          hmr: {
+            protocol: 'ws',
+            host: host,
+            port: serverPort
+          },
+          cors: true, // 配置 CORS
+          host: '0.0.0.0',
+          port: serverPort,
+          strictPort: true,
+          watch: {
+            // 3. tell vite to ignore watching `src-tauri`
+            ignored: ['**/src-tauri/**']
+          }
+        },
+    // 浏览器版 vite preview 同样代理后端
+    preview: isWeb ? { host: '0.0.0.0', port: webPort, strictPort: true, proxy: webProxy } : undefined
   }
 })
