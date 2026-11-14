@@ -6,6 +6,8 @@
   :deep(.code-block-container) {
     // AI 消息气泡按内容收缩，代码块需要参与宽度计算。
     container-type: normal;
+    --code-border: var(--code-block-border-color);
+    --markstream-diff-shell-border: var(--code-block-border-color);
     background: var(--code-block-bg);
     border-radius: 10px;
     border: 1px solid var(--code-block-border-color);
