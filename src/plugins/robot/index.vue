@@ -21,13 +21,10 @@ import Left from './layout/Left.vue'
 import Right from './layout/Right.vue'
 import ChatRoleManagement from './components/ChatRoleManagement.vue'
 import ModelManagement from './components/ModelManagement.vue'
-import { getUseMonaco } from 'markstream-vue'
-import { initMarkdownRenderer } from '@/plugins/robot/utils/markdown'
+import { preloadCodeBlockRuntime } from 'markstream-vue'
 
 const showRoleManagement = ref(false)
 const showModelManagement = ref(false)
-/** 初始化 Markdown 渲染器 */
-initMarkdownRenderer()
 
 // 监听打开角色管理事件
 useMitt.on('open-role-management', () => {
@@ -57,6 +54,6 @@ const handleModelManagementRefresh = () => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show()
-  await getUseMonaco()
+  await preloadCodeBlockRuntime()
 })
 </script>
