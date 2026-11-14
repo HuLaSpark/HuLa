@@ -295,12 +295,13 @@
                               :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                               <MarkdownRender
                                 :content="message.reasoningContent"
-                                :custom-id="markdownCustomId"
+                                :final="!message.streaming"
                                 :is-dark="isDarkTheme"
                                 :viewportPriority="false"
                                 :smooth-streaming="true"
                                 :themes="markdownThemes"
-                                :code-block-props="markdownCodeBlockProps" />
+                                :code-block-props="markdownCodeBlockProps"
+                                :code-block-options="markdownCodeBlockOptions" />
                             </div>
                           </div>
 
@@ -308,12 +309,13 @@
                           <div class="code-block-wrapper" :class="isDarkTheme ? 'code-block-dark' : 'code-block-light'">
                             <MarkdownRender
                               :content="message.content"
-                              :custom-id="markdownCustomId"
+                              :final="!message.streaming"
                               :is-dark="isDarkTheme"
                               :viewportPriority="false"
                               :smooth-streaming="true"
                               :themes="markdownThemes"
-                              :code-block-props="markdownCodeBlockProps" />
+                              :code-block-props="markdownCodeBlockProps"
+                              :code-block-options="markdownCodeBlockOptions" />
                           </div>
                         </div>
                       </template>
@@ -876,14 +878,13 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { fetch as nativeFetch } from '@tauri-apps/plugin-http'
 import { type InputInst, UploadFileInfo } from 'naive-ui'
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import MsgInput from '@/components/rightBox/MsgInput.vue'
 import { useMitt } from '@/hooks/useMitt.ts'
 import { useSettingStore } from '@/stores/setting.ts'
 import { useUserStore } from '@/stores/user.ts'
-import MarkdownRender from 'markstream-vue'
-import { ROBOT_MARKDOWN_CUSTOM_ID } from '@/plugins/robot/utils/markdown'
+import MarkdownRender, { type CodeBlockOptions, type CodeBlockThemes, type NodeRendererProps } from 'markstream-vue'
 import { useResizeObserver } from '@vueuse/core'
 import { ThemeEnum, AiMsgContentTypeEnum } from '@/enums'
 import 'markstream-vue/index.css'
@@ -923,10 +924,23 @@ import { UploadSceneEnum } from '@/enums'
 const settingStore = useSettingStore()
 const userStore = useUserStore()
 const { page, themes } = storeToRefs(settingStore)
-const SHIKI_LIGHT_THEME = 'vitesse-light'
-const SHIKI_DARK_THEME = 'vitesse-dark'
-const markdownCustomId = ROBOT_MARKDOWN_CUSTOM_ID
-const markdownThemes = [SHIKI_LIGHT_THEME, SHIKI_DARK_THEME] as const as any
+const markdownThemes: CodeBlockThemes = ['vitesse-dark', 'vitesse-light']
+const markdownCodeBlockProps: NodeRendererProps['codeBlockProps'] = {
+  theme: { dark: markdownThemes[0], light: markdownThemes[1] },
+  showHeader: true,
+  showCopyButton: true,
+  showExpandButton: true,
+  isShowPreview: false,
+  showPreviewButton: false,
+  enableFontSizeControl: false,
+  showFontSizeButtons: false
+}
+const markdownCodeBlockOptions: CodeBlockOptions = {
+  disableLineNumbers: true,
+  fontSize: 14,
+  padding: 16,
+  overflow: 'scroll'
+}
 
 const MsgInputRef = ref()
 /** 是否是编辑模式 */
@@ -976,31 +990,6 @@ const isDarkTheme = computed(() => {
   }
   return content === ThemeEnum.DARK
 })
-
-const markdownCodeBlockProps = computed(() => ({
-  isDark: isDarkTheme.value,
-  darkTheme: SHIKI_DARK_THEME,
-  lightTheme: SHIKI_LIGHT_THEME,
-  themes: [SHIKI_DARK_THEME, SHIKI_LIGHT_THEME],
-  showHeader: true
-}))
-
-// 同时监听 isDarkTheme 的变化，确保在主题切换时组件能正确更新
-watch(
-  isDarkTheme,
-  (newVal) => {
-    // 主题切换时，确保 CSS 类正确应用
-    nextTick(() => {
-      // 查找所有 code-block-wrapper 元素，确保它们有正确的类
-      const wrappers = document.querySelectorAll('.code-block-wrapper')
-      wrappers.forEach((wrapper) => {
-        wrapper.classList.remove('code-block-dark', 'code-block-light')
-        wrapper.classList.add(newVal ? 'code-block-dark' : 'code-block-light')
-      })
-    })
-  },
-  { immediate: true }
-)
 
 // 消息列表
 interface Message {
@@ -1755,13 +1744,14 @@ const sendAIMessage = async (content: string, model: any) => {
     })
 
     // 添加AI消息占位符（用于流式更新）
-    const aiMessageIndex = messageList.value.length
-    messageList.value.push({
+    const aiResponse = reactive<Message>({
       type: 'assistant',
       msgType: 1, // 1=TEXT
       content: AI_THINKING_PLACEHOLDER,
+      streaming: true,
       createTime: Date.now()
     })
+    messageList.value.push(aiResponse)
 
     // 滚动到底部、用于累积AI回复内容
     scrollToBottom()
@@ -1797,23 +1787,20 @@ const sendAIMessage = async (content: string, model: any) => {
             if (data && data.success && data.data?.receive) {
               if (data.data.receive.content) {
                 const incrementalContent = data.data.receive.content
-                if (
-                  messageList.value[aiMessageIndex].content === AI_THINKING_PLACEHOLDER &&
-                  accumulatedContent === ''
-                ) {
-                  messageList.value[aiMessageIndex].content = ''
+                if (aiResponse.content === AI_THINKING_PLACEHOLDER && accumulatedContent === '') {
+                  aiResponse.content = ''
                 }
                 accumulatedContent += incrementalContent
-                messageList.value[aiMessageIndex].content = accumulatedContent
+                aiResponse.content = accumulatedContent
                 currentAiAccumulatedContent.value = accumulatedContent
               }
               if (data.data.receive.reasoningContent) {
                 const incrementalReasoningContent = data.data.receive.reasoningContent
                 accumulatedReasoningContent += incrementalReasoningContent
-                messageList.value[aiMessageIndex].reasoningContent = accumulatedReasoningContent
+                aiResponse.reasoningContent = accumulatedReasoningContent
               }
               if (data.data.receive.msgType !== undefined) {
-                messageList.value[aiMessageIndex].msgType = data.data.receive.msgType
+                aiResponse.msgType = data.data.receive.msgType
               }
               handled = true
             }
@@ -1821,17 +1808,18 @@ const sendAIMessage = async (content: string, model: any) => {
 
           if (!handled) {
             const incrementalContent = chunk || ''
-            if (messageList.value[aiMessageIndex].content === AI_THINKING_PLACEHOLDER && accumulatedContent === '') {
-              messageList.value[aiMessageIndex].content = ''
+            if (aiResponse.content === AI_THINKING_PLACEHOLDER && accumulatedContent === '') {
+              aiResponse.content = ''
             }
             accumulatedContent += incrementalContent
-            messageList.value[aiMessageIndex].content = accumulatedContent
+            aiResponse.content = accumulatedContent
             currentAiAccumulatedContent.value = accumulatedContent
           }
 
           scrollToBottom()
         },
         onDone: () => {
+          aiResponse.streaming = false
           isAIStreaming.value = false
           currentAiRequestId.value = null
           scrollToBottom()
@@ -1855,13 +1843,13 @@ const sendAIMessage = async (content: string, model: any) => {
               loadRemainingUsage(model.id)
             }
 
-            if (!messageList.value[aiMessageIndex].reasoningContent) {
+            if (!aiResponse.reasoningContent) {
               messageListByConversationId({ conversationId: currentChat.value.id, pageNo: 1, pageSize: 100 })
                 .then((list: any[]) => {
                   if (Array.isArray(list) && list.length > 0) {
                     const last = list[list.length - 1]
                     if (last && last.type === 'assistant' && last.reasoningContent) {
-                      messageList.value[aiMessageIndex].reasoningContent = last.reasoningContent
+                      aiResponse.reasoningContent = last.reasoningContent
                     }
                   }
                 })
@@ -1871,7 +1859,8 @@ const sendAIMessage = async (content: string, model: any) => {
         },
         onError: (error: string) => {
           console.error('AI流式响应错误:', error)
-          messageList.value[aiMessageIndex].content = '抱歉，发生了错误：' + error
+          aiResponse.content = '抱歉，发生了错误：' + error
+          aiResponse.streaming = false
           isAIStreaming.value = false
           currentAiRequestId.value = null
         }
@@ -1895,6 +1884,7 @@ const sendAIMessage = async (content: string, model: any) => {
 // 停止AI流式生成
 const handleStopAIStream = async () => {
   if (!isAIStreaming.value || !currentAiRequestId.value) return
+  const streamingMessage = messageList.value.find((message) => message.streaming)
   try {
     window.$message.destroyAll()
     await messageCancelStream(currentAiRequestId.value)
@@ -1919,6 +1909,7 @@ const handleStopAIStream = async () => {
     console.error('停止生成失败:', e)
     window.$message.error('停止生成失败')
   } finally {
+    if (streamingMessage) streamingMessage.streaming = false
     isAIStreaming.value = false
     currentAiRequestId.value = null
   }

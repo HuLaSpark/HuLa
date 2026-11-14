@@ -1,8 +1,11 @@
 .code-block-wrapper {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
 
   :deep(.code-block-container) {
+    // AI 消息气泡按内容收缩，代码块需要参与宽度计算。
+    container-type: normal;
     background: var(--code-block-bg);
     border-radius: 10px;
     border: 1px solid var(--code-block-border-color);
@@ -11,6 +14,7 @@
   :deep(.code-block-header) {
     background: var(--code-block-header-bg);
     border-bottom: 1px solid var(--code-block-border-color);
+    border-radius: 9px 9px 0 0;
     padding: 10px 14px;
   }
 
@@ -45,11 +49,6 @@
 
   :deep(.loading-skeleton .skeleton-line) {
     background: var(--code-block-skeleton-line);
-  }
-
-  :deep(.code-block-content) {
-    max-height: none !important;
-    overflow: visible !important;
   }
 }
 
