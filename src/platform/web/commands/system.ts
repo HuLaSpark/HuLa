@@ -8,8 +8,22 @@ import { registerCommands } from './registry'
 const PAYLOAD_PREFIX = '__web_payload:'
 export const OAUTH_SECRET_KEY = '__web_oauth_secret'
 
-const escapeHtml = (text: string) => text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)
-const preformatted = (text: string) => `<pre style="white-space:pre-wrap">${escapeHtml(text)}</pre>`
+const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || '/'
+
+// README 里的图片按仓库路径书写（public/ 与 preview/），浏览器版需映射到站点可访问的地址。
+const toWebAssetUrl = (src: string) => {
+  if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(src) || src.startsWith('#')) return src
+  const path = src.replace(/^\.\//, '')
+  return PUBLIC_ASSET_BASE + (path.startsWith('public/') ? path.slice('public/'.length) : path)
+}
+
+const rewriteAssetUrls = (html: string) =>
+  html.replace(/(<img\b[^>]*?\bsrc=")([^"]+)(")/gi, (_, pre, src, post) => pre + toWebAssetUrl(src) + post)
+
+const renderMarkdown = async (markdown: string) => {
+  const { marked } = await import('marked')
+  return rewriteAssetUrls(marked.parse(markdown, { async: false }))
+}
 
 const noop = () => null
 
@@ -59,14 +73,14 @@ registerCommands({
     const readme = String(args.language || '').startsWith('en')
       ? await import('~/README.en.md?raw')
       : await import('~/README.md?raw')
-    return preformatted(readme.default)
+    return renderMarkdown(readme.default)
   },
   async parse_markdown(args) {
     const path: string = args.filePath || ''
     if (!/^(https?:)?\//.test(path)) throw `file not available in the browser: ${path}`
     const res = await fetch(path)
     if (!res.ok) throw `failed to load ${path}: ${res.status}`
-    return preformatted(await res.text())
+    return renderMarkdown(await res.text())
   },
 
   get_windows_scale_info: () => ({ scale: window.devicePixelRatio || 1 }),

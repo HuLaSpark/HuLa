@@ -123,6 +123,9 @@ importers:
       internal-ip:
         specifier: ^9.0.0
         version: 9.0.0
+      marked:
+        specifier: 16.4.2
+        version: 16.4.2
       markstream-vue:
         specifier: 1.0.1-beta.1
         version: 1.0.1-beta.1(katex@0.16.45)(mermaid@11.14.0)(stream-markdown@0.0.15(shiki@3.23.0)(vue@3.5.33(typescript@6.0.3)))(stream-monaco@0.0.41(monaco-editor@0.55.1))(vue-i18n@11.4.0(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))

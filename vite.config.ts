@@ -1,3 +1,4 @@
+import { cpSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import UnoCSS from '@unocss/vite'
 import vue from '@vitejs/plugin-vue'
@@ -34,6 +35,21 @@ const dependencies = Object.keys(packageJson.dependencies || {})
 
 // 预先获取本地IP
 const rawIP = getLocalIP() || (await internalIpV4())
+
+// 浏览器版 HuLa 小管家直接渲染仓库根目录的 README，其截图位于 preview/，构建时一并复制到站点根目录
+const webReadmeAssets = () => ({
+  name: 'hula-web-readme-assets',
+  apply: 'build' as const,
+  closeBundle() {
+    cpSync(
+      fileURLToPath(new URL('./preview', import.meta.url)),
+      fileURLToPath(new URL('./dist-web/preview', import.meta.url)),
+      {
+        recursive: true
+      }
+    )
+  }
+})
 
 // https://vitejs.dev/config/
 /**! 不需要优化前端打包(如开启gzip) */
@@ -125,7 +141,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     },
     plugins: [
       // 浏览器版：未提供替身的 Tauri 模块直接报错
-      ...(isWeb ? [webAliasGuard()] : []),
+      ...(isWeb ? [webAliasGuard(), webReadmeAssets()] : []),
       /**
        * vue3.5.0已支持解构并具有响应式
        * */
