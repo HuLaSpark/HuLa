@@ -350,7 +350,10 @@ export const useLogin = () => {
    */
   const routerOrOpenHomeWindow = async () => {
     if (isWeb) {
-      await router?.replace('/message')
+      // The tab label is fixed at page load; a full navigation is what turns this tab into "home"
+      // so events addressed to the main window are delivered without a manual refresh.
+      window.name = 'home'
+      location.replace(`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/message`)
     } else if (isDesktop()) {
       const registerWindow = await WebviewWindow.getByLabel('register')
       if (registerWindow) {

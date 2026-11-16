@@ -3,6 +3,16 @@ import { getOSType } from '@/utils/PlatformConstants'
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24小时缓存
 
+// crypto.subtle 只在安全上下文可用，http 局域网站点会生成失败，退化为本地持久化随机 ID
+const fallbackFingerprint = (): string => {
+  const key = 'deviceFingerprintFallback'
+  const saved = localStorage.getItem(key)
+  if (saved) return saved
+  const id = `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}-${Math.random().toString(16).slice(2, 10)}`
+  localStorage.setItem(key, id)
+  return id
+}
+
 // 创建 Worker 实例
 const worker = new Worker(new URL('../workers/fingerprint.worker.ts', import.meta.url), {
   type: 'module'
@@ -82,23 +92,22 @@ export const getEnhancedFingerprint = async (): Promise<string> => {
       console.log(`Worker生成指纹耗时: ${workerTime.toFixed(2)}ms`)
 
       // 缓存结果
-      if (fingerprint) {
-        localStorage.setItem(
-          'deviceFingerprint',
-          JSON.stringify({
-            fingerprint,
-            timestamp: Date.now()
-          })
-        )
-      }
+      const finalFingerprint = fingerprint || fallbackFingerprint()
+      localStorage.setItem(
+        'deviceFingerprint',
+        JSON.stringify({
+          fingerprint: finalFingerprint,
+          timestamp: Date.now()
+        })
+      )
 
       const totalTime = performance.now() - totalStart
       console.log(`设备指纹获取总耗时: ${totalTime.toFixed(2)}ms`)
-      return fingerprint
+      return finalFingerprint
     } catch (error) {
       const totalTime = performance.now() - totalStart
       console.error(`获取设备指纹失败，总耗时: ${totalTime.toFixed(2)}ms`, error)
-      return ''
+      return fallbackFingerprint()
     } finally {
       fingerprintPromise = null
     }

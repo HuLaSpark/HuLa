@@ -7,7 +7,25 @@
  */
 const firstSegment = location.pathname.split('/')[1] || ''
 
-export const LABEL: string = window.name || (firstSegment === '' ? 'login' : firstSegment)
+// The desktop app has a single "home" window for the whole main layout; its routes (/message,
+// /friendsList, ...) must not leak into the label, otherwise events addressed to "home" are dropped.
+const MAIN_SEGMENTS = new Set(['home', 'message', 'friendsList', 'searchDetails'])
+
+const hasWebSession = () => {
+  try {
+    const auth = JSON.parse(localStorage.getItem('__web_auth') || '{}')
+    return Boolean(auth.token && auth.refreshToken)
+  } catch {
+    return false
+  }
+}
+
+const routeLabel = () => {
+  if (firstSegment === '') return hasWebSession() ? 'home' : 'login'
+  return MAIN_SEGMENTS.has(firstSegment) ? 'home' : firstSegment
+}
+
+export const LABEL: string = routeLabel()
 window.name = LABEL
 
 /** Main windows replace the current page; every other window opens in its own tab. */
