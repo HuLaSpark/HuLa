@@ -7,6 +7,7 @@ import { useChatStore } from '@/stores/chat'
 import { useGlobalStore } from '@/stores/global.ts'
 import { LoginStatus, useWsLoginStore } from '@/stores/ws'
 import { isDesktop, isMac, isMobile } from '@/utils/PlatformConstants'
+import { isWeb } from '@/utils/runtime'
 import { clearListener } from '@/utils/ReadCountQueue'
 import { ErrorType, invokeSilently, invokeWithErrorHandler } from '@/utils/TauriInvokeHandler.ts'
 import { useSettingStore } from '../stores/setting'
@@ -348,7 +349,9 @@ export const useLogin = () => {
    * 移动端: 路由跳转到主页
    */
   const routerOrOpenHomeWindow = async () => {
-    if (isDesktop()) {
+    if (isWeb) {
+      await router?.replace('/message')
+    } else if (isDesktop()) {
       const registerWindow = await WebviewWindow.getByLabel('register')
       if (registerWindow) {
         await registerWindow.close().catch(() => {

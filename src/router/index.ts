@@ -49,6 +49,7 @@ import SimpleBio from '#/views/my/SimpleBio.vue'
 import AiAssistant from '#/views/my/AiAssistant.vue'
 import MyAlbum from '#/views/my/MyAlbum.vue'
 import { TauriCommand } from '@/enums'
+import { isWeb } from '@/utils/runtime'
 import ConfirmQRLogin from '#/views/ConfirmQRLogin.vue'
 import MyQRCode from '#/views/MyQRCode.vue'
 import Splashscreen from '#/views/Splashscreen.vue'
@@ -61,6 +62,15 @@ import SyncData from '#/views/SyncData.vue'
 const { BASE_URL } = import.meta.env
 
 const isMobile = type() === 'ios' || type() === 'android'
+
+const hasWebSession = () => {
+  try {
+    const auth = JSON.parse(localStorage.getItem('__web_auth') || '{}')
+    return Boolean(auth.token && auth.refreshToken)
+  } catch {
+    return false
+  }
+}
 
 // 移动端路由配置 - 使用直接导入避免懒加载问题
 const getMobileRoutes = (): Array<RouteRecordRaw> => [
@@ -341,6 +351,10 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
 // 桌面端路由配置
 const getDesktopRoutes = (): Array<RouteRecordRaw> => [
   {
+    path: '/',
+    redirect: () => (isWeb && hasWebSession() ? '/message' : '/login')
+  },
+  {
     path: '/home',
     name: 'home',
     component: () => import('@/layout/index.vue'),
@@ -534,7 +548,8 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/loginWindow/Login.vue')
+    component: () => import('@/views/loginWindow/Login.vue'),
+    beforeEnter: () => (isWeb && hasWebSession() ? '/message' : undefined)
   },
   {
     path: '/splashscreen',
@@ -619,7 +634,15 @@ const getAllRoutes = (): Array<RouteRecordRaw> => {
   if (isMobile) {
     return [...commonRoutes, ...getMobileRoutes()]
   } else {
-    return [...commonRoutes, ...getDesktopRoutes()]
+    return [
+      ...commonRoutes,
+      ...getDesktopRoutes(),
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'notFound',
+        component: () => import('@/views/NotFound.vue')
+      }
+    ]
   }
 }
 
