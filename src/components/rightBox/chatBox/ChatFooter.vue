@@ -198,7 +198,10 @@
 
     <!-- 移动端输入框点击icon弹起的面板 -->
     <Transition v-if="isMobile()" name="panel-slide">
-      <div v-show="isPanelVisible" class="panel-container panel-container--fixed">
+      <div
+        v-show="isPanelVisible"
+        class="panel-container"
+        :class="mobilePanelState === MobilePanelStateEnum.MORE ? 'panel-container--more' : 'panel-container--fixed'">
         <Transition name="panel-content" mode="out-in">
           <div v-if="mobilePanelState === MobilePanelStateEnum.EMOJI" key="emoji" class="panel-content">
             <Emoticon @emojiHandle="emojiHandle" :all="false" />
@@ -207,7 +210,7 @@
             <VoicePanel @cancel="handleMobileVoiceCancel" @send="handleMobileVoiceSend" />
           </div>
           <div v-else-if="mobilePanelState === MobilePanelStateEnum.MORE" key="more" class="panel-content">
-            <More @sendFiles="handleMoreSendFiles" />
+            <More @sendFiles="handleMoreSendFiles" @open-voice="mobilePanelState = MobilePanelStateEnum.VOICE" />
           </div>
         </Transition>
       </div>
@@ -811,6 +814,11 @@ onUnmounted(() => {
 
 .panel-container--fixed {
   height: 18rem;
+}
+
+/* 功能面板按内容高度展示 */
+.panel-container--more {
+  height: 15rem;
 }
 
 /* 使用 transform 实现高性能动画 - 从下往上滑出 */
