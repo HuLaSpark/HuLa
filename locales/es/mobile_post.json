@@ -1,0 +1,47 @@
+{
+  "title": "Publicar en la comunidad",
+  "content": {
+    "label": "Contenido de la publicación",
+    "placeholder": "Comparte tu vida 😎"
+  },
+  "media_type": {
+    "label": "Tipo de contenido",
+    "option_image": "Imagen (no disponible temporalmente)",
+    "option_video": "Vídeo (no disponible temporalmente)"
+  },
+  "visibility": {
+    "label": "Visibilidad",
+    "public": "Público",
+    "selected": "Personas seleccionadas",
+    "exclude": "Ocultar a personas concretas",
+    "emptySelectionHint": {
+      "visible": "Selecciona quién puede verlo",
+      "hidden": "Selecciona a quién quieres ocultárselo"
+    }
+  },
+  "visibility_selected_btn_label": "Elegir quién puede verlo",
+  "visibility_exclude_btn_label": "Ocultar a...",
+  "visibility_select_btn": "Seleccionar usuarios ({count} seleccionados)",
+  "btn": {
+    "cancel": "Cancelar",
+    "publish": "Publicar"
+  },
+  "select_users": {
+    "title": "Seleccionar usuarios",
+    "search_placeholder": "Buscar usuarios",
+    "btn": {
+      "done": "Listo"
+    }
+  },
+  "empty": "Aún no tienes contactos",
+  "error": {
+    "publish_failed": "No se pudo publicar. Vuelve a intentarlo",
+    "required": "El contenido de la publicación no puede estar vacío",
+    "select_visible_users": "Selecciona quién puede verlo",
+    "select_exclude_users": "Selecciona a quién quieres ocultárselo"
+  },
+  "success": {
+    "publish_success": "Se ha publicado correctamente"
+  },
+  "unknown_user": "Usuario desconocido"
+}

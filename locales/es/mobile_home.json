@@ -1,0 +1,25 @@
+{
+  "menu": {
+    "pintop": "Fijar",
+    "unpin": "Dejar de fijar",
+    "read": "Leído",
+    "unread": "No leído",
+    "delete": "Eliminar"
+  },
+  "input": {
+    "search": "Buscar"
+  },
+  "noname": "Sin nombre",
+  "china": "China",
+  "chat": {
+    "unpin": "Dejar de fijar",
+    "pintop": "Fijar",
+    "mark_as_read": "Leído",
+    "mark_as_unread": "No leído",
+    "delete": "Eliminar"
+  },
+  "marked_as_read": "Marcado como leído",
+  "marked_as_unread": "Marcado como no leído",
+  "mark_as_read_failed": "No se pudo marcar como leído",
+  "mark_as_unread_failed": "No se pudo marcar como no leído"
+}

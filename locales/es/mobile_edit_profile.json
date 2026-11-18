@@ -1,0 +1,23 @@
+{
+  "title": "Perfil",
+  "nickname": "Apodo",
+  "gender": "Género",
+  "brithday": "Cumpleaños",
+  "region": "Región",
+  "phone": "Teléfono",
+  "bio": "Biografía",
+  "placeholder": {
+    "nickname": "Introduce un apodo",
+    "gender": "Toca para seleccionar el género",
+    "brithday": "Selecciona tu cumpleaños",
+    "region": "Toca para seleccionar la región",
+    "phone": "Introduce un número de teléfono",
+    "bio": "Escribe una breve presentación personal"
+  },
+  "save_btn": "GUARDAR",
+  "change_avatar": "Cambiar",
+  "genders": {
+    "male": "Hombre",
+    "female": "Mujer"
+  }
+}

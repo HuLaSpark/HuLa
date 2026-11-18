@@ -1,0 +1,162 @@
+{
+  "common": {
+    "provider_label": "Proveedor",
+    "provider_name": "HuLa",
+    "tag_new": "Nuevo"
+  },
+  "footer": {
+    "like_product": "¿Te gusta este producto?",
+    "star_cta": "Danos una estrella en GitHub",
+    "share_joiner": "y",
+    "share_cta": "comparte tus valiosas ideas",
+    "star_popover_title": "Danos una estrella en GitHub",
+    "star_popover_desc": "Si te gusta HuLa y quieres apoyarnos, ¿podrías darle una estrella al repositorio en GitHub? Este pequeño gesto significa mucho para nosotros y nos anima a seguir creando grandes funciones.",
+    "later": "Más tarde",
+    "star_button": "Dar una estrella",
+    "issue_popover_title": "Envíanos tus comentarios en GitHub",
+    "issue_popover_desc": "Cada idea cuenta. Nos encantaría saber de ti: ¡cuéntanos qué función o experiencia te gustaría que mejorásemos!",
+    "issue_button": "Enviar comentarios"
+  },
+  "general": {
+    "title": "General",
+    "appearance": {
+      "title": "Apariencia",
+      "theme": {
+        "auto": "Según el sistema",
+        "light": "Claro",
+        "dark": "Oscuro"
+      }
+    },
+    "chat": {
+      "title": "Chat",
+      "translate_service": "Servicio de traducción",
+      "translate_options": {
+        "tencent": "Traducción de Tencent Cloud",
+        "youdao": "Traducción de Youdao"
+      }
+    },
+    "ui": {
+      "title": "Interfaz",
+      "language": "Idioma",
+      "blur": "Desenfoque gaussiano",
+      "shadow": "Activar sombra",
+      "font": "Fuente",
+      "menu_name": "Nombres del menú",
+      "font_options": {
+        "PingFang": "PingFang",
+        "AliFangYuan": "Alibaba Rounded"
+      }
+    },
+    "system": {
+      "title": "Sistema",
+      "close_panel": "Al cerrar el panel",
+      "close_options": {
+        "minimize_to_tray": "Minimizar a la bandeja del sistema",
+        "exit_program": "Salir directamente"
+      },
+      "close_prompt": "No volver a preguntar",
+      "esc_close_window": "Cerrar ventana con ESC"
+    }
+  },
+  "login": {
+    "title": "Inicio de sesión",
+    "auto_login_startup": "Iniciar sesión automáticamente al arrancar",
+    "launch_startup": "Abrir al iniciar el sistema"
+  },
+  "notice": {
+    "title": "Notificaciones",
+    "sound": "Sonido",
+    "message_sound": "Sonido de aviso de mensajes nuevos",
+    "message_sound_descript": "Si lo activas, sonará un aviso cada vez que recibas un mensaje nuevo.",
+    "message_volume": "Volumen del aviso",
+    "message_volume_descript": "Arrastra para ajustar el volumen del sonido de aviso (0-100).",
+    "group_setting": "Ajustes de grupos",
+    "select_all": "Seleccionar todo",
+    "group_notic_type": {
+      "allow": "Permitir",
+      "silent": "Silenciar",
+      "block": "Bloquear"
+    },
+    "input": {
+      "search_group_placholder": "Buscar grupo"
+    },
+    "batch_set": "Configurar en lote",
+    "message_select_group_first": "Selecciona primero un chat de grupo para configurarlo.",
+    "unknow_group": "Grupo desconocido",
+    "group_chat_not_found": "No se ha encontrado la información del chat de grupo.",
+    "setup_fail": "No se pudo configurar",
+    "message_group_batch_setup_success": "¡Configuración en lote completada! Se ha aplicado «{type}» a {count} chats de grupo.",
+    "message_group_batch_update_result": "Actualización en lote completada: {success_count} correctas, {fail_count} fallidas.",
+    "message_reminder_allowed": "Se han activado los avisos de mensajes",
+    "message_reminder_silent": "Recibirás los mensajes, pero sin notificaciones",
+    "message_ring": "Con sonido",
+    "message_unblocked": "Desbloqueado"
+  },
+  "shortcut": {
+    "title": "Atajos",
+    "global_shortcut_title": "Globales",
+    "enable_global_shortcuts": "Activar atajos globales",
+    "enable_global_shortcuts_hint": "Si lo desactivas, se deshabilitarán todos los atajos de abajo.",
+    "function_shortcut_title": "Funciones",
+    "message_title": "Mensajes",
+    "screenshot": "Captura de pantalla",
+    "screenshot_hint": "Pulsa el atajo para hacer una captura",
+    "panel_switch": "Mostrar u ocultar panel principal",
+    "panel_switch_hint": "Pulsa el atajo para mostrar u ocultar el panel principal",
+    "message_shortcut": "Mensaje",
+    "send_message_shortcut": "Enviar mensaje",
+    "send_message_shortcut_hint": "Pulsa el atajo para enviar un mensaje",
+    "send_message_shortcut_option": "Pulsa {key} para enviar",
+    "unbound": "Sin asignar",
+    "bound": "Asignado",
+    "reset": "Restablecer",
+    "shortcut_update_result": "Se ha actualizado {name}",
+    "shortcut_setting_failed": "No se pudo configurar {name}",
+    "global_enable": "Atajos globales activados",
+    "global_disable": "Atajos globales desactivados",
+    "global_toggle_failed": "No se pudo activar o desactivar los atajos globales",
+    "send_message_updated": "Atajo de envío de mensajes actualizado",
+    "send_message_failed": "No se pudo configurar el atajo de envío de mensajes"
+  },
+  "storage": {
+    "title": "Almacenamiento",
+    "file_scan_progress": "Progreso del análisis",
+    "usage": "Proporción de archivos analizados",
+    "used_space": "Espacio usado",
+    "app_used_space": "Datos de HuLa",
+    "free_space": "Espacio libre",
+    "directory": "Directorio",
+    "curr_dir": "Directorio actual",
+    "current_file": "Archivo actual",
+    "scanning_progress": "Progreso del análisis",
+    "processed_files": "Archivos procesados",
+    "processed_files_unit": "{count} archivos",
+    "total_size": "Tamaño total",
+    "mount_point": "Punto de montaje",
+    "disk_total": "Capacidad total del disco",
+    "disk_used": "Espacio ocupado en disco",
+    "disk_usage_percent": "% de uso del disco",
+    "elapsed": "Tiempo transcurrido",
+    "elapsed_unit": "{seconds} s",
+    "path_type": "Tipo de directorio que analizar",
+    "path_type_default": "Predeterminado",
+    "path_type_custom": "Personalizado",
+    "fetching_directory": "Obteniendo directorio...",
+    "select_directory": "Elegir directorio",
+    "start_scan": "Iniciar análisis",
+    "scanning": "Analizando...",
+    "select_directory_title": "Selecciona un directorio para analizar",
+    "select_directory_failed": "No se pudo elegir el directorio",
+    "select_directory_error": "Error al seleccionar el directorio"
+  },
+  "theme": {
+    "title": "Tema",
+    "restore_default": "Restablecer",
+    "versatile": {
+      "title": "Paleta vibrante",
+      "description": "Siente el encanto de los colores y crea tu propia paleta",
+      "simple": "Elegancia minimalista"
+    }
+  },
+  "unknow": "Desconocido"
+}

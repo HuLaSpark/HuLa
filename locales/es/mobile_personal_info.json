@@ -1,0 +1,21 @@
+{
+  "account": "ID",
+  "unlocked_count_park": {
+    "text1": "Has desbloqueado",
+    "text2": "insignias"
+  },
+  "no_medal": "Aún no tienes medallas~",
+  "follower": "Seguidores",
+  "follow": "Siguiendo",
+  "like": "Me gusta",
+  "edit_profile": "Editar perfil",
+  "remove_user": "Eliminar",
+  "add_friend": "Añadir amigo",
+  "open_bot": "Abrir bot",
+  "chat": "Chatear",
+  "delete_user": {
+    "success": "Amigo eliminado correctamente",
+    "failed": "No se pudo eliminar al amigo"
+  },
+  "not_found": "No se han encontrado amigos"
+}

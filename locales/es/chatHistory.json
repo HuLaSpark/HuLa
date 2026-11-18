@@ -1,0 +1,18 @@
+{
+  "search": {
+    "placeholder": "Buscar en el historial"
+  },
+  "tabs": {
+    "all": "Todo",
+    "imageVideo": "Imágenes/vídeos",
+    "file": "Archivos"
+  },
+  "datePicker": {
+    "placeholder": "Selecciona un intervalo de fechas",
+    "start": "Fecha de inicio",
+    "end": "Fecha de fin"
+  },
+  "empty": {
+    "noData": "Aún no hay historial de chat"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Editar cumpleaños",
+  "options": {
+    "display_birthday_tag": "Mostrar etiqueta de cumpleaños",
+    "displsy_age": "Mostrar edad",
+    "display_constellation": "Mostrar signo del zodiaco"
+  },
+  "save_btn": "GUARDAR"
+}
