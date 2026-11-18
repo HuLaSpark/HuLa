@@ -1,0 +1,89 @@
+{
+  "navigation": {
+    "title": "Categorías de archivos",
+    "items": {
+      "myFiles": "Mis archivos",
+      "senders": "Por remitente",
+      "sessions": "Por conversación",
+      "groups": "Por grupo",
+      "default": "Archivos"
+    }
+  },
+  "search": {
+    "placeholder": {
+      "default": "Buscar archivos",
+      "myFiles": "Buscar en mis archivos",
+      "senders": "Buscar archivos por remitente",
+      "sessions": "Buscar archivos de conversaciones",
+      "groups": "Buscar archivos de grupos"
+    },
+    "clear": "Borrar búsqueda",
+    "showAllUsers": "Mostrar todos los usuarios"
+  },
+  "header": {
+    "titles": {
+      "myFiles": "Mis archivos",
+      "senders": "Agrupados por remitente",
+      "sessions": "Agrupados por conversación",
+      "groups": "Agrupados por grupo",
+      "default": "Lista de archivos"
+    },
+    "subtitle": {
+      "userFiles": "Archivos de {name} · {total} elementos",
+      "search": "{total} archivos encontrados",
+      "total": "{total} archivos en total"
+    }
+  },
+  "list": {
+    "fileCount": "{count} archivos",
+    "meta": {
+      "from": "De:"
+    }
+  },
+  "empty": {
+    "search": "No hay archivos relacionados",
+    "userHasNoFiles": "{name} no tiene archivos",
+    "default": "No hay archivos",
+    "senders": "No hay archivos de remitentes",
+    "sessions": "No hay archivos de conversaciones",
+    "groups": "No hay archivos de grupos"
+  },
+  "notifications": {
+    "saveFileSuccess": "Archivo guardado correctamente",
+    "saveFileFail": "No se pudo guardar el archivo",
+    "saveVideoSuccess": "Vídeo guardado correctamente",
+    "saveVideoFail": "No se pudo guardar el vídeo"
+  },
+  "common": {
+    "unknownUser": "Usuario desconocido",
+    "unknown": "Desconocido",
+    "loading": "Cargando"
+  },
+  "userList": {
+    "searchPlaceholder": {
+      "default": "Buscar",
+      "senders": "Buscar remitentes",
+      "sessions": "Buscar conversaciones",
+      "groups": "Buscar grupos"
+    },
+    "sectionTitle": {
+      "default": "Lista ({count})",
+      "senders": "Remitentes ({count})",
+      "sessions": "Conversaciones ({count})",
+      "groups": "Grupos ({count})"
+    },
+    "allOptions": {
+      "default": "Todos",
+      "senders": "Todos los remitentes",
+      "sessions": "Todas las conversaciones",
+      "groups": "Todos los grupos"
+    },
+    "empty": {
+      "default": "No hay elementos coincidentes",
+      "senders": "No hay remitentes coincidentes",
+      "sessions": "No hay conversaciones coincidentes",
+      "groups": "No hay grupos coincidentes"
+    },
+    "memberCount": "{count} miembros"
+  }
+}

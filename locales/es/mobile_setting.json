@@ -1,0 +1,14 @@
+{
+  "title": "Ajustes",
+  "silent_label": "Notificaciones",
+  "nickname": "Apodo",
+  "theme": "Tema",
+  "language": "Idioma",
+  "button": {
+    "logout": "Cerrar sesión"
+  },
+  "themes": {
+    "dark": "Oscuro",
+    "light": "Claro"
+  }
+}

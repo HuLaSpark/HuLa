@@ -1,0 +1,109 @@
+{
+  "common": {
+    "loading_title": "Cargando...",
+    "loading_desc": "Obteniendo los detalles de la publicación",
+    "image_alt": "Imagen",
+    "video_alt": "Vídeo",
+    "unknown_user": "Usuario desconocido"
+  },
+  "page": {
+    "detail": {
+      "title": "Detalles de la publicación"
+    },
+    "mobile_title": "Comunidad"
+  },
+  "list": {
+    "empty": "Aún no hay publicaciones, ¡comparte tu primer momento!",
+    "actions": {
+      "publish": "Publicar",
+      "refresh": "Actualizar",
+      "comment_notice": "Notificaciones",
+      "like": "Me gusta",
+      "liked": "Te gusta",
+      "comment": "Comentar",
+      "comment_with_count": "Comentarios ({count})"
+    },
+    "permission": {
+      "open": "Público",
+      "part_visible": "Visible para los seleccionados",
+      "not_anyone": "Oculto para los seleccionados"
+    },
+    "modal": {
+      "add_title": "Nueva publicación",
+      "content_placeholder": "Comparte algo nuevo...",
+      "visibility_label": "Quién puede verla",
+      "visibility_placeholder": "Elige la visibilidad",
+      "select_visible": "Elige quién puede verla",
+      "select_hidden": "Elige quién no puede verla",
+      "select_users": "Seleccionar usuarios",
+      "selected_count": "Seleccionar usuarios ({count} seleccionados)",
+      "user_modal_title": "Seleccionar usuarios",
+      "user_search_placeholder": "Buscar usuarios...",
+      "comment_notice_title": "Notificaciones de comentarios",
+      "comment_notice_empty_title": "No hay notificaciones",
+      "comment_notice_empty_desc": "Aún no hay comentarios"
+    },
+    "buttons": {
+      "cancel": "Cancelar",
+      "publish": "Publicar",
+      "select_users": "Seleccionar usuarios",
+      "confirm": "Confirmar",
+      "confirm_with_count": "Confirmar ({count})"
+    },
+    "comments": {
+      "more": "{count} comentarios más"
+    },
+    "loading": "Cargando...",
+    "load_more": "Cargar más",
+    "loaded_all": "Se han cargado todas las publicaciones"
+  },
+  "detail": {
+    "content": {
+      "view_image": "Ver imagen completa",
+      "video_tag": "Vídeo",
+      "video_cta": "Toca para reproducir"
+    },
+    "stats": {
+      "liked_by": "Les gusta a:",
+      "like": "Me gusta",
+      "liked": "Te gusta",
+      "comments": "Comentarios ({count})"
+    },
+    "actions": {
+      "comment": "Comentar",
+      "reply": "Responder",
+      "delete": "Eliminar"
+    },
+    "dropdown": {
+      "report": "Denunciar",
+      "delete": "Eliminar publicación"
+    },
+    "modal": {
+      "title": "Escribir un comentario",
+      "send": "Enviar",
+      "cancel": "Cancelar",
+      "placeholder": "Escribe tu comentario...",
+      "replying": "Respondiendo a {name}"
+    },
+    "empty": "La publicación no existe o se ha eliminado"
+  },
+  "messages": {
+    "refresh_success": "Actualizado",
+    "refresh_fail": "No se pudo actualizar, inténtalo de nuevo",
+    "publish_empty": "Escribe el contenido de la publicación",
+    "publish_select_visible": "Selecciona quién puede verla",
+    "publish_select_hidden": "Selecciona quién no puede verla",
+    "publish_success": "¡Publicado correctamente!",
+    "publish_fail": "No se pudo publicar, inténtalo de nuevo más tarde",
+    "delete_success": "Eliminado",
+    "delete_fail": "No se pudo eliminar, inténtalo de nuevo",
+    "copy_success": "Enlace copiado",
+    "report_todo": "La función de denuncia está en desarrollo",
+    "like_fail": "No se pudo completar la acción, inténtalo de nuevo",
+    "comment_empty": "Escribe tu comentario",
+    "comment_fail": "No se pudo publicar el comentario, inténtalo de nuevo",
+    "comment_delete_fail": "No se pudo eliminar, inténtalo de nuevo",
+    "detail_missing": "La publicación no existe o se ha eliminado",
+    "detail_fetch_fail": "No se pudieron obtener los detalles de la publicación"
+  }
+}

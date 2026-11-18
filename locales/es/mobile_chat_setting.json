@@ -1,0 +1,61 @@
+{
+  "title": "Ajustes de {t}",
+  "type": {
+    "group": "grupo",
+    "single_chat": "chat"
+  },
+  "group_members_title": "Miembros del grupo",
+  "member_count": "{count} miembros",
+  "group_invite_member": "Invitar",
+  "manage_group_members": "Gestionar miembros del grupo",
+  "search_history": "Buscar en el historial del chat",
+  "id_card": {
+    "type": {
+      "group": "Grupo",
+      "single_chat": "Chat"
+    },
+    "qr_code_label": "{t} / Código QR"
+  },
+  "group_notice": {
+    "title": "Anuncio"
+  },
+  "group_name": "Nombre del grupo",
+  "input": {
+    "group_name": "Introduce el nombre del grupo",
+    "group_alias": "Introduce tu alias en el grupo",
+    "remark": "Este nombre solo lo ves tú."
+  },
+  "group_alias": "Mi alias en el grupo",
+  "remark": "Alias",
+  "remar_kprivate_visible": "(Solo tú)",
+  "setting_type": "Ajustes de {t}",
+  "silent": "Silenciar notificaciones",
+  "pintop": "Fijar arriba",
+  "delete_chat_history": "Eliminar historial del chat",
+  "disband_group": "Disolver grupo",
+  "leave_group": "Salir del grupo",
+  "delete_friend": "Eliminar amigo",
+  "copy_id": "Se ha copiado {id}",
+  "confirm_disband_group": "¿Seguro que quieres disolver este grupo?",
+  "confirm_leave_group": "¿Seguro que quieres salir de este grupo?",
+  "confirm_delete_friend": "¿Seguro que quieres eliminar a este amigo?",
+  "session_not_exist": "La conversación actual no existe",
+  "disband_channel_failed": "No se puede disolver el canal",
+  "group_disbanded": "Se ha disuelto el grupo",
+  "leave_channel_failed": "No se puede salir del canal",
+  "group_left": "Has salido del grupo",
+  "get_friend_info_failed": "No se pudo obtener la información del amigo",
+  "delete_friend_success": "Amigo eliminado correctamente",
+  "session_not_ready": "La información de la conversación actual aún no está lista",
+  "unpinned_success": "Se ha dejado de fijar",
+  "pinned_success": "Se ha fijado arriba",
+  "pin_failed": "No se pudo fijar",
+  "group_note_updated": "Alias del grupo actualizado correctamente",
+  "remark_updated": "Alias de {n} actualizado correctamente",
+  "group_name_updated": "Nombre del grupo actualizado correctamente",
+  "setting_failed": "No se pudo aplicar el ajuste",
+  "messages_muted": "Mensajes silenciados",
+  "messages_unmuted": "Silencio desactivado",
+  "notifications_silent": "Mensajes permitidos, notificaciones desactivadas",
+  "notifications_enabled": "Notificaciones activadas"
+}

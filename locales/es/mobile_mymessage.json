@@ -1,0 +1,41 @@
+{
+  "title": "Mensajes",
+  "accept": "Aceptar",
+  "approved": "Aprobada",
+  "refused": "Rechazada",
+  "agreed": "Aceptada",
+  "declined": "Rechazada",
+  "pending": "Pendiente",
+  "ignored": "Ignorada",
+  "notification": {
+    "friend": "Notificaciones de amigos",
+    "group": "Notificaciones de grupos"
+  },
+  "friend_request_message": "Mensaje: ",
+  "unknown_user": "Desconocido",
+  "empty_require": "No hay solicitudes de amistad",
+  "empty_group_require": "No hay notificaciones de solicitudes de grupo",
+  "menu": {
+    "decline": "Rechazar",
+    "ignore": "Ignorar"
+  },
+  "friend_request_status": {
+    "accepted": "Se ha aceptado tu solicitud",
+    "verifying": "Esperando verificación",
+    "sent": "Te ha enviado una solicitud de amistad"
+  },
+  "loading": "cargando{tail}",
+  "group": {
+    "apply_to_join": "Solicita unirse a [{name}]",
+    "invited_to_join": "{inviter} te ha invitado a unirte a [{group}]",
+    "joined_group": "Te has unido a [{group}]",
+    "invited_curr_to_join": "Te ha invitado a unirte a [{group}]",
+    "kicked_out": "{operator} te ha expulsado de [{group}]",
+    "set_as_admin": "El propietario del grupo te ha nombrado administrador de [{group}]",
+    "removed_as_admin": "El propietario del grupo te ha quitado como administrador de [{group}]"
+  },
+  "tab": {
+    "friend_messages": "Amigos",
+    "group_messages": "Grupos"
+  }
+}

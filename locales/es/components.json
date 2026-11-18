@@ -1,0 +1,31 @@
+{
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "actionBar": {
+    "always_on_top": {
+      "enabled": "Desactivar siempre visible",
+      "disabled": "Activar siempre visible"
+    },
+    "close_prompt": {
+      "title": "¿Minimizar a la bandeja o salir de la aplicación?",
+      "hide_to_tray": "Minimizar a la bandeja del sistema",
+      "exit_app": "Salir de la aplicación",
+      "no_prompt": "No volver a mostrar"
+    }
+  },
+  "avatarCropper": {
+    "title": "Recortar avatar",
+    "preview": {
+      "round": "Vista previa redonda",
+      "square": "Vista previa cuadrada redondeada"
+    },
+    "uploading": "Subiendo..."
+  },
+  "announcementCard": {
+    "title": "Anuncio",
+    "viewDetail": "Ver detalles",
+    "windowTitle": "Ver anuncio del grupo"
+  }
+}

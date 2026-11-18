@@ -117,6 +117,10 @@ const settings = reactive([
       {
         label: '한국어',
         value: 'ko'
+      },
+      {
+        label: 'Español',
+        value: 'es'
       }
     ]
   }

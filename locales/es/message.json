@@ -1,0 +1,277 @@
+{
+  "file": {
+    "unknown_file": "Archivo desconocido",
+    "unknown_error": "Error desconocido",
+    "status": {
+      "downloaded": "Descargado",
+      "not_downloaded": "No descargado"
+    },
+    "toast": {
+      "missing_local": "No se encuentra el archivo local. Descárgalo primero",
+      "reveal_fail": "No se pudo mostrar el archivo en la carpeta",
+      "open_fail_hint": "No se pudo abrir ni mostrar el archivo. Búscalo manualmente en tu gestor de archivos.",
+      "download_open_fail": "El archivo se ha descargado, pero no se puede abrir ni mostrar. Búscalo manualmente en tu gestor de archivos.",
+      "download_failed": "No se pudo descargar el archivo: {reason}"
+    }
+  },
+  "video": {
+    "unknown_video": "Archivo de vídeo",
+    "uploading": "Subiendo vídeo... {progress} %",
+    "opening": "Abriendo vídeo..."
+  },
+  "file_upload": {
+    "title": "Enviar archivos",
+    "cancel": "Cancelar",
+    "send": "Enviar ({count})"
+  },
+  "file_upload_progress": {
+    "uploading_with_name": "Subiendo: {name}",
+    "uploading": "Subiendo archivos",
+    "preparing": "Preparando la subida",
+    "completed_failed": "Subida completada ({count} con errores)",
+    "completed": "Subida completada"
+  },
+  "voice_recorder": {
+    "tap_prefix": "Toca",
+    "tap_suffix": "para hablar",
+    "recording": "Grabando",
+    "processing": "Procesando audio",
+    "error": "Error al grabar"
+  },
+  "call_window": {
+    "incoming": "Llamada entrante",
+    "video_call": "Videollamada",
+    "voice_call": "Llamada de voz",
+    "unknown_user": "Usuario desconocido",
+    "status": {
+      "calling": "Llamando",
+      "ongoing": "En llamada",
+      "ended": "Llamada finalizada",
+      "preparing": "Preparando"
+    },
+    "mic_on": "Micrófono activado",
+    "mic_off": "Micrófono desactivado",
+    "speaker_on": "Altavoz activado",
+    "speaker_off": "Altavoz desactivado",
+    "camera_disable": "Desactivar cámara",
+    "camera_enable": "Activar cámara",
+    "hangup": "Colgar"
+  },
+  "permission": {
+    "mic": {
+      "title": "Permiso de micrófono",
+      "denied": "Permiso de micrófono denegado. Actívalo en los ajustes del sistema y vuelve a intentarlo",
+      "unavailable": "No se ha detectado ningún micrófono"
+    },
+    "camera": {
+      "title": "Permiso de cámara",
+      "denied": "Permiso de cámara denegado. Actívalo en los ajustes del sistema y vuelve a intentarlo",
+      "unavailable": "No se ha detectado ninguna cámara"
+    },
+    "open_settings": "Abrir ajustes del sistema",
+    "retry": "Reintentar",
+    "hangup": "Colgar",
+    "requesting": "Solicitando permiso del dispositivo..."
+  },
+  "friend_verify": {
+    "title": "Solicitud de amistad",
+    "account": "Cuenta: {account}",
+    "placeholder": "Escribe un mensaje de presentación...",
+    "send_btn": "Añadir amigo",
+    "toast_success": "Solicitud de amistad enviada",
+    "default_msg": "Soy {name}"
+  },
+  "group_verify": {
+    "title": "Solicitud para unirse al grupo",
+    "account": "ID del grupo: {account}",
+    "placeholder": "Escribe tu mensaje de verificación",
+    "send_btn": "Solicitar unirse",
+    "toast_success": "Solicitud para unirse al grupo enviada",
+    "default_msg": "Soy {name}"
+  },
+  "message_list": {
+    "sync_loading": "Sincronizando mensajes",
+    "official_popover": "Grupo oficial",
+    "bot_popover": "Asistente de HuLa",
+    "mention_tag": "[Te han mencionado]",
+    "shield_group": "Grupo silenciado",
+    "shield_user": "Usuario silenciado",
+    "empty_description": "¡Empieza a chatear con tus amigos!",
+    "empty_action": "Buscar amigos",
+    "default_last_msg": "Te damos la bienvenida a HuLa"
+  },
+  "message_menu": {
+    "pin_success": "Fijado",
+    "unpin_success": "Se ha dejado de fijar",
+    "pin_fail": "No se pudo fijar",
+    "unpin_fail": "No se pudo dejar de fijar",
+    "copy_success": "Se ha copiado {account}",
+    "shield_success": "Mensajes bloqueados",
+    "unshield_success": "Se ha quitado el bloqueo",
+    "delete_friend_success": "Amigo eliminado",
+    "cannot_dissolve_channel": "No se puede disolver el canal",
+    "cannot_quit_channel": "No se puede salir del canal",
+    "dissolve_group_success": "Grupo disuelto",
+    "quit_group_success": "Has salido del grupo",
+    "notification_allowed": "Notificaciones activadas",
+    "notification_silent": "Recibiendo en silencio"
+  },
+  "image_viewer": {
+    "zoom_out": "Alejar",
+    "zoom_in": "Acercar",
+    "rotate_left": "Girar a la izquierda",
+    "rotate_right": "Girar a la derecha",
+    "reset": "Restablecer",
+    "save_as": "Guardar como",
+    "first_image": "Esta es la primera imagen",
+    "last_image": "Ya es la última imagen",
+    "filter_name": "Imagen"
+  },
+  "video_viewer": {
+    "previous_video": "Vídeo anterior",
+    "next_video": "Vídeo siguiente",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "tip_playing_index": "Reproduciendo el vídeo n.º {index}",
+    "tip_playing_previous": "Reproduciendo el vídeo anterior",
+    "tip_first": "Este es el primer vídeo",
+    "tip_playing_next": "Reproduciendo el vídeo siguiente",
+    "tip_last": "Este es el último vídeo"
+  },
+  "screenshot": {
+    "border_radius": "Radio",
+    "redo": "Rehacer",
+    "undo": "Deshacer",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "tool_rect": "Rectángulo",
+    "tool_circle": "Círculo",
+    "tool_arrow": "Flecha",
+    "tool_mosaic": "Mosaico",
+    "tooltip_drag": "Arrastra para ajustar la selección",
+    "tooltip_resize": "Arrastra los controles para cambiar el tamaño",
+    "save_success": "Captura de pantalla copiada al portapapeles",
+    "save_failed": "No se pudo hacer la captura de pantalla, inténtalo de nuevo"
+  },
+  "lock_screen": {
+    "title": "Bloqueo de pantalla",
+    "password_label": "Contraseña de bloqueo",
+    "password_placeholder": "Introduce la contraseña de bloqueo",
+    "confirm_button": "Confirmar",
+    "validation_required": "Introduce la contraseña de bloqueo",
+    "tip_description": "Una app de mensajería instantánea de código abierto creada con tecnologías punteras como Tauri, Vue 3, Vite 5, UnoCSS y TypeScript.",
+    "enter_system_tooltip": "Entrar",
+    "unlocking": "Desbloqueando",
+    "wrong_password": "Contraseña incorrecta. Inténtalo de nuevo",
+    "toast_empty_password": "Introduce la contraseña",
+    "return_action": "Volver",
+    "logout_action": "Cerrar sesión",
+    "forgot_password": "He olvidado la contraseña",
+    "enter_system_action": "Entrar"
+  },
+  "check_update": {
+    "current_version": "Versión actual",
+    "new_tag": "nueva",
+    "new_release_date": "Fecha de la nueva versión:",
+    "release_date": "Fecha de publicación:",
+    "log_title": "Notas de la versión",
+    "collapse": "Contraer",
+    "expand": "Expandir",
+    "ignore": "Ignorar",
+    "update_now": "Actualizar ahora",
+    "check_now": "Buscar actualizaciones",
+    "downloading": "Descargando...",
+    "update_success": "Actualizado",
+    "confirm_update": "¿Continuar con la actualización?",
+    "confirm_ignore": "Si la ignoras, dejarás de ver este aviso, pero podrás actualizar más adelante. ¿Quieres ignorarla?",
+    "update_error": "Error al buscar actualizaciones, inténtalo de nuevo más tarde",
+    "fetch_log_failed": "No se pudieron cargar las notas de la versión, configura el token y vuelve a intentarlo",
+    "download_success_toast": "Instalador descargado. Se instalará y se reiniciará en breve",
+    "restart_failed": "No se pudo reiniciar, reinicia la app manualmente"
+  },
+  "notify": {
+    "new_messages": "Mensajes nuevos",
+    "ignore_all": "Ignorar todo"
+  },
+  "tray": {
+    "online_status_window_title": "Estado en línea",
+    "more_status": "Más estados",
+    "mute_all": "Silenciar todos los sonidos",
+    "unmute_all": "Activar todos los sonidos",
+    "open_main_panel": "Abrir panel principal",
+    "exit": "Salir"
+  },
+  "location": {
+    "modal": {
+      "title": {
+        "map_error": "Error del mapa",
+        "location_error": "Error de ubicación",
+        "default": "Elige una ubicación"
+      },
+      "result": {
+        "map_error_title": "No se pudo cargar el mapa",
+        "location_error_title": "No se pudo obtener la ubicación"
+      },
+      "buttons": {
+        "cancel": "Cancelar",
+        "retry": "Reintentar",
+        "send": "Enviar ubicación"
+      },
+      "loading": {
+        "locating": "Obteniendo ubicación...",
+        "map": "Cargando mapa..."
+      },
+      "info": {
+        "current": "Ubicación actual",
+        "fetching_address": "Obteniendo dirección...",
+        "coordinate": "Coord.: {lat}, {lng}",
+        "unknown_address": "Dirección desconocida"
+      },
+      "errors": {
+        "missing_api_key": "No se ha configurado la clave de API de Tencent Map",
+        "geocode_failed": "No se pudo obtener la dirección"
+      }
+    },
+    "map": {
+      "marker_current": "Ubicación actual"
+    },
+    "hook": {
+      "permission_check_failed": "No se pudo comprobar el permiso de geolocalización",
+      "unsupported": "Este navegador no admite la geolocalización",
+      "error_generic": "No se pudo obtener la ubicación",
+      "permission_denied": "Permiso de ubicación denegado",
+      "position_unavailable": "Ubicación no disponible",
+      "timeout": "Se ha agotado el tiempo de espera de la ubicación"
+    }
+  },
+  "update_window": {
+    "updating": "Actualizando",
+    "fetch_commit_failed": "No se pudieron cargar las notas de la versión v{version}",
+    "fetch_release_error": "No se pudo obtener la información de la versión",
+    "fetch_release_error_with_reason": "No se pudo obtener la información de la versión: {reason}"
+  },
+  "multi_choose": {
+    "search_placeholder": "Buscar conversaciones",
+    "send_to_separately": "Enviar por separado a",
+    "leave_message_placeholder": "Añade una nota",
+    "single_forward": "Reenviar uno a uno",
+    "merge_forward": "Reenviar combinados",
+    "save_to_pc": "Guardar en el ordenador",
+    "delete_action": "Eliminar",
+    "exit_multi_select": "Salir de la selección",
+    "cancel_button": "Cancelar",
+    "send_button": "Enviar",
+    "not_implemented": "Todavía no disponible",
+    "select_delete_prompt": "Selecciona los mensajes que quieres eliminar",
+    "delete_confirm": "Los mensajes eliminados desaparecerán de tu historial. ¿Eliminar estos {count} mensajes?",
+    "room_missing": "No se reconoce la conversación actual, no se pudo eliminar",
+    "delete_failed_short": "No se pudo eliminar el mensaje",
+    "delete_failed_retry": "No se pudo eliminar, inténtalo de nuevo más tarde",
+    "delete_success": "Mensajes seleccionados eliminados",
+    "forward_success": "Mensajes reenviados",
+    "forward_failed": "No se pudo reenviar",
+    "non_text_message": "[Mensaje sin texto]"
+  }
+}
