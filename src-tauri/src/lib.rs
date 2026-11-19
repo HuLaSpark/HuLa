@@ -349,6 +349,9 @@ fn setup_logout_listener(app_handle: tauri::AppHandle) {
 #[cfg(mobile)]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn setup_mobile() {
+    #[cfg(target_os = "android")]
+    mobiles::init_android_ndk_context();
+
     splash::show();
     // 创建一个缓存实例
     // let cache: Cache<String, String> = Cache::builder()

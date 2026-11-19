@@ -5,6 +5,7 @@ import { createSharedComposable, tryOnScopeDispose } from '@vueuse/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import rustWebSocketClient, { ConnectionState } from '@/services/webSocketRust'
 import { info, warn, error as logError } from '@tauri-apps/plugin-log'
+import { isWeb } from '@/utils/runtime'
 
 const useSharedNetworkStatus = createSharedComposable(() => {
   // 网络状态 - 基于浏览器navigator.onLine
@@ -104,9 +105,10 @@ const useSharedNetworkStatus = createSharedComposable(() => {
     }
   }
 
+  // 浏览器版的 WebSocket 状态同样通过 websocket-event 事件上报
   const isTauriContext = () => {
     if (typeof window === 'undefined') return false
-    return Boolean((window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__)
+    return isWeb || Boolean((window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__)
   }
 
   const resolveWsState = (state: unknown): ConnectionState | null => {

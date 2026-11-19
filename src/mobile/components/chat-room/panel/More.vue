@@ -1,69 +1,51 @@
 <template>
-  <div class="h-15rem w-full">
-    <van-swipe class="h-full" :loop="false" :show-indicators="true" indicator-color="#999">
+  <div class="h-full w-full">
+    <van-swipe class="h-full" :loop="false" :show-indicators="pages.length > 1" indicator-color="#999">
       <van-swipe-item v-for="(page, pageIndex) in pages" :key="pageIndex">
-        <div class="px-15px pt-15px pb-30px grid grid-cols-4 gap-3 auto-rows-18">
-          <div
-            @click="handleClickIcon(item)"
-            v-for="item in page"
-            :key="item.id"
-            class="flex flex-col gap-8px items-center justify-center rounded-2">
-            <svg
-              v-if="item.label !== '文件' && item.label !== '图片' && item.isShow()"
-              class="h-24px w-24px iconpark-icon">
-              <use :href="`#${item.icon}`"></use>
-            </svg>
-
+        <div class="more-panel">
+          <div v-for="item in page" :key="item.id" v-show="item.isShow()" class="more-cell">
             <van-uploader
-              v-if="item.label === '文件' && item.isShow()"
-              accept="*/*"
+              v-if="item.id === 'file' || item.id === 'image'"
+              :accept="item.id === 'file' ? '*/*' : 'image/*'"
               multiple
-              :after-read="afterReadFile">
-              <svg class="h-24px w-24px iconpark-icon">
-                <use :href="`#${item.icon}`"></use>
-              </svg>
-              <svg
-                v-if="item.showArrow"
-                :class="[
-                  'h-15px w-15px iconpark-icon transition-transform duration-300',
-                  item.isRotate ? 'rotate' : ''
-                ]">
-                <use href="#down" />
-              </svg>
+              :after-read="item.id === 'file' ? afterReadFile : afterReadImage">
+              <div class="more-tile">
+                <svg class="more-icon iconpark-icon">
+                  <use :href="`#${item.icon}`"></use>
+                </svg>
+              </div>
+              <span class="more-label">{{ item.label }}</span>
             </van-uploader>
 
-            <van-uploader
-              v-if="item.label === '图片' && item.isShow()"
-              accept="image/*"
-              multiple
-              :after-read="afterReadImage">
-              <svg class="h-24px w-24px iconpark-icon">
-                <use :href="`#${item.icon}`"></use>
-              </svg>
-              <svg
-                v-if="item.showArrow"
-                :class="[
-                  'h-15px w-15px iconpark-icon transition-transform duration-300',
-                  item.isRotate ? 'rotate' : ''
-                ]">
-                <use href="#down" />
-              </svg>
-            </van-uploader>
-
-            <div class="text-10px" v-if="item.isShow()">
-              {{ item.label }}
-            </div>
+            <button v-else type="button" class="more-button" @click="handleClickIcon(item)">
+              <div class="more-tile">
+                <svg class="more-icon iconpark-icon">
+                  <use :href="`#${item.icon}`"></use>
+                </svg>
+              </div>
+              <span class="more-label">{{ item.label }}</span>
+            </button>
           </div>
         </div>
       </van-swipe-item>
     </van-swipe>
 
-    <van-popup v-model:show="pickRtcCall" position="bottom">
-      <div class="flex flex-col items-center justify-center">
-        <div class="w-full text-center py-3" @click="startCall(CallTypeEnum.VIDEO)">视频通话</div>
-        <div class="w-full text-center py-3" @click="startCall(CallTypeEnum.AUDIO)">语音通话</div>
-        <div class="w-full text-center py-3">取消</div>
+    <van-popup v-model:show="pickRtcCall" position="bottom" round class="call-sheet-popup">
+      <div class="call-sheet">
+        <div class="call-sheet__item" @click="startCall(CallTypeEnum.VIDEO)">
+          <span class="call-sheet__icon">
+            <svg class="iconpark-icon"><use href="#video-one"></use></svg>
+          </span>
+          <span class="call-sheet__label">视频通话</span>
+        </div>
+        <div class="call-sheet__item" @click="startCall(CallTypeEnum.AUDIO)">
+          <span class="call-sheet__icon">
+            <svg class="iconpark-icon"><use href="#phone-telephone"></use></svg>
+          </span>
+          <span class="call-sheet__label">语音通话</span>
+        </div>
       </div>
+      <div class="call-sheet__cancel" @click="pickRtcCall = false">取消</div>
     </van-popup>
   </div>
 </template>
@@ -79,17 +61,22 @@ const globalStore = useGlobalStore()
 const isGroup = computed(() => globalStore.currentSession?.type === RoomTypeEnum.GROUP)
 
 const pickRtcCall = ref(false)
+
+const emit = defineEmits<{
+  (e: 'sendFiles', files: File[]): void
+  (e: 'openVoice'): void
+}>()
+
 // ==== 展开面板 ====
 const options = ref([
-  { label: '文件', icon: 'file', showArrow: false, isRotate: true, onClick: () => {}, isShow: () => true },
-  { label: '图片', icon: 'photo', showArrow: false, isRotate: true, onClick: () => {}, isShow: () => true },
-  { label: '视频', icon: 'voice', showArrow: true, isRotate: false, onClick: () => {}, isShow: () => true },
-  { label: '历史', icon: 'history', showArrow: true, isRotate: false, onClick: () => {}, isShow: () => true },
+  { id: 'file', label: '文件', icon: 'file', onClick: () => {}, isShow: () => true },
+  { id: 'image', label: '图片', icon: 'photo', onClick: () => {}, isShow: () => true },
+  { id: 'voice', label: '语音', icon: 'voice', onClick: () => emit('openVoice'), isShow: () => true },
+  { id: 'history', label: '历史', icon: 'history', onClick: () => {}, isShow: () => true },
   {
+    id: 'call',
     label: '视频通话',
-    icon: 'video-one',
-    showArrow: true,
-    isRotate: false,
+    icon: 'phone-telephone',
     onClick: () => {
       pickRtcCall.value = true
     },
@@ -128,8 +115,6 @@ const startCall = (callType: CallTypeEnum) => {
     }
   })
 }
-
-const emit = defineEmits<(e: 'sendFiles', files: File[]) => void>()
 
 const selectedFiles = ref<File[]>([])
 
@@ -218,4 +203,129 @@ const afterReadImage = (fileList: UploaderFileListItem | UploaderFileListItem[])
 }
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+.more-panel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 8px;
+  row-gap: 20px;
+  height: 100%;
+  padding: 20px 16px 12px;
+  box-sizing: border-box;
+}
+
+.more-cell {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+
+  :deep(.van-uploader),
+  :deep(.van-uploader__wrapper),
+  :deep(.van-uploader__input-wrapper) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+}
+
+.more-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.more-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background-color: var(--panel-tile-bg);
+  transition: transform 0.15s ease;
+}
+
+.more-button:active .more-tile,
+.more-cell :deep(.van-uploader__input-wrapper:active .more-tile) {
+  transform: scale(0.94);
+}
+
+.more-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--panel-tile-icon);
+}
+
+.more-label {
+  margin-top: 7px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-color);
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+:global(.call-sheet-popup) {
+  background-color: var(--bg-info);
+}
+
+.call-sheet {
+  padding: 6px 16px 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 2px;
+
+    & + & {
+      border-top: 1px solid var(--setting-item-line);
+    }
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background-color: var(--panel-tile-bg);
+
+    svg {
+      width: 20px;
+      height: 20px;
+      color: var(--panel-tile-icon);
+    }
+  }
+
+  &__label {
+    font-size: 16px;
+    color: var(--text-color);
+  }
+
+  &__cancel {
+    margin-top: 6px;
+    padding: 15px 0 calc(15px + env(safe-area-inset-bottom));
+    text-align: center;
+    font-size: 16px;
+    color: var(--text-color);
+    border-top: 1px solid var(--setting-item-line);
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+}
+</style>
