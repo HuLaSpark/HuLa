@@ -1,0 +1,36 @@
+{
+  "title": {
+    "create": "Crear anuncio del grupo",
+    "view": "Anuncios del grupo",
+    "edit": "Editar anuncio del grupo"
+  },
+  "form": {
+    "placeholder": "Escribe el anuncio (1-600 caracteres)",
+    "pinned": "Fijar arriba",
+    "actions": {
+      "cancel": "Cancelar",
+      "publish": "Publicar",
+      "new": "Publicar nuevo anuncio"
+    }
+  },
+  "list": {
+    "empty": "Aún no hay anuncios",
+    "loadMore": "Cargar más",
+    "noMore": "No hay más anuncios",
+    "deleteConfirm": "¿Seguro que quieres eliminar este anuncio?",
+    "delete": {
+      "confirm": "Eliminar",
+      "cancel": "Cancelar"
+    },
+    "expand": "Mostrar más",
+    "collapse": "Mostrar menos"
+  },
+  "toast": {
+    "contentRequired": "El contenido del anuncio no puede estar vacío",
+    "contentTooLong": "El anuncio no puede superar los 600 caracteres",
+    "createSuccess": "Anuncio publicado correctamente",
+    "createFail": "No se pudo publicar el anuncio",
+    "editSuccess": "Anuncio actualizado correctamente",
+    "editFail": "No se pudo actualizar el anuncio"
+  }
+}

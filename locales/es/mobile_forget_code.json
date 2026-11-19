@@ -1,0 +1,49 @@
+{
+  "title": "Recuperar contraseña",
+  "steps": {
+    "verify_email": "Verificar correo",
+    "set_new_password": "Nueva contraseña",
+    "done": "Listo"
+  },
+  "input": {
+    "label": {
+      "email": "Correo electrónico",
+      "email_verification_code": "Código de verificación",
+      "new_pass": "Nueva contraseña",
+      "confirm_password": "Confirmar contraseña"
+    },
+    "email": "Correo electrónico",
+    "email_code": "Código",
+    "new_pass": "Introduce una nueva contraseña ({len} caracteres)",
+    "confirm_password": "Vuelve a introducir la contraseña"
+  },
+  "validation": {
+    "minlength": "Al menos {len} caracteres",
+    "valid_characters": "Solo letras y números",
+    "must_special_char": "Debe incluir un carácter especial",
+    "passwords_match": "Las contraseñas coinciden"
+  },
+  "button": {
+    "send_email_code": "Enviar código",
+    "next": "Siguiente",
+    "go_back_setp": "Atrás",
+    "submit": "Enviar"
+  },
+  "password_reset_success": "Contraseña restablecida correctamente",
+  "password_reset_success_desc": "Ya puedes iniciar sesión con tu nueva contraseña",
+  "rules": {
+    "email_require": "Introduce tu correo electrónico",
+    "email_invalid": "Introduce un correo electrónico válido",
+    "email_code_require": "Introduce el código de verificación que te hemos enviado por correo",
+    "code_length": "El código de verificación debe tener {len} dígitos",
+
+    "new_pass_require": "Introduce una nueva contraseña",
+    "new_pass_length": "La contraseña debe tener {len} caracteres",
+
+    "confirm_pass_require": "Confirma tu contraseña",
+    "pass_not_match": "Las contraseñas no coinciden"
+  },
+  "too_many_requests": "Demasiadas solicitudes. Vuelve a intentarlo dentro de {s} segundos",
+  "code_sent_email": "Te hemos enviado el código de verificación por correo",
+  "email_resend_in": "Reenviar en {seconds} s"
+}

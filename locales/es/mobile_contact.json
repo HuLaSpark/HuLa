@@ -1,0 +1,17 @@
+{
+  "title": "Contactos",
+  "input": {
+    "search": "Buscar"
+  },
+  "my_chat": "Mis mensajes",
+  "tab": {
+    "contacts": "Amigos",
+    "group": "Grupos"
+  },
+  "friend": {
+    "title": "Mis amigos"
+  },
+  "group": {
+    "title": "Mis grupos"
+  }
+}

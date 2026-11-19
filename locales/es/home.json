@@ -1,0 +1,489 @@
+{
+  "search_suggestions": "Sugerencias",
+  "search_guide": "Busca desde el cuadro de búsqueda",
+  "no_search_results": "No se han encontrado resultados",
+  "search_result": "Resultados",
+  "search_history": "Historial",
+  "search_input_placeholder": "Buscar",
+  "clear_search_history": "Borrar",
+  "loading": {
+    "app": "Cargando la aplicación...",
+    "left_panel": "Cargando el panel izquierdo...",
+    "data": "Cargando datos...",
+    "right_panel": "Cargando el panel derecho..."
+  },
+  "action": {
+    "message": "Mensajes",
+    "message_short_title": "Mensajes",
+    "contact": "Amigos",
+    "contact_short_title": "Amigos",
+    "file_manager": "Gestor de archivos",
+    "file_manager_short_title": "Archivos",
+    "favorite": "Favoritos",
+    "favorite_short_title": "Favoritos",
+    "plugin": "Plugins",
+    "plugin_manage": "Gestión de plugins",
+    "more": "Más",
+    "opened": "(ventana abierta)",
+    "start_group_chat": "Iniciar chat de grupo",
+    "add_friend_or_group": "Añadir amigo/grupo"
+  },
+  "plugins": {
+    "dynamic": "Momentos",
+    "dynamic_short_title": "Momentos",
+    "chatbot": "ChatBot",
+    "chatbot_short_title": "ChatBot",
+    "status": {
+      "builtin": "Integrado",
+      "uninstalling": "Desinstalando"
+    },
+    "actions": {
+      "install": "Instalar",
+      "pin": "Fijar en la barra lateral",
+      "unpin": "Dejar de fijar",
+      "uninstall": "Desinstalar"
+    }
+  },
+  "search_window": {
+    "title": "Búsqueda global",
+    "tabs": {
+      "recommend": "Recomendados",
+      "user": "Buscar amigos",
+      "group": "Buscar grupos"
+    },
+    "placeholder": {
+      "recommend": "Introduce palabras clave para explorar",
+      "user": "Busca un apodo para añadir amigos",
+      "group": "Introduce el ID del grupo para buscarlo"
+    },
+    "labels": {
+      "account": "Cuenta: {account}"
+    },
+    "tooltip": {
+      "copy_account": "Copiar cuenta",
+      "bound_gitee": "Gitee vinculado",
+      "bound_github": "GitHub vinculado",
+      "bound_gitcode": "Gitcode vinculado"
+    },
+    "empty": {
+      "no_result": "No hay resultados coincidentes",
+      "prompt": "Introduce palabras clave para buscar"
+    },
+    "notification": {
+      "copy_success": "Se ha copiado {account}",
+      "search_fail": "No se pudo realizar la búsqueda"
+    },
+    "buttons": {
+      "add": "Añadir",
+      "message": "Enviar mensaje",
+      "edit_profile": "Editar perfil"
+    },
+    "modal": {
+      "add_friend": "Solicitud de amistad",
+      "add_group": "Solicitud para unirse al grupo"
+    }
+  },
+  "chat_details": {
+    "single": {
+      "empty_signature": "Este usuario aún no ha escrito su biografía",
+      "region": "Región: {place}",
+      "unknown": "Desconocida",
+      "badge_label": "Insignias:",
+      "call_only_single": "Las llamadas de voz y vídeo solo están disponibles en chats individuales",
+      "friend_info_missing": "No se pudo cargar la información del amigo",
+      "footer": {
+        "audio_call": "Llamada de voz",
+        "video_call": "Videollamada"
+      }
+    },
+    "group": {
+      "official_badge": "Grupo oficial",
+      "id": "ID del grupo {account}",
+      "copy": "Copiar",
+      "copy_success": "Se ha copiado {account}",
+      "info_missing": "No se pudo cargar la información del grupo",
+      "remark": {
+        "label": "Alias del grupo",
+        "placeholder": "Introduce un alias",
+        "empty": "Establecer alias del grupo",
+        "success": "Alias del grupo actualizado",
+        "fail": "No se pudo actualizar el alias del grupo"
+      },
+      "nickname": {
+        "label": "Mi apodo",
+        "placeholder": "Introduce un apodo",
+        "empty": "Sin establecer",
+        "success": "Apodo actualizado",
+        "fail": "No se pudo actualizar el apodo"
+      },
+      "announcement": {
+        "label": "Anuncios",
+        "empty": "Sin establecer",
+        "window_title": "Ver anuncios"
+      },
+      "members": {
+        "count": "Miembros ({count})",
+        "online": "{count} en línea"
+      }
+    },
+    "actions": {
+      "message": "Enviar mensaje"
+    },
+    "window": {
+      "image_viewer": "Visor de imágenes"
+    }
+  },
+  "chat_reaction": {
+    "like": "Me gusta",
+    "unsatisfied": "Descontento",
+    "heart": "Corazón",
+    "angry": "Enfadado",
+    "party": "Celebrar",
+    "rocket": "Cohete",
+    "lol": "Jaja",
+    "clap": "Aplaudir",
+    "flower": "Flor",
+    "bomb": "Bomba",
+    "question": "Confundido",
+    "victory": "Victoria",
+    "light": "Luz",
+    "red_envelope": "Sobre rojo"
+  },
+  "chat_header": {
+    "bot_tag": "Asistente",
+    "status_abnormal": "Estado del amigo no disponible",
+    "toolbar": {
+      "audio_call": "Llamada de voz",
+      "video_call": "Videollamada",
+      "screen_share": "Compartir pantalla",
+      "remote_assist": "Asistencia remota",
+      "invite_to_group": "Invitar al grupo",
+      "start_group_chat": "Iniciar chat de grupo"
+    },
+    "sidebar": {
+      "single": {
+        "pin": "Fijar arriba",
+        "mute": "Silenciar notificaciones",
+        "shield": "Bloquear usuario",
+        "delete_history": "Eliminar historial de chat",
+        "delete_friend": "Eliminar amigo",
+        "report": "¿Sufres acoso? Denuncia a este usuario"
+      },
+      "group": {
+        "name_placeholder": "Introduce el nombre del grupo (máx. 12 caracteres)",
+        "official_badge": "Grupo oficial",
+        "copy": "Copiar",
+        "qr": "QR",
+        "members": "Miembros del grupo",
+        "channel_members": "Miembros del canal",
+        "my_name": "Mi apodo",
+        "remark": "Alias del grupo",
+        "remark_desc": "(Solo lo ves tú)",
+        "settings": {
+          "title": "Ajustes del grupo",
+          "pin": "Fijar arriba",
+          "mute": "Silenciar notificaciones",
+          "scan": "Permitir unirse con código QR"
+        },
+        "message_settings": {
+          "title": "Ajustes de mensajes"
+        },
+        "manage_members": "Gestionar miembros",
+        "delete_history": "Eliminar historial de chat",
+        "dissolve": "Disolver grupo",
+        "exit": "Salir del grupo",
+        "report": "¿Sufres acoso? Denuncia este grupo"
+      }
+    },
+    "message_setting": {
+      "receive_no_alert": "Recibir sin avisos",
+      "shield": "Bloquear mensajes"
+    },
+    "modal": {
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "invite_friends": "Invitar a amigos",
+      "tips": {
+        "delete_friend": "¿Eliminar a este amigo?",
+        "dissolve_group": "¿Disolver este grupo?",
+        "exit_group": "¿Salir de este grupo?",
+        "rename_group": "¿Cambiar el nombre del grupo a {name}?",
+        "update_info": "¿Guardar los cambios en la información del grupo?",
+        "delete_history": "¿Eliminar el historial de chat local?"
+      }
+    },
+    "qr": {
+      "tip": "Escanea el código QR para unirte",
+      "group_id_label": "ID del grupo: ",
+      "actions": {
+        "forward": "Reenviar",
+        "copy_group_id": "Copiar ID del grupo",
+        "save_image": "Guardar imagen"
+      },
+      "toast": {
+        "group_id_copied": "ID del grupo copiado",
+        "save_success": "Imagen guardada",
+        "save_failed": "No se pudo guardar"
+      }
+    },
+    "toast": {
+      "copy_success": "Se ha copiado {account}",
+      "group_info_updated": "Información del grupo actualizada",
+      "group_info_update_failed": "No se pudo actualizar la información del grupo",
+      "todo": "Próximamente",
+      "pin_on": "Fijado arriba",
+      "pin_off": "Ya no está fijado",
+      "pin_failed": "No se pudo fijar",
+      "mute_on": "Recibirás los mensajes sin avisos",
+      "mute_off": "Notificaciones reactivadas",
+      "shield_on": "Mensajes bloqueados",
+      "shield_off": "Mensajes desbloqueados",
+      "action_failed": "No se pudo completar la operación",
+      "group_name_empty": "El nombre del grupo no puede estar vacío",
+      "group_name_too_long": "El nombre del grupo no puede superar los 12 caracteres",
+      "delete_history_success": "Historial de chat eliminado",
+      "delete_history_failed": "No se pudo eliminar el historial de chat",
+      "delete_friend_success": "Amigo eliminado",
+      "dissolve_not_allowed": "No se puede disolver el canal",
+      "dissolve_success": "Grupo disuelto",
+      "exit_not_allowed": "No se puede salir del canal",
+      "exit_success": "Has salido del grupo",
+      "group_name_update_failed": "No se pudo cambiar el nombre del grupo"
+    }
+  },
+  "manage_group_member": {
+    "title": "Gestionar miembros del grupo",
+    "search_placeholder_mobile": "Buscar miembros~",
+    "search_placeholder_pc": "Buscar miembros del grupo",
+    "selected_count": "{count} miembros seleccionados",
+    "remove_button": "Quitar del grupo",
+    "dialog_negative": "Cancelar",
+    "dialog_positive": "Confirmar",
+    "remove_confirm": "¿Quitar a {count} miembros?",
+    "channel_not_allowed": "No se pueden quitar miembros de un canal",
+    "select_member_warning": "Selecciona los miembros que quieres quitar",
+    "remove_success": "Se han quitado {count} miembros",
+    "remove_failed": "No se pudieron quitar los miembros, inténtalo de nuevo",
+    "confirm_remove_title": "Confirmar eliminación",
+    "channel_manage_unsupported": "Los canales no admiten la gestión de miembros"
+  },
+  "profile_card": {
+    "online_status": "Estado en línea",
+    "status": {
+      "online": "En línea",
+      "offline": "Sin conexión"
+    },
+    "labels": {
+      "account": "Cuenta",
+      "location": "Ubicación",
+      "badges": "Insignias",
+      "activities": "Momentos"
+    },
+    "location_unknown": "Desconocida",
+    "tooltip": {
+      "copy_account": "Copiar cuenta",
+      "bound_gitee": "Gitee vinculado",
+      "bound_github": "GitHub vinculado",
+      "bound_gitcode": "Gitcode vinculado"
+    },
+    "buttons": {
+      "edit": "Editar perfil",
+      "message": "Enviar mensaje",
+      "add_friend": "Añadir amigo"
+    },
+    "notification": {
+      "copy_success": "Se ha copiado {account}"
+    },
+    "modal": {
+      "add_friend": "Solicitud de amistad"
+    },
+    "developer_badge": "Desarrollador de HuLa"
+  },
+  "profile_edit": {
+    "title": "Editar perfil",
+    "avatar": {
+      "change": "Cambiar avatar",
+      "tips": "Tamaño recomendado: 180x180 px. Admite archivos JPG, PNG y WEBP de menos de 500 KB"
+    },
+    "badge": {
+      "current": "Insignia actual:",
+      "wear": "Usar"
+    },
+    "form": {
+      "nickname": {
+        "label": "Apodo",
+        "placeholder": "Introduce tu apodo",
+        "remaining": "Cambios de apodo restantes: {count}"
+      }
+    },
+    "actions": {
+      "save": "Guardar"
+    },
+    "toast": {
+      "avatar_update_success": "Avatar actualizado"
+    }
+  },
+  "chat_sidebar": {
+    "announcement": {
+      "title": "Anuncio del grupo",
+      "load_failed": "No se pudo cargar el anuncio, inténtalo de nuevo",
+      "default": "No compartas información sensible. Respeta las normas de internet o el mensaje se eliminará.",
+      "window": {
+        "add": "Añadir anuncio",
+        "view": "Ver anuncio"
+      }
+    },
+    "actions": {
+      "retry": "Reintentar"
+    },
+    "online_members": "Miembros en línea: {count}",
+    "search": {
+      "placeholder": "Buscar"
+    },
+    "roles": {
+      "owner": "Propietario",
+      "admin": "Administrador"
+    }
+  },
+  "about": {
+    "version": "Versión: {version} ({arch})",
+    "device": "Dispositivo: {type}{version}",
+    "copyright": "Copyright © {start}-{end} HuLaSpark",
+    "rights": "Todos los derechos reservados."
+  },
+  "apply_list": {
+    "friend_notice": "Solicitudes de amistad",
+    "group_notice": "Notificaciones de grupos",
+    "you": "Tú",
+    "unknown_user": "Usuario desconocido",
+    "message_label": "Mensaje: ",
+    "handler_label": "Gestionado por: {name}",
+    "accept": "Aceptar",
+    "status": {
+      "accepted": "Aprobada",
+      "rejected": "Rechazada",
+      "ignored": "Ignorada",
+      "rejected_by_other": "Rechazada por el destinatario",
+      "pending": "Pendiente de verificación"
+    },
+    "friend": {
+      "accepted_you": "Ha aprobado tu solicitud",
+      "pending": "Esperando verificación",
+      "request": "Quiere añadirte como amigo"
+    },
+    "group": {
+      "loading": "Cargando...",
+      "apply": "Solicita unirse a [{group}]",
+      "invite": "Invita a {name} a unirse a [{group}]",
+      "invite_confirmed": "Se ha unido a [{group}]",
+      "invite_you": "Te invita a unirte a [{group}]",
+      "kicked": "Expulsado de [{group}] por {operator}",
+      "set_admin": "Nombrado administrador de [{group}]",
+      "remove_admin": "Ya no es administrador de [{group}]"
+    },
+    "dropdown": {
+      "reject": "Rechazar",
+      "ignore": "Ignorar"
+    },
+    "empty_friend": "No hay solicitudes de amistad",
+    "empty_group": "No hay notificaciones de grupos"
+  },
+  "chat_main": {
+    "network_offline": "Red no disponible, comprueba los ajustes de red",
+    "network_connecting": "Conectando con el servidor...",
+    "network_ws_offline": "Se ha perdido la conexión con el servidor, reintentando",
+    "copy": {
+      "empty": "No hay nada que copiar",
+      "image_processing": "Convirtiendo imagen {format} a PNG...",
+      "image_success": "Imagen copiada al portapapeles",
+      "image_convert_success": "Imagen convertida a PNG y copiada",
+      "selected_success": "Texto seleccionado copiado",
+      "message_success": "Mensaje copiado",
+      "unknown_error": "No se pudo copiar el contenido, inténtalo de nuevo más tarde"
+    },
+    "feature": {
+      "coming_soon": "Función en desarrollo"
+    },
+    "translate": {
+      "empty": "No hay nada que traducir"
+    },
+    "file": {
+      "missing_local": "El archivo no está en tu dispositivo, descárgalo primero",
+      "show_failed": "No se pudo mostrar el archivo en la carpeta",
+      "download_prompt": "El archivo aún no se ha descargado, descárgalo primero",
+      "download_success": "Archivo descargado correctamente",
+      "download_failed": "No se pudo descargar el archivo, inténtalo de nuevo",
+      "save_success": "Archivo guardado en tu dispositivo",
+      "save_failed": "No se pudo guardar el archivo, inténtalo de nuevo"
+    },
+    "image": {
+      "fetch_failed": "No se pudo obtener la URL de la imagen",
+      "locate_failed": "No se puede localizar esta imagen por ahora",
+      "download_prompt": "La imagen no se ha descargado, guardándola en tu dispositivo...",
+      "save_success": "Imagen guardada en tu dispositivo",
+      "save_failed": "No se pudo guardar la imagen",
+      "download_failed": "No se pudo descargar la imagen, inténtalo de nuevo"
+    },
+    "delete": {
+      "invalid_session": "No se pudo determinar a qué conversación pertenece este mensaje",
+      "confirm": "Los mensajes eliminados desaparecerán de tu historial. ¿Quieres continuar?",
+      "success": "Mensaje eliminado"
+    },
+    "announcement": {
+      "view_all": "Ver todo"
+    },
+    "no_more": "No hay más mensajes",
+    "new_messages": "{count} mensajes nuevos",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "group_nickname": {
+      "title": "Editar apodo en el grupo",
+      "placeholder": "Introduce un apodo para el grupo",
+      "error": {
+        "empty": "El apodo en el grupo no puede estar vacío",
+        "invalid_room": "La información del grupo no es válida"
+      }
+    },
+    "toast": {
+      "searching": "Buscando mensajes...",
+      "not_found": "No se pudo cargar el historial, inténtalo de nuevo",
+      "multi_select_mobile": "La selección múltiple de mensajes no está disponible en el móvil",
+      "disbanded_group": "Este grupo se ha disuelto"
+    }
+  },
+  "friends_list": {
+    "notice": {
+      "friend": "Notificaciones de amistad",
+      "group": "Notificaciones de grupos"
+    },
+    "tabs": {
+      "friend": "Amigos",
+      "group": "Grupos"
+    },
+    "collapse": {
+      "friend": "Mis amigos",
+      "group": "Mis grupos"
+    },
+    "bot_tag": "Asistente",
+    "status": {
+      "online": "En línea",
+      "offline": "Sin conexión"
+    },
+    "menu": {
+      "add_group": "Añadir categoría",
+      "rename_group": "Cambiar nombre de la categoría",
+      "delete_group": "Eliminar categoría"
+    }
+  },
+  "create_group": {
+    "title": "Crear chat de grupo",
+    "action": "Crear",
+    "success": "Chat de grupo creado",
+    "fail": "No se pudo crear el chat de grupo",
+    "required_tag": "Obligatorio"
+  },
+  "file_drop": {
+    "title": "Suelta para enviar archivos",
+    "desc": "Arrastra y suelta imágenes o archivos; la conversación actual los recibirá"
+  }
+}

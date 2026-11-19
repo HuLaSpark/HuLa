@@ -1,0 +1,21 @@
+{
+  "recent": {
+    "title": "Usados recientemente"
+  },
+  "tabs": {
+    "emoji": "Emojis",
+    "favorites": "Mis favoritos"
+  },
+  "favorites": {
+    "title": "Mis stickers",
+    "empty": "Aún no tienes stickers",
+    "delete": "Eliminar",
+    "deleteSuccess": "Sticker eliminado",
+    "deleteFail": "No se pudo eliminar el sticker"
+  },
+  "categories": {
+    "expression": "Emojis de caras amarillas",
+    "animal": "Emojis de animales",
+    "gesture": "Emojis de gestos"
+  }
+}

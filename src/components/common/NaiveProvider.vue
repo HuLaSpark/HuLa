@@ -24,9 +24,11 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import {
   darkTheme,
   dateEnUS,
+  dateEsAR,
   dateKoKR,
   dateZhCN,
   enUS,
+  esAR,
   type GlobalThemeOverrides,
   type NDateLocale,
   type NLocale,
@@ -58,7 +60,9 @@ const naiveLocaleMap: Record<string, NaiveLocalePack> = {
   'en-US': { locale: enUS, dateLocale: dateEnUS },
   en: { locale: enUS, dateLocale: dateEnUS },
   'ko-KR': { locale: koKR, dateLocale: dateKoKR },
-  ko: { locale: koKR, dateLocale: dateKoKR }
+  ko: { locale: koKR, dateLocale: dateKoKR },
+  'es-ES': { locale: esAR, dateLocale: dateEsAR },
+  es: { locale: esAR, dateLocale: dateEsAR }
 }
 
 const defaultNaiveLocalePack = naiveLocaleMap['zh-CN']

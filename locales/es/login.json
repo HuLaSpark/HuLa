@@ -1,0 +1,193 @@
+{
+  "button": {
+    "login": {
+      "default": "Iniciar sesión",
+      "network_error": "Error de red"
+    },
+    "qr_code": "Código QR",
+    "cancel_login": "Cancelar",
+    "remove_account": "Quitar"
+  },
+  "input": {
+    "account": {
+      "placeholder": "Correo / cuenta de HuLa"
+    },
+    "pass": {
+      "placeholder": "Introduce la contraseña de HuLa"
+    }
+  },
+  "option": {
+    "more": "Más opciones",
+    "items": {
+      "forget": "He olvidado la contraseña",
+      "network_setting": "Ajustes de red"
+    }
+  },
+  "term": {
+    "checkout": {
+      "text1": "Acepto las",
+      "text2": " condiciones del servicio ",
+      "text3": " y la ",
+      "text4": "política de privacidad"
+    }
+  },
+  "auth_way": {
+    "acc_pss": "Iniciar sesión con cuenta y contraseña"
+  },
+  "register": "Registrar cuenta",
+  "third_party": {
+    "title": "Iniciar sesión o registrarse con OAuth",
+    "gitee": "Iniciar sesión con Gitee",
+    "github": "Iniciar sesión con GitHub",
+    "gitcode": "Iniciar sesión con GitCode"
+  },
+  "qr_code_expired": "El código QR ha caducado",
+  "qr_code_expired_hint": "Inténtalo de nuevo más tarde",
+  "qr_code_scan_hint": "Escanea el código QR con la app HuLa",
+  "qr_code_gen_fail_hint": "No se pudo generar el código QR",
+  "qr_code_scan_success_hint": "Escaneado correctamente, esperando autorización",
+  "wait_auth_hint": "Esperando autorización...",
+  "login_success": "Sesión iniciada correctamente",
+  "fetch_user_fail": "No se pudo obtener la información del usuario",
+  "refreshing": "Actualizando...",
+  "loading": "Cargando...",
+  "scan_qr_code_fail": "Error al escanear el código QR",
+  "status": {
+    "logging_in": "Iniciando sesión...",
+    "success_redirect": "Redirigiendo...",
+    "service_disconnected": "Servicio desconectado"
+  },
+  "qr": {
+    "overlay": {
+      "success": "Sesión iniciada correctamente",
+      "error": "Error al escanear el código QR",
+      "auth": "Escaneado, esperando autorización",
+      "expired": "El código QR ha caducado",
+      "fetch_failed": "Sesión iniciada, pero no se pudo obtener la información del usuario",
+      "generate_fail": "No se pudo generar el código QR",
+      "general_error": "Algo ha salido mal",
+      "refreshing": "Actualizando..."
+    },
+    "load_text": {
+      "loading": "Cargando...",
+      "refreshing": "Actualizando...",
+      "scan_hint": "Escanea con la app HuLa",
+      "login": "Iniciando sesión...",
+      "retry": "Inténtalo de nuevo más tarde",
+      "auth_pending": "Esperando autorización..."
+    },
+    "actions": {
+      "account_login": "Usar contraseña",
+      "register": "Registrarse",
+      "register_title": "Registro"
+    }
+  },
+  "guide": {
+    "welcome": {
+      "title": "🎉 Te damos la bienvenida a HuLa",
+      "desc": "HuLa está desarrollado con Tauri y es compatible con Windows, macOS, Linux, iOS y Android"
+    },
+    "privacy": {
+      "title": "🤔 Privacidad y condiciones del servicio",
+      "desc": "Revisa primero la política de privacidad y las condiciones del servicio de HuLa"
+    },
+    "network": {
+      "title": "⚙️ Ajustes de red",
+      "desc": "HuLa te permite usar un servidor personalizado en lugar del oficial"
+    },
+    "register": {
+      "title": "🤓 Cómo iniciar sesión",
+      "desc": "Regístrate y completa tu perfil antes de usar HuLa"
+    },
+    "actions": {
+      "next": "Siguiente",
+      "prev": "Atrás",
+      "done": "Listo",
+      "progress": "{current}/{total}"
+    }
+  },
+  "network": {
+    "title": "Ajustes de red",
+    "tabs": {
+      "api": "API",
+      "ws": "WebSocket"
+    },
+    "fields": {
+      "type": "Tipo",
+      "host": "IP o dominio",
+      "port": "Puerto",
+      "suffix": "Sufijo"
+    },
+    "placeholder": {
+      "host": "127.0.0.1 o hulaspark.com",
+      "port": "443",
+      "api_suffix": "api",
+      "ws_suffix": "websocket"
+    },
+    "api": {
+      "options": {
+        "none": "Desactivado (usar el servidor oficial)",
+        "http": "HTTP",
+        "https": "HTTPS"
+      }
+    },
+    "ws": {
+      "options": {
+        "none": "Desactivado (usar el servidor oficial)",
+        "ws": "WS",
+        "wss": "WSS"
+      }
+    },
+    "actions": {
+      "save": "Guardar",
+      "back": "Volver"
+    },
+    "messages": {
+      "incomplete": "Completa todos los campos de red obligatorios",
+      "save_success": "Ajustes de red guardados",
+      "save_failed": "No se pudieron guardar los ajustes de red: {error}"
+    }
+  },
+  "mobile": {
+    "welcome_title": "Hola, te damos la bienvenida",
+    "tabs": {
+      "login": "Iniciar sesión",
+      "register": "Registrarse"
+    },
+    "forget_code": "Recuperar",
+    "btn": {
+      "login": "Iniciar sesión"
+    },
+    "input": {
+      "account_placeholder": "Introduce tu cuenta de HuLa",
+      "code_placeholder": "Introduce la contraseña"
+    },
+    "register": {
+      "input": {
+        "nickname": "Apodo",
+        "password": "Contraseña",
+        "confirm_password": "Confirmar contraseña",
+        "email": "Correo electrónico",
+        "email_verification_code": "Introduce el código de verificación del correo"
+      },
+      "btn": {
+        "register": "Registrarse",
+        "next": "Siguiente",
+        "send_email_code": "Enviar código",
+        "resend_in": "Reenviar en {seconds} s"
+      },
+      "pass_validate_info": {
+        "minlength": "Al menos {len} caracteres",
+        "valid_characters": "Formada por letras y números",
+        "must_special_char": "Debe incluir un carácter especial"
+      }
+    },
+    "email_invalid": "Correo electrónico no válido.",
+    "code_sent_email": "Código de verificación enviado. Revisa tu correo.",
+    "code_send_failed_with_reason": "No se pudo enviar el código de verificación: {reason}",
+    "code_send_failed_retry": "No se pudo enviar el código de verificación. Inténtalo de nuevo más tarde.",
+    "complete_info_before_register": "Completa tus datos antes de registrarte.",
+    "register_success": "Te has registrado correctamente.",
+    "register_fail": "No se pudo completar el registro."
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "menu": {
+    "select_all": "Seleccionar todo",
+    "save_as": "Guardar como",
+    "paste": "Pegar",
+    "copy": "Copiar",
+    "cut": "Cortar"
+  },
+  "send": "Enviar",
+  "placeholder": "Una palabra amable reconforta el corazón; una palabra dura lo hiere.",
+  "send_or_newline": "{send} Enviar/{newline} Salto de línea",
+  "file": "Archivo",
+  "image": "Imagen",
+  "voice": "Voz",
+  "location": "Ubicación",
+  "chat_history": "Historial de chat",
+  "screenshot": "Captura de pantalla",
+  "screenshot_hide_curr_window": "Ocultar la ventana durante la captura",
+  "relation": {
+    "not_friends": "Ya no sois amigos."
+  }
+}

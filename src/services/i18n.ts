@@ -62,7 +62,8 @@ function getLangPrefix(lang: string) {
 const PREFIX_LANG_MAP: Record<string, Locale> = {
   zh: 'zh-CN',
   en: 'en',
-  ko: 'ko'
+  ko: 'ko',
+  es: 'es'
 }
 
 // 根据语言前缀映射受支持的 locale，未匹配则回退中文

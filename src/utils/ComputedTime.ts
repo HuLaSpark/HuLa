@@ -5,11 +5,18 @@ import type { ConfigType, Dayjs, OpUnitType } from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/en'
 import 'dayjs/locale/ko'
+import 'dayjs/locale/es'
 import { useI18nGlobal } from '@/services/i18n'
 
 export const setDayjsLocale = (lang: string) => {
   const normalized = lang.toLowerCase()
-  const mapped = normalized.includes('zh') ? 'zh-cn' : normalized.includes('ko') ? 'ko' : 'en'
+  const mapped = normalized.includes('zh')
+    ? 'zh-cn'
+    : normalized.includes('ko')
+      ? 'ko'
+      : normalized.startsWith('es')
+        ? 'es'
+        : 'en'
   dayjs.locale(mapped)
 }
 
