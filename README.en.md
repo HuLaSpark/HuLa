@@ -126,6 +126,9 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
   <h3>🎨 Interface Showcase</h3>
 </div>
 
+<details>
+<summary>Expand to view interface screenshots</summary>
+
 <!-- Main Interface -->
 <div align="center">
   <h4>PC interface display, there are other functions not in the introduction screenshot, please download your own experience</h4>
@@ -179,6 +182,9 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 </div>
 
 <br>
+
+
+</details>
 
 ## ✨ Features
 
@@ -256,9 +262,14 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 
 ## App Upgrade Sponsor
 
-<a href="https://www.toolsetlink.com">
-  <img height="54" alt="UpgradeLink" src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" />
-</a>
+<a href="https://infistar.cc/register?aff=R5GA55AM&ref_source=link"><img src="preview/infistar-banner-en.svg" alt="HuLa × Infistar.cc" width="100%" /></a>
+
+**Sponsored: HuLa × Infistar.cc | Claude, GPT, Gemini, Grok, DeepSeek &amp; more with one key, at a fraction of official prices**<br>
+💥 Up to 99% off; ✅ genuine official models; ⚡ 1,000+ redundant routes with automatic failover; 🧩 200+ models from 16 brands.<br>
+🎯 Try Claude and GPT in HuLa AI Chat with one key; 🎁 [Sign up through this link](https://infistar.cc/register?aff=R5GA55AM&ref_source=link) to receive CNY 5 in credit.
+
+> **Sponsored (AI Chat recommendation, disabled by default)**<br>
+> [Infistar.cc | Use Claude, GPT, Gemini &amp; more with one key. Sign up for CNY 5 in credit](https://infistar.cc/register?aff=R5GA55AM&ref_source=link)
 
 ## 👏 Thanks to all Contributors!
 
