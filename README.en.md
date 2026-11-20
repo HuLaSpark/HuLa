@@ -39,7 +39,7 @@
 <div align="center">
   <p>
     <a href="https://deepwiki.com/HuLaSpark/HuLa">
-      <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
+      <img src="https://img.shields.io/badge/DeepWiki-Explore-1848A0?logo=readthedocs&logoColor=white" alt="DeepWiki">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield">
       <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt="FOSSA Status">
@@ -126,6 +126,9 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
   <h3>🎨 Interface Showcase</h3>
 </div>
 
+<details>
+<summary>Expand to view interface screenshots</summary>
+
 <!-- Main Interface -->
 <div align="center">
   <h4>PC interface display, there are other functions not in the introduction screenshot, please download your own experience</h4>
@@ -179,6 +182,9 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 </div>
 
 <br>
+
+
+</details>
 
 ## ✨ Features
 
@@ -254,11 +260,30 @@ HuLa is an instant messaging system built with Tauri, Vite 7, Vue 3, and TypeScr
 | 🧠 | AI Chat Assistant | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 | 🔌 | Multi-platform AI Support | ![Completed](https://img.shields.io/badge/✅-Completed-008080?style=flat&labelColor=e6f7f7&color=008080) |
 
-## App Upgrade Sponsor
+## App Upgrade Sponsors
 
-<a href="https://www.toolsetlink.com">
-  <img height="54" alt="UpgradeLink" src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" />
-</a>
+### UpgradeLink
+
+<p align="center">
+  <a href="https://www.toolsetlink.com"><img src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" alt="UpgradeLink" width="360" /></a>
+</p>
+
+<p align="center">UpgradeLink is an update platform for Tauri apps, helping desktop app developers publish and deliver version updates.</p>
+
+---
+
+### Infistar.cc
+
+<a href="https://infistar.cc/register?aff=R5GA55AM&ref_source=link"><img src="preview/infistar-banner-en.jpg" alt="HuLa × Infistar.cc" width="100%" /></a>
+
+<p align="center"><strong>Claude, GPT, Gemini, Grok, DeepSeek &amp; more with one key, at a fraction of official prices</strong><br />
+💥 Up to 99% off　·　✅ 100% genuine official models　·　⚡ 1,000+ routes with automatic failover<br />
+🧩 200+ models from 16 brands　·　🏆 Recommended by 100+ open-source projects, up to 100k+ stars<br />
+🎯 Try multiple providers in HuLa AI Chat with one key<br />
+🎁 <a href="https://infistar.cc/register?aff=R5GA55AM&amp;ref_source=link">HuLa users: sign up for CNY 5 credit</a></p>
+
+> **Sponsored · AI Chat recommendation (disabled by default)**<br>
+> [Infistar.cc | Use Claude, GPT, Gemini &amp; more with one key. Sign up for CNY 5 in credit](https://infistar.cc/register?aff=R5GA55AM&ref_source=link)
 
 ## 👏 Thanks to all Contributors!
 
