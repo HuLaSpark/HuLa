@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">HuLa × Infistar.cc</title>
+  <desc id="desc">Claude, GPT, Gemini, Grok, DeepSeek and more with one key</desc>
+  <defs><linearGradient id="bg" x1="0" x2="1"><stop stop-color="#17153b"/><stop offset="1" stop-color="#3156a6"/></linearGradient></defs>
+  <rect width="1200" height="300" rx="24" fill="url(#bg)"/>
+  <circle cx="1060" cy="55" r="150" fill="#7c5cff" opacity=".22"/><circle cx="1130" cy="260" r="120" fill="#25d0c8" opacity=".16"/>
+  <text x="70" y="92" fill="#fff" font-family="Arial,sans-serif" font-size="42" font-weight="700">HuLa × Infistar.cc</text>
+  <text x="70" y="145" fill="#dbe5ff" font-family="Arial,sans-serif" font-size="25">Claude, GPT, Gemini, Grok, DeepSeek &amp; more with one key</text>
+  <text x="70" y="205" fill="#72f1d1" font-family="Arial,sans-serif" font-size="30" font-weight="700">Up to 99% off · Get CNY 5 credit</text>
+  <text x="70" y="247" fill="#b9c8ee" font-family="Arial,sans-serif" font-size="19">Official models · 200+ models · 1,000+ redundant routes</text>
+</svg>
