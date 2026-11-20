@@ -37,7 +37,7 @@
 <div align="center">
   <p>
     <a href="https://deepwiki.com/HuLaSpark/HuLa">
-      <img src="https://deepwiki.com/badge.svg" alt="DeepWiki">
+      <img src="https://img.shields.io/badge/DeepWiki-Explore-1848A0?logo=readthedocs&logoColor=white" alt="DeepWiki">
     </a>
     <a href="https://app.fossa.com/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa?ref=badge_shield">
       <img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FHuLaSpark%2FHuLa.svg?type=shield" alt="FOSSA Status">
@@ -125,6 +125,9 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
   <h3>🎨 界面展示</h3>
 </div>
 
+<details>
+<summary>展开查看界面效果图</summary>
+
 <!-- 主界面展示 -->
 <div align="center">
   <h4>PC端界面展示，有其他功能未在介绍截图内，请自行下载体验 🙏</h4>
@@ -178,6 +181,9 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 </div>
 
 <br>
+
+
+</details>
 
 ## ✨ 功能特性
 
@@ -264,9 +270,28 @@ HuLa 是一款基于 Tauri、Vite 7、Vue 3 和 TypeScript 构建的即时通讯
 
 ## 应用升级赞助商
 
-<a href="https://www.toolsetlink.com">
-  <img height="54" alt="UpgradeLink" src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" />
-</a>
+### UpgradeLink
+
+<p align="center">
+  <a href="https://www.toolsetlink.com"><img src="https://github.com/user-attachments/assets/6b84fb0f-3f1d-44b5-9932-2298bc999d8d" alt="UpgradeLink" width="360" /></a>
+</p>
+
+<p align="center">UpgradeLink 是面向 Tauri 应用的升级平台，为桌面应用提供版本发布与更新支持。</p>
+
+---
+
+### Infistar.cc
+
+<a href="https://infistar.cc/register?aff=R5GA55AM&ref_source=link"><img src="preview/infistar-banner-zh.jpg" alt="HuLa × Infistar.cc 无限星河" width="100%" /></a>
+
+<p align="center"><strong>Claude、GPT、Gemini、Grok、DeepSeek 等，一个 Key，官方价的零头</strong><br />
+💥 低至官方 0.1 折，省 99%　·　✅ 官方纯血模型　·　⚡ 上千线路自动切换<br />
+🧩 200+ 个模型、16 个品牌　·　🏆 100+ 开源项目推荐，最高 10 万+ Star<br />
+🎯 在 HuLa AI 聊天里用一个 Key 体验多家模型<br />
+🎁 <a href="https://infistar.cc/register?aff=R5GA55AM&amp;ref_source=link">HuLa 用户专属：注册即送人民币 5 元</a></p>
+
+> **Sponsored · AI 聊天推荐（默认不配置）**<br>
+> [Infistar.cc｜一个 Key 用 Claude、GPT、Gemini 等模型，注册领人民币 5 元](https://infistar.cc/register?aff=R5GA55AM&ref_source=link)
 
 ## 👏 感谢以下贡献者们！
 
