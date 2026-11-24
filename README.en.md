@@ -333,6 +333,16 @@ pnpm run tauri:dev
 pnpm run tauri:build
 ```
 
+## CircleCI macOS build trial
+
+`.circleci/config.yml` adds an isolated build trial on CircleCI's hosted `m4pro.medium` macOS runner with Xcode 27.1.0. It builds arm64 and x86_64 DMGs on the same Apple Silicon machine, runs only for the `circleci-macos-trial` branch, and stores outputs as CircleCI artifacts. The trial uses placeholder API configuration and disables Tauri updater artifacts; its DMGs are not signed or suitable for distribution and it does not create a GitHub Release.
+
+Cost note: CircleCI Free includes 30,000 credits per month. The `m4pro.medium` macOS machine uses 200 credits per minute, so the free allowance covers up to about **150 total macOS runner minutes** across both architecture builds. On the Free plan, jobs stop when credits are exhausted; they do not automatically switch to paid usage. Additional credits are listed at $15 per 25,000 credits (about $0.12/minute on this machine), so this is useful for a free trial but is not cheaper than GitHub Actions' standard macOS rate of about $0.062/minute for sustained paid usage. Check CircleCI's usage page for actual runtime and credits.
+
+Connect the HuLa GitHub repository to CircleCI. No application secrets or updater private key are needed for this placeholder-only trial. Push a branch named `circleci-macos-trial`, then download the `macos-arm64` and `macos-x86_64` artifacts from the CircleCI job. Confirm both targets build and the DMGs contain the expected architecture before moving the steps into the signed and notarized release workflow.
+
+This trial checks build compatibility only. It does not generate Tauri updater signatures, notarize with an Apple Developer ID, or publish to Gitee, GitHub, or cloud storage.
+
 ## ⚠️ Important Notes (macOS Users)
 
 Downloading installation packages from the web may show a damaged package prompt, possibly encountering certificate issues due to macOS security mechanisms. Please follow these steps to resolve:

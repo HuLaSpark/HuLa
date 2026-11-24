@@ -363,6 +363,20 @@ sudo xattr -rd com.apple.quarantine 你的安装包路径/下载的安装包名�
 sudo xattr -r -d com.apple.quarantine /Applications/应用名称.app
 ```
 
+## CircleCI macOS 构建试点
+
+仓库提供 `.circleci/config.yml`，用于验证 CircleCI 托管的 Apple Silicon macOS 机器能否构建 HuLa。该试点使用 `m4pro.medium`、Xcode 27.1.0，在同一台 macOS runner 上分别构建 `aarch64-apple-darwin` 和 `x86_64-apple-darwin` 的 DMG；x86_64 目标通过 Apple Silicon 的交叉编译完成，不需要第二台 Intel Mac。试点使用占位 API 配置并关闭 Tauri updater 签名产物，只保存 CircleCI artifacts，不创建 GitHub Release，产物不用于正式分发。
+
+费用提示：CircleCI Free 每月提供 30,000 credits；`m4pro.medium` 每分钟消耗 200 credits，免费额度最多约 **150 分钟的 macOS runner 时间**，而 arm64 与 x86_64 两次构建合计计时。免费额度耗尽时任务会停止，不会自动转成付费。CircleCI 标准额外 credits 为每 25,000 credits $15，折算该 Mac 规格约 $0.12/分钟；因此这适合作为免费额度内的试点，长期付费并不比 GitHub Actions 标准 macOS runner（约 $0.062/分钟）便宜。请在 CircleCI 用量页观察真实构建耗时和扣分。
+
+启用步骤：
+
+1. 在 CircleCI 连接 HuLa 的 GitHub 项目。此试点使用占位配置，不需要添加应用密钥或 updater 私钥。
+2. 将测试分支命名为 `circleci-macos-trial` 并推送。构建结束后，在 CircleCI Artifacts 中分别下载 `macos-arm64` 和 `macos-x86_64` 目录下的 DMG。
+3. 确认两个目标都成功、DMG 可打开且包含预期架构。此试点不生成 Tauri updater 签名文件、不做 Apple 公证，也不用于发布；验证通过后再把步骤移植到签名/公证的正式 release workflow。
+
+CircleCI 配置要求 Node.js 22、pnpm 10、Rust stable、Xcode 27.1.0 和 `m4pro.medium` macOS executor。正式发行仍需 Apple Developer ID 签名/公证及 Tauri updater 密钥；本试点不上传 GitHub Release 或云存储。
+
 ## 📋 提交规范
 
 执行 **pnpm run commit** 唤起 _git commit_ 交互，根据提示完成信息的输入和选择
