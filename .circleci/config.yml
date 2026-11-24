@@ -1,0 +1,131 @@
+version: 2.1
+
+jobs:
+  build-macos-trial:
+    macos:
+      xcode: "27.1.0"
+    resource_class: m4pro.medium
+    working_directory: ~/project
+    environment:
+      CARGO_BUILD_JOBS: "2"
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - checkout
+
+      - run:
+          name: Install Node.js 22 and pnpm 10
+          command: |
+            set -euo pipefail
+            if ! brew list --versions node@22 >/dev/null 2>&1; then
+              brew install node@22
+            fi
+            echo 'export PATH="$(brew --prefix node@22)/bin:$PATH"' >> "$BASH_ENV"
+            source "$BASH_ENV"
+            node --version
+            npm install --global pnpm@10
+            pnpm config set store-dir "$HOME/.cache/pnpm/store"
+            pnpm --version
+
+      - restore_cache:
+          keys:
+            - hula-pnpm-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+            - hula-pnpm-v1-{{ arch }}-
+
+      - restore_cache:
+          keys:
+            - hula-cargo-v1-{{ arch }}-{{ checksum "src-tauri/Cargo.lock" }}
+            - hula-cargo-v1-{{ arch }}-
+
+      - run:
+          name: Install Rust and macOS target triples
+          command: |
+            set -euo pipefail
+            if ! command -v rustup >/dev/null 2>&1; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            fi
+            source "$HOME/.cargo/env"
+            rustup toolchain install stable --profile minimal
+            rustup default stable
+            rustup target add aarch64-apple-darwin x86_64-apple-darwin
+            echo 'source "$HOME/.cargo/env"' >> "$BASH_ENV"
+
+      - run:
+          name: Prepare non-production application configuration
+          command: |
+            set -euo pipefail
+            printf '%s\n' \
+              'VITE_GITEE_TOKEN=circleci-build-only-disabled' \
+              'VITE_TURN_SERVER_URL=' > .env.production.local
+            printf '%s\n' \
+              'youdao:' \
+              '  app_key: "circleci-build-only"' \
+              '  app_secret: "circleci-build-only"' \
+              'tencent:' \
+              '  api_key: "circleci-build-only"' \
+              '  secret_id: "circleci-build-only"' \
+              '  map_key: "circleci-build-only"' > src-tauri/configuration/production.yaml
+
+      - run:
+          name: Install frontend dependencies
+          command: pnpm install --frozen-lockfile
+
+      - save_cache:
+          key: hula-pnpm-v1-{{ arch }}-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.cache/pnpm/store
+
+      - run:
+          name: Build frontend and prepare Tauri config
+          command: |
+            set -euo pipefail
+            # Generate dist and the component typings consumed by the later Tauri builds.
+            pnpm vite build --emptyOutDir
+            printf '%s\n' \
+              '{' \
+              '  "build": { "beforeBuildCommand": "" },' \
+              '  "bundle": { "createUpdaterArtifacts": false }' \
+              '}' > circleci-tauri-config.json
+
+      - run:
+          name: Build macOS arm64 DMG
+          command: |
+            set -euo pipefail
+            source "$HOME/.cargo/env"
+            pnpm exec tauri build \
+              --target aarch64-apple-darwin \
+              --bundles dmg \
+              --config circleci-tauri-config.json
+            test -n "$(find src-tauri/target/aarch64-apple-darwin/release/bundle -type f -name '*.dmg' -print -quit)"
+
+      - store_artifacts:
+          path: src-tauri/target/aarch64-apple-darwin/release/bundle
+          destination: macos-arm64
+
+      - run:
+          name: Build macOS x86_64 DMG through Apple Silicon cross-compilation
+          command: |
+            set -euo pipefail
+            source "$HOME/.cargo/env"
+            pnpm exec tauri build \
+              --target x86_64-apple-darwin \
+              --bundles dmg \
+              --config circleci-tauri-config.json
+            test -n "$(find src-tauri/target/x86_64-apple-darwin/release/bundle -type f -name '*.dmg' -print -quit)"
+
+      - store_artifacts:
+          path: src-tauri/target/x86_64-apple-darwin/release/bundle
+          destination: macos-x86_64
+
+      - save_cache:
+          key: hula-cargo-v1-{{ arch }}-{{ checksum "src-tauri/Cargo.lock" }}
+          paths:
+            - ~/.cargo/registry
+            - ~/.cargo/git
+
+workflows:
+  hula-macos-trial:
+    jobs:
+      - build-macos-trial:
+          filters:
+            branches:
+              only: circleci-macos-trial
