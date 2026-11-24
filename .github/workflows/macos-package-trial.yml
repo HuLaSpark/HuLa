@@ -1,0 +1,102 @@
+name: macOS package trial
+
+on:
+  push:
+    branches:
+      - circleci-macos-trial
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-package-trial-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package-macos:
+    name: Build macOS ${{ matrix.label }} DMG
+    runs-on: macos-15
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: arm64
+            target: aarch64-apple-darwin
+          - label: x86_64
+            target: x86_64-apple-darwin
+    env:
+      CARGO_BUILD_JOBS: "2"
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - name: Check out HuLa
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Rust and macOS targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> src-tauri/target
+
+      - name: Set non-production application configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' \
+            'VITE_GITEE_TOKEN=circleci-build-only-disabled' \
+            'VITE_TURN_SERVER_URL=' > .env.production.local
+          printf '%s\n' \
+            'youdao:' \
+            '  app_key: "build-only-placeholder"' \
+            '  app_secret: "build-only-placeholder"' \
+            'tencent:' \
+            '  api_key: "build-only-placeholder"' \
+            '  secret_id: "build-only-placeholder"' \
+            '  map_key: "build-only-placeholder"' > src-tauri/configuration/production.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend and prepare unsigned Tauri config
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm vite build --emptyOutDir
+          cat > macos-trial-tauri-config.json <<'EOF'
+          {
+            "build": { "beforeBuildCommand": "" },
+            "bundle": { "createUpdaterArtifacts": false }
+          }
+          EOF
+
+      - name: Build DMG
+        run: >-
+          pnpm exec tauri build
+          --target ${{ matrix.target }}
+          --bundles dmg
+          --config macos-trial-tauri-config.json
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: hula-macos-${{ matrix.label }}-dmg
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 3
