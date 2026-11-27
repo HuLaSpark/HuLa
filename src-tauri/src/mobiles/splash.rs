@@ -17,37 +17,49 @@ mod platform {
 #[cfg(target_os = "android")]
 mod platform {
     use jni::{JavaVM, objects::JObject};
+    // tao 0.35 不再初始化 ndk-context，Activity 上下文需从 tao 获取
+    use tauri::tao::platform::android::prelude::main_android_context;
 
-    fn invoke(method: &str) -> Result<(), jni::errors::Error> {
-        let ctx = ndk_context::android_context();
-        let vm = unsafe { JavaVM::from_raw(ctx.vm().cast()) }?;
-        let mut env = vm.attach_current_thread()?;
-        let activity = unsafe { JObject::from_raw(ctx.context() as jni::sys::jobject) };
+    fn invoke(method: &str) {
+        let Some(ctx) = main_android_context() else {
+            tracing::warn!("[Splashscreen] android context not ready, skip {}", method);
+            return;
+        };
 
-        // 直接调用Activity实例的方法，不使用静态方法
-        let result = env.call_method(&activity, method, "()V", &[]);
+        let result = (|| -> jni::errors::Result<()> {
+            let vm = unsafe { JavaVM::from_raw(ctx.java_vm.cast()) }?;
+            let mut env = vm.attach_current_thread()?;
+            let activity = unsafe { JObject::from_raw(ctx.context_jobject as jni::sys::jobject) };
 
-        let _ = activity.into_raw();
+            // 直接调用Activity实例的方法，不使用静态方法
+            let result = env.call_method(&activity, method, "()V", &[]);
 
-        result.map(|_| ()).map_err(|err| {
-            if env.exception_check().unwrap_or(false) {
-                let _ = env.exception_describe();
-                let _ = env.exception_clear();
-            }
-            err
-        })
+            let _ = activity.into_raw();
+
+            result.map(|_| ()).map_err(|err| {
+                if env.exception_check().unwrap_or(false) {
+                    let _ = env.exception_describe();
+                    let _ = env.exception_clear();
+                }
+                err
+            })
+        })();
+
+        if let Err(err) = result {
+            tracing::error!(
+                "[Splashscreen] failed to call {} on Android: {}",
+                method,
+                err
+            );
+        }
     }
 
     pub fn show() {
-        if let Err(err) = invoke("show") {
-            tracing::error!("[Splashscreen] failed to show on Android: {}", err);
-        }
+        invoke("show");
     }
 
     pub fn hide() {
-        if let Err(err) = invoke("hide") {
-            tracing::error!("[Splashscreen] failed to hide on Android: {}", err);
-        }
+        invoke("hide");
     }
 }
 
